@@ -161,11 +161,10 @@ suite('End to End Tests: test adapters', () => {
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
         // const deferredTillEOT = createTestingDeferred();
-        resultResolver.resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
-            return Promise.resolve();
         };
 
         // set workspace to test workspace folder and set up settings
@@ -202,11 +201,10 @@ suite('End to End Tests: test adapters', () => {
         };
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
-        resultResolver.resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
-            return Promise.resolve();
         };
 
         // set settings to work for the given workspace
@@ -242,10 +240,9 @@ suite('End to End Tests: test adapters', () => {
         workspaceUri = Uri.parse(rootPathSmallWorkspace);
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
-        resultResolver.resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = (payload, _token?) => {
             callCount = callCount + 1;
             actualData = payload;
-            return Promise.resolve();
         };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
@@ -291,11 +288,10 @@ suite('End to End Tests: test adapters', () => {
 
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
-        resultResolver.resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
-            return Promise.resolve();
         };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
@@ -375,11 +371,10 @@ suite('End to End Tests: test adapters', () => {
 
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
-        resultResolver.resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
-            return Promise.resolve();
         };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
@@ -446,11 +441,10 @@ suite('End to End Tests: test adapters', () => {
         };
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
-        resultResolver.resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
-            return Promise.resolve();
         };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
@@ -480,22 +474,23 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver.resolveExecution = async (payload, _token?) => {
+        resultResolver.resolveExecution = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
             try {
-                assert.strictEqual(
-                    payload.status,
-                    'success',
-                    `Expected status to be 'success', instead status is ${payload.status}`,
-                );
-                assert.ok(payload.result, 'Expected results to be present');
+                if ('status' in payload) {
+                    assert.strictEqual(
+                        payload.status,
+                        'success',
+                        `Expected status to be 'success', instead status is ${payload.status}`,
+                    );
+                    assert.ok(payload.result, 'Expected results to be present');
+                }
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            return Promise.resolve();
         };
 
         // set workspace to test workspace folder
@@ -554,22 +549,25 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver.resolveExecution = async (payload, _token?) => {
+        resultResolver.resolveExecution = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
             try {
-                const validStatuses = ['subtest-success', 'subtest-failure'];
-                assert.ok(
-                    validStatuses.includes(payload.status),
-                    `Expected status to be one of ${validStatuses.join(', ')}, but instead status is ${payload.status}`,
-                );
-                assert.ok(payload.result, 'Expected results to be present');
+                if ('status' in payload) {
+                    const validStatuses = ['subtest-success', 'subtest-failure'];
+                    assert.ok(
+                        validStatuses.includes(payload.status),
+                        `Expected status to be one of ${validStatuses.join(', ')}, but instead status is ${
+                            payload.status
+                        }`,
+                    );
+                    assert.ok(payload.result, 'Expected results to be present');
+                }
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            return Promise.resolve();
         };
 
         // set workspace to test workspace folder
@@ -625,22 +623,23 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver.resolveExecution = async (payload, _token?) => {
+        resultResolver.resolveExecution = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
             try {
-                assert.strictEqual(
-                    payload.status,
-                    'success',
-                    `Expected status to be 'success', instead status is ${payload.status}`,
-                );
-                assert.ok(payload.result, 'Expected results to be present');
+                if ('status' in payload) {
+                    assert.strictEqual(
+                        payload.status,
+                        'success',
+                        `Expected status to be 'success', instead status is ${payload.status}`,
+                    );
+                    assert.ok(payload.result, 'Expected results to be present');
+                }
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            return Promise.resolve();
         };
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathSmallWorkspace);
@@ -707,7 +706,7 @@ suite('End to End Tests: test adapters', () => {
     test('Unittest execution with coverage, small workspace', async () => {
         // result resolver and saved data for assertions
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
-        resultResolver._resolveCoverage = async (payload, _token?) => {
+        resultResolver._resolveCoverage = (payload, _token?) => {
             assert.strictEqual(payload.cwd, rootPathCoverageWorkspace, 'Expected cwd to be the workspace folder');
             assert.ok(payload.result, 'Expected results to be present');
             const simpleFileCov = payload.result[`${rootPathCoverageWorkspace}/even.py`];
@@ -717,7 +716,6 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
             assert.strictEqual(simpleFileCov.executed_branches, 1, 'Expected 1 branch to be executed in even.py');
             assert.strictEqual(simpleFileCov.total_branches, 2, 'Expected 2 branches in even.py');
-            return Promise.resolve();
         };
 
         // set workspace to test workspace folder
@@ -757,7 +755,7 @@ suite('End to End Tests: test adapters', () => {
     test('pytest coverage execution, small workspace', async () => {
         // result resolver and saved data for assertions
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
-        resultResolver._resolveCoverage = async (payload, _runInstance?) => {
+        resultResolver._resolveCoverage = (payload, _runInstance?) => {
             assert.strictEqual(payload.cwd, rootPathCoverageWorkspace, 'Expected cwd to be the workspace folder');
             assert.ok(payload.result, 'Expected results to be present');
             const simpleFileCov = payload.result[`${rootPathCoverageWorkspace}/even.py`];
@@ -767,8 +765,6 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
             assert.strictEqual(simpleFileCov.executed_branches, 1, 'Expected 1 branch to be executed in even.py');
             assert.strictEqual(simpleFileCov.total_branches, 2, 'Expected 2 branches in even.py');
-
-            return Promise.resolve();
         };
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathCoverageWorkspace);
@@ -811,22 +807,23 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver.resolveExecution = async (payload, _token?) => {
+        resultResolver.resolveExecution = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
             try {
-                assert.strictEqual(
-                    payload.status,
-                    'success',
-                    `Expected status to be 'success', instead status is ${payload.status}`,
-                );
-                assert.ok(payload.result, 'Expected results to be present');
+                if ('status' in payload) {
+                    assert.strictEqual(
+                        payload.status,
+                        'success',
+                        `Expected status to be 'success', instead status is ${payload.status}`,
+                    );
+                    assert.ok(payload.result, 'Expected results to be present');
+                }
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            return Promise.resolve();
         };
 
         // set workspace to test workspace folder
@@ -878,7 +875,7 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver.resolveDiscovery = async (data, _token?) => {
+        resultResolver.resolveDiscovery = (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             callCount = callCount + 1;
             traceLog(`unittest discovery adapter seg fault error handling \n  ${JSON.stringify(data)}`);
@@ -903,7 +900,6 @@ suite('End to End Tests: test adapters', () => {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            return Promise.resolve();
         };
 
         // set workspace to test workspace folder
@@ -931,7 +927,7 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver.resolveDiscovery = async (data, _token?) => {
+        resultResolver.resolveDiscovery = (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             callCount = callCount + 1;
             traceLog(`add one to call count, is now ${callCount}`);
@@ -961,7 +957,6 @@ suite('End to End Tests: test adapters', () => {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            return Promise.resolve();
         };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
@@ -984,22 +979,24 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver.resolveExecution = async (data, _token?) => {
+        resultResolver.resolveExecution = (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             console.log(`pytest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
             callCount = callCount + 1;
             try {
-                if (data.status === 'error') {
-                    assert.ok(data.error, "Expected errors in 'error' field");
-                } else {
-                    const indexOfTest = JSON.stringify(data.result).search('error');
-                    assert.notDeepEqual(
-                        indexOfTest,
-                        -1,
-                        'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.',
-                    );
+                if ('status' in data) {
+                    if (data.status === 'error') {
+                        assert.ok(data.error, "Expected errors in 'error' field");
+                    } else {
+                        const indexOfTest = JSON.stringify(data.result).search('error');
+                        assert.notDeepEqual(
+                            indexOfTest,
+                            -1,
+                            'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.',
+                        );
+                    }
+                    assert.ok(data.result, 'Expected results to be present');
                 }
-                assert.ok(data.result, 'Expected results to be present');
                 // make sure the testID is found in the results
                 const indexOfTest = JSON.stringify(data).search(
                     'test_seg_fault.py::TestSegmentationFault::test_segfault',
@@ -1009,7 +1006,6 @@ suite('End to End Tests: test adapters', () => {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            return Promise.resolve();
         };
 
         const testId = `${rootPathErrorWorkspace}/test_seg_fault.py::TestSegmentationFault::test_segfault`;
@@ -1091,19 +1087,17 @@ suite('End to End Tests: test adapters', () => {
 
         // Wrap the _resolveExecution function to measure performance
         const original_resolveExecution = resultResolver.resolveExecution.bind(resultResolver);
-        resultResolver.resolveExecution = async (payload, runInstance) => {
+        resultResolver.resolveExecution = (payload, runInstance) => {
             const startTime = performance.now();
             callCount++;
 
             // Call the actual implementation
-            await original_resolveExecution(payload, runInstance);
+            original_resolveExecution(payload, runInstance);
 
             const endTime = performance.now();
             const callTime = endTime - startTime;
             callTimes.push(callTime);
             totalCallTime += callTime;
-
-            return Promise.resolve();
         };
 
         // ================================================================
