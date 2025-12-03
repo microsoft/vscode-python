@@ -1151,7 +1151,7 @@ suite('End to End Tests: test adapters', () => {
                     Uri.file(`/test_${i}.py`),
                 );
                 testItem.children.set(`test_${i}_${j}`, childItem);
-
+                console.log('hi!');
                 // Set up the ID mappings that the resolver uses
                 resultResolver.runIdToTestItem.set(`test_${i}_${j}`, childItem as any);
                 resultResolver.runIdToVSid.set(`test_${i}_${j}`, `test_${i}_${j}`);
