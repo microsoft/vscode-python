@@ -1158,7 +1158,8 @@ suite('End to End Tests: test adapters', () => {
         } // Create payload with multiple test results (simulates real test execution)
         const testResults: Record<string, any> = {};
         for (let i = 0; i < numParameterizedResults; i++) {
-            testResults[`test_0_${i % 20}`] = {
+            // Use test IDs that actually exist in our mock setup (test_0_0 through test_0_9)
+            testResults[`test_0_${i % testFunctionsPerFile}`] = {
                 test: `test_method[${i}]`,
                 outcome: 'success',
                 message: null,
