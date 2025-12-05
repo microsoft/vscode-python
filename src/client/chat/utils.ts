@@ -19,6 +19,7 @@ import { JUPYTER_EXTENSION_ID, NotebookCellScheme } from '../common/constants';
 import { dirname, join } from 'path';
 import { resolveEnvironment, useEnvExtension } from '../envExt/api.internal';
 import { ErrorWithTelemetrySafeReason } from '../common/errors/errorUtils';
+import { getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
 
 export interface IResourceReference {
     resourcePath?: string;
@@ -26,14 +27,21 @@ export interface IResourceReference {
 
 export function resolveFilePath(filepath?: string): Uri | undefined {
     if (!filepath) {
-        return workspace.workspaceFolders ? workspace.workspaceFolders[0].uri : undefined;
+        const folders = getWorkspaceFolders() ?? [];
+        return folders.length > 0 ? folders[0].uri : undefined;
     }
-    // starts with a scheme
-    try {
-        return Uri.parse(filepath);
-    } catch (e) {
-        return Uri.file(filepath);
+    // Check if it's a URI with a scheme (contains "://")
+    // This handles schemes like "file://", "vscode-notebook://", etc.
+    // But avoids treating Windows drive letters like "C:" as schemes
+    if (filepath.includes('://')) {
+        try {
+            return Uri.parse(filepath);
+        } catch {
+            return Uri.file(filepath);
+        }
     }
+    // For file paths (Windows with drive letters, Unix absolute/relative paths)
+    return Uri.file(filepath);
 }
 
 /**
