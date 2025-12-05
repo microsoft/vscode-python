@@ -134,3 +134,17 @@ mockedVSCode.LogLevel = vscodeMocks.LogLevel;
 (mockedVSCode as any).CancellationError = vscodeMocks.vscMockExtHostedTypes.CancellationError;
 (mockedVSCode as any).LSPCancellationError = vscodeMocks.vscMockExtHostedTypes.LSPCancellationError;
 mockedVSCode.TestRunProfileKind = vscodeMocks.TestRunProfileKind;
+(mockedVSCode as any).TestCoverageCount = class TestCoverageCount {
+    constructor(public covered: number, public total: number) {}
+};
+(mockedVSCode as any).FileCoverage = class FileCoverage {
+    constructor(
+        public uri: any,
+        public statementCoverage: any,
+        public branchCoverage?: any,
+        public declarationCoverage?: any,
+    ) {}
+};
+(mockedVSCode as any).StatementCoverage = class StatementCoverage {
+    constructor(public executed: number | boolean, public location: any, public branches?: any) {}
+};
