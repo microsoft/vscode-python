@@ -4,7 +4,7 @@
 import { CancellationToken, TestController, TestItem, Uri, TestRun, FileCoverageDetail } from 'vscode';
 import { CoveragePayload, DiscoveredTestPayload, ExecutionTestPayload, ITestResultResolver } from './types';
 import { TestProvider } from '../../types';
-import { traceVerbose } from '../../../logging';
+import { traceInfo } from '../../../logging';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { TestItemIndex } from './testItemIndex';
@@ -23,8 +23,6 @@ export class PythonResultResolver implements ITestResultResolver {
     private static discoveryHandler: TestDiscoveryHandler = new TestDiscoveryHandler();
     private static executionHandler: TestExecutionHandler = new TestExecutionHandler();
     private static coverageHandler: TestCoverageHandler = new TestCoverageHandler();
-
-    public subTestStats: Map<string, { passed: number; failed: number }> = new Map();
 
     public detailedCoverageMap = new Map<string, FileCoverageDetail[]>();
 
@@ -71,13 +69,14 @@ export class PythonResultResolver implements ITestResultResolver {
     public resolveExecution(payload: ExecutionTestPayload | CoveragePayload, runInstance: TestRun): void {
         if ('coverage' in payload) {
             // coverage data is sent once per connection
-            traceVerbose('Coverage data received.');
+            traceInfo('Coverage data received, processing...');
             this.detailedCoverageMap = PythonResultResolver.coverageHandler.processCoverage(
                 payload as CoveragePayload,
                 runInstance,
             );
+            traceInfo('Coverage data processing complete.');
         } else {
-            this.subTestStats = PythonResultResolver.executionHandler.processExecution(
+            PythonResultResolver.executionHandler.processExecution(
                 payload as ExecutionTestPayload,
                 runInstance,
                 this.testItemIndex,

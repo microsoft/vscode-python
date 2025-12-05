@@ -5,6 +5,11 @@ import { TestController, TestItem } from 'vscode';
 import { traceError, traceVerbose } from '../../../logging';
 import { getTestCaseNodes } from './testItemUtilities';
 
+export interface SubtestStats {
+    passed: number;
+    failed: number;
+}
+
 /**
  * Maintains persistent ID mappings between Python test IDs and VS Code TestItems.
  * This is a stateful component that bridges discovery and execution phases.
@@ -21,11 +26,13 @@ export class TestItemIndex {
     private runIdToTestItem: Map<string, TestItem>;
     private runIdToVSid: Map<string, string>;
     private vsIdToRunId: Map<string, string>;
+    private subtestStatsMap: Map<string, SubtestStats>;
 
     constructor() {
         this.runIdToTestItem = new Map<string, TestItem>();
         this.runIdToVSid = new Map<string, string>();
         this.vsIdToRunId = new Map<string, string>();
+        this.subtestStatsMap = new Map<string, SubtestStats>();
     }
 
     /**
@@ -134,6 +141,21 @@ export class TestItemIndex {
     }
 
     /**
+     * Get subtest statistics for a parent test case
+     * Returns undefined if no stats exist yet for this parent
+     */
+    public getSubtestStats(parentId: string): SubtestStats | undefined {
+        return this.subtestStatsMap.get(parentId);
+    }
+
+    /**
+     * Set subtest statistics for a parent test case
+     */
+    public setSubtestStats(parentId: string, stats: SubtestStats): void {
+        this.subtestStatsMap.set(parentId, stats);
+    }
+
+    /**
      * Remove all mappings
      * Called at the start of discovery to ensure clean state
      */
@@ -141,6 +163,7 @@ export class TestItemIndex {
         this.runIdToTestItem.clear();
         this.runIdToVSid.clear();
         this.vsIdToRunId.clear();
+        this.subtestStatsMap.clear();
     }
 
     /**

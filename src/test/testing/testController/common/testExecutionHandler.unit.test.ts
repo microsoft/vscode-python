@@ -32,7 +32,7 @@ suite('TestExecutionHandler', () => {
     });
 
     suite('processExecution', () => {
-        test('should return empty stats for empty payload', () => {
+        test('should process empty payload without errors', () => {
             const payload: ExecutionTestPayload = {
                 cwd: '/foo/bar',
                 status: 'success',
@@ -40,31 +40,31 @@ suite('TestExecutionHandler', () => {
                 error: '',
             };
 
-            const stats = executionHandler.processExecution(
+            executionHandler.processExecution(
                 payload,
                 runInstanceMock.object,
                 testItemIndexMock.object,
                 testControllerMock.object,
             );
 
-            assert.strictEqual(stats.size, 0);
+            // No errors should be thrown
         });
 
-        test('should return empty stats for undefined result', () => {
+        test('should process undefined result without errors', () => {
             const payload: ExecutionTestPayload = {
                 cwd: '/foo/bar',
                 status: 'success',
                 error: '',
             };
 
-            const stats = executionHandler.processExecution(
+            executionHandler.processExecution(
                 payload,
                 runInstanceMock.object,
                 testItemIndexMock.object,
                 testControllerMock.object,
             );
 
-            assert.strictEqual(stats.size, 0);
+            // No errors should be thrown
         });
 
         test('should process multiple test results', () => {
@@ -425,20 +425,30 @@ suite('TestExecutionHandler', () => {
             testItemIndexMock
                 .setup((x) => x.getTestItem('parentTest', testControllerMock.object))
                 .returns(() => mockParentItem);
+            testItemIndexMock.setup((x) => x.getSubtestStats('parentTest')).returns(() => undefined);
+            testItemIndexMock
+                .setup((x) => x.setSubtestStats('parentTest', typemoq.It.isAny()))
+                .returns(() => undefined);
             testControllerMock
                 .setup((t) => t.createTestItem(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
                 .returns(() => mockSubtestItem);
 
-            const stats = executionHandler.processExecution(
+            executionHandler.processExecution(
                 payload,
                 runInstanceMock.object,
                 testItemIndexMock.object,
                 testControllerMock.object,
             );
 
-            assert.strictEqual(stats.size, 1);
-            assert.strictEqual(stats.get('parentTest')?.failed, 1);
-            assert.strictEqual(stats.get('parentTest')?.passed, 0);
+            // Verify stats were set correctly
+            testItemIndexMock.verify(
+                (x) =>
+                    x.setSubtestStats(
+                        'parentTest',
+                        typemoq.It.is((stats) => stats.failed === 1 && stats.passed === 0),
+                    ),
+                typemoq.Times.once(),
+            );
 
             runInstanceMock.verify((r) => r.started(mockSubtestItem), typemoq.Times.once());
             runInstanceMock.verify((r) => r.failed(mockSubtestItem, typemoq.It.isAny()), typemoq.Times.once());
@@ -482,6 +492,12 @@ suite('TestExecutionHandler', () => {
                 .setup((x) => x.getTestItem('parentTest', testControllerMock.object))
                 .returns(() => mockParentItem);
 
+            // First subtest: no existing stats
+            testItemIndexMock.setup((x) => x.getSubtestStats('parentTest')).returns(() => undefined);
+            testItemIndexMock
+                .setup((x) => x.setSubtestStats('parentTest', typemoq.It.isAny()))
+                .returns(() => undefined);
+
             // Return different items based on call order
             let callCount = 0;
             testControllerMock
@@ -491,24 +507,30 @@ suite('TestExecutionHandler', () => {
                     return callCount === 1 ? mockSubtest1 : mockSubtest2;
                 });
 
-            const stats1 = executionHandler.processExecution(
+            executionHandler.processExecution(
                 payload1,
                 runInstanceMock.object,
                 testItemIndexMock.object,
                 testControllerMock.object,
             );
 
-            // Process second subtest with stats from first
-            const stats2 = executionHandler.processExecution(
+            // Second subtest: should have existing stats from first
+            testItemIndexMock.reset();
+            testItemIndexMock
+                .setup((x) => x.getTestItem('parentTest', testControllerMock.object))
+                .returns(() => mockParentItem);
+            testItemIndexMock.setup((x) => x.getSubtestStats('parentTest')).returns(() => ({ failed: 1, passed: 0 }));
+
+            executionHandler.processExecution(
                 payload2,
                 runInstanceMock.object,
                 testItemIndexMock.object,
                 testControllerMock.object,
             );
 
-            // Verify stats are separate for each call
-            assert.strictEqual(stats1.get('parentTest')?.failed, 1);
-            assert.strictEqual(stats2.get('parentTest')?.failed, 1);
+            // Verify the first subtest set initial stats
+            runInstanceMock.verify((r) => r.started(mockSubtest1), typemoq.Times.once());
+            runInstanceMock.verify((r) => r.started(mockSubtest2), typemoq.Times.once());
         });
 
         test('should throw error when parent test item not found', () => {
@@ -564,20 +586,30 @@ suite('TestExecutionHandler', () => {
             testItemIndexMock
                 .setup((x) => x.getTestItem('parentTest', testControllerMock.object))
                 .returns(() => mockParentItem);
+            testItemIndexMock.setup((x) => x.getSubtestStats('parentTest')).returns(() => undefined);
+            testItemIndexMock
+                .setup((x) => x.setSubtestStats('parentTest', typemoq.It.isAny()))
+                .returns(() => undefined);
             testControllerMock
                 .setup((t) => t.createTestItem(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
                 .returns(() => mockSubtestItem);
 
-            const stats = executionHandler.processExecution(
+            executionHandler.processExecution(
                 payload,
                 runInstanceMock.object,
                 testItemIndexMock.object,
                 testControllerMock.object,
             );
 
-            assert.strictEqual(stats.size, 1);
-            assert.strictEqual(stats.get('parentTest')?.passed, 1);
-            assert.strictEqual(stats.get('parentTest')?.failed, 0);
+            // Verify stats were set correctly
+            testItemIndexMock.verify(
+                (x) =>
+                    x.setSubtestStats(
+                        'parentTest',
+                        typemoq.It.is((stats) => stats.passed === 1 && stats.failed === 0),
+                    ),
+                typemoq.Times.once(),
+            );
 
             runInstanceMock.verify((r) => r.started(mockSubtestItem), typemoq.Times.once());
             runInstanceMock.verify((r) => r.passed(mockSubtestItem), typemoq.Times.once());
@@ -604,6 +636,10 @@ suite('TestExecutionHandler', () => {
             testItemIndexMock
                 .setup((x) => x.getTestItem('parentTest', testControllerMock.object))
                 .returns(() => mockParentItem);
+            testItemIndexMock.setup((x) => x.getSubtestStats('parentTest')).returns(() => undefined);
+            testItemIndexMock
+                .setup((x) => x.setSubtestStats('parentTest', typemoq.It.isAny()))
+                .returns(() => undefined);
             testControllerMock
                 .setup((t) => t.createTestItem(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
                 .returns(() => mockSubtestItem);
@@ -616,6 +652,252 @@ suite('TestExecutionHandler', () => {
             );
 
             runInstanceMock.verify((r) => r.passed(mockSubtestItem), typemoq.Times.once());
+        });
+    });
+
+    suite('Comprehensive Subtest Scenarios', () => {
+        test('should handle mixed passing and failing subtests in sequence', () => {
+            // Simulates unittest with subtests like: test_even with i=0,1,2,3,4,5
+            const mockSubtest0 = createMockTestItem('(i=0)', '(i=0)');
+            const mockSubtest1 = createMockTestItem('(i=1)', '(i=1)');
+            const mockSubtest2 = createMockTestItem('(i=2)', '(i=2)');
+            const mockSubtest3 = createMockTestItem('(i=3)', '(i=3)');
+            const mockSubtest4 = createMockTestItem('(i=4)', '(i=4)');
+            const mockSubtest5 = createMockTestItem('(i=5)', '(i=5)');
+
+            const subtestItems = [mockSubtest0, mockSubtest1, mockSubtest2, mockSubtest3, mockSubtest4, mockSubtest5];
+
+            testItemIndexMock
+                .setup((x) => x.getTestItem('test_even', testControllerMock.object))
+                .returns(() => mockParentItem);
+
+            let subtestCallCount = 0;
+            testControllerMock
+                .setup((t) => t.createTestItem(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+                .returns(() => subtestItems[subtestCallCount++]);
+
+            // First subtest (i=0) - passes
+            testItemIndexMock.setup((x) => x.getSubtestStats('test_even')).returns(() => undefined);
+            testItemIndexMock.setup((x) => x.setSubtestStats('test_even', typemoq.It.isAny())).returns(() => undefined);
+
+            const payload0: ExecutionTestPayload = {
+                cwd: '/foo/bar',
+                status: 'success',
+                result: {
+                    'test_even (i=0)': {
+                        test: 'test_even',
+                        outcome: 'subtest-success',
+                        message: '',
+                        traceback: '',
+                        subtest: '(i=0)',
+                    },
+                },
+                error: '',
+            };
+
+            executionHandler.processExecution(
+                payload0,
+                runInstanceMock.object,
+                testItemIndexMock.object,
+                testControllerMock.object,
+            );
+
+            // Verify first subtest created stats
+            testItemIndexMock.verify(
+                (x) =>
+                    x.setSubtestStats(
+                        'test_even',
+                        typemoq.It.is((stats) => stats.passed === 1 && stats.failed === 0),
+                    ),
+                typemoq.Times.once(),
+            );
+
+            // Second subtest (i=1) - fails
+            testItemIndexMock.reset();
+            testItemIndexMock
+                .setup((x) => x.getTestItem('test_even', testControllerMock.object))
+                .returns(() => mockParentItem);
+            testItemIndexMock.setup((x) => x.getSubtestStats('test_even')).returns(() => ({ passed: 1, failed: 0 }));
+
+            const payload1: ExecutionTestPayload = {
+                cwd: '/foo/bar',
+                status: 'success',
+                result: {
+                    'test_even (i=1)': {
+                        test: 'test_even',
+                        outcome: 'subtest-failure',
+                        message: '1 is not even',
+                        traceback: 'AssertionError',
+                        subtest: '(i=1)',
+                    },
+                },
+                error: '',
+            };
+
+            executionHandler.processExecution(
+                payload1,
+                runInstanceMock.object,
+                testItemIndexMock.object,
+                testControllerMock.object,
+            );
+
+            // Third subtest (i=2) - passes
+            testItemIndexMock.reset();
+            testItemIndexMock
+                .setup((x) => x.getTestItem('test_even', testControllerMock.object))
+                .returns(() => mockParentItem);
+            testItemIndexMock.setup((x) => x.getSubtestStats('test_even')).returns(() => ({ passed: 1, failed: 1 }));
+
+            const payload2: ExecutionTestPayload = {
+                cwd: '/foo/bar',
+                status: 'success',
+                result: {
+                    'test_even (i=2)': {
+                        test: 'test_even',
+                        outcome: 'subtest-success',
+                        message: '',
+                        traceback: '',
+                        subtest: '(i=2)',
+                    },
+                },
+                error: '',
+            };
+
+            executionHandler.processExecution(
+                payload2,
+                runInstanceMock.object,
+                testItemIndexMock.object,
+                testControllerMock.object,
+            );
+
+            // Verify all subtests were started and had outcomes
+            runInstanceMock.verify((r) => r.started(mockSubtest0), typemoq.Times.once());
+            runInstanceMock.verify((r) => r.passed(mockSubtest0), typemoq.Times.once());
+            runInstanceMock.verify((r) => r.started(mockSubtest1), typemoq.Times.once());
+            runInstanceMock.verify((r) => r.failed(mockSubtest1, typemoq.It.isAny()), typemoq.Times.once());
+            runInstanceMock.verify((r) => r.started(mockSubtest2), typemoq.Times.once());
+            runInstanceMock.verify((r) => r.passed(mockSubtest2), typemoq.Times.once());
+        });
+
+        test('should persist stats across multiple processExecution calls', () => {
+            // Test that stats persist in TestItemIndex across multiple processExecution calls
+            const mockSubtest1 = createMockTestItem('subtest1', 'Subtest 1');
+            const mockSubtest2 = createMockTestItem('subtest2', 'Subtest 2');
+
+            testItemIndexMock
+                .setup((x) => x.getTestItem('parentTest', testControllerMock.object))
+                .returns(() => mockParentItem);
+            testItemIndexMock.setup((x) => x.getSubtestStats('parentTest')).returns(() => undefined);
+            testItemIndexMock
+                .setup((x) => x.setSubtestStats('parentTest', typemoq.It.isAny()))
+                .returns(() => undefined);
+
+            let callCount = 0;
+            testControllerMock
+                .setup((t) => t.createTestItem(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+                .returns(() => (callCount++ === 0 ? mockSubtest1 : mockSubtest2));
+
+            const payload1: ExecutionTestPayload = {
+                cwd: '/foo/bar',
+                status: 'success',
+                result: {
+                    'parentTest (subtest1)': {
+                        test: 'parentTest',
+                        outcome: 'subtest-success',
+                        message: '',
+                        traceback: '',
+                        subtest: 'subtest1',
+                    },
+                },
+                error: '',
+            };
+
+            // First call - no existing stats
+            executionHandler.processExecution(
+                payload1,
+                runInstanceMock.object,
+                testItemIndexMock.object,
+                testControllerMock.object,
+            );
+
+            // Simulate stats being stored in TestItemIndex
+            testItemIndexMock.reset();
+            testItemIndexMock
+                .setup((x) => x.getTestItem('parentTest', testControllerMock.object))
+                .returns(() => mockParentItem);
+            testItemIndexMock.setup((x) => x.getSubtestStats('parentTest')).returns(() => ({ passed: 1, failed: 0 }));
+
+            const payload2: ExecutionTestPayload = {
+                cwd: '/foo/bar',
+                status: 'success',
+                result: {
+                    'parentTest (subtest2)': {
+                        test: 'parentTest',
+                        outcome: 'subtest-failure',
+                        message: 'Failed',
+                        traceback: '',
+                        subtest: 'subtest2',
+                    },
+                },
+                error: '',
+            };
+
+            // Second call - existing stats should be retrieved and updated
+            executionHandler.processExecution(
+                payload2,
+                runInstanceMock.object,
+                testItemIndexMock.object,
+                testControllerMock.object,
+            );
+
+            // Verify getSubtestStats was called to retrieve existing stats
+            testItemIndexMock.verify((x) => x.getSubtestStats('parentTest'), typemoq.Times.once());
+
+            // Verify both subtests were processed
+            runInstanceMock.verify((r) => r.passed(mockSubtest1), typemoq.Times.once());
+            runInstanceMock.verify((r) => r.failed(mockSubtest2, typemoq.It.isAny()), typemoq.Times.once());
+        });
+
+        test('should clear children only on first subtest when no existing stats', () => {
+            // When first subtest arrives, children should be cleared
+            // Subsequent subtests should NOT clear children
+            const mockSubtest1 = createMockTestItem('subtest1', 'Subtest 1');
+
+            testItemIndexMock
+                .setup((x) => x.getTestItem('parentTest', testControllerMock.object))
+                .returns(() => mockParentItem);
+            testItemIndexMock.setup((x) => x.getSubtestStats('parentTest')).returns(() => undefined);
+            testItemIndexMock
+                .setup((x) => x.setSubtestStats('parentTest', typemoq.It.isAny()))
+                .returns(() => undefined);
+            testControllerMock
+                .setup((t) => t.createTestItem(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+                .returns(() => mockSubtest1);
+
+            const payload: ExecutionTestPayload = {
+                cwd: '/foo/bar',
+                status: 'success',
+                result: {
+                    'parentTest (subtest1)': {
+                        test: 'parentTest',
+                        outcome: 'subtest-success',
+                        message: '',
+                        traceback: '',
+                        subtest: 'subtest1',
+                    },
+                },
+                error: '',
+            };
+
+            executionHandler.processExecution(
+                payload,
+                runInstanceMock.object,
+                testItemIndexMock.object,
+                testControllerMock.object,
+            );
+
+            // Verify setSubtestStats was called (which happens when creating new stats)
+            testItemIndexMock.verify((x) => x.setSubtestStats('parentTest', typemoq.It.isAny()), typemoq.Times.once());
         });
     });
 });

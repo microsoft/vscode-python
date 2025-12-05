@@ -8,11 +8,6 @@ import { splitLines } from '../../../common/stringUtils';
 import { splitTestNameWithRegex } from './utils';
 import { clearAllChildren } from './testItemUtilities';
 
-export interface SubtestStats {
-    passed: number;
-    failed: number;
-}
-
 /**
  * Stateless handler for processing execution payloads and updating TestRun instances.
  * This handler is shared across all workspaces and contains no instance state.
@@ -21,15 +16,13 @@ export class TestExecutionHandler {
     /**
      * Process execution payload and update test run
      * Pure function - no instance state used
-     * Returns subtest statistics for caller to manage
      */
     public processExecution(
         payload: ExecutionTestPayload,
         runInstance: TestRun,
         testItemIndex: TestItemIndex,
         testController: TestController,
-    ): Map<string, SubtestStats> {
-        const subtestStats = new Map<string, SubtestStats>();
+    ): void {
         const rawTestExecData = payload as ExecutionTestPayload;
 
         if (rawTestExecData !== undefined && rawTestExecData.result !== undefined) {
@@ -37,11 +30,9 @@ export class TestExecutionHandler {
                 const testItem = rawTestExecData.result[keyTemp];
 
                 // Delegate to specific outcome handlers
-                this.handleTestOutcome(keyTemp, testItem, runInstance, testItemIndex, testController, subtestStats);
+                this.handleTestOutcome(keyTemp, testItem, runInstance, testItemIndex, testController);
             }
         }
-
-        return subtestStats;
     }
 
     /**
@@ -53,7 +44,6 @@ export class TestExecutionHandler {
         runInstance: TestRun,
         testItemIndex: TestItemIndex,
         testController: TestController,
-        subtestStats: Map<string, SubtestStats>,
     ): void {
         if (testItem.outcome === 'error') {
             this.handleTestError(runId, testItem, runInstance, testItemIndex, testController);
@@ -64,9 +54,9 @@ export class TestExecutionHandler {
         } else if (testItem.outcome === 'skipped') {
             this.handleTestSkipped(runId, runInstance, testItemIndex, testController);
         } else if (testItem.outcome === 'subtest-failure') {
-            this.handleSubtestFailure(runId, testItem, runInstance, testItemIndex, testController, subtestStats);
+            this.handleSubtestFailure(runId, testItem, runInstance, testItemIndex, testController);
         } else if (testItem.outcome === 'subtest-success') {
-            this.handleSubtestSuccess(runId, runInstance, testItemIndex, testController, subtestStats);
+            this.handleSubtestSuccess(runId, runInstance, testItemIndex, testController);
         }
     }
 
@@ -168,17 +158,16 @@ export class TestExecutionHandler {
         runInstance: TestRun,
         testItemIndex: TestItemIndex,
         testController: TestController,
-        subtestStats: Map<string, SubtestStats>,
     ): void {
         const [parentTestCaseId, subtestId] = splitTestNameWithRegex(runId);
         const parentTestItem = testItemIndex.getTestItem(parentTestCaseId, testController);
 
         if (parentTestItem) {
-            const stats = subtestStats.get(parentTestCaseId);
+            const stats = testItemIndex.getSubtestStats(parentTestCaseId);
             if (stats) {
                 stats.failed += 1;
             } else {
-                subtestStats.set(parentTestCaseId, {
+                testItemIndex.setSubtestStats(parentTestCaseId, {
                     failed: 1,
                     passed: 0,
                 });
@@ -213,17 +202,16 @@ export class TestExecutionHandler {
         runInstance: TestRun,
         testItemIndex: TestItemIndex,
         testController: TestController,
-        subtestStats: Map<string, SubtestStats>,
     ): void {
         const [parentTestCaseId, subtestId] = splitTestNameWithRegex(runId);
         const parentTestItem = testItemIndex.getTestItem(parentTestCaseId, testController);
 
         if (parentTestItem) {
-            const stats = subtestStats.get(parentTestCaseId);
+            const stats = testItemIndex.getSubtestStats(parentTestCaseId);
             if (stats) {
                 stats.passed += 1;
             } else {
-                subtestStats.set(parentTestCaseId, { failed: 0, passed: 1 });
+                testItemIndex.setSubtestStats(parentTestCaseId, { failed: 0, passed: 1 });
                 clearAllChildren(parentTestItem);
             }
 
