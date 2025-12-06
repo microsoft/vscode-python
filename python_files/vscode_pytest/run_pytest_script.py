@@ -55,12 +55,13 @@ if __name__ == "__main__":
         try:
             # Read the test ids from the file and run pytest.
             ids = ids_path.read_text(encoding="utf-8").splitlines()
-            arg_array = ["-p", "vscode_pytest", *args, *ids]
-            print("Running pytest with args: " + str(arg_array))
-            pytest.main(arg_array)
         except Exception as e:
             print("Error[vscode-pytest]: unable to read testIds from temp file" + str(e))
             run_pytest(args)
+        else:
+            arg_array = ["-p", "vscode_pytest", *args, *ids]
+            print("Running pytest with args: " + str(arg_array))
+            pytest.main(arg_array)
         finally:
             # Delete the test ids temp file.
             try:
