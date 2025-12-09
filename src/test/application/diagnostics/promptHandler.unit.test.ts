@@ -47,7 +47,12 @@ suite('Application Diagnostics - PromptHandler', () => {
             switch (severity.value) {
                 case DiagnosticSeverity.Error: {
                     appShell
-                        .setup((a) => a.showErrorMessage(typemoq.It.isValue(diagnostic.message)))
+                        .setup((a) =>
+                            a.showErrorMessage(
+                                typemoq.It.isValue(diagnostic.message),
+                                typemoq.It.isValue({ modal: true }),
+                            ),
+                        )
                         .verifiable(typemoq.Times.once());
                     break;
                 }
@@ -92,6 +97,7 @@ suite('Application Diagnostics - PromptHandler', () => {
                         .setup((a) =>
                             a.showErrorMessage(
                                 typemoq.It.isValue(options.message!),
+                                typemoq.It.isValue({ modal: true }),
                                 typemoq.It.isValue('Yes'),
                                 typemoq.It.isValue('No'),
                             ),
@@ -152,6 +158,7 @@ suite('Application Diagnostics - PromptHandler', () => {
                         .setup((a) =>
                             a.showErrorMessage(
                                 typemoq.It.isValue(options.message!),
+                                typemoq.It.isValue({ modal: true }),
                                 typemoq.It.isValue('Yes'),
                                 typemoq.It.isValue('No'),
                             ),
@@ -213,6 +220,7 @@ suite('Application Diagnostics - PromptHandler', () => {
                         .setup((a) =>
                             a.showErrorMessage(
                                 typemoq.It.isValue(options.message!),
+                                typemoq.It.isValue({ modal: true }),
                                 typemoq.It.isValue('Yes'),
                                 typemoq.It.isValue('No'),
                             ),

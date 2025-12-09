@@ -54,7 +54,7 @@ export class DiagnosticCommandPromptHandlerService implements IDiagnosticHandler
     ): Promise<string | undefined> {
         switch (severity) {
             case DiagnosticSeverity.Error: {
-                return this.appShell.showErrorMessage(message, ...prompts);
+                return this.appShell.showErrorMessage(message, { modal: true }, ...prompts);
             }
             case DiagnosticSeverity.Warning: {
                 return this.appShell.showWarningMessage(message, ...prompts);
