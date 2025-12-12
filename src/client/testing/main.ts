@@ -42,6 +42,89 @@ export class TestingService implements ITestingService {
     }
 }
 
+/**
+ * Registers test commands early in the extension activation to prevent race conditions.
+ * This function should be called synchronously before any async operations in the activation flow.
+ */
+export function registerTestCommands(serviceContainer: IServiceContainer): void {
+    const disposableRegistry = serviceContainer.get<Disposable[]>(IDisposableRegistry);
+    const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
+    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    
+    // Get test controller if available
+    let testController: ITestController | undefined;
+    if (tests && !!tests.createTestController) {
+        testController = serviceContainer.get<ITestController>(ITestController);
+    }
+
+    // Helper function to configure tests
+    const configureTestsHandler = async (resource?: Uri) => {
+        // Send telemetry for test configuration
+        sendTelemetryEvent(EventName.UNITTEST_CONFIGURE);
+        
+        let wkspace: Uri | undefined;
+        if (resource) {
+            const wkspaceFolder = workspaceService.getWorkspaceFolder(resource);
+            wkspace = wkspaceFolder ? wkspaceFolder.uri : undefined;
+        } else {
+            const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+            wkspace = await selectTestWorkspace(appShell);
+        }
+        if (!wkspace) {
+            return;
+        }
+        const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
+        if (!(await interpreterService.getActiveInterpreter(wkspace))) {
+            cmdManager.executeCommand(constants.Commands.TriggerEnvironmentSelection, wkspace);
+            return;
+        }
+        const configurationService = serviceContainer.get<ITestConfigurationService>(ITestConfigurationService);
+        await configurationService.promptToEnableAndConfigureTestFramework(wkspace);
+    };
+
+    disposableRegistry.push(
+        commandManager.registerCommand(
+            constants.Commands.Tests_Configure,
+            (_, _cmdSource: constants.CommandSource = constants.CommandSource.commandPalette, resource?: Uri) => {
+                // Ignore the exceptions returned.
+                // This command will be invoked from other places of the extension.
+                configureTestsHandler(resource).ignoreErrors();
+                traceVerbose('Testing: Trigger refresh after config change');
+                testController?.refreshTestData(resource, { forceRefresh: true });
+            },
+        ),
+        commandManager.registerCommand(constants.Commands.Tests_CopilotSetup, (resource?: Uri):
+            | { message: string; command: Command }
+            | undefined => {
+            const wkspaceFolder =
+                workspaceService.getWorkspaceFolder(resource) || workspaceService.workspaceFolders?.at(0);
+            if (!wkspaceFolder) {
+                return undefined;
+            }
+
+            const configurationService = serviceContainer.get<ITestConfigurationService>(
+                ITestConfigurationService,
+            );
+            if (configurationService.hasConfiguredTests(wkspaceFolder.uri)) {
+                return undefined;
+            }
+
+            return {
+                message: Testing.copilotSetupMessage,
+                command: {
+                    title: Testing.configureTests,
+                    command: constants.Commands.Tests_Configure,
+                    arguments: [undefined, constants.CommandSource.ui, resource],
+                },
+            };
+        }),
+        commandManager.registerCommand(constants.Commands.CopyTestId, async (testItem: TestItem) => {
+            writeTestIdToClipboard(testItem);
+        }),
+    );
+}
+
 @injectable()
 export class UnitTestManagementService implements IExtensionActivationService {
     private activatedOnce: boolean = false;
@@ -80,7 +163,8 @@ export class UnitTestManagementService implements IExtensionActivationService {
         this.activatedOnce = true;
 
         this.registerHandlers();
-        this.registerCommands();
+        // Note: Commands are now registered early in extensionActivation.ts via registerTestCommands()
+        // to avoid race conditions where commands are invoked before extension activation completes.
 
         if (!!tests.testResults) {
             await this.updateTestUIButtons();
@@ -130,72 +214,7 @@ export class UnitTestManagementService implements IExtensionActivationService {
         await Promise.all(changedWorkspaces.map((u) => this.testController?.refreshTestData(u)));
     }
 
-    @captureTelemetry(EventName.UNITTEST_CONFIGURE, undefined, false)
-    private async configureTests(resource?: Uri) {
-        let wkspace: Uri | undefined;
-        if (resource) {
-            const wkspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
-            wkspace = wkspaceFolder ? wkspaceFolder.uri : undefined;
-        } else {
-            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            wkspace = await selectTestWorkspace(appShell);
-        }
-        if (!wkspace) {
-            return;
-        }
-        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
-        if (!(await interpreterService.getActiveInterpreter(wkspace))) {
-            commandManager.executeCommand(constants.Commands.TriggerEnvironmentSelection, wkspace);
-            return;
-        }
-        const configurationService = this.serviceContainer.get<ITestConfigurationService>(ITestConfigurationService);
-        await configurationService.promptToEnableAndConfigureTestFramework(wkspace!);
-    }
 
-    private registerCommands(): void {
-        const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
-        this.disposableRegistry.push(
-            commandManager.registerCommand(
-                constants.Commands.Tests_Configure,
-                (_, _cmdSource: constants.CommandSource = constants.CommandSource.commandPalette, resource?: Uri) => {
-                    // Ignore the exceptions returned.
-                    // This command will be invoked from other places of the extension.
-                    this.configureTests(resource).ignoreErrors();
-                    traceVerbose('Testing: Trigger refresh after config change');
-                    this.testController?.refreshTestData(resource, { forceRefresh: true });
-                },
-            ),
-            commandManager.registerCommand(constants.Commands.Tests_CopilotSetup, (resource?: Uri):
-                | { message: string; command: Command }
-                | undefined => {
-                const wkspaceFolder =
-                    this.workspaceService.getWorkspaceFolder(resource) || this.workspaceService.workspaceFolders?.at(0);
-                if (!wkspaceFolder) {
-                    return undefined;
-                }
-
-                const configurationService = this.serviceContainer.get<ITestConfigurationService>(
-                    ITestConfigurationService,
-                );
-                if (configurationService.hasConfiguredTests(wkspaceFolder.uri)) {
-                    return undefined;
-                }
-
-                return {
-                    message: Testing.copilotSetupMessage,
-                    command: {
-                        title: Testing.configureTests,
-                        command: constants.Commands.Tests_Configure,
-                        arguments: [undefined, constants.CommandSource.ui, resource],
-                    },
-                };
-            }),
-            commandManager.registerCommand(constants.Commands.CopyTestId, async (testItem: TestItem) => {
-                writeTestIdToClipboard(testItem);
-            }),
-        );
-    }
 
     private registerHandlers() {
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);

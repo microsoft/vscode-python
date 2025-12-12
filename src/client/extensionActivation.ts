@@ -34,6 +34,7 @@ import { registerTypes as tensorBoardRegisterTypes } from './tensorBoard/service
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionHelper, ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
+import { registerTestCommands } from './testing/main';
 
 // components
 import * as pythonEnvironments from './pythonEnvironments';
@@ -186,6 +187,10 @@ async function activateLegacy(ext: ExtensionState, startupStopWatch: StopWatch):
             await registerPythonStartup(ext.context);
 
             serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
+            
+            // Register test commands early to prevent race conditions where commands
+            // are invoked before extension activation completes
+            registerTestCommands(serviceContainer);
 
             disposables.push(new ReplProvider(serviceContainer));
 
