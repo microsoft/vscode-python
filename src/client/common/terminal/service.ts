@@ -20,12 +20,9 @@ import {
     TerminalShellType,
 } from './types';
 import { traceVerbose } from '../../logging';
-import { getConfiguration } from '../vscodeApis/workspaceApis';
 import { useEnvExtension } from '../../envExt/api.internal';
 import { ensureTerminalLegacy } from '../../envExt/api.legacy';
 import { sleep } from '../utils/async';
-import { isWindows } from '../utils/platform';
-import { getPythonMinorVersion } from '../../repl/replUtils';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -108,20 +105,10 @@ export class TerminalService implements ITerminalService, Disposable {
             await promise;
         }
 
-        const config = getConfiguration('python');
-        const pythonrcSetting = config.get<boolean>('terminal.shellIntegration.enabled');
-
-        const minorVersion = this.options?.resource
-            ? await getPythonMinorVersion(
-                  this.options.resource,
-                  this.serviceContainer.get<IInterpreterService>(IInterpreterService),
-              )
-            : undefined;
-
-        if ((isPythonShell && !pythonrcSetting) || (isPythonShell && isWindows()) || (minorVersion ?? 0) >= 13) {
-            // If user has explicitly disabled SI for Python, use sendText for inside Terminal REPL.
+        if (isPythonShell) {
+            // Prevent KeyboardInterrupt in Python REPL: https://github.com/microsoft/vscode-python/issues/25468
             terminal.sendText(commandLine);
-            return undefined;
+            traceVerbose(`Python REPL detected, sendText: ${commandLine}`);
         } else if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
             traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
