@@ -83,7 +83,7 @@ INCLUDE_BRANCHES = False
 # Performance optimization caches for path resolution
 _path_cache: dict[int, pathlib.Path] = {}  # Cache node paths by object id
 _path_to_str_cache: dict[pathlib.Path, str] = {}  # Cache path-to-string conversions
-_CACHED_CWD: pathlib.Path | None = None  # Cache cwd once instead of thousands of calls
+_CACHED_CWD: pathlib.Path | None = None
 
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
@@ -636,7 +636,6 @@ def process_parameterized_test(
             "Unable to find original name for parameterized test case"
         ) from None
 
-    # Use dict.get() instead of exception-based control flow
     function_test_node = function_nodes_dict.get(parent_id)
     if function_test_node is None:
         function_test_node = create_parameterized_function_node(
@@ -700,7 +699,6 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 USES_PYTEST_DESCRIBE and isinstance(case_iter, DescribeBlock)
             ):
                 # While the given node is a class, create a class and nest the previous node as a child.
-                # Use dict.get() instead of exception-based control flow
                 test_class_node = class_nodes_dict.get(case_iter.nodeid)
                 if test_class_node is None:
                     test_class_node = create_class_node(case_iter)
@@ -953,8 +951,7 @@ def cached_fsdecode(path: pathlib.Path) -> str:
     """Convert path to string with caching for performance.
 
     This function caches path-to-string conversions to avoid redundant
-    os.fsdecode() calls during test tree building. For large test suites,
-    this can save millions of string conversion operations.
+    os.fsdecode() calls during test tree building.
 
     Parameters:
         path: The pathlib.Path object to convert to string.
@@ -978,7 +975,6 @@ def get_node_path(
     """A function that returns the path of a node given the switch to pathlib.Path.
 
     It also evaluates if the node is a symlink and returns the equivalent path.
-    This function uses caching to avoid redundant path resolution operations.
 
     Parameters:
         node: A pytest object or any object that has a path or fspath attribute.
@@ -987,7 +983,6 @@ def get_node_path(
     Returns:
         pathlib.Path: The resolved path for the node.
     """
-    # Use object id as cache key for O(1) lookups
     cache_key = id(node)
     if cache_key in _path_cache:
         return _path_cache[cache_key]
