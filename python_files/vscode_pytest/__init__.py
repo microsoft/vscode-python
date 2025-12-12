@@ -75,7 +75,7 @@ class VSCodePytestError(Exception):
 ERRORS = []
 IS_DISCOVERY = False
 map_id_to_path = {}
-collected_tests_so_far = []
+collected_tests_so_far = set()
 TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 SYMLINK_PATH = None
 INCLUDE_BRANCHES = False
@@ -170,7 +170,7 @@ def pytest_exception_interact(node, call, report):
             report_value = "failure"
         node_id = get_absolute_test_id(node.nodeid, get_node_path(node))
         if node_id not in collected_tests_so_far:
-            collected_tests_so_far.append(node_id)
+            collected_tests_so_far.add(node_id)
             item_result = create_test_outcome(
                 node_id,
                 report_value,
@@ -295,7 +295,7 @@ def pytest_report_teststatus(report, config):  # noqa: ARG001
         # Calculate the absolute test id and use this as the ID moving forward.
         absolute_node_id = get_absolute_test_id(report.nodeid, node_path)
         if absolute_node_id not in collected_tests_so_far:
-            collected_tests_so_far.append(absolute_node_id)
+            collected_tests_so_far.add(absolute_node_id)
             item_result = create_test_outcome(
                 absolute_node_id,
                 report_value,
@@ -329,7 +329,7 @@ def pytest_runtest_protocol(item, nextitem):  # noqa: ARG001
         report_value = "skipped"
         cwd = pathlib.Path.cwd()
         if absolute_node_id not in collected_tests_so_far:
-            collected_tests_so_far.append(absolute_node_id)
+            collected_tests_so_far.add(absolute_node_id)
             item_result = create_test_outcome(
                 absolute_node_id,
                 report_value,
