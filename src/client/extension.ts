@@ -45,6 +45,8 @@ import { buildProposedApi } from './proposedApi';
 import { GLOBAL_PERSISTENT_KEYS } from './common/persistentState';
 import { registerTools } from './chat';
 import { IRecommendedEnvironmentService } from './interpreter/configuration/types';
+import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
+import { registerTestCommands } from './testing/main';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -121,6 +123,12 @@ async function activateUnsafe(
     // Note standard utils especially experiment and platform code are fundamental to the extension
     // and should be available before we activate anything else.Hence register them first.
     initializeStandard(ext);
+    
+    // Register test services and commands early, before any async operations, to prevent race conditions
+    // where commands are invoked before the extension has fully activated.
+    unitTestsRegisterTypes(ext.legacyIOC.serviceManager);
+    registerTestCommands(activatedServiceContainer);
+    
     // We need to activate experiments before initializing components as objects are created or not created based on experiments.
     const experimentService = activatedServiceContainer.get<IExperimentService>(IExperimentService);
     // This guarantees that all experiment information has loaded & all telemetry will contain experiment info.
