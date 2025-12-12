@@ -80,6 +80,11 @@ TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 SYMLINK_PATH = None
 INCLUDE_BRANCHES = False
 
+# Performance optimization caches for path resolution
+_path_cache: dict[int, pathlib.Path] = {}  # Cache node paths by object id
+_path_to_str_cache: dict[pathlib.Path, str] = {}  # Cache path-to-string conversions
+_CACHED_CWD: pathlib.Path | None = None
+
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
     has_pytest_cov = early_config.pluginmanager.hasplugin("pytest_cov")
@@ -619,11 +624,10 @@ def process_parameterized_test(
 
     class_and_method = second_split[1] + "::"  # This has "::" separator at both ends
     # construct the parent id, so it is absolute path :: any class and method :: parent_part
-    parent_id = os.fspath(get_node_path(test_case)) + class_and_method + parent_part
+    parent_id = cached_fsdecode(get_node_path(test_case)) + class_and_method + parent_part
 
     try:
         function_name = test_case.originalname  # type: ignore
-        function_test_node = function_nodes_dict[parent_id]
     except AttributeError:  # actual error has occurred
         ERRORS.append(
             f"unable to find original name for {test_case.name} with parameterization detected."
@@ -631,8 +635,10 @@ def process_parameterized_test(
         raise VSCodePytestError(
             "Unable to find original name for parameterized test case"
         ) from None
-    except KeyError:
-        function_test_node: TestNode = create_parameterized_function_node(
+
+    function_test_node = function_nodes_dict.get(parent_id)
+    if function_test_node is None:
+        function_test_node = create_parameterized_function_node(
             function_name, get_node_path(test_case), parent_id
         )
         function_nodes_dict[parent_id] = function_test_node
@@ -644,11 +650,11 @@ def process_parameterized_test(
     if isinstance(test_case.parent, pytest.File):
         # calculate the parent path of the test case
         parent_path = get_node_path(test_case.parent)
-        try:
-            parent_test_case = file_nodes_dict[os.fspath(parent_path)]
-        except KeyError:
+        parent_path_key = cached_fsdecode(parent_path)
+        parent_test_case = file_nodes_dict.get(parent_path_key)
+        if parent_test_case is None:
             parent_test_case = create_file_node(parent_path)
-            file_nodes_dict[os.fspath(parent_path)] = parent_test_case
+            file_nodes_dict[parent_path_key] = parent_test_case
         if function_test_node not in parent_test_case["children"]:
             parent_test_case["children"].append(function_test_node)
 
@@ -693,9 +699,8 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 USES_PYTEST_DESCRIBE and isinstance(case_iter, DescribeBlock)
             ):
                 # While the given node is a class, create a class and nest the previous node as a child.
-                try:
-                    test_class_node = class_nodes_dict[case_iter.nodeid]
-                except KeyError:
+                test_class_node = class_nodes_dict.get(case_iter.nodeid)
+                if test_class_node is None:
                     test_class_node = create_class_node(case_iter)
                     class_nodes_dict[case_iter.nodeid] = test_class_node
                 # Check if the class already has the child node. This will occur if the test is parameterized.
@@ -712,11 +717,11 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 break
             parent_path = get_node_path(parent_module)
             # Create a file node that has the last class as a child.
-            try:
-                test_file_node: TestNode = file_nodes_dict[os.fspath(parent_path)]
-            except KeyError:
+            parent_path_key = cached_fsdecode(parent_path)
+            test_file_node = file_nodes_dict.get(parent_path_key)
+            if test_file_node is None:
                 test_file_node = create_file_node(parent_path)
-                file_nodes_dict[os.fspath(parent_path)] = test_file_node
+                file_nodes_dict[parent_path_key] = test_file_node
             # Check if the class is already a child of the file node.
             if test_class_node is not None and test_class_node not in test_file_node["children"]:
                 test_file_node["children"].append(test_class_node)
@@ -731,11 +736,11 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                     test_case.parent,
                 )
             )
-            try:
-                parent_test_case = file_nodes_dict[os.fspath(parent_path)]
-            except KeyError:
+            parent_path_key = cached_fsdecode(parent_path)
+            parent_test_case = file_nodes_dict.get(parent_path_key)
+            if parent_test_case is None:
                 parent_test_case = create_file_node(parent_path)
-                file_nodes_dict[os.fspath(parent_path)] = parent_test_case
+                file_nodes_dict[parent_path_key] = parent_test_case
             parent_test_case["children"].append(test_node)
     # Process all files and construct them into nested folders
     session_children_dict = construct_nested_folders(
@@ -776,11 +781,11 @@ def build_nested_folders(
     max_iter = 100
     while iterator_path != session_node_path:
         curr_folder_name = iterator_path.name
-        try:
-            curr_folder_node: TestNode = created_files_folders_dict[os.fspath(iterator_path)]
-        except KeyError:
-            curr_folder_node: TestNode = create_folder_node(curr_folder_name, iterator_path)
-            created_files_folders_dict[os.fspath(iterator_path)] = curr_folder_node
+        iterator_path_key = cached_fsdecode(iterator_path)
+        curr_folder_node = created_files_folders_dict.get(iterator_path_key)
+        if curr_folder_node is None:
+            curr_folder_node = create_folder_node(curr_folder_name, iterator_path)
+            created_files_folders_dict[iterator_path_key] = curr_folder_node
         if prev_folder_node not in curr_folder_node["children"]:
             curr_folder_node["children"].append(prev_folder_node)
         iterator_path = iterator_path.parent
@@ -942,6 +947,23 @@ class CoveragePayloadDict(Dict):
     error: str | None  # Currently unused need to check
 
 
+def cached_fsdecode(path: pathlib.Path) -> str:
+    """Convert path to string with caching for performance.
+
+    This function caches path-to-string conversions to avoid redundant
+    os.fsdecode() calls during test tree building.
+
+    Parameters:
+        path: The pathlib.Path object to convert to string.
+
+    Returns:
+        str: The string representation of the path.
+    """
+    if path not in _path_to_str_cache:
+        _path_to_str_cache[path] = os.fspath(path)
+    return _path_to_str_cache[path]
+
+
 def get_node_path(
     node: pytest.Session
     | pytest.Item
@@ -961,6 +983,10 @@ def get_node_path(
     Returns:
         pathlib.Path: The resolved path for the node.
     """
+    cache_key = id(node)
+    if cache_key in _path_cache:
+        return _path_cache[cache_key]
+
     node_path = getattr(node, "path", None)
     if node_path is None:
         fspath = getattr(node, "fspath", None)
@@ -982,19 +1008,28 @@ def get_node_path(
             common_path = os.path.commonpath([symlink_str, node_path_str])
             if common_path == os.fsdecode(SYMLINK_PATH):
                 # The node path is already relative to the SYMLINK_PATH root therefore return
-                return node_path
+                result = node_path
             else:
                 # If the node path is not a symlink, then we need to calculate the equivalent symlink path
                 # get the relative path between the cwd and the node path (as the node path is not a symlink).
-                rel_path = node_path.relative_to(pathlib.Path.cwd())
+                # Use cached cwd to avoid repeated system calls
+                global _CACHED_CWD
+                if _CACHED_CWD is None:
+                    _CACHED_CWD = pathlib.Path.cwd()
+                rel_path = node_path.relative_to(_CACHED_CWD)
                 # combine the difference between the cwd and the node path with the symlink path
-                return pathlib.Path(SYMLINK_PATH, rel_path)
+                result = pathlib.Path(SYMLINK_PATH, rel_path)
         except Exception as e:
             raise VSCodePytestError(
                 f"Error occurred while calculating symlink equivalent from node path: {e}"
-                f"\n SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {node_path}, \n cwd: {pathlib.Path.cwd()}"
+                f"\n SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {node_path}, \n cwd: {_CACHED_CWD if _CACHED_CWD else pathlib.Path.cwd()}"
             ) from e
-    return node_path
+    else:
+        result = node_path
+
+    # Cache before returning
+    _path_cache[cache_key] = result
+    return result
 
 
 __writer = None
