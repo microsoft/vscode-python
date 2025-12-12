@@ -18,7 +18,7 @@ import { IDisposableRegistry, Product } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { EventName } from '../telemetry/constants';
-import { captureTelemetry, sendTelemetryEvent } from '../telemetry/index';
+import { sendTelemetryEvent } from '../telemetry/index';
 import { selectTestWorkspace } from './common/testUtils';
 import { TestSettingsPropertyNames } from './configuration/types';
 import { ITestConfigurationService, ITestsHelper } from './common/types';
@@ -43,25 +43,21 @@ export class TestingService implements ITestingService {
 }
 
 /**
- * Registers test commands early in the extension activation to prevent race conditions.
- * This function should be called synchronously before any async operations in the activation flow.
+ * Registers command handlers but defers service resolution until the commands are actually invoked,
+ * allowing registration to happen before all services are fully initialized.
  */
 export function registerTestCommands(serviceContainer: IServiceContainer): void {
+    // Resolve only the essential services needed for command registration itself
     const disposableRegistry = serviceContainer.get<Disposable[]>(IDisposableRegistry);
     const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
-    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    
-    // Get test controller if available
-    let testController: ITestController | undefined;
-    if (tests && !!tests.createTestController) {
-        testController = serviceContainer.get<ITestController>(ITestController);
-    }
 
-    // Helper function to configure tests
+    // Helper function to configure tests - services are resolved when invoked, not at registration time
     const configureTestsHandler = async (resource?: Uri) => {
-        // Send telemetry for test configuration
         sendTelemetryEvent(EventName.UNITTEST_CONFIGURE);
-        
+
+        // Resolve services lazily when the command is invoked
+        const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+
         let wkspace: Uri | undefined;
         if (resource) {
             const wkspaceFolder = workspaceService.getWorkspaceFolder(resource);
@@ -84,28 +80,33 @@ export function registerTestCommands(serviceContainer: IServiceContainer): void 
     };
 
     disposableRegistry.push(
+        // Command: python.configureTests - prompts user to configure test framework
         commandManager.registerCommand(
             constants.Commands.Tests_Configure,
             (_, _cmdSource: constants.CommandSource = constants.CommandSource.commandPalette, resource?: Uri) => {
-                // Ignore the exceptions returned.
-                // This command will be invoked from other places of the extension.
+                // Invoke configuration handler (errors are ignored as this can be called from multiple places)
                 configureTestsHandler(resource).ignoreErrors();
                 traceVerbose('Testing: Trigger refresh after config change');
-                testController?.refreshTestData(resource, { forceRefresh: true });
+                // Refresh test data if test controller is available (resolved lazily)
+                if (tests && !!tests.createTestController) {
+                    const testController = serviceContainer.get<ITestController>(ITestController);
+                    testController?.refreshTestData(resource, { forceRefresh: true });
+                }
             },
         ),
+        // Command: python.tests.copilotSetup - Copilot integration for test setup
         commandManager.registerCommand(constants.Commands.Tests_CopilotSetup, (resource?: Uri):
             | { message: string; command: Command }
             | undefined => {
+            // Resolve services lazily when the command is invoked
+            const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
             const wkspaceFolder =
                 workspaceService.getWorkspaceFolder(resource) || workspaceService.workspaceFolders?.at(0);
             if (!wkspaceFolder) {
                 return undefined;
             }
 
-            const configurationService = serviceContainer.get<ITestConfigurationService>(
-                ITestConfigurationService,
-            );
+            const configurationService = serviceContainer.get<ITestConfigurationService>(ITestConfigurationService);
             if (configurationService.hasConfiguredTests(wkspaceFolder.uri)) {
                 return undefined;
             }
@@ -119,6 +120,7 @@ export function registerTestCommands(serviceContainer: IServiceContainer): void 
                 },
             };
         }),
+        // Command: python.copyTestId - copies test ID to clipboard
         commandManager.registerCommand(constants.Commands.CopyTestId, async (testItem: TestItem) => {
             writeTestIdToClipboard(testItem);
         }),
@@ -163,8 +165,6 @@ export class UnitTestManagementService implements IExtensionActivationService {
         this.activatedOnce = true;
 
         this.registerHandlers();
-        // Note: Commands are now registered early in extensionActivation.ts via registerTestCommands()
-        // to avoid race conditions where commands are invoked before extension activation completes.
 
         if (!!tests.testResults) {
             await this.updateTestUIButtons();
@@ -213,8 +213,6 @@ export class UnitTestManagementService implements IExtensionActivationService {
 
         await Promise.all(changedWorkspaces.map((u) => this.testController?.refreshTestData(u)));
     }
-
-
 
     private registerHandlers() {
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
