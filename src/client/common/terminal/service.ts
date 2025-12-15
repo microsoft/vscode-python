@@ -81,7 +81,14 @@ export class TerminalService implements ITerminalService, Disposable {
         commandLine: string,
         isPythonShell: boolean,
     ): Promise<TerminalShellExecution | undefined> {
-        const terminal = this.terminal!;
+        // TODO: First execution of shift+enter may get ignored when using sendText.
+        // Prevent Cannot read properties of undefined: https://github.com/microsoft/vscode-python-environments/issues/958
+        if (!this.terminal) {
+            traceVerbose('Terminal not available yet, cannot execute command');
+            return undefined;
+        }
+
+        const terminal = this.terminal;
         if (!this.options?.hideFromUser) {
             terminal.show(true);
         }
@@ -138,6 +145,7 @@ export class TerminalService implements ITerminalService, Disposable {
                 name: this.options?.title || 'Python',
                 hideFromUser: this.options?.hideFromUser,
             });
+            return;
         } else {
             this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
             this.terminal = this.terminalManager.createTerminal({
