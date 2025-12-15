@@ -135,7 +135,6 @@ export class TerminalService implements ITerminalService, Disposable {
         }
     }
     // TODO: Debt switch to Promise<Terminal> ---> breaks 20 tests
-    // TODO: Properly migrate all creation, ensureTerminal to environment extension.
     public async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
         if (this.terminal) {
             return;
