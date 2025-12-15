@@ -138,6 +138,7 @@ export class TerminalService implements ITerminalService, Disposable {
                 name: this.options?.title || 'Python',
                 hideFromUser: this.options?.hideFromUser,
             });
+            // Return early to prevent duplicate creation of terminal when using env extension.
             return;
         } else {
             this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
