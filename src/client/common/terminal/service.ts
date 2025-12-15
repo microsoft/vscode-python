@@ -21,6 +21,8 @@ import {
 } from './types';
 import { traceVerbose } from '../../logging';
 import { sleep } from '../utils/async';
+import { useEnvExtension } from '../../envExt/api.internal';
+import { ensureTerminalLegacy } from '../../envExt/api.legacy';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -153,14 +155,15 @@ export class TerminalService implements ITerminalService, Disposable {
             });
             this.terminalAutoActivator.disableAutoActivation(this.terminal);
 
-        await sleep(100);
+            await sleep(100);
 
-        await this.terminalActivator.activateEnvironmentInTerminal(this.terminal, {
-            resource: this.options?.resource,
-            preserveFocus,
-            interpreter: this.options?.interpreter,
-            hideFromUser: this.options?.hideFromUser,
-        });
+            await this.terminalActivator.activateEnvironmentInTerminal(this.terminal, {
+                resource: this.options?.resource,
+                preserveFocus,
+                interpreter: this.options?.interpreter,
+                hideFromUser: this.options?.hideFromUser,
+            });
+        }
 
         if (!this.options?.hideFromUser) {
             this.terminal.show(preserveFocus);
