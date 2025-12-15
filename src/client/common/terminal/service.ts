@@ -105,14 +105,11 @@ export class TerminalService implements ITerminalService, Disposable {
             });
         }
 
-        // For non-Python shell commands, execute directly
+        // Non-REPL code execution
         return this.executeCommandInternal(commandLine, isPythonShell);
     }
 
-    /**
-     * Starts listening for the Python REPL prompt (>>>).
-     * When detected, processes all queued commands.
-     */
+    // Process Python code execution once REPL is detected.
     private startReplListener(): void {
         if (this.replDataListener) {
             return;
