@@ -24,11 +24,6 @@ import { sleep } from '../utils/async';
 import { useEnvExtension } from '../../envExt/api.internal';
 import { ensureTerminalLegacy } from '../../envExt/api.legacy';
 
-interface QueuedCommand {
-    commandLine: string;
-    resolve: (value: TerminalShellExecution | undefined) => void;
-}
-
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
     private terminal?: Terminal;
@@ -41,7 +36,7 @@ export class TerminalService implements ITerminalService, Disposable {
     private applicationShell: IApplicationShell;
     private readonly executeCommandListeners: Set<Disposable> = new Set();
     private _terminalFirstLaunched: boolean = true;
-    private pythonReplCommandQueue: QueuedCommand[] = [];
+    private pythonReplCommandQueue: string[] = [];
     private isReplReady: boolean = false;
     private replDataListener?: Disposable;
     public get onDidCloseTerminal(): Event<void> {
@@ -94,19 +89,19 @@ export class TerminalService implements ITerminalService, Disposable {
     ): Promise<TerminalShellExecution | undefined> {
         if (isPythonShell) {
             if (this.isReplReady) {
-                return this.executeCommandInternal(commandLine, true);
-            }
-
-            // Queue command and start listening for REPL prompt if not already
-            return new Promise<TerminalShellExecution | undefined>((resolve) => {
-                this.pythonReplCommandQueue.push({ commandLine, resolve });
-                traceVerbose(`Queued Python REPL command: ${commandLine}`);
+                this.terminal?.sendText(commandLine);
+                traceVerbose(`Python REPL sendText: ${commandLine}`);
+            } else {
+                // Queue command to run once REPL is ready.
+                this.pythonReplCommandQueue.push(commandLine);
+                traceVerbose(`Python REPL queued command: ${commandLine}`);
                 this.startReplListener();
-            });
+            }
+            return undefined;
         }
 
         // Non-REPL code execution
-        return this.executeCommandInternal(commandLine, isPythonShell);
+        return this.executeCommandInternal(commandLine);
     }
 
     // Process Python code execution once REPL is detected.
@@ -138,21 +133,17 @@ export class TerminalService implements ITerminalService, Disposable {
         }
     }
 
-    private async flushReplQueue(): Promise<void> {
+    private flushReplQueue(): void {
         while (this.pythonReplCommandQueue.length > 0) {
-            const cmd = this.pythonReplCommandQueue.shift();
-            if (cmd) {
-                traceVerbose(`Executing queued REPL command: ${cmd.commandLine}`);
-                const result = await this.executeCommandInternal(cmd.commandLine, true);
-                cmd.resolve(result);
+            const commandLine = this.pythonReplCommandQueue.shift();
+            if (commandLine) {
+                traceVerbose(`Executing queued REPL command: ${commandLine}`);
+                this.terminal?.sendText(commandLine);
             }
         }
     }
 
-    private async executeCommandInternal(
-        commandLine: string,
-        isPythonShell: boolean,
-    ): Promise<TerminalShellExecution | undefined> {
+    private async executeCommandInternal(commandLine: string): Promise<TerminalShellExecution | undefined> {
         const terminal = this.terminal;
         if (!terminal) {
             traceVerbose('Terminal not available, cannot execute command');
@@ -182,11 +173,7 @@ export class TerminalService implements ITerminalService, Disposable {
             await promise;
         }
 
-        if (isPythonShell) {
-            // Prevent KeyboardInterrupt in Python REPL: https://github.com/microsoft/vscode-python/issues/25468
-            terminal.sendText(commandLine);
-            traceVerbose(`Python REPL detected, sendText: ${commandLine}`);
-        } else if (terminal.shellIntegration) {
+        if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
             traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
             return execution;
@@ -248,11 +235,7 @@ export class TerminalService implements ITerminalService, Disposable {
             // Reset REPL state when terminal closes
             this.isReplReady = false;
             this.disposeReplListener();
-            // Clear any pending commands
-            while (this.pythonReplCommandQueue.length > 0) {
-                const cmd = this.pythonReplCommandQueue.shift();
-                cmd?.resolve(undefined);
-            }
+            this.pythonReplCommandQueue = [];
         }
     }
 
