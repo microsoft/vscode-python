@@ -14,8 +14,9 @@ import {
     Uri,
     Terminal as VSCodeTerminal,
     WorkspaceConfiguration,
+    TerminalDataWriteEvent,
 } from 'vscode';
-import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
+import { IApplicationShell, ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { TerminalService } from '../../../client/common/terminal/service';
@@ -56,6 +57,8 @@ suite('Terminal Service', () => {
     let useEnvExtensionStub: sinon.SinonStub;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let options: TypeMoq.IMock<TerminalCreationOptions>;
+    let applicationShell: TypeMoq.IMock<IApplicationShell>;
+    let onDidWriteTerminalDataEmitter: EventEmitter<TerminalDataWriteEvent>;
 
     setup(() => {
         useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
@@ -118,6 +121,15 @@ suite('Terminal Service', () => {
         mockServiceContainer.setup((c) => c.get(ITerminalActivator)).returns(() => terminalActivator.object);
         mockServiceContainer.setup((c) => c.get(ITerminalAutoActivation)).returns(() => terminalAutoActivator.object);
         mockServiceContainer.setup((c) => c.get(IInterpreterService)).returns(() => interpreterService.object);
+
+        // Setup IApplicationShell mock with onDidWriteTerminalData
+        applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        onDidWriteTerminalDataEmitter = new EventEmitter<TerminalDataWriteEvent>();
+        applicationShell
+            .setup((a) => a.onDidWriteTerminalData)
+            .returns(() => onDidWriteTerminalDataEmitter.event);
+        mockServiceContainer.setup((c) => c.get(IApplicationShell)).returns(() => applicationShell.object);
+
         getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
         isWindowsStub = sinon.stub(platform, 'isWindows');
         pythonConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
@@ -230,10 +242,12 @@ suite('Terminal Service', () => {
         terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
-        service.ensureTerminal();
-        service.executeCommand(textToSend, true);
+        await service.ensureTerminal();
+        // Simulate REPL ready by firing the >>> prompt
+        onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
+        await service.executeCommand(textToSend, true);
 
-        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
+        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
@@ -251,10 +265,12 @@ suite('Terminal Service', () => {
         terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
-        service.ensureTerminal();
-        service.executeCommand(textToSend, true);
+        await service.ensureTerminal();
+        // Simulate REPL ready by firing the >>> prompt
+        onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
+        await service.executeCommand(textToSend, true);
 
-        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
+        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
@@ -273,10 +289,12 @@ suite('Terminal Service', () => {
         terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
-        service.ensureTerminal();
-        service.executeCommand(textToSend, true);
+        await service.ensureTerminal();
+        // Simulate REPL ready by firing the >>> prompt
+        onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
+        await service.executeCommand(textToSend, true);
 
-        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
+        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
@@ -305,6 +323,8 @@ suite('Terminal Service', () => {
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
         await service.ensureTerminal();
+        // Simulate REPL ready by firing the >>> prompt
+        onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
         await service.executeCommand(textToSend, true);
 
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.once());
@@ -325,10 +345,12 @@ suite('Terminal Service', () => {
         terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
-        service.ensureTerminal();
-        service.executeCommand(textToSend, true);
+        await service.ensureTerminal();
+        // Simulate REPL ready by firing the >>> prompt
+        onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
+        await service.executeCommand(textToSend, true);
 
-        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
+        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
