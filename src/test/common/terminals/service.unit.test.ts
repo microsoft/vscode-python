@@ -241,9 +241,10 @@ suite('Terminal Service', () => {
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
         await service.ensureTerminal();
-        // Simulate REPL ready by firing the >>> prompt
+        // Start executeCommand (sets up listener), then fire >>> prompt, then await
+        const executePromise = service.executeCommand(textToSend, true);
         onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
-        await service.executeCommand(textToSend, true);
+        await executePromise;
 
         terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
@@ -264,9 +265,10 @@ suite('Terminal Service', () => {
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
         await service.ensureTerminal();
-        // Simulate REPL ready by firing the >>> prompt
+        // Start executeCommand (sets up listener), then fire >>> prompt, then await
+        const executePromise = service.executeCommand(textToSend, true);
         onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
-        await service.executeCommand(textToSend, true);
+        await executePromise;
 
         terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
@@ -288,9 +290,10 @@ suite('Terminal Service', () => {
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
         await service.ensureTerminal();
-        // Simulate REPL ready by firing the >>> prompt
+        // Start executeCommand (sets up listener), then fire >>> prompt, then await
+        const executePromise = service.executeCommand(textToSend, true);
         onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
-        await service.executeCommand(textToSend, true);
+        await executePromise;
 
         terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
@@ -321,9 +324,10 @@ suite('Terminal Service', () => {
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
         await service.ensureTerminal();
-        // Simulate REPL ready by firing the >>> prompt
+        // Start executeCommand (sets up listener), then fire >>> prompt, then await
+        const executePromise = service.executeCommand(textToSend, true);
         onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
-        await service.executeCommand(textToSend, true);
+        await executePromise;
 
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.once());
     });
@@ -344,9 +348,10 @@ suite('Terminal Service', () => {
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
         await service.ensureTerminal();
-        // Simulate REPL ready by firing the >>> prompt
+        // Start executeCommand (sets up listener), then fire >>> prompt, then await
+        const executePromise = service.executeCommand(textToSend, true);
         onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
-        await service.executeCommand(textToSend, true);
+        await executePromise;
 
         terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
