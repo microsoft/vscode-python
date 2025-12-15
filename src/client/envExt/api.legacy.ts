@@ -148,5 +148,24 @@ export async function ensureTerminalLegacy(
         const terminal = await api.createTerminal(pythonEnv, fixedOptions);
         return terminal;
     }
+    traceError('ensureTerminalLegacy - Did not return terminal successfully.');
+    traceError(
+        'ensureTerminalLegacy - pythonEnv:',
+        pythonEnv
+            ? `id=${pythonEnv.envId.id}, managerId=${pythonEnv.envId.managerId}, name=${pythonEnv.name}, version=${pythonEnv.version}, executable=${pythonEnv.execInfo.run.executable}`
+            : 'undefined',
+    );
+    traceError(
+        'ensureTerminalLegacy - project:',
+        project ? `name=${project.name}, uri=${project.uri.toString()}` : 'undefined',
+    );
+    traceError(
+        'ensureTerminalLegacy - options:',
+        options
+            ? `name=${options.name}, cwd=${options.cwd?.toString()}, hideFromUser=${options.hideFromUser}`
+            : 'undefined',
+    );
+    traceError('ensureTerminalLegacy - resource:', resource?.toString() || 'undefined');
+
     throw new Error('Invalid arguments to create terminal');
 }
