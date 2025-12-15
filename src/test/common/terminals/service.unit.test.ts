@@ -125,9 +125,7 @@ suite('Terminal Service', () => {
         // Setup IApplicationShell mock with onDidWriteTerminalData
         applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
         onDidWriteTerminalDataEmitter = new EventEmitter<TerminalDataWriteEvent>();
-        applicationShell
-            .setup((a) => a.onDidWriteTerminalData)
-            .returns(() => onDidWriteTerminalDataEmitter.event);
+        applicationShell.setup((a) => a.onDidWriteTerminalData).returns(() => onDidWriteTerminalDataEmitter.event);
         mockServiceContainer.setup((c) => c.get(IApplicationShell)).returns(() => applicationShell.object);
 
         getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
