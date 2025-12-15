@@ -20,6 +20,8 @@ import {
     TerminalShellType,
 } from './types';
 import { traceVerbose } from '../../logging';
+import { useEnvExtension } from '../../envExt/api.internal';
+import { ensureTerminalLegacy } from '../../envExt/api.legacy';
 import { sleep } from '../utils/async';
 
 @injectable()
@@ -79,7 +81,6 @@ export class TerminalService implements ITerminalService, Disposable {
         commandLine: string,
         isPythonShell: boolean,
     ): Promise<TerminalShellExecution | undefined> {
-        await this.ensureTerminal();
         const terminal = this.terminal!;
         if (!this.options?.hideFromUser) {
             terminal.show(true);
@@ -127,30 +128,34 @@ export class TerminalService implements ITerminalService, Disposable {
         }
     }
     // TODO: Debt switch to Promise<Terminal> ---> breaks 20 tests
-    // TODO: Properly migrate all creation, ensureTerminal to environment extension.
     public async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
         if (this.terminal) {
             return;
         }
 
-        // Always use the legacy terminal creation method for now
-        // The environment extension path can create duplicate terminals
-        // or show `Cannot read properties of undefined (reading 'show')` error: https://github.com/microsoft/vscode-python-environments/issues/958
-        this.terminal = this.terminalManager.createTerminal({
-            name: this.options?.title || 'Python',
-            hideFromUser: this.options?.hideFromUser,
-        });
-        this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
-        this.terminalAutoActivator.disableAutoActivation(this.terminal);
+        if (useEnvExtension()) {
+            this.terminal = await ensureTerminalLegacy(this.options?.resource, {
+                name: this.options?.title || 'Python',
+                hideFromUser: this.options?.hideFromUser,
+            });
+            return;
+        } else {
+            this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
+            this.terminal = this.terminalManager.createTerminal({
+                name: this.options?.title || 'Python',
+                hideFromUser: this.options?.hideFromUser,
+            });
+            this.terminalAutoActivator.disableAutoActivation(this.terminal);
 
-        await sleep(100);
+            await sleep(100);
 
-        await this.terminalActivator.activateEnvironmentInTerminal(this.terminal, {
-            resource: this.options?.resource,
-            preserveFocus,
-            interpreter: this.options?.interpreter,
-            hideFromUser: this.options?.hideFromUser,
-        });
+            await this.terminalActivator.activateEnvironmentInTerminal(this.terminal, {
+                resource: this.options?.resource,
+                preserveFocus,
+                interpreter: this.options?.interpreter,
+                hideFromUser: this.options?.hideFromUser,
+            });
+        }
 
         if (!this.options?.hideFromUser) {
             this.terminal.show(preserveFocus);
