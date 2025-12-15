@@ -20,8 +20,6 @@ import {
     TerminalShellType,
 } from './types';
 import { traceVerbose } from '../../logging';
-import { useEnvExtension } from '../../envExt/api.internal';
-import { ensureTerminalLegacy } from '../../envExt/api.legacy';
 import { sleep } from '../utils/async';
 
 @injectable()
@@ -135,6 +133,7 @@ export class TerminalService implements ITerminalService, Disposable {
         }
     }
     // TODO: Debt switch to Promise<Terminal> ---> breaks 20 tests
+    // TODO: Properly migrate all creation, ensureTerminal to environment extension.
     public async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
         if (this.terminal) {
             return;
@@ -154,15 +153,14 @@ export class TerminalService implements ITerminalService, Disposable {
             });
             this.terminalAutoActivator.disableAutoActivation(this.terminal);
 
-            await sleep(100);
+        await sleep(100);
 
-            await this.terminalActivator.activateEnvironmentInTerminal(this.terminal, {
-                resource: this.options?.resource,
-                preserveFocus,
-                interpreter: this.options?.interpreter,
-                hideFromUser: this.options?.hideFromUser,
-            });
-        }
+        await this.terminalActivator.activateEnvironmentInTerminal(this.terminal, {
+            resource: this.options?.resource,
+            preserveFocus,
+            interpreter: this.options?.interpreter,
+            hideFromUser: this.options?.hideFromUser,
+        });
 
         if (!this.options?.hideFromUser) {
             this.terminal.show(preserveFocus);
