@@ -348,7 +348,7 @@ suite('Terminal Service', () => {
         onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
         await executePromise;
 
-        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
+        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
