@@ -467,6 +467,11 @@
       "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
    }
 */
+/* __GDPR__
+   "language_server/copilot_hover" : {
+      "symbolName" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+   }
+*/
 /**
  * Telemetry event sent when LSP server crashes
  */
