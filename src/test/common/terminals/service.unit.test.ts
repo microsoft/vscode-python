@@ -241,7 +241,6 @@ suite('Terminal Service', () => {
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
         await service.ensureTerminal();
-        // Start executeCommand (sets up listener), then fire >>> prompt, then await
         const executePromise = service.executeCommand(textToSend, true);
         onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
         await executePromise;
@@ -265,7 +264,6 @@ suite('Terminal Service', () => {
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
         await service.ensureTerminal();
-        // Start executeCommand (sets up listener), then fire >>> prompt, then await
         const executePromise = service.executeCommand(textToSend, true);
         onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
         await executePromise;
@@ -290,7 +288,6 @@ suite('Terminal Service', () => {
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
         await service.ensureTerminal();
-        // Start executeCommand (sets up listener), then fire >>> prompt, then await
         const executePromise = service.executeCommand(textToSend, true);
         onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
         await executePromise;
@@ -324,7 +321,6 @@ suite('Terminal Service', () => {
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
         await service.ensureTerminal();
-        // Start executeCommand (sets up listener), then fire >>> prompt, then await
         const executePromise = service.executeCommand(textToSend, true);
         onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
         await executePromise;
@@ -348,7 +344,6 @@ suite('Terminal Service', () => {
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
         await service.ensureTerminal();
-        // Start executeCommand (sets up listener), then fire >>> prompt, then await
         const executePromise = service.executeCommand(textToSend, true);
         onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
         await executePromise;

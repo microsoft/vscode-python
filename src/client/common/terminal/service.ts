@@ -104,18 +104,15 @@ export class TerminalService implements ITerminalService, Disposable {
         return this.executeCommandInternal(commandLine);
     }
 
-    // Process Python code execution once REPL is detected.
     private startReplListener(): void {
         if (this.replDataListener) {
             return;
         }
 
         let terminalData = '';
-
         this.replDataListener = this.applicationShell.onDidWriteTerminalData((e) => {
             if (this.terminal && e.terminal === this.terminal) {
                 terminalData += e.data;
-                // Check for Python REPL prompt (>>>)
                 if (/>>>\s*$/.test(terminalData)) {
                     traceVerbose('Python REPL ready, detected >>> prompt');
                     this.isReplReady = true;
@@ -232,7 +229,6 @@ export class TerminalService implements ITerminalService, Disposable {
         if (terminal === this.terminal) {
             this.terminalClosed.fire();
             this.terminal = undefined;
-            // Reset REPL state when terminal closes
             this.isReplReady = false;
             this.disposeReplListener();
             this.pythonReplCommandQueue = [];
