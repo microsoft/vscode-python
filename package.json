@@ -1528,7 +1528,8 @@
                         }
                     },
                     "required": []
-                }
+                },
+                "when": "editorLangId == python || resourceLangId == python || notebookType == jupyter-notebook"
             },
             {
                 "name": "get_python_executable_details",
@@ -1553,7 +1554,8 @@
                         }
                     },
                     "required": []
-                }
+                },
+                "when": "editorLangId == python || resourceLangId == python || notebookType == jupyter-notebook"
             },
             {
                 "name": "install_python_packages",
@@ -1588,7 +1590,8 @@
                     "required": [
                         "packageList"
                     ]
-                }
+                },
+                "when": "editorLangId == python || resourceLangId == python || notebookType == jupyter-notebook"
             },
             {
                 "name": "configure_python_environment",
@@ -1612,7 +1615,8 @@
                         }
                     },
                     "required": []
-                }
+                },
+                "when": "editorLangId == python || resourceLangId == python || notebookType == jupyter-notebook"
             },
             {
                 "name": "create_virtual_environment",
