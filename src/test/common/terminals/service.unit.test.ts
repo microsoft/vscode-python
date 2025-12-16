@@ -59,6 +59,7 @@ suite('Terminal Service', () => {
     let options: TypeMoq.IMock<TerminalCreationOptions>;
     let applicationShell: TypeMoq.IMock<IApplicationShell>;
     let onDidWriteTerminalDataEmitter: EventEmitter<TerminalDataWriteEvent>;
+    let onDidChangeTerminalStateEmitter: EventEmitter<VSCodeTerminal>;
 
     setup(() => {
         useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
@@ -122,11 +123,15 @@ suite('Terminal Service', () => {
         mockServiceContainer.setup((c) => c.get(ITerminalAutoActivation)).returns(() => terminalAutoActivator.object);
         mockServiceContainer.setup((c) => c.get(IInterpreterService)).returns(() => interpreterService.object);
 
-        // Setup IApplicationShell mock with onDidWriteTerminalData
         applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
         onDidWriteTerminalDataEmitter = new EventEmitter<TerminalDataWriteEvent>();
         applicationShell.setup((a) => a.onDidWriteTerminalData).returns(() => onDidWriteTerminalDataEmitter.event);
         mockServiceContainer.setup((c) => c.get(IApplicationShell)).returns(() => applicationShell.object);
+
+        onDidChangeTerminalStateEmitter = new EventEmitter<VSCodeTerminal>();
+        terminalManager
+            .setup((t) => t.onDidChangeTerminalState(TypeMoq.It.isAny()))
+            .returns((handler) => onDidChangeTerminalStateEmitter.event(handler));
 
         getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
         isWindowsStub = sinon.stub(platform, 'isWindows');
@@ -349,6 +354,30 @@ suite('Terminal Service', () => {
         await executePromise;
 
         terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
+        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
+    });
+
+    test('Ensure REPL ready when onDidChangeTerminalState fires with python shell', async () => {
+        pythonConfig
+            .setup((p) => p.get('terminal.shellIntegration.enabled'))
+            .returns(() => false)
+            .verifiable(TypeMoq.Times.once());
+
+        terminalHelper
+            .setup((helper) => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
+        service = new TerminalService(mockServiceContainer.object);
+        const textToSend = 'Some Text';
+        terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+
+        terminal.setup((t) => t.state).returns(() => ({ isInteractedWith: true, shell: 'python' }));
+        terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
+        await service.ensureTerminal();
+        const executePromise = service.executeCommand(textToSend, true);
+        onDidChangeTerminalStateEmitter.fire(terminal.object);
+        await executePromise;
+
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 

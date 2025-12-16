@@ -38,7 +38,8 @@ export class TerminalService implements ITerminalService, Disposable {
     private _terminalFirstLaunched: boolean = true;
     private pythonReplCommandQueue: string[] = [];
     private isReplReady: boolean = false;
-    private replDataListener?: Disposable;
+    private replPromptListener?: Disposable;
+    private replShellTypeListener?: Disposable;
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event.bind(this.terminalClosed);
     }
@@ -105,28 +106,48 @@ export class TerminalService implements ITerminalService, Disposable {
     }
 
     private startReplListener(): void {
-        if (this.replDataListener) {
+        if (this.replPromptListener || this.replShellTypeListener) {
             return;
         }
 
+        this.replShellTypeListener = this.terminalManager.onDidChangeTerminalState((terminal) => {
+            if (this.terminal && terminal === this.terminal) {
+                if (terminal.state.shell == 'python') {
+                    traceVerbose('Python REPL ready from terminal shell api');
+                    this.onReplReady();
+                }
+            }
+        });
+
         let terminalData = '';
-        this.replDataListener = this.applicationShell.onDidWriteTerminalData((e) => {
+        this.replPromptListener = this.applicationShell.onDidWriteTerminalData((e) => {
             if (this.terminal && e.terminal === this.terminal) {
                 terminalData += e.data;
                 if (/>>>\s*$/.test(terminalData)) {
-                    traceVerbose('Python REPL ready, detected >>> prompt');
-                    this.isReplReady = true;
-                    this.disposeReplListener();
-                    this.flushReplQueue();
+                    traceVerbose('Python REPL ready, from >>> prompt detection');
+                    this.onReplReady();
                 }
             }
         });
     }
 
+    private onReplReady(): void {
+        if (this.isReplReady) {
+            return;
+        }
+        this.isReplReady = true;
+        this.flushReplQueue();
+        this.disposeReplListener();
+    }
+
     private disposeReplListener(): void {
-        if (this.replDataListener) {
-            this.replDataListener.dispose();
-            this.replDataListener = undefined;
+        if (this.replPromptListener) {
+            this.replPromptListener.dispose();
+            this.replPromptListener = undefined;
+        }
+        if (this.replShellTypeListener) {
+            this.replShellTypeListener.dispose();
+            this.replShellTypeListener = undefined;
         }
     }
 
