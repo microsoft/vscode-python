@@ -34,12 +34,19 @@
             "label": "preTestJediLSP"
         },
         {
+            "type": "npm",
+            "script": "check-python",
+            "problemMatcher": ["$python"],
             "label": "npm: check-python",
+            "detail": "npm run check-python:ruff && npm run check-python:pyright"
+        },
+        {
+            "label": "npm: check-python (venv)",
             "type": "shell",
             "command": "bash",
             "args": ["-lc", "source .venv/bin/activate && npm run check-python"],
             "problemMatcher": [],
-            "detail": "Runs in the repo .venv (avoids pyenv/shim Python): npm run check-python",
+            "detail": "Activates the repo .venv first (avoids pyenv/shim Python) then runs: npm run check-python",
             "windows": {
                 "command": "pwsh",
                 "args": [
@@ -50,13 +57,6 @@
                     ".\\.venv\\Scripts\\Activate.ps1; npm run check-python"
                 ]
             }
-        },
-        {
-            "type": "npm",
-            "script": "check-python",
-            "problemMatcher": ["$python"],
-            "label": "npm: check-python (no venv)",
-            "detail": "Runs without activating .venv (uses the task shell's default python): npm run check-python"
         }
     ]
 }
