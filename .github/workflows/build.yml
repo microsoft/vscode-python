@@ -447,3 +447,146 @@ jobs:
         with:
           node_version: ${{ env.NODE_VERSION }}
           artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}-${{ matrix.vsix-target }}
+
+  report-failure:
+    name: Report CI Failure
+    if: |
+      always() &&
+      github.repository == 'microsoft/vscode-python' &&
+      github.ref == 'refs/heads/main' &&
+      (needs.setup.result == 'failure' ||
+       needs.build-vsix.result == 'failure' ||
+       needs.lint.result == 'failure' ||
+       needs.check-types.result == 'failure' ||
+       needs.python-tests.result == 'failure' ||
+       needs.tests.result == 'failure' ||
+       needs.smoke-tests.result == 'failure')
+    runs-on: ubuntu-latest
+    needs: [setup, build-vsix, lint, check-types, python-tests, tests, smoke-tests]
+    permissions:
+      issues: write
+    steps:
+      - name: Create Issue on Failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const failedJobs = [];
+            const jobs = {
+              'setup': '${{ needs.setup.result }}',
+              'build-vsix': '${{ needs.build-vsix.result }}',
+              'lint': '${{ needs.lint.result }}',
+              'check-types': '${{ needs.check-types.result }}',
+              'python-tests': '${{ needs.python-tests.result }}',
+              'tests': '${{ needs.tests.result }}',
+              'smoke-tests': '${{ needs.smoke-tests.result }}'
+            };
+
+            for (const [job, result] of Object.entries(jobs)) {
+              if (result === 'failure') {
+                failedJobs.push(job);
+              }
+            }
+
+            const title = `CI Failure on main: ${failedJobs.join(', ')}`;
+            const body = `## CI Failure Report
+
+            The following jobs failed on the main branch:
+            ${failedJobs.map(job => `- **${job}**`).join('\n')}
+
+            **Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            **Commit:** ${{ github.sha }}
+            **Commit Message:** ${{ github.event.head_commit.message }}
+            **Author:** @${{ github.event.head_commit.author.username }}
+
+            Please investigate and fix the failure.
+
+            ---
+            *This issue was automatically created by the CI system.*`;
+
+            // Check if there's already an open issue for CI failures
+            const existingIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'ci-failure',
+              per_page: 100
+            });
+
+            const logMarker = '<!-- ci-failure-log -->';
+            const logHeader = `${logMarker}\n## CI Failure Log\n\n`;
+            const entrySeparator = '\n\n---\n\n';
+
+            const commitAuthor = '${{ github.event.head_commit.author.username }}';
+            const authorText = commitAuthor ? commitAuthor : '${{ github.actor }}';
+
+            const newEntry = `### ${new Date().toISOString()}
+
+            Failed jobs:
+            ${failedJobs.map(job => `- **${job}**`).join('\n')}
+
+            **Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            **Commit:** ${{ github.sha }}
+            **Commit Message:** ${{ github.event.head_commit.message }}
+            **Author:** ${authorText}`;
+
+            // If there's already an open CI failure issue, comment there instead of creating a new one.
+            // Prefer issues created by this workflow (title match), otherwise fall back to the first open issue.
+            const existingIssue =
+              existingIssues.data.find(issue => issue.title.includes('CI Failure on main')) ??
+              existingIssues.data[0];
+
+            if (existingIssue) {
+              // Reduce notification noise: keep a single rolling log comment and update it in-place.
+              const comments = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                per_page: 100
+              });
+
+              const existingLogComment = comments.data.find(c => typeof c.body === 'string' && c.body.includes(logMarker));
+              if (existingLogComment) {
+                const existingBody = existingLogComment.body || '';
+                let existingEntriesText = '';
+                if (existingBody.startsWith(logHeader)) {
+                  existingEntriesText = existingBody.slice(logHeader.length);
+                } else {
+                  const idx = existingBody.indexOf(logMarker);
+                  existingEntriesText = idx >= 0 ? existingBody.slice(idx + logMarker.length) : '';
+                }
+                const existingEntries = existingEntriesText
+                  .split(entrySeparator)
+                  .map(s => s.trim())
+                  .filter(Boolean);
+
+                const updatedEntries = [newEntry.trim(), ...existingEntries].slice(0, 20);
+                const updatedBody = logHeader + updatedEntries.join(entrySeparator);
+
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existingLogComment.id,
+                  body: updatedBody
+                });
+                console.log(`Updated CI failure log comment on issue #${existingIssue.number}`);
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: existingIssue.number,
+                  body: logHeader + newEntry.trim()
+                });
+                console.log(`Created CI failure log comment on issue #${existingIssue.number}`);
+              }
+            } else {
+              // Create a new issue
+              const issue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['ci-failure', 'bug', 'needs-triage']
+              });
+
+              console.log(`Created issue #${issue.data.number}`);
+            }
