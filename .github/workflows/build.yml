@@ -447,3 +447,103 @@ jobs:
         with:
           node_version: ${{ env.NODE_VERSION }}
           artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}-${{ matrix.vsix-target }}
+
+  report-failure:
+    name: Report CI Failure
+    if: |
+      always() &&
+      github.repository == 'microsoft/vscode-python' &&
+      github.ref == 'refs/heads/main' &&
+      (needs.build-vsix.result == 'failure' ||
+       needs.lint.result == 'failure' ||
+       needs.check-types.result == 'failure' ||
+       needs.python-tests.result == 'failure' ||
+       needs.tests.result == 'failure' ||
+       needs.smoke-tests.result == 'failure')
+    runs-on: ubuntu-latest
+    needs: [build-vsix, lint, check-types, python-tests, tests, smoke-tests]
+    permissions:
+      issues: write
+    steps:
+      - name: Create Issue on Failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const failedJobs = [];
+            const jobs = {
+              'build-vsix': '${{ needs.build-vsix.result }}',
+              'lint': '${{ needs.lint.result }}',
+              'check-types': '${{ needs.check-types.result }}',
+              'python-tests': '${{ needs.python-tests.result }}',
+              'tests': '${{ needs.tests.result }}',
+              'smoke-tests': '${{ needs.smoke-tests.result }}'
+            };
+            
+            for (const [job, result] of Object.entries(jobs)) {
+              if (result === 'failure') {
+                failedJobs.push(job);
+              }
+            }
+            
+            const title = `CI Failure on main: ${failedJobs.join(', ')}`;
+            const body = `## CI Failure Report
+            
+            The following jobs failed on the main branch:
+            ${failedJobs.map(job => `- **${job}**`).join('\n')}
+            
+            **Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            **Commit:** ${{ github.sha }}
+            **Commit Message:** ${{ github.event.head_commit.message }}
+            **Author:** @${{ github.event.head_commit.author.username }}
+            
+            Please investigate and fix the failure.
+            
+            ---
+            *This issue was automatically created by the CI system.*`;
+            
+            // Check if there's already an open issue for CI failures
+            const existingIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'ci-failure',
+              per_page: 100
+            });
+            
+            // Look for recent issues (within last 24 hours) to avoid duplicates
+            const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            const recentIssue = existingIssues.data.find(issue => {
+              const issueDate = new Date(issue.created_at);
+              return issueDate > oneDayAgo && issue.title.includes('CI Failure on main');
+            });
+            
+            if (recentIssue) {
+              // Add a comment to the existing issue instead of creating a new one
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: recentIssue.number,
+                body: `## Additional CI Failure
+                
+                Another CI failure occurred:
+                ${failedJobs.map(job => `- **${job}**`).join('\n')}
+                
+                **Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+                **Commit:** ${{ github.sha }}
+                **Commit Message:** ${{ github.event.head_commit.message }}
+                **Author:** @${{ github.event.head_commit.author.username }}`
+              });
+              
+              console.log(`Added comment to existing issue #${recentIssue.number}`);
+            } else {
+              // Create a new issue
+              const issue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['ci-failure', 'bug', 'needs-triage']
+              });
+              
+              console.log(`Created issue #${issue.data.number}`);
+            }
