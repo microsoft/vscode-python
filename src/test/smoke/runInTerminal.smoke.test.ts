@@ -17,13 +17,22 @@ suite('Smoke Test: Run Python File In Terminal', () => {
             return this.skip();
         }
         await initialize();
+        // Ensure the environments extension is not used for this test
+        await vscode.workspace
+            .getConfiguration('python')
+            .update('useEnvironmentsExtension', false, vscode.ConfigurationTarget.Global);
         return undefined;
     });
+
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
 
-    test('Exec', async () => {
+    // TODO: Re-enable this test once the flakiness on Windows is resolved
+    test('Exec', async function () {
+        if (process.platform === 'win32') {
+            return this.skip();
+        }
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',

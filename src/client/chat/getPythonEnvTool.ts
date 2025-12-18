@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import {
-    CancellationError,
     CancellationToken,
     l10n,
     LanguageModelTextPart,
@@ -11,22 +10,22 @@ import {
     LanguageModelToolInvocationPrepareOptions,
     LanguageModelToolResult,
     PreparedToolInvocation,
+    Uri,
 } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
-import { getEnvironmentDetails, getToolResponseIfNotebook, raceCancellationError } from './utils';
-import { resolveFilePath } from './utils';
+import { getEnvironmentDetails, getToolResponseIfNotebook, IResourceReference, raceCancellationError } from './utils';
 import { getPythonPackagesResponse } from './listPackagesTool';
 import { ITerminalHelper } from '../common/terminal/types';
+import { getEnvExtApi, useEnvExtension } from '../envExt/api.internal';
+import { ErrorWithTelemetrySafeReason } from '../common/errors/errorUtils';
+import { BaseTool } from './baseTool';
 
-export interface IResourceReference {
-    resourcePath?: string;
-}
-
-export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceReference> {
+export class GetEnvironmentInfoTool extends BaseTool<IResourceReference>
+    implements LanguageModelTool<IResourceReference> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
     private readonly pythonExecFactory: IPythonExecutionFactory;
     private readonly processServiceFactory: IProcessServiceFactory;
@@ -36,6 +35,7 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
         private readonly api: PythonExtension['environments'],
         private readonly serviceContainer: IServiceContainer,
     ) {
+        super(GetEnvironmentInfoTool.toolName);
         this.terminalExecutionService = this.serviceContainer.get<TerminalCodeExecutionProvider>(
             ICodeExecutionService,
             'standard',
@@ -44,61 +44,70 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
         this.processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
     }
-    /**
-     * Invokes the tool to get the information about the Python environment.
-     * @param options - The invocation options containing the file path.
-     * @param token - The cancellation token.
-     * @returns The result containing the information about the Python environment or an error message.
-     */
-    async invoke(
-        options: LanguageModelToolInvocationOptions<IResourceReference>,
+
+    async invokeImpl(
+        _options: LanguageModelToolInvocationOptions<IResourceReference>,
+        resourcePath: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
-        const resourcePath = resolveFilePath(options.input.resourcePath);
         const notebookResponse = getToolResponseIfNotebook(resourcePath);
         if (notebookResponse) {
             return notebookResponse;
         }
 
-        try {
-            // environment
-            const envPath = this.api.getActiveEnvironmentPath(resourcePath);
-            const environment = await raceCancellationError(this.api.resolveEnvironment(envPath), token);
-            if (!environment || !environment.version) {
-                throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
+        // environment
+        const envPath = this.api.getActiveEnvironmentPath(resourcePath);
+        const environment = await raceCancellationError(this.api.resolveEnvironment(envPath), token);
+        if (!environment || !environment.version) {
+            throw new ErrorWithTelemetrySafeReason(
+                'No environment found for the provided resource path: ' + resourcePath?.fsPath,
+                'noEnvFound',
+            );
+        }
+
+        let packages = '';
+        if (useEnvExtension()) {
+            const api = await getEnvExtApi();
+            const env = await api.getEnvironment(resourcePath);
+            const pkgs = env ? await api.getPackages(env) : [];
+            if (pkgs && pkgs.length > 0) {
+                // Installed Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown. Returns an empty array if no packages are installed.
+                const response = [
+                    'Below is a list of the Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown: ',
+                ];
+                pkgs.forEach((pkg) => {
+                    const version = pkg.version;
+                    response.push(version ? `- ${pkg.name} (${version})` : `- ${pkg.name}`);
+                });
+                packages = response.join('\n');
             }
-            const packages = await getPythonPackagesResponse(
+        }
+        if (!packages) {
+            packages = await getPythonPackagesResponse(
                 environment,
                 this.pythonExecFactory,
                 this.processServiceFactory,
                 resourcePath,
                 token,
             );
-
-            const message = await getEnvironmentDetails(
-                resourcePath,
-                this.api,
-                this.terminalExecutionService,
-                this.terminalHelper,
-                packages,
-                token,
-            );
-
-            return new LanguageModelToolResult([new LanguageModelTextPart(message)]);
-        } catch (error) {
-            if (error instanceof CancellationError) {
-                throw error;
-            }
-            const errorMessage: string = `An error occurred while fetching environment information: ${error}`;
-            return new LanguageModelToolResult([new LanguageModelTextPart(errorMessage)]);
         }
+        const message = await getEnvironmentDetails(
+            resourcePath,
+            this.api,
+            this.terminalExecutionService,
+            this.terminalHelper,
+            packages,
+            token,
+        );
+
+        return new LanguageModelToolResult([new LanguageModelTextPart(message)]);
     }
 
-    async prepareInvocation?(
-        options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
+    async prepareInvocationImpl(
+        _options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
+        resourcePath: Uri | undefined,
         _token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
-        const resourcePath = resolveFilePath(options.input.resourcePath);
         if (getToolResponseIfNotebook(resourcePath)) {
             return {};
         }

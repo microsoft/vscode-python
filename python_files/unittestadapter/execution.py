@@ -189,8 +189,8 @@ def run_tests(
     pattern: str,
     top_level_dir: Optional[str],
     verbosity: int,
-    failfast: Optional[bool],
-    locals_: Optional[bool] = None,
+    failfast: Optional[bool],  # noqa: FBT001
+    locals_: Optional[bool] = None,  # noqa: FBT001
 ) -> ExecutionPayloadDict:
     cwd = os.path.abspath(start_dir)  # noqa: PTH100
     if "/" in start_dir:  #  is a subdir
@@ -284,10 +284,10 @@ if __name__ == "__main__":
     run_test_ids_pipe = os.environ.get("RUN_TEST_IDS_PIPE")
     test_run_pipe = os.getenv("TEST_RUN_PIPE")
     if not run_test_ids_pipe:
-        print("Error[vscode-unittest]: RUN_TEST_IDS_PIPE env var is not set.")
+        print("Error[vscode-unittest]: RUN_TEST_IDS_PIPE env var is not set.", file=sys.stderr)
         raise VSCodeUnittestError("Error[vscode-unittest]: RUN_TEST_IDS_PIPE env var is not set.")
     if not test_run_pipe:
-        print("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.")
+        print("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.", file=sys.stderr)
         raise VSCodeUnittestError("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.")
     test_ids = []
     cwd = pathlib.Path(start_dir).absolute()
@@ -295,11 +295,10 @@ if __name__ == "__main__":
         # Read the test ids from the file, attempt to delete file afterwords.
         ids_path = pathlib.Path(run_test_ids_pipe)
         test_ids = ids_path.read_text(encoding="utf-8").splitlines()
-        print("Received test ids from temp file.")
         try:
             ids_path.unlink()
         except Exception as e:
-            print("Error[vscode-pytest]: unable to delete temp file" + str(e))
+            print(f"Error[vscode-unittest]: unable to delete temp file: {e}", file=sys.stderr)
 
     except Exception as e:
         # No test ids received from buffer, return error payload
@@ -318,10 +317,6 @@ if __name__ == "__main__":
     is_coverage_run = os.environ.get("COVERAGE_ENABLED") is not None
     include_branches = False
     if is_coverage_run:
-        print(
-            "COVERAGE_ENABLED env var set, starting coverage. workspace_root used as parent dir:",
-            workspace_root,
-        )
         import coverage
 
         # insert "python_files/lib/python" into the path so packaging can be imported
@@ -350,7 +345,6 @@ if __name__ == "__main__":
 
     # If no error occurred, we will have test ids to run.
     if manage_py_path := os.environ.get("MANAGE_PY_PATH"):
-        print("MANAGE_PY_PATH env var set, running Django test suite.")
         args = argv[index + 1 :] or []
         django_execution_runner(manage_py_path, test_ids, args)
     else:

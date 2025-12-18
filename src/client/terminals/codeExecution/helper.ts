@@ -55,7 +55,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
     public async normalizeLines(
         code: string,
-        replType: ReplType,
+        _replType: ReplType,
         wholeFileContent?: string,
         resource?: Uri,
     ): Promise<string> {
@@ -99,10 +99,12 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const endLineVal = activeEditor?.selection?.end.line ?? 0;
             const emptyHighlightVal = activeEditor?.selection?.isEmpty ?? true;
             let smartSendSettingsEnabledVal = true;
+            let shellIntegrationEnabled = false;
             const configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
             if (configuration) {
                 const pythonSettings = configuration.getSettings(this.activeResourceService.getActiveResource());
                 smartSendSettingsEnabledVal = pythonSettings.REPL.enableREPLSmartSend;
+                shellIntegrationEnabled = pythonSettings.terminal.shellIntegration.enabled;
             }
 
             const input = JSON.stringify({
@@ -124,8 +126,9 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                 const lineOffset = object.nextBlockLineno - activeEditor!.selection.start.line - 1;
                 await this.moveToNextBlock(lineOffset, activeEditor);
             }
-            // For new _pyrepl for Python3.13 and above, we need to send code via bracketed paste mode.
-            if (object.attach_bracket_paste && replType === ReplType.terminal) {
+
+            // For new _pyrepl for Python3.13+ && !shellIntegration, we need to send code via bracketed paste mode.
+            if (object.attach_bracket_paste && !shellIntegrationEnabled && _replType === ReplType.terminal) {
                 let trimmedNormalized = object.normalized.replace(/\n$/, '');
                 if (trimmedNormalized.endsWith(':\n')) {
                     // In case where statement is unfinished via :, truncate so auto-indentation lands nicely.

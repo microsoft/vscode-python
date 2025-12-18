@@ -337,15 +337,37 @@ def test_config_sub_folder():
             assert tests.get("name") == "config_sub_folder"
 
 
-def test_ruff_plugin():
-    """Here the session node will be a subfolder of the workspace root and the test are in another subfolder.
+@pytest.mark.parametrize(
+    ("file", "expected_const", "extra_arg"),
+    [
+        (
+            "folder_with_script",
+            expected_discovery_test_output.ruff_test_expected_output,
+            "--ruff",
+        ),
+        (
+            "2496-black-formatter",
+            expected_discovery_test_output.black_formatter_expected_output,
+            "--black",
+        ),
+    ],
+)
+def test_plugin_collect(file, expected_const, extra_arg):
+    """Test pytest discovery on a folder with a plugin argument (e.g., --ruff, --black).
 
-    This tests checks to see if test node path are under the session node and if so the
-    session node is correctly updated to the common path.
+    Uses variables from expected_discovery_test_output.py to store the expected
+    dictionary return. Only handles discovery and therefore already contains the arg
+    --collect-only. All test discovery will succeed, be in the correct cwd, and match
+    expected test output.
+
+    Keyword arguments:
+    file -- a string with the file or folder to run pytest discovery on.
+    expected_const -- the expected output from running pytest discovery on the file.
+    extra_arg -- the extra plugin argument to pass (e.g., --ruff, --black)
     """
-    file_path = helpers.TEST_DATA_PATH / "folder_with_script"
+    file_path = helpers.TEST_DATA_PATH / file
     actual = helpers.runner(
-        [os.fspath(file_path), "--collect-only", "--ruff"],
+        [os.fspath(file_path), "--collect-only", extra_arg],
     )
 
     assert actual
@@ -359,8 +381,8 @@ def test_ruff_plugin():
         assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH)
         assert is_same_tree(
             actual_item.get("tests"),
-            expected_discovery_test_output.ruff_test_expected_output,
+            expected_const,
             ["id_", "lineno", "name", "runID"],
         ), (
-            f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_discovery_test_output.ruff_test_expected_output, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
+            f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_const, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
         )

@@ -130,7 +130,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         // Display progress indicator if we have ability to cancel this operation from calling code.
         // This is required as its possible the installation can take a long time.
         // (i.e. if installation takes a long time in terminal or like, a progress indicator is necessary to let user know what is being waited on).
-        if (cancel) {
+        if (cancel && !options?.hideProgress) {
             const shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
             const options: ProgressOptions = {
                 location: ProgressLocation.Notification,

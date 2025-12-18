@@ -135,6 +135,15 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         globalEnvironmentVariableCollection.verify((c) => c.delete('PYTHONSTARTUP'), TypeMoq.Times.once());
     });
 
+    test('PYTHON_BASIC_REPL is set when shell integration is enabled', async () => {
+        pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => true);
+        await registerPythonStartup(context.object);
+        globalEnvironmentVariableCollection.verify(
+            (c) => c.replace('PYTHON_BASIC_REPL', '1', TypeMoq.It.isAny()),
+            TypeMoq.Times.once(),
+        );
+    });
+
     test('Ensure registering terminal link calls registerTerminalLinkProvider', async () => {
         const registerTerminalLinkProviderStub = sinon.stub(
             pythonStartupLinkProvider,

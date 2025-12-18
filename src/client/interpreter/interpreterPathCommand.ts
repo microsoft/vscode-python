@@ -4,12 +4,13 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
+import { Uri, workspace } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { Commands } from '../common/constants';
 import { IDisposable, IDisposableRegistry } from '../common/types';
 import { registerCommand } from '../common/vscodeApis/commandApis';
 import { IInterpreterService } from './contracts';
+import { useEnvExtension } from '../envExt/api.internal';
 
 @injectable()
 export class InterpreterPathCommand implements IExtensionSingleActivationService {
@@ -26,7 +27,9 @@ export class InterpreterPathCommand implements IExtensionSingleActivationService
         );
     }
 
-    public async _getSelectedInterpreterPath(args: { workspaceFolder: string } | string[]): Promise<string> {
+    public async _getSelectedInterpreterPath(
+        args: { workspaceFolder: string; type: string } | string[],
+    ): Promise<string> {
         // If `launch.json` is launching this command, `args.workspaceFolder` carries the workspaceFolder
         // If `tasks.json` is launching this command, `args[1]` carries the workspaceFolder
         let workspaceFolder;
@@ -35,6 +38,11 @@ export class InterpreterPathCommand implements IExtensionSingleActivationService
         } else if (args[1]) {
             const [, second] = args;
             workspaceFolder = second;
+        } else if (useEnvExtension() && 'type' in args && args.type === 'debugpy') {
+            // If using the envsExt and the type is debugpy, we need to add the workspace folder to get the interpreter path.
+            if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
+                workspaceFolder = workspace.workspaceFolders[0].uri.fsPath;
+            }
         } else {
             workspaceFolder = undefined;
         }

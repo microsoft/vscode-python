@@ -411,7 +411,6 @@ export namespace DebugConfigStrings {
 
 export namespace Testing {
     export const configureTests = l10n.t('Configure Test Framework');
-    export const testNotConfigured = l10n.t('No test framework configured.');
     export const cancelUnittestDiscovery = l10n.t('Canceled unittest test discovery');
     export const errorUnittestDiscovery = l10n.t('Unittest test discovery error');
     export const cancelPytestDiscovery = l10n.t('Canceled pytest test discovery');

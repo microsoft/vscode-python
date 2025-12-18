@@ -4,7 +4,7 @@
 import { Terminal, Uri } from 'vscode';
 import { getEnvExtApi, getEnvironment } from './api.internal';
 import { EnvironmentType, PythonEnvironment as PythonEnvironmentLegacy } from '../pythonEnvironments/info';
-import { PythonEnvironment, PythonTerminalOptions } from './types';
+import { PythonEnvironment, PythonTerminalCreateOptions } from './types';
 import { Architecture } from '../common/utils/platform';
 import { parseVersion } from '../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvType } from '../pythonEnvironments/base/info';
@@ -77,13 +77,13 @@ function toLegacyType(env: PythonEnvironment): PythonEnvironmentLegacy {
     const ver = parseVersion(env.version);
     const envType = toEnvironmentType(env);
     return {
-        id: env.environmentPath.fsPath,
+        id: env.execInfo.run.executable,
         displayName: env.displayName,
         detailedDisplayName: env.name,
         envType,
         envPath: env.sysPrefix,
         type: getEnvType(envType),
-        path: env.environmentPath.fsPath,
+        path: env.execInfo.run.executable,
         version: {
             raw: env.version,
             major: ver.major,
@@ -137,7 +137,7 @@ export async function resetInterpreterLegacy(uri: Uri | undefined): Promise<void
 
 export async function ensureTerminalLegacy(
     resource: Uri | undefined,
-    options?: PythonTerminalOptions,
+    options?: PythonTerminalCreateOptions,
 ): Promise<Terminal> {
     const api = await getEnvExtApi();
     const pythonEnv = await api.getEnvironment(resource);
@@ -148,5 +148,24 @@ export async function ensureTerminalLegacy(
         const terminal = await api.createTerminal(pythonEnv, fixedOptions);
         return terminal;
     }
+    traceError('ensureTerminalLegacy - Did not return terminal successfully.');
+    traceError(
+        'ensureTerminalLegacy - pythonEnv:',
+        pythonEnv
+            ? `id=${pythonEnv.envId.id}, managerId=${pythonEnv.envId.managerId}, name=${pythonEnv.name}, version=${pythonEnv.version}, executable=${pythonEnv.execInfo.run.executable}`
+            : 'undefined',
+    );
+    traceError(
+        'ensureTerminalLegacy - project:',
+        project ? `name=${project.name}, uri=${project.uri.toString()}` : 'undefined',
+    );
+    traceError(
+        'ensureTerminalLegacy - options:',
+        options
+            ? `name=${options.name}, cwd=${options.cwd?.toString()}, hideFromUser=${options.hideFromUser}`
+            : 'undefined',
+    );
+    traceError('ensureTerminalLegacy - resource:', resource?.toString() || 'undefined');
+
     throw new Error('Invalid arguments to create terminal');
 }

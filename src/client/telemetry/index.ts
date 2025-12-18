@@ -404,6 +404,10 @@ export interface IEventNamePropertyMapping {
          * to approximately guess if it's the first session.
          */
         isFirstSession?: boolean;
+        /**
+         * If user has enabled the Python Environments extension integration
+         */
+        usingEnvironmentsExtension?: boolean;
     };
     /**
      * Telemetry event sent when substituting Environment variables to calculate value of variables
@@ -1981,6 +1985,32 @@ export interface IEventNamePropertyMapping {
         replType: 'Terminal' | 'Native' | 'manualTerminal' | `runningScript`;
     };
     /**
+     * Telemetry event sent when invoking a Tool
+     */
+    /* __GDPR__
+       "invokeTool" : {
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+           "toolName" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+            "failed": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether there was a failure. Common to most of the events.", "owner": "donjayamanne" },
+            "failureCategory": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error. Common to most of the events.", "owner": "donjayamanne" }
+       }
+     */
+    [EventName.INVOKE_TOOL]: {
+        /**
+         * Tool name.
+         */
+        toolName: string;
+        /**
+         * Whether there was a failure.
+         * Common to most of the events.
+         */
+        failed: boolean;
+        /**
+         * A reason the error was thrown.
+         */
+        failureCategory?: string;
+    };
+    /**
      * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
      */
     /* __GDPR__
@@ -2317,7 +2347,7 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.ENVIRONMENT_CREATING]: {
-        environmentType: 'venv' | 'conda' | 'microvenv';
+        environmentType: 'venv' | 'conda' | 'microvenv' | undefined;
         pythonVersion: string | undefined;
     };
     /**

@@ -9,7 +9,11 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as sinon from 'sinon';
 import { PytestTestDiscoveryAdapter } from '../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
-import { ITestController, ITestResultResolver } from '../../../client/testing/testController/common/types';
+import {
+    ITestController,
+    ITestResultResolver,
+    ExecutionTestPayload,
+} from '../../../client/testing/testController/common/types';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -157,11 +161,10 @@ suite('End to End Tests: test adapters', () => {
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
         // const deferredTillEOT = createTestingDeferred();
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
-            return Promise.resolve();
         };
 
         // set workspace to test workspace folder and set up settings
@@ -198,11 +201,10 @@ suite('End to End Tests: test adapters', () => {
         };
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
-            return Promise.resolve();
         };
 
         // set settings to work for the given workspace
@@ -238,10 +240,9 @@ suite('End to End Tests: test adapters', () => {
         workspaceUri = Uri.parse(rootPathSmallWorkspace);
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = (payload, _token?) => {
             callCount = callCount + 1;
             actualData = payload;
-            return Promise.resolve();
         };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
@@ -287,11 +288,10 @@ suite('End to End Tests: test adapters', () => {
 
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
-            return Promise.resolve();
         };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
@@ -371,11 +371,10 @@ suite('End to End Tests: test adapters', () => {
 
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
-            return Promise.resolve();
         };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
@@ -442,11 +441,10 @@ suite('End to End Tests: test adapters', () => {
         };
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
-            return Promise.resolve();
         };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
@@ -476,22 +474,23 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver._resolveExecution = async (payload, _token?) => {
+        resultResolver.resolveExecution = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
             try {
-                assert.strictEqual(
-                    payload.status,
-                    'success',
-                    `Expected status to be 'success', instead status is ${payload.status}`,
-                );
-                assert.ok(payload.result, 'Expected results to be present');
+                if ('status' in payload) {
+                    assert.strictEqual(
+                        payload.status,
+                        'success',
+                        `Expected status to be 'success', instead status is ${payload.status}`,
+                    );
+                    assert.ok(payload.result, 'Expected results to be present');
+                }
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            return Promise.resolve();
         };
 
         // set workspace to test workspace folder
@@ -550,22 +549,25 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver._resolveExecution = async (payload, _token?) => {
+        resultResolver.resolveExecution = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
             try {
-                const validStatuses = ['subtest-success', 'subtest-failure'];
-                assert.ok(
-                    validStatuses.includes(payload.status),
-                    `Expected status to be one of ${validStatuses.join(', ')}, but instead status is ${payload.status}`,
-                );
-                assert.ok(payload.result, 'Expected results to be present');
+                if ('status' in payload) {
+                    const validStatuses = ['subtest-success', 'subtest-failure'];
+                    assert.ok(
+                        validStatuses.includes(payload.status),
+                        `Expected status to be one of ${validStatuses.join(', ')}, but instead status is ${
+                            payload.status
+                        }`,
+                    );
+                    assert.ok(payload.result, 'Expected results to be present');
+                }
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            return Promise.resolve();
         };
 
         // set workspace to test workspace folder
@@ -621,22 +623,23 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver._resolveExecution = async (payload, _token?) => {
+        resultResolver.resolveExecution = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
             try {
-                assert.strictEqual(
-                    payload.status,
-                    'success',
-                    `Expected status to be 'success', instead status is ${payload.status}`,
-                );
-                assert.ok(payload.result, 'Expected results to be present');
+                if ('status' in payload) {
+                    assert.strictEqual(
+                        payload.status,
+                        'success',
+                        `Expected status to be 'success', instead status is ${payload.status}`,
+                    );
+                    assert.ok(payload.result, 'Expected results to be present');
+                }
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            return Promise.resolve();
         };
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathSmallWorkspace);
@@ -703,7 +706,7 @@ suite('End to End Tests: test adapters', () => {
     test('Unittest execution with coverage, small workspace', async () => {
         // result resolver and saved data for assertions
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
-        resultResolver._resolveCoverage = async (payload, _token?) => {
+        resultResolver._resolveCoverage = (payload, _token?) => {
             assert.strictEqual(payload.cwd, rootPathCoverageWorkspace, 'Expected cwd to be the workspace folder');
             assert.ok(payload.result, 'Expected results to be present');
             const simpleFileCov = payload.result[`${rootPathCoverageWorkspace}/even.py`];
@@ -713,7 +716,6 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
             assert.strictEqual(simpleFileCov.executed_branches, 1, 'Expected 1 branch to be executed in even.py');
             assert.strictEqual(simpleFileCov.total_branches, 2, 'Expected 2 branches in even.py');
-            return Promise.resolve();
         };
 
         // set workspace to test workspace folder
@@ -753,7 +755,7 @@ suite('End to End Tests: test adapters', () => {
     test('pytest coverage execution, small workspace', async () => {
         // result resolver and saved data for assertions
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
-        resultResolver._resolveCoverage = async (payload, _runInstance?) => {
+        resultResolver._resolveCoverage = (payload, _runInstance?) => {
             assert.strictEqual(payload.cwd, rootPathCoverageWorkspace, 'Expected cwd to be the workspace folder');
             assert.ok(payload.result, 'Expected results to be present');
             const simpleFileCov = payload.result[`${rootPathCoverageWorkspace}/even.py`];
@@ -763,8 +765,6 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
             assert.strictEqual(simpleFileCov.executed_branches, 1, 'Expected 1 branch to be executed in even.py');
             assert.strictEqual(simpleFileCov.total_branches, 2, 'Expected 2 branches in even.py');
-
-            return Promise.resolve();
         };
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathCoverageWorkspace);
@@ -807,22 +807,23 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver._resolveExecution = async (payload, _token?) => {
+        resultResolver.resolveExecution = (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
             try {
-                assert.strictEqual(
-                    payload.status,
-                    'success',
-                    `Expected status to be 'success', instead status is ${payload.status}`,
-                );
-                assert.ok(payload.result, 'Expected results to be present');
+                if ('status' in payload) {
+                    assert.strictEqual(
+                        payload.status,
+                        'success',
+                        `Expected status to be 'success', instead status is ${payload.status}`,
+                    );
+                    assert.ok(payload.result, 'Expected results to be present');
+                }
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            return Promise.resolve();
         };
 
         // set workspace to test workspace folder
@@ -874,7 +875,7 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver._resolveDiscovery = async (data, _token?) => {
+        resultResolver.resolveDiscovery = (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             callCount = callCount + 1;
             traceLog(`unittest discovery adapter seg fault error handling \n  ${JSON.stringify(data)}`);
@@ -899,7 +900,6 @@ suite('End to End Tests: test adapters', () => {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            return Promise.resolve();
         };
 
         // set workspace to test workspace folder
@@ -927,7 +927,7 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver._resolveDiscovery = async (data, _token?) => {
+        resultResolver.resolveDiscovery = (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             callCount = callCount + 1;
             traceLog(`add one to call count, is now ${callCount}`);
@@ -957,7 +957,6 @@ suite('End to End Tests: test adapters', () => {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            return Promise.resolve();
         };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
@@ -980,22 +979,24 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver._resolveExecution = async (data, _token?) => {
+        resultResolver.resolveExecution = (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             console.log(`pytest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
             callCount = callCount + 1;
             try {
-                if (data.status === 'error') {
-                    assert.ok(data.error, "Expected errors in 'error' field");
-                } else {
-                    const indexOfTest = JSON.stringify(data.result).search('error');
-                    assert.notDeepEqual(
-                        indexOfTest,
-                        -1,
-                        'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.',
-                    );
+                if ('status' in data) {
+                    if (data.status === 'error') {
+                        assert.ok(data.error, "Expected errors in 'error' field");
+                    } else {
+                        const indexOfTest = JSON.stringify(data.result).search('error');
+                        assert.notDeepEqual(
+                            indexOfTest,
+                            -1,
+                            'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.',
+                        );
+                    }
+                    assert.ok(data.result, 'Expected results to be present');
                 }
-                assert.ok(data.result, 'Expected results to be present');
                 // make sure the testID is found in the results
                 const indexOfTest = JSON.stringify(data).search(
                     'test_seg_fault.py::TestSegmentationFault::test_segfault',
@@ -1005,7 +1006,6 @@ suite('End to End Tests: test adapters', () => {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            return Promise.resolve();
         };
 
         const testId = `${rootPathErrorWorkspace}/test_seg_fault.py::TestSegmentationFault::test_segfault`;
@@ -1032,5 +1032,211 @@ suite('End to End Tests: test adapters', () => {
                 assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
                 assert.strictEqual(failureOccurred, false, failureMsg);
             });
+    });
+
+    test('resolveExecution performance test: validates efficient test result processing', async () => {
+        // This test validates that resolveExecution processes test results efficiently
+        // without expensive tree rebuilding or linear searching operations.
+        //
+        // The test ensures that processing many test results (like parameterized tests)
+        // remains fast and doesn't cause performance issues or stack overflow.
+
+        // ================================================================
+        // SETUP: Initialize test environment and tracking variables
+        // ================================================================
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+
+        // Performance tracking variables
+        let totalCallTime = 0;
+        let callCount = 0;
+        const callTimes: number[] = [];
+        let treeRebuildCount = 0;
+        let totalSearchOperations = 0;
+
+        // Test configuration - Moderate scale to validate efficiency
+        const numTestFiles = 5; // Multiple test files
+        const testFunctionsPerFile = 10; // Test functions per file
+        const totalTestItems = numTestFiles * testFunctionsPerFile; // Total test items in mock tree
+        const numParameterizedResults = 15; // Number of parameterized test results to process
+
+        // ================================================================
+        // MOCK: Set up spies and function wrapping to track performance
+        // ================================================================
+
+        // Mock getTestCaseNodes to track expensive tree operations
+        const originalGetTestCaseNodes = require('../../../client/testing/testController/common/testItemUtilities')
+            .getTestCaseNodes;
+        const getTestCaseNodesSpy = sinon.stub().callsFake((item) => {
+            treeRebuildCount++;
+            const result = originalGetTestCaseNodes(item);
+            // Track search operations through tree items
+            // Safely handle undefined results
+            if (result && Array.isArray(result)) {
+                totalSearchOperations += result.length;
+            }
+            return result || []; // Return empty array if undefined
+        });
+
+        // Replace the real function with our spy
+        const testItemUtilities = require('../../../client/testing/testController/common/testItemUtilities');
+        testItemUtilities.getTestCaseNodes = getTestCaseNodesSpy;
+
+        // Stub isTestItemValid to always return true for performance test
+        // This prevents expensive tree searches during validation
+        const testItemIndexStub = sinon.stub((resultResolver as any).testItemIndex, 'isTestItemValid').returns(true);
+
+        // Wrap the _resolveExecution function to measure performance
+        const original_resolveExecution = resultResolver.resolveExecution.bind(resultResolver);
+        resultResolver.resolveExecution = (payload, runInstance) => {
+            const startTime = performance.now();
+            callCount++;
+
+            // Call the actual implementation
+            original_resolveExecution(payload, runInstance);
+
+            const endTime = performance.now();
+            const callTime = endTime - startTime;
+            callTimes.push(callTime);
+            totalCallTime += callTime;
+        };
+
+        // ================================================================
+        // SETUP: Create test data that simulates realistic test scenarios
+        // ================================================================
+
+        // Create a mock TestController with the methods we need
+        const mockTestController = {
+            items: new Map(),
+            createTestItem: (id: string, label: string, uri?: Uri) => {
+                const childrenMap = new Map();
+                // Add forEach method to children map to simulate TestItemCollection
+                (childrenMap as any).forEach = function (callback: (item: any) => void) {
+                    Map.prototype.forEach.call(this, callback);
+                };
+
+                const mockTestItem = {
+                    id,
+                    label,
+                    uri,
+                    children: childrenMap,
+                    parent: undefined,
+                    canResolveChildren: false,
+                    tags: [{ id: 'python-run' }, { id: 'python-debug' }],
+                };
+                return mockTestItem;
+            },
+            // Add a forEach method to simulate the problematic iteration
+            forEach: function (callback: (item: any) => void) {
+                this.items.forEach(callback);
+            },
+        }; // Replace the testController in our resolver
+        (resultResolver as any).testController = mockTestController;
+
+        // Create test controller with many test items (simulates real workspace)
+        for (let i = 0; i < numTestFiles; i++) {
+            const testItem = mockTestController.createTestItem(
+                `test_file_${i}`,
+                `Test File ${i}`,
+                Uri.file(`/test_${i}.py`),
+            );
+            mockTestController.items.set(`test_file_${i}`, testItem);
+
+            // Add child test items to each file
+            for (let j = 0; j < testFunctionsPerFile; j++) {
+                const childItem = mockTestController.createTestItem(
+                    `test_${i}_${j}`,
+                    `test_method_${j}`,
+                    Uri.file(`/test_${i}.py`),
+                );
+                testItem.children.set(`test_${i}_${j}`, childItem);
+
+                // Set up the ID mappings that the resolver uses
+                resultResolver.runIdToTestItem.set(`test_${i}_${j}`, childItem as any);
+                resultResolver.runIdToVSid.set(`test_${i}_${j}`, `test_${i}_${j}`);
+                resultResolver.vsIdToRunId.set(`test_${i}_${j}`, `test_${i}_${j}`);
+            }
+        } // Create payload with multiple test results (simulates real test execution)
+        const testResults: Record<string, any> = {};
+        for (let i = 0; i < numParameterizedResults; i++) {
+            // Use test IDs that actually exist in our mock setup (test_0_0 through test_0_9)
+            testResults[`test_0_${i % testFunctionsPerFile}`] = {
+                test: `test_method[${i}]`,
+                outcome: 'success',
+                message: null,
+                traceback: null,
+                subtest: null,
+            };
+        }
+
+        const payload: ExecutionTestPayload = {
+            cwd: '/test',
+            status: 'success' as const,
+            error: '',
+            result: testResults,
+        };
+
+        const mockRunInstance = {
+            passed: sinon.stub(),
+            failed: sinon.stub(),
+            errored: sinon.stub(),
+            skipped: sinon.stub(),
+        };
+
+        // ================================================================
+        // EXECUTION: Run the performance test
+        // ================================================================
+
+        const overallStartTime = performance.now();
+
+        // Run the resolveExecution function with test data
+        await resultResolver.resolveExecution(payload, mockRunInstance as any);
+
+        const overallEndTime = performance.now();
+        const totalTime = overallEndTime - overallStartTime;
+
+        // ================================================================
+        // CLEANUP: Restore original functions
+        // ================================================================
+        testItemUtilities.getTestCaseNodes = originalGetTestCaseNodes;
+        testItemIndexStub.restore();
+
+        // ================================================================
+        // ASSERT: Verify efficient performance characteristics
+        // ================================================================
+        console.log(`\n=== PERFORMANCE RESULTS ===`);
+        console.log(
+            `Test setup: ${numTestFiles} files × ${testFunctionsPerFile} test functions = ${totalTestItems} total items`,
+        );
+        console.log(`Total execution time: ${totalTime.toFixed(2)}ms`);
+        console.log(`Tree operations performed: ${treeRebuildCount}`);
+        console.log(`Search operations: ${totalSearchOperations}`);
+        console.log(`Average time per call: ${(totalCallTime / callCount).toFixed(2)}ms`);
+        console.log(`Results processed: ${numParameterizedResults}`);
+
+        // Basic function call verification
+        assert.strictEqual(callCount, 1, 'Expected resolveExecution to be called once');
+
+        // EFFICIENCY VERIFICATION: Ensure minimal expensive operations
+        assert.strictEqual(
+            treeRebuildCount,
+            0,
+            'Expected ZERO tree rebuilds - efficient implementation should use cached lookups',
+        );
+
+        assert.strictEqual(
+            totalSearchOperations,
+            0,
+            'Expected ZERO linear search operations - efficient implementation should use direct lookups',
+        );
+
+        // Performance threshold verification - should be fast
+        assert.ok(totalTime < 100, `Function should complete quickly, took ${totalTime}ms (should be under 100ms)`);
+
+        // Scalability check - time should not grow significantly with more results
+        const timePerResult = totalTime / numParameterizedResults;
+        assert.ok(
+            timePerResult < 10,
+            `Time per result should be minimal: ${timePerResult.toFixed(2)}ms per result (should be under 10ms)`,
+        );
     });
 });

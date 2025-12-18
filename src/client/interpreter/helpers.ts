@@ -19,7 +19,7 @@ export function isInterpreterLocatedInWorkspace(interpreter: PythonEnvironment, 
 /**
  * Build a version-sorted list from the given one, with lowest first.
  */
-function sortInterpreters(interpreters: PythonEnvironment[]): PythonEnvironment[] {
+export function sortInterpreters(interpreters: PythonEnvironment[]): PythonEnvironment[] {
     if (interpreters.length === 0) {
         return [];
     }

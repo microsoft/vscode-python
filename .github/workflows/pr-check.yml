@@ -10,7 +10,7 @@ on:
 permissions: {}
 
 env:
-  NODE_VERSION: 20.18.0
+  NODE_VERSION: 22.17.0
   PYTHON_VERSION: '3.10' # YML treats 3.10 the number as 3.1, so quotes around 3.10
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
@@ -57,12 +57,12 @@ jobs:
           #     vsix-target: alpine-arm64
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: 'microsoft/python-environment-tools'
           path: 'python-env-tools'
@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
@@ -101,17 +101,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Use Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: 'microsoft/python-environment-tools'
           path: 'python-env-tools'
@@ -138,7 +138,7 @@ jobs:
           python -m pip install --upgrade -r build/test-requirements.txt
 
       - name: Run Pyright
-        uses: jakebailey/pyright-action@b5d50e5cde6547546a5c4ac92e416a8c2c1a1dfe # v2.3.2
+        uses: jakebailey/pyright-action@6cabc0f01c4994be48fd45cd9dbacdd6e1ee6e5e # v2.3.3
         with:
           version: 1.1.308
           working-directory: 'python_files'
@@ -162,13 +162,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: ${{ env.special-working-directory-relative }}
           persist-credentials: false
 
       - name: Use Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
 
@@ -215,13 +215,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: ${{ env.special-working-directory-relative }}
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: 'microsoft/python-environment-tools'
           path: ${{ env.special-working-directory-relative }}/python-env-tools
@@ -233,7 +233,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -249,7 +249,7 @@ jobs:
         run: npx @vscode/l10n-dev@latest export ./src
 
       - name: Use Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
 
@@ -412,13 +412,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: ${{ env.special-working-directory-relative }}
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: 'microsoft/python-environment-tools'
           path: ${{ env.special-working-directory-relative }}/python-env-tools
@@ -452,12 +452,12 @@ jobs:
     steps:
       # Need the source to have the tests available.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: 'microsoft/python-environment-tools'
           path: python-env-tools
@@ -488,12 +488,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: 'microsoft/python-environment-tools'
           path: python-env-tools
@@ -505,7 +505,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -520,7 +520,7 @@ jobs:
         run: npx @vscode/l10n-dev@latest export ./src
 
       - name: Use Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -680,7 +680,7 @@ jobs:
         run: npm run test:cover:report
 
       - name: Upload HTML report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ runner.os }}-coverage-report-html
           path: ./coverage

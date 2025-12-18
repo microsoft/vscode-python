@@ -3,22 +3,6 @@
 
 import { traceWarn } from '../../../logging';
 
-export function getOptionValues(args: string[], option: string): string[] {
-    const values: string[] = [];
-    let returnNextValue = false;
-    for (const arg of args) {
-        if (returnNextValue) {
-            values.push(arg);
-            returnNextValue = false;
-        } else if (arg.startsWith(`${option}=`)) {
-            values.push(arg.substring(`${option}=`.length));
-        } else if (arg === option) {
-            returnNextValue = true;
-        }
-    }
-    return values;
-}
-
 export function getPositionalArguments(
     args: string[],
     optionsWithArguments: string[] = [],

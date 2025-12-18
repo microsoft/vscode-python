@@ -8,7 +8,7 @@ import { executeCommand, registerCommand } from '../../common/vscodeApis/command
 import { IInterpreterQuickPick, IPythonPathUpdaterServiceManager } from '../../interpreter/configuration/types';
 import { getCreationEvents, handleCreateEnvironmentCommand } from './createEnvironment';
 import { condaCreationProvider } from './provider/condaCreationProvider';
-import { VenvCreationProvider } from './provider/venvCreationProvider';
+import { VenvCreationProvider, VenvCreationProviderId } from './provider/venvCreationProvider';
 import { showInformationMessage } from '../../common/vscodeApis/windowApis';
 import { CreateEnv } from '../../common/utils/localize';
 import {
@@ -72,11 +72,28 @@ export function registerCreateEnvironmentFeatures(
             ): Promise<CreateEnvironmentResult | undefined> => {
                 if (useEnvExtension()) {
                     try {
+                        sendTelemetryEvent(EventName.ENVIRONMENT_CREATING, undefined, {
+                            environmentType: undefined,
+                            pythonVersion: undefined,
+                        });
                         const result = await executeCommand<PythonEnvironment | undefined>(
                             'python-envs.createAny',
                             options,
                         );
                         if (result) {
+                            const managerId = result.envId.managerId;
+                            if (managerId === 'ms-python.python:venv') {
+                                sendTelemetryEvent(EventName.ENVIRONMENT_CREATED, undefined, {
+                                    environmentType: 'venv',
+                                    reason: 'created',
+                                });
+                            }
+                            if (managerId === 'ms-python.python:conda') {
+                                sendTelemetryEvent(EventName.ENVIRONMENT_CREATED, undefined, {
+                                    environmentType: 'conda',
+                                    reason: 'created',
+                                });
+                            }
                             return { path: result.environmentPath.path };
                         }
                     } catch (err) {
@@ -132,4 +149,12 @@ export function buildEnvironmentCreationApi(): ProposedCreateEnvironmentAPI {
         registerCreateEnvironmentProvider: (provider: CreateEnvironmentProvider) =>
             registerCreateEnvironmentProvider(provider),
     };
+}
+
+export async function createVirtualEnvironment(options?: CreateEnvironmentOptions & CreateEnvironmentOptionsInternal) {
+    const provider = _createEnvironmentProviders.getAll().find((p) => p.id === VenvCreationProviderId);
+    if (!provider) {
+        return;
+    }
+    return handleCreateEnvironmentCommand([provider], { ...options, providerId: provider.id });
 }

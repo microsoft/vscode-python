@@ -11,22 +11,37 @@ import {
     workspace,
 } from 'vscode';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
-import { PythonExtension, ResolvedEnvironment } from '../api/types';
+import { Environment, PythonExtension, ResolvedEnvironment, VersionInfo } from '../api/types';
 import { ITerminalHelper, TerminalShellType } from '../common/terminal/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
 import { Conda } from '../pythonEnvironments/common/environmentManagers/conda';
 import { JUPYTER_EXTENSION_ID, NotebookCellScheme } from '../common/constants';
+import { dirname, join } from 'path';
+import { resolveEnvironment, useEnvExtension } from '../envExt/api.internal';
+import { ErrorWithTelemetrySafeReason } from '../common/errors/errorUtils';
+import { getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
+
+export interface IResourceReference {
+    resourcePath?: string;
+}
 
 export function resolveFilePath(filepath?: string): Uri | undefined {
     if (!filepath) {
-        return workspace.workspaceFolders ? workspace.workspaceFolders[0].uri : undefined;
+        const folders = getWorkspaceFolders() ?? [];
+        return folders.length > 0 ? folders[0].uri : undefined;
     }
-    // starts with a scheme
-    try {
-        return Uri.parse(filepath);
-    } catch (e) {
-        return Uri.file(filepath);
+    // Check if it's a URI with a scheme (contains "://")
+    // This handles schemes like "file://", "vscode-notebook://", etc.
+    // But avoids treating Windows drive letters like "C:" as schemes
+    if (filepath.includes('://')) {
+        try {
+            return Uri.parse(filepath);
+        } catch {
+            return Uri.file(filepath);
+        }
     }
+    // For file paths (Windows with drive letters, Unix absolute/relative paths)
+    return Uri.file(filepath);
 }
 
 /**
@@ -71,18 +86,52 @@ export async function getEnvironmentDetails(
 ): Promise<string> {
     // environment
     const envPath = api.getActiveEnvironmentPath(resourcePath);
-    const environment = await raceCancellationError(api.resolveEnvironment(envPath), token);
-    if (!environment || !environment.version) {
-        throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
+    let envType = '';
+    let envVersion = '';
+    let runCommand = '';
+    if (useEnvExtension()) {
+        const environment =
+            (await raceCancellationError(resolveEnvironment(envPath.id), token)) ||
+            (await raceCancellationError(resolveEnvironment(envPath.path), token));
+        if (!environment || !environment.version) {
+            throw new ErrorWithTelemetrySafeReason(
+                'No environment found for the provided resource path: ' + resourcePath?.fsPath,
+                'noEnvFound',
+            );
+        }
+        envVersion = environment.version;
+        try {
+            const managerId = environment.envId.managerId;
+            envType =
+                (!managerId.endsWith(':') && managerId.includes(':') ? managerId.split(':').reverse()[0] : '') ||
+                'unknown';
+        } catch {
+            envType = 'unknown';
+        }
+
+        const execInfo = environment.execInfo;
+        const executable = execInfo?.activatedRun?.executable ?? execInfo?.run.executable ?? 'python';
+        const args = execInfo?.activatedRun?.args ?? execInfo?.run.args ?? [];
+        runCommand = terminalHelper.buildCommandForTerminal(TerminalShellType.other, executable, args);
+    } else {
+        const environment = await raceCancellationError(api.resolveEnvironment(envPath), token);
+        if (!environment || !environment.version) {
+            throw new ErrorWithTelemetrySafeReason(
+                'No environment found for the provided resource path: ' + resourcePath?.fsPath,
+                'noEnvFound',
+            );
+        }
+        envType = environment.environment?.type || 'unknown';
+        envVersion = environment.version.sysVersion || 'unknown';
+        runCommand = await raceCancellationError(
+            getTerminalCommand(environment, resourcePath, terminalExecutionService, terminalHelper),
+            token,
+        );
     }
-    const runCommand = await raceCancellationError(
-        getTerminalCommand(environment, resourcePath, terminalExecutionService, terminalHelper),
-        token,
-    );
     const message = [
         `Following is the information about the Python environment:`,
-        `1. Environment Type: ${environment.environment?.type || 'unknown'}`,
-        `2. Version: ${environment.version.sysVersion || 'unknown'}`,
+        `1. Environment Type: ${envType}`,
+        `2. Version: ${envVersion}`,
         '',
         `3. Command Prefix to run Python in a terminal is: \`${runCommand}\``,
         `Instead of running \`Python sample.py\` in the terminal, you will now run: \`${runCommand} sample.py\``,
@@ -155,4 +204,82 @@ export function getToolResponseIfNotebook(resource: Uri | undefined) {
             ),
         ]);
     }
+}
+
+export function isCancellationError(error: unknown): boolean {
+    return (
+        !!error && (error instanceof CancellationError || (error as Error).message === new CancellationError().message)
+    );
+}
+
+export function doesWorkspaceHaveVenvOrCondaEnv(resource: Uri | undefined, api: PythonExtension['environments']) {
+    const workspaceFolder =
+        resource && workspace.workspaceFolders?.length
+            ? workspace.getWorkspaceFolder(resource)
+            : workspace.workspaceFolders?.length === 1
+            ? workspace.workspaceFolders[0]
+            : undefined;
+    if (!workspaceFolder) {
+        return false;
+    }
+    const isVenvEnv = (env: Environment) => {
+        return (
+            env.environment?.folderUri &&
+            env.executable.sysPrefix &&
+            dirname(env.executable.sysPrefix) === workspaceFolder.uri.fsPath &&
+            ((env.environment.name || '').startsWith('.venv') ||
+                env.executable.sysPrefix === join(workspaceFolder.uri.fsPath, '.venv')) &&
+            env.environment.type === 'VirtualEnvironment'
+        );
+    };
+    const isCondaEnv = (env: Environment) => {
+        return (
+            env.environment?.folderUri &&
+            env.executable.sysPrefix &&
+            dirname(env.executable.sysPrefix) === workspaceFolder.uri.fsPath &&
+            (env.environment.folderUri.fsPath === join(workspaceFolder.uri.fsPath, '.conda') ||
+                env.executable.sysPrefix === join(workspaceFolder.uri.fsPath, '.conda')) &&
+            env.environment.type === 'Conda'
+        );
+    };
+    // If we alraedy have a .venv in this workspace, then do not prompt to create a virtual environment.
+    return api.known.find((e) => isVenvEnv(e) || isCondaEnv(e));
+}
+
+export async function getEnvDetailsForResponse(
+    environment: ResolvedEnvironment | undefined,
+    api: PythonExtension['environments'],
+    terminalExecutionService: TerminalCodeExecutionProvider,
+    terminalHelper: ITerminalHelper,
+    resource: Uri | undefined,
+    token: CancellationToken,
+): Promise<LanguageModelToolResult> {
+    if (!workspace.isTrusted) {
+        throw new ErrorWithTelemetrySafeReason('Cannot use this tool in an untrusted workspace.', 'untrustedWorkspace');
+    }
+    const envPath = api.getActiveEnvironmentPath(resource);
+    environment = environment || (await raceCancellationError(api.resolveEnvironment(envPath), token));
+    if (!environment || !environment.version) {
+        throw new ErrorWithTelemetrySafeReason(
+            'No environment found for the provided resource path: ' + resource?.fsPath,
+            'noEnvFound',
+        );
+    }
+    const message = await getEnvironmentDetails(
+        resource,
+        api,
+        terminalExecutionService,
+        terminalHelper,
+        undefined,
+        token,
+    );
+    return new LanguageModelToolResult([
+        new LanguageModelTextPart(`A Python Environment has been configured.  \n` + message),
+    ]);
+}
+export function getDisplayVersion(version?: VersionInfo): string | undefined {
+    if (!version || version.major === undefined || version.minor === undefined || version.micro === undefined) {
+        return undefined;
+    }
+    return `${version.major}.${version.minor}.${version.micro}`;
 }

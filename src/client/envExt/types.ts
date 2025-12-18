@@ -2,16 +2,16 @@
 // Licensed under the MIT License.
 
 import {
-    Uri,
     Disposable,
-    MarkdownString,
     Event,
-    LogOutputChannel,
-    ThemeIcon,
-    Terminal,
-    TaskExecution,
-    TerminalOptions,
     FileChangeType,
+    LogOutputChannel,
+    MarkdownString,
+    TaskExecution,
+    Terminal,
+    TerminalOptions,
+    ThemeIcon,
+    Uri,
 } from 'vscode';
 
 /**
@@ -48,23 +48,6 @@ export interface PythonCommandRunConfiguration {
     args?: string[];
 }
 
-export enum TerminalShellType {
-    powershell = 'powershell',
-    powershellCore = 'powershellCore',
-    commandPrompt = 'commandPrompt',
-    gitbash = 'gitbash',
-    bash = 'bash',
-    zsh = 'zsh',
-    ksh = 'ksh',
-    fish = 'fish',
-    cshell = 'cshell',
-    tcshell = 'tshell',
-    nushell = 'nushell',
-    wsl = 'wsl',
-    xonsh = 'xonsh',
-    unknown = 'unknown',
-}
-
 /**
  * Contains details on how to use a particular python environment
  *
@@ -73,7 +56,7 @@ export enum TerminalShellType {
  * 2. If {@link PythonEnvironmentExecutionInfo.activatedRun} is not provided, then:
  *   - If {@link PythonEnvironmentExecutionInfo.shellActivation} is provided and shell type is known, then that will be used.
  *   - If {@link PythonEnvironmentExecutionInfo.shellActivation} is provided and shell type is not known, then:
- *     - {@link TerminalShellType.unknown} will be used if provided.
+ *     - 'unknown' will be used if provided.
  *     - {@link PythonEnvironmentExecutionInfo.activation} will be used otherwise.
  *   - If {@link PythonEnvironmentExecutionInfo.shellActivation} is not provided, then {@link PythonEnvironmentExecutionInfo.activation} will be used.
  *   - If {@link PythonEnvironmentExecutionInfo.activation} is not provided, then {@link PythonEnvironmentExecutionInfo.run} will be used.
@@ -82,7 +65,7 @@ export enum TerminalShellType {
  * 1. If {@link PythonEnvironmentExecutionInfo.shellActivation} is provided and shell type is known, then that will be used.
  * 2. If {@link PythonEnvironmentExecutionInfo.shellActivation} is provided and shell type is not known, then {@link PythonEnvironmentExecutionInfo.activation} will be used.
  * 3. If {@link PythonEnvironmentExecutionInfo.shellActivation} is not provided, then:
- *     - {@link TerminalShellType.unknown} will be used if provided.
+ *     - 'unknown' will be used if provided.
  *     - {@link PythonEnvironmentExecutionInfo.activation} will be used otherwise.
  * 4. If {@link PythonEnvironmentExecutionInfo.activation} is not provided, then {@link PythonEnvironmentExecutionInfo.run} will be used.
  *
@@ -107,11 +90,11 @@ export interface PythonEnvironmentExecutionInfo {
     /**
      * Details on how to activate an environment using a shell specific command.
      * If set this will override the {@link PythonEnvironmentExecutionInfo.activation}.
-     * {@link TerminalShellType.unknown} is used if shell type is not known.
-     * If {@link TerminalShellType.unknown} is not provided and shell type is not known then
+     * 'unknown' is used if shell type is not known.
+     * If 'unknown' is not provided and shell type is not known then
      * {@link PythonEnvironmentExecutionInfo.activation} if set.
      */
-    shellActivation?: Map<TerminalShellType, PythonCommandRunConfiguration[]>;
+    shellActivation?: Map<string, PythonCommandRunConfiguration[]>;
 
     /**
      * Details on how to deactivate an environment.
@@ -121,11 +104,11 @@ export interface PythonEnvironmentExecutionInfo {
     /**
      * Details on how to deactivate an environment using a shell specific command.
      * If set this will override the {@link PythonEnvironmentExecutionInfo.deactivation} property.
-     * {@link TerminalShellType.unknown} is used if shell type is not known.
-     * If {@link TerminalShellType.unknown} is not provided and shell type is not known then
+     * 'unknown' is used if shell type is not known.
+     * If 'unknown' is not provided and shell type is not known then
      * {@link PythonEnvironmentExecutionInfo.deactivation} if set.
      */
-    shellDeactivation?: Map<TerminalShellType, PythonCommandRunConfiguration[]>;
+    shellDeactivation?: Map<string, PythonCommandRunConfiguration[]>;
 }
 
 /**
@@ -141,6 +124,33 @@ export interface PythonEnvironmentId {
      * The ID of the manager responsible for the Python environment.
      */
     managerId: string;
+}
+
+/**
+ * Display information for an environment group.
+ */
+export interface EnvironmentGroupInfo {
+    /**
+     * The name of the environment group. This is used as an identifier for the group.
+     *
+     * Note: The first instance of the group with the given name will be used in the UI.
+     */
+    readonly name: string;
+
+    /**
+     * The description of the environment group.
+     */
+    readonly description?: string;
+
+    /**
+     * The tooltip for the environment group, which can be a string or a Markdown string.
+     */
+    readonly tooltip?: string | MarkdownString;
+
+    /**
+     * The icon path for the environment group, which can be a string, Uri, or an object with light and dark theme paths.
+     */
+    readonly iconPath?: IconPath;
 }
 
 /**
@@ -193,16 +203,20 @@ export interface PythonEnvironmentInfo {
     readonly iconPath?: IconPath;
 
     /**
-     * Information on how to execute the Python environment. If not provided, {@link PythonEnvironmentApi.resolveEnvironment} will be
-     * used to to get the details at later point if needed. The recommendation is to fill this in if known.
+     * Information on how to execute the Python environment. This is required for executing Python code in the environment.
      */
-    readonly execInfo?: PythonEnvironmentExecutionInfo;
+    readonly execInfo: PythonEnvironmentExecutionInfo;
 
     /**
      * `sys.prefix` is the path to the base directory of the Python installation. Typically obtained by executing `sys.prefix` in the Python interpreter.
      * This is required by extension like Jupyter, Pylance, and other extensions to provide better experience with python.
      */
     readonly sysPrefix: string;
+
+    /**
+     * Optional `group` for this environment. This is used to group environments in the Environment Manager UI.
+     */
+    readonly group?: string | EnvironmentGroupInfo;
 }
 
 /**
@@ -219,7 +233,7 @@ export interface PythonEnvironment extends PythonEnvironmentInfo {
  * Type representing the scope for setting a Python environment.
  * Can be undefined or a URI.
  */
-export type SetEnvironmentScope = undefined | Uri;
+export type SetEnvironmentScope = undefined | Uri | Uri[];
 
 /**
  * Type representing the scope for getting a Python environment.
@@ -300,14 +314,26 @@ export type DidChangeEnvironmentsEventArgs = {
 /**
  * Type representing the context for resolving a Python environment.
  */
-export type ResolveEnvironmentContext = PythonEnvironment | Uri;
+export type ResolveEnvironmentContext = Uri;
+
+export interface QuickCreateConfig {
+    /**
+     * The description of the quick create step.
+     */
+    readonly description: string;
+
+    /**
+     * The detail of the quick create step.
+     */
+    readonly detail?: string;
+}
 
 /**
  * Interface representing an environment manager.
  */
 export interface EnvironmentManager {
     /**
-     * The name of the environment manager.
+     * The name of the environment manager. Allowed characters (a-z, A-Z, 0-9, -, _).
      */
     readonly name: string;
 
@@ -317,7 +343,9 @@ export interface EnvironmentManager {
     readonly displayName?: string;
 
     /**
-     * The preferred package manager ID for the environment manager.
+     * The preferred package manager ID for the environment manager. This is a combination
+     * of publisher id, extension id, and {@link EnvironmentManager.name package manager name}.
+     * `<publisher-id>.<extension-id>:<package-manager-name>`
      *
      * @example
      * 'ms-python.python:pip'
@@ -345,11 +373,18 @@ export interface EnvironmentManager {
     readonly log?: LogOutputChannel;
 
     /**
+     * The quick create details for the environment manager. Having this method also enables the quick create feature
+     * for the environment manager. Should Implement {@link EnvironmentManager.create} to support quick create.
+     */
+    quickCreateConfig?(): QuickCreateConfig | undefined;
+
+    /**
      * Creates a new Python environment within the specified scope.
      * @param scope - The scope within which to create the environment.
+     * @param options - Optional parameters for creating the Python environment.
      * @returns A promise that resolves to the created Python environment, or undefined if creation failed.
      */
-    create?(scope: CreateEnvironmentScope): Promise<PythonEnvironment | undefined>;
+    create?(scope: CreateEnvironmentScope, options?: CreateEnvironmentOptions): Promise<PythonEnvironment | undefined>;
 
     /**
      * Removes the specified Python environment.
@@ -529,7 +564,7 @@ export interface DidChangePackagesEventArgs {
  */
 export interface PackageManager {
     /**
-     * The name of the package manager.
+     * The name of the package manager. Allowed characters (a-z, A-Z, 0-9, -, _).
      */
     name: string;
 
@@ -559,20 +594,12 @@ export interface PackageManager {
     log?: LogOutputChannel;
 
     /**
-     * Installs packages in the specified Python environment.
+     * Installs/Uninstall packages in the specified Python environment.
      * @param environment - The Python environment in which to install packages.
-     * @param packages - The packages to install.
+     * @param options - Options for managing packages.
      * @returns A promise that resolves when the installation is complete.
      */
-    install(environment: PythonEnvironment, packages: string[], options: PackageInstallOptions): Promise<void>;
-
-    /**
-     * Uninstalls packages from the specified Python environment.
-     * @param environment - The Python environment from which to uninstall packages.
-     * @param packages - The packages to uninstall, which can be an array of packages or strings.
-     * @returns A promise that resolves when the uninstall is complete.
-     */
-    uninstall(environment: PythonEnvironment, packages: Package[] | string[]): Promise<void>;
+    manage(environment: PythonEnvironment, options: PackageManagementOptions): Promise<void>;
 
     /**
      * Refreshes the package list for the specified Python environment.
@@ -587,17 +614,6 @@ export interface PackageManager {
      * @returns An array of packages, or undefined if the packages could not be retrieved.
      */
     getPackages(environment: PythonEnvironment): Promise<Package[] | undefined>;
-
-    /**
-     * Get a list of installable items for a Python project.
-     *
-     * @param environment The Python environment for which to get installable items.
-     *
-     * Note: An environment can be used by multiple projects, so the installable items returned.
-     * should be for the environment. If you want to do it for a particular project, then you should
-     * ask user to select a project, and filter the installable items based on the project.
-     */
-    getInstallable?(environment: PythonEnvironment): Promise<Installable[]>;
 
     /**
      * Event that is fired when packages change.
@@ -651,9 +667,14 @@ export interface PythonProjectCreatorOptions {
     name: string;
 
     /**
-     * Optional path that may be provided as a root for the project.
+     * Path provided as the root for the project.
      */
-    uri?: Uri;
+    rootUri: Uri;
+
+    /**
+     * Boolean indicating whether the project should be created without any user input.
+     */
+    quickCreate?: boolean;
 }
 
 /**
@@ -686,11 +707,20 @@ export interface PythonProjectCreator {
     readonly iconPath?: IconPath;
 
     /**
-     * Creates a new Python project or projects.
-     * @param options - Optional parameters for creating the Python project.
-     * @returns A promise that resolves to a Python project, an array of Python projects, or undefined.
+     * Creates a new Python project(s) or, if files are not a project, returns Uri(s) to the created files.
+     * Anything that needs its own python environment constitutes a project.
+     * @param options Optional parameters for creating the Python project.
+     * @returns A promise that resolves to one of the following:
+     *   - PythonProject or PythonProject[]: when a single or multiple projects are created.
+     *   - Uri or Uri[]: when files are created that do not constitute a project.
+     *   - undefined: if project creation fails.
      */
-    create(options?: PythonProjectCreatorOptions): Promise<PythonProject | PythonProject[] | undefined>;
+    create(options?: PythonProjectCreatorOptions): Promise<PythonProject | PythonProject[] | Uri | Uri[] | undefined>;
+
+    /**
+     * A flag indicating whether the project creator supports quick create where no user input is required.
+     */
+    readonly supportsQuickCreate?: boolean;
 }
 
 /**
@@ -708,55 +738,70 @@ export interface DidChangePythonProjectsEventArgs {
     removed: PythonProject[];
 }
 
+export type PackageManagementOptions =
+    | {
+          /**
+           * Upgrade the packages if they are already installed.
+           */
+          upgrade?: boolean;
+
+          /**
+           * Show option to skip package installation or uninstallation.
+           */
+          showSkipOption?: boolean;
+          /**
+           * The list of packages to install.
+           */
+          install: string[];
+
+          /**
+           * The list of packages to uninstall.
+           */
+          uninstall?: string[];
+      }
+    | {
+          /**
+           * Upgrade the packages if they are already installed.
+           */
+          upgrade?: boolean;
+
+          /**
+           * Show option to skip package installation or uninstallation.
+           */
+          showSkipOption?: boolean;
+          /**
+           * The list of packages to install.
+           */
+          install?: string[];
+
+          /**
+           * The list of packages to uninstall.
+           */
+          uninstall: string[];
+      };
+
 /**
- * Options for package installation.
+ * Options for creating a Python environment.
  */
-export interface PackageInstallOptions {
+export interface CreateEnvironmentOptions {
     /**
-     * Upgrade the packages if it is already installed.
+     * Provides some context about quick create based on user input.
+     *   - if true, the environment should be created without any user input or prompts.
+     *   - if false, the environment creation can show user input or prompts.
+     *     This also means user explicitly skipped the quick create option.
+     *   - if undefined, the environment creation can show user input or prompts.
+     *     You can show quick create option to the user if you support it.
      */
-    upgrade?: boolean;
+    quickCreate?: boolean;
+    /**
+     * Packages to install in addition to the automatically picked packages as a part of creating environment.
+     */
+    additionalPackages?: string[];
 }
 
-export interface Installable {
-    /**
-     * The display name of the package, requirements, pyproject.toml or any other project file.
-     */
-    readonly displayName: string;
-
-    /**
-     * Arguments passed to the package manager to install the package.
-     *
-     * @example
-     *  ['debugpy==1.8.7'] for `pip install debugpy==1.8.7`.
-     *  ['--pre', 'debugpy'] for `pip install --pre debugpy`.
-     *  ['-r', 'requirements.txt'] for `pip install -r requirements.txt`.
-     */
-    readonly args: string[];
-
-    /**
-     * Installable group name, this will be used to group installable items in the UI.
-     *
-     * @example
-     *  `Requirements` for any requirements file.
-     *  `Packages` for any package.
-     */
-    readonly group?: string;
-
-    /**
-     * Description about the installable item. This can also be path to the requirements,
-     * version of the package, or any other project file path.
-     */
-    readonly description?: string;
-
-    /**
-     * External Uri to the package on pypi or docs.
-     * @example
-     *  https://pypi.org/project/debugpy/ for `debugpy`.
-     */
-    readonly uri?: Uri;
-}
-
+/**
+ * Object representing the process started using run in background API.
+ */
 export interface PythonProcess {
     /**
      * The process ID of the Python process.
@@ -817,9 +862,13 @@ export interface PythonEnvironmentManagementApi {
      * Create a Python environment using environment manager associated with the scope.
      *
      * @param scope Where the environment is to be created.
+     * @param options Optional parameters for creating the Python environment.
      * @returns The Python environment created. `undefined` if not created.
      */
-    createEnvironment(scope: CreateEnvironmentScope): Promise<PythonEnvironment | undefined>;
+    createEnvironment(
+        scope: CreateEnvironmentScope,
+        options?: CreateEnvironmentOptions,
+    ): Promise<PythonEnvironment | undefined>;
 
     /**
      * Remove a Python environment.
@@ -938,21 +987,13 @@ export interface PythonPackageItemApi {
 
 export interface PythonPackageManagementApi {
     /**
-     * Install packages into a Python Environment.
+     * Install/Uninstall packages into a Python Environment.
      *
      * @param environment The Python Environment into which packages are to be installed.
      * @param packages The packages to install.
      * @param options Options for installing packages.
      */
-    installPackages(environment: PythonEnvironment, packages: string[], options?: PackageInstallOptions): Promise<void>;
-
-    /**
-     * Uninstall packages from a Python Environment.
-     *
-     * @param environment The Python Environment from which packages are to be uninstalled.
-     * @param packages The packages to uninstall.
-     */
-    uninstallPackages(environment: PythonEnvironment, packages: PackageInfo[] | string[]): Promise<void>;
+    managePackages(environment: PythonEnvironment, options: PackageManagementOptions): Promise<void>;
 }
 
 export interface PythonPackageManagerApi
@@ -1017,9 +1058,9 @@ export interface PythonProjectModifyApi {
  */
 export interface PythonProjectApi extends PythonProjectCreationApi, PythonProjectGetterApi, PythonProjectModifyApi {}
 
-export interface PythonTerminalOptions extends TerminalOptions {
+export interface PythonTerminalCreateOptions extends TerminalOptions {
     /**
-     * Whether to show the terminal.
+     * Whether to disable activation on create.
      */
     disableActivation?: boolean;
 }
@@ -1033,7 +1074,7 @@ export interface PythonTerminalCreateApi {
      *
      * Note: Non-activatable environments have no effect on the terminal.
      */
-    createTerminal(environment: PythonEnvironment, options: PythonTerminalOptions): Promise<Terminal>;
+    createTerminal(environment: PythonEnvironment, options: PythonTerminalCreateOptions): Promise<Terminal>;
 }
 
 /**

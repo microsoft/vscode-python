@@ -83,4 +83,5 @@ export enum ModuleInstallFlags {
 
 export type InstallOptions = {
     installAsProcess?: boolean;
+    hideProgress?: boolean;
 };

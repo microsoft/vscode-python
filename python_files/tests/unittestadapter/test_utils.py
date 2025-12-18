@@ -284,11 +284,56 @@ def test_build_empty_tree() -> None:
     start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "does_not_exist*"
 
-    expected = None
+    loader = unittest.TestLoader()
+    suite = loader.discover(start_dir, pattern)
+    tests, errors = build_test_tree(suite, start_dir)
+
+    assert tests is not None
+    assert tests.get("children") == []
+    assert not errors
+
+
+def test_doctest_standard_blocked() -> None:
+    """Standard doctests with short IDs should be skipped with an error message."""
+    start_dir = os.fsdecode(TEST_DATA_PATH)
+    pattern = "test_doctest_standard*"
 
     loader = unittest.TestLoader()
     suite = loader.discover(start_dir, pattern)
     tests, errors = build_test_tree(suite, start_dir)
 
-    assert expected == tests
-    assert not errors
+    # Should return a tree but with no test children (since doctests are skipped)
+    assert tests is not None
+    # Check that we got an error about doctests not being supported
+    assert len(errors) > 0
+    assert "Skipping doctest as it is not supported for the extension" in errors[0]
+
+
+def test_doctest_patched_works() -> None:
+    """Patched doctests with properly formatted IDs should be processed normally."""
+    start_dir = os.fsdecode(TEST_DATA_PATH)
+    pattern = "test_doctest_patched*"
+
+    loader = unittest.TestLoader()
+    suite = loader.discover(start_dir, pattern)
+    tests, errors = build_test_tree(suite, start_dir)
+
+    # Should successfully build a tree with the patched doctest
+    assert tests is not None
+
+    # The patched doctests should have proper IDs and be included
+    # We should find at least one test child (the doctests that were patched)
+    def count_tests(node):
+        """Recursively count test nodes."""
+        if node.get("type_") == "test":
+            return 1
+        count = 0
+        for child in node.get("children", []):
+            count += count_tests(child)
+        return count
+
+    test_count = count_tests(tests)
+    # We expect at least the module doctest and function doctest
+    assert test_count > 0, "Patched doctests should be included in the tree"
+    # Should not have doctest-related errors since they're properly formatted
+    assert not any("doctest" in str(e).lower() for e in errors)
