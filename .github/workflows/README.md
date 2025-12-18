@@ -23,20 +23,17 @@ When any job in the build workflow fails on the `main` branch, the `report-failu
    - Labels: `ci-failure`, `bug`, `needs-triage`
 
 2. **Prevents duplicate issues** by:
-   - Checking for existing open issues with the `ci-failure` label
-   - Adding a comment to recent issues (within 24 hours) instead of creating duplicates
+   - Checking for any existing open issues with the `ci-failure` label
+   - Updating a single rolling "CI Failure Log" comment on the existing issue (edits in-place to reduce notification noise)
 
 3. **Provides actionable information** including:
    - Workflow run URL for detailed logs
    - Commit details for quick identification
    - Author mention for notification
 
-**Example Issue Title:**
-```
-CI Failure on main: lint, tests
-```
+**Example issue title:** `CI Failure on main: lint, tests`
 
-**Example Issue Body:**
+**Example issue body (abbreviated):**
 ```markdown
 ## CI Failure Report
 
@@ -44,15 +41,10 @@ The following jobs failed on the main branch:
 - **lint**
 - **tests**
 
-**Workflow Run:** https://github.com/microsoft/vscode-python/actions/runs/123456789
-**Commit:** abc123def456
-**Commit Message:** Fix test flakiness
-**Author:** @username
-
-Please investigate and fix the failure.
-
----
-*This issue was automatically created by the CI system.*
+**Workflow Run:** <link>
+**Commit:** <sha>
+**Commit Message:** <message>
+**Author:** @<user>
 ```
 
 #### Configuration
@@ -62,6 +54,10 @@ The automatic issue filing is controlled by:
 - **Branch check:** Only runs on `refs/heads/main`
 - **Permissions:** Requires `issues: write` permission
 - **Dependencies:** Runs after all test jobs complete using `needs` and `always()`
+
+#### Local validation
+
+The issue filing logic is validated by the script in `.github/workflows/test-issue-creation.js`.
 
 ### pr-check.yml
 Runs on pull requests and non-main branches. Similar to build.yml but does not include automatic issue filing.
