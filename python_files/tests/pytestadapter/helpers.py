@@ -264,17 +264,34 @@ def runner_with_cwd_env(
         pipe_name = generate_random_pipe_name("pytest-discovery-test")
 
     if "COVERAGE_ENABLED" in env_add and "_TEST_VAR_UNITTEST" not in env_add:
-        process_args = [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-p",
-            "vscode_pytest",
-            "--cov=.",
-            "--cov-branch",
-            "-s",
-            *args,
-        ]
+        if "_PYTEST_MANUAL_PLUGIN_LOAD" in env_add:
+            # Test manual plugin loading scenario for issue #25590
+            process_args = [
+                sys.executable,
+                "-m",
+                "pytest",
+                "--disable-plugin-autoload",
+                "-p",
+                "pytest_cov.plugin",
+                "-p",
+                "vscode_pytest",
+                "--cov=.",
+                "--cov-branch",
+                "-s",
+                *args,
+            ]
+        else:
+            process_args = [
+                sys.executable,
+                "-m",
+                "pytest",
+                "-p",
+                "vscode_pytest",
+                "--cov=.",
+                "--cov-branch",
+                "-s",
+                *args,
+            ]
 
     # Generate pipe name, pipe name specific per OS type.
 
