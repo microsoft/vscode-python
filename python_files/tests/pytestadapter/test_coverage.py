@@ -142,3 +142,23 @@ def test_coverage_w_omit_config():
     assert results
     # assert one file is reported and one file (as specified in pyproject.toml) is omitted
     assert len(results) == 1
+
+
+def test_pytest_cov_manual_plugin_loading():
+    """
+    Test that pytest-cov is detected when loaded manually via -p pytest_cov.plugin.
+
+    This test verifies the fix for issue #25590, where pytest-cov detection failed
+    when using --disable-plugin-autoload with -p pytest_cov.plugin. The plugin is
+    registered under its module name (pytest_cov.plugin) instead of entry point name
+    (pytest_cov) in this scenario.
+    """
+    args = ["--collect-only"]
+    env_add = {"COVERAGE_ENABLED": "True", "_PYTEST_MANUAL_PLUGIN_LOAD": "True"}
+    cov_folder_path = TEST_DATA_PATH / "coverage_gen"
+
+    # Should NOT raise VSCodePytestError about pytest-cov not being installed
+    actual = runner_with_cwd_env(args, cov_folder_path, env_add)
+    assert actual is not None
+    # Verify discovery succeeded (status != "error")
+    assert actual[0].get("status") != "error"

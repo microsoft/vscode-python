@@ -87,7 +87,9 @@ _CACHED_CWD: pathlib.Path | None = None
 
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
-    has_pytest_cov = early_config.pluginmanager.hasplugin("pytest_cov")
+    has_pytest_cov = early_config.pluginmanager.hasplugin(
+        "pytest_cov"
+    ) or early_config.pluginmanager.hasplugin("pytest_cov.plugin")
     has_cov_arg = any("--cov" in arg for arg in args)
     if has_cov_arg and not has_pytest_cov:
         raise VSCodePytestError(
