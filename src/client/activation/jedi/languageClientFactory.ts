@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+import { WorkspaceConfiguration } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node';
 
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
@@ -13,7 +14,7 @@ import { ILanguageClientFactory } from '../types';
 const languageClientName = 'Python Jedi';
 
 export class JediLanguageClientFactory implements ILanguageClientFactory {
-    constructor(private interpreterService: IInterpreterService) {}
+    constructor(private interpreterService: IInterpreterService, private readonly workspaceConfiguration: WorkspaceConfiguration) {}
 
     public async createLanguageClient(
         resource: Resource,
@@ -23,9 +24,10 @@ export class JediLanguageClientFactory implements ILanguageClientFactory {
         // Just run the language server using a module
         const lsScriptPath = path.join(EXTENSION_ROOT_DIR, 'python_files', 'run-jedi-language-server.py');
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        const useJediInEnv = this.workspaceConfiguration.get<boolean>("languageServer.useJediInEnvPath") === true
         const serverOptions: ServerOptions = {
             command: interpreter ? interpreter.path : 'python',
-            args: [lsScriptPath],
+            args: [lsScriptPath, useJediInEnv ? "external": "internal"],
         };
 
         return new LanguageClient(PYTHON_LANGUAGE, languageClientName, serverOptions, clientOptions);

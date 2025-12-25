@@ -536,6 +536,12 @@
                     "scope": "window",
                     "type": "string"
                 },
+                "python.languageServer.useJediInEnvPath": {
+                    "default": false,
+                    "description": "%python.languageServer.useJediInEnvPath.description%",
+                    "scope": "window",
+                    "type": "boolean"
+                },
                 "python.interpreter.infoVisibility": {
                     "default": "onPythonRelated",
                     "description": "%python.interpreter.infoVisibility.description%",
