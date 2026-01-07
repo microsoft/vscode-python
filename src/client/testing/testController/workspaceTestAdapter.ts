@@ -42,9 +42,9 @@ export class WorkspaceTestAdapter {
         testController: TestController,
         runInstance: TestRun,
         includes: TestItem[],
+        executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
         profileKind?: boolean | TestRunProfileKind,
-        executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
     ): Promise<void> {
@@ -73,20 +73,18 @@ export class WorkspaceTestAdapter {
                 }
             });
             const testCaseIds = Array.from(testCaseIdsSet);
-            // ** execution factory only defined for new rewrite way
-            if (executionFactory !== undefined) {
-                await this.executionAdapter.runTests(
-                    this.workspaceUri,
-                    testCaseIds,
-                    profileKind,
-                    runInstance,
-                    executionFactory,
-                    debugLauncher,
-                    interpreter,
-                );
-            } else {
-                await this.executionAdapter.runTests(this.workspaceUri, testCaseIds, profileKind);
+            if (executionFactory === undefined) {
+                throw new Error('Execution factory is required for test execution');
             }
+            await this.executionAdapter.runTests(
+                this.workspaceUri,
+                testCaseIds,
+                profileKind,
+                runInstance,
+                executionFactory,
+                debugLauncher,
+                interpreter,
+            );
             deferred.resolve();
         } catch (ex) {
             // handle token and telemetry here
@@ -116,8 +114,8 @@ export class WorkspaceTestAdapter {
 
     public async discoverTests(
         testController: TestController,
+        executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
-        executionFactory?: IPythonExecutionFactory,
         interpreter?: PythonEnvironment,
     ): Promise<void> {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: this.testProvider });
@@ -132,12 +130,10 @@ export class WorkspaceTestAdapter {
         this.discovering = deferred;
 
         try {
-            // ** execution factory only defined for new rewrite way
-            if (executionFactory !== undefined) {
-                await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory, token, interpreter);
-            } else {
-                await this.discoveryAdapter.discoverTests(this.workspaceUri);
+            if (executionFactory === undefined) {
+                throw new Error('Execution factory is required for test discovery');
             }
+            await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory, token, interpreter);
             deferred.resolve();
         } catch (ex) {
             sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: this.testProvider, failed: true });

@@ -29,7 +29,7 @@ import { IConfigurationService, IDisposableRegistry, Resource } from '../../comm
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { traceError, traceInfo, traceVerbose } from '../../logging';
+import { traceError, traceVerbose } from '../../logging';
 import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
@@ -253,101 +253,121 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
     private async refreshTestDataInternal(uri?: Resource): Promise<void> {
         this.refreshingStartedEvent.fire();
-        if (uri) {
-            const settings = this.configSettings.getSettings(uri);
-            const workspace = this.workspaceService.getWorkspaceFolder(uri);
-            traceInfo(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
-            // Ensure we send test telemetry if it gets disabled again
-            this.sendTestDisabledTelemetry = true;
-            // ** experiment to roll out NEW test discovery mechanism
-            if (settings.testing.pytestEnabled) {
-                if (workspace && workspace.uri) {
-                    const testAdapter = this.testAdapters.get(workspace.uri);
-                    if (testAdapter) {
-                        const testProviderInAdapter = testAdapter.getTestProvider();
-                        if (testProviderInAdapter !== 'pytest') {
-                            traceError('Test provider in adapter is not pytest. Please reload window.');
-                            this.surfaceErrorNode(
-                                workspace.uri,
-                                'Test provider types are not aligned, please reload your VS Code window.',
-                                'pytest',
-                            );
-                            return Promise.resolve();
-                        }
-                        await testAdapter.discoverTests(
-                            this.testController,
-                            this.refreshCancellation.token,
-                            this.pythonExecFactory,
-                            await this.interpreterService.getActiveInterpreter(workspace.uri),
-                        );
-                    } else {
-                        traceError('Unable to find test adapter for workspace.');
-                    }
-                } else {
-                    traceError('Unable to find workspace for given file');
-                }
-            } else if (settings.testing.unittestEnabled) {
-                if (workspace && workspace.uri) {
-                    const testAdapter = this.testAdapters.get(workspace.uri);
-                    if (testAdapter) {
-                        const testProviderInAdapter = testAdapter.getTestProvider();
-                        if (testProviderInAdapter !== 'unittest') {
-                            traceError('Test provider in adapter is not unittest. Please reload window.');
-                            this.surfaceErrorNode(
-                                workspace.uri,
-                                'Test provider types are not aligned, please reload your VS Code window.',
-                                'unittest',
-                            );
-                            return Promise.resolve();
-                        }
-                        await testAdapter.discoverTests(
-                            this.testController,
-                            this.refreshCancellation.token,
-                            this.pythonExecFactory,
-                            await this.interpreterService.getActiveInterpreter(workspace.uri),
-                        );
-                    } else {
-                        traceError('Unable to find test adapter for workspace.');
-                    }
-                } else {
-                    traceError('Unable to find workspace for given file');
-                }
+        try {
+            if (uri) {
+                await this.refreshSingleWorkspace(uri);
             } else {
-                if (this.sendTestDisabledTelemetry) {
-                    this.sendTestDisabledTelemetry = false;
-                    sendTelemetryEvent(EventName.UNITTEST_DISABLED);
-                }
-                // If we are here we may have to remove an existing node from the tree
-                // This handles the case where user removes test settings. Which should remove the
-                // tests for that particular case from the tree view
-                if (workspace) {
-                    const toDelete: string[] = [];
-                    this.testController.items.forEach((i: TestItem) => {
-                        const w = this.workspaceService.getWorkspaceFolder(i.uri);
-                        if (w?.uri.fsPath === workspace.uri.fsPath) {
-                            toDelete.push(i.id);
-                        }
-                    });
-                    toDelete.forEach((i) => this.testController.items.delete(i));
-                }
+                await this.refreshAllWorkspaces();
             }
-        } else {
-            traceVerbose('Testing: Refreshing all test data');
-            const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
-            await Promise.all(
-                workspaces.map(async (workspace) => {
-                    if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
-                        this.commandManager
-                            .executeCommand(constants.Commands.TriggerEnvironmentSelection, workspace.uri)
-                            .then(noop, noop);
-                        return;
-                    }
-                    await this.refreshTestDataInternal(workspace.uri);
-                }),
-            );
+        } finally {
+            this.refreshingCompletedEvent.fire();
         }
-        this.refreshingCompletedEvent.fire();
-        return Promise.resolve();
+    }
+
+    /**
+     * Discovers tests for a single workspace.
+     */
+    private async refreshSingleWorkspace(uri: Uri): Promise<void> {
+        const workspace = this.workspaceService.getWorkspaceFolder(uri);
+        if (!workspace?.uri) {
+            traceError('Unable to find workspace for given file');
+            return;
+        }
+
+        const settings = this.configSettings.getSettings(uri);
+        traceVerbose(`Discover tests for workspace name: ${workspace.name} - uri: ${uri.fsPath}`);
+
+        // Ensure we send test telemetry if it gets disabled again
+        this.sendTestDisabledTelemetry = true;
+
+        if (settings.testing.pytestEnabled) {
+            await this.discoverTestsForProvider(workspace.uri, 'pytest');
+        } else if (settings.testing.unittestEnabled) {
+            await this.discoverTestsForProvider(workspace.uri, 'unittest');
+        } else {
+            await this.handleNoTestProviderEnabled(workspace);
+        }
+    }
+
+    /**
+     * Discovers tests for all workspaces in the workspace folders.
+     */
+    private async refreshAllWorkspaces(): Promise<void> {
+        traceVerbose('Testing: Refreshing all test data');
+        const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
+
+        await Promise.all(
+            workspaces.map(async (workspace) => {
+                if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
+                    this.commandManager
+                        .executeCommand(constants.Commands.TriggerEnvironmentSelection, workspace.uri)
+                        .then(noop, noop);
+                    return;
+                }
+                await this.refreshSingleWorkspace(workspace.uri);
+            }),
+        );
+    }
+
+    /**
+     * Discovers tests for a specific test provider (pytest or unittest).
+     * Validates that the adapter's provider matches the expected provider.
+     */
+    private async discoverTestsForProvider(workspaceUri: Uri, expectedProvider: TestProvider): Promise<void> {
+        const testAdapter = this.testAdapters.get(workspaceUri);
+
+        if (!testAdapter) {
+            traceError('Unable to find test adapter for workspace.');
+            return;
+        }
+
+        const actualProvider = testAdapter.getTestProvider();
+        if (actualProvider !== expectedProvider) {
+            traceError(`Test provider in adapter is not ${expectedProvider}. Please reload window.`);
+            this.surfaceErrorNode(
+                workspaceUri,
+                'Test provider types are not aligned, please reload your VS Code window.',
+                expectedProvider,
+            );
+            return;
+        }
+
+        await testAdapter.discoverTests(
+            this.testController,
+            this.pythonExecFactory,
+            this.refreshCancellation.token,
+            await this.interpreterService.getActiveInterpreter(workspaceUri),
+        );
+    }
+
+    /**
+     * Handles the case when no test provider is enabled.
+     * Sends telemetry and removes test items for the workspace from the tree.
+     */
+    private async handleNoTestProviderEnabled(workspace: WorkspaceFolder): Promise<void> {
+        if (this.sendTestDisabledTelemetry) {
+            this.sendTestDisabledTelemetry = false;
+            sendTelemetryEvent(EventName.UNITTEST_DISABLED);
+        }
+
+        this.removeTestItemsForWorkspace(workspace);
+    }
+
+    /**
+     * Removes all test items belonging to a specific workspace from the test controller.
+     * This is used when test discovery is disabled for a workspace.
+     */
+    private removeTestItemsForWorkspace(workspace: WorkspaceFolder): void {
+        const itemsToDelete: string[] = [];
+
+        this.testController.items.forEach((testItem: TestItem) => {
+            const itemWorkspace = this.workspaceService.getWorkspaceFolder(testItem.uri);
+            if (itemWorkspace?.uri.fsPath === workspace.uri.fsPath) {
+                itemsToDelete.push(testItem.id);
+            }
+        });
+
+        itemsToDelete.forEach((id) => this.testController.items.delete(id));
     }
 
     private async resolveChildren(item: TestItem | undefined): Promise<void> {
@@ -378,21 +398,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     }
 
     private async runTests(request: TestRunRequest, token: CancellationToken): Promise<void> {
-        const workspaces: WorkspaceFolder[] = [];
-        if (request.include) {
-            uniq(request.include.map((r) => this.workspaceService.getWorkspaceFolder(r.uri))).forEach((w) => {
-                if (w) {
-                    workspaces.push(w);
-                }
-            });
-        } else {
-            (this.workspaceService.workspaceFolders || []).forEach((w) => workspaces.push(w));
-        }
+        const workspaces = this.getWorkspacesForTestRun(request);
         const runInstance = this.testController.createTestRun(
             request,
             `Running Tests for Workspace(s): ${workspaces.map((w) => w.uri.fsPath).join(';')}`,
             true,
         );
+
         const dispose = token.onCancellationRequested(() => {
             runInstance.appendOutput(`\nRun instance cancelled.\r\n`);
             runInstance.end();
@@ -402,87 +414,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
         try {
             await Promise.all(
-                workspaces.map(async (workspace) => {
-                    if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
-                        this.commandManager
-                            .executeCommand(constants.Commands.TriggerEnvironmentSelection, workspace.uri)
-                            .then(noop, noop);
-                        return undefined;
-                    }
-                    const testItems: TestItem[] = [];
-                    // If the run request includes test items then collect only items that belong to
-                    // `workspace`. If there are no items in the run request then just run the `workspace`
-                    // root test node. Include will be `undefined` in the "run all" scenario.
-                    (request.include ?? this.testController.items).forEach((i: TestItem) => {
-                        const w = this.workspaceService.getWorkspaceFolder(i.uri);
-                        if (w?.uri.fsPath === workspace.uri.fsPath) {
-                            testItems.push(i);
-                        }
-                    });
-
-                    const settings = this.configSettings.getSettings(workspace.uri);
-                    if (testItems.length > 0) {
-                        const testAdapter =
-                            this.testAdapters.get(workspace.uri) ||
-                            (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-
-                        // no profile will have TestRunProfileKind.Coverage if rewrite isn't enabled
-                        if (request.profile?.kind && request.profile?.kind === TestRunProfileKind.Coverage) {
-                            request.profile.loadDetailedCoverage = (
-                                _testRun: TestRun,
-                                fileCoverage,
-                                _token,
-                            ): Thenable<FileCoverageDetail[]> => {
-                                const details = testAdapter.resultResolver.detailedCoverageMap.get(
-                                    fileCoverage.uri.fsPath,
-                                );
-                                if (details === undefined) {
-                                    // given file has no detailed coverage data
-                                    return Promise.resolve([]);
-                                }
-                                return Promise.resolve(details);
-                            };
-                        }
-
-                        if (settings.testing.pytestEnabled) {
-                            sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
-                                tool: 'pytest',
-                                debugging: request.profile?.kind === TestRunProfileKind.Debug,
-                            });
-                            return testAdapter.executeTests(
-                                this.testController,
-                                runInstance,
-                                testItems,
-                                token,
-                                request.profile?.kind,
-                                this.pythonExecFactory,
-                                this.debugLauncher,
-                                await this.interpreterService.getActiveInterpreter(workspace.uri),
-                            );
-                        }
-                        if (settings.testing.unittestEnabled) {
-                            sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
-                                tool: 'unittest',
-                                debugging: request.profile?.kind === TestRunProfileKind.Debug,
-                            });
-                            // ** experiment to roll out NEW test discovery mechanism
-                            return testAdapter.executeTests(
-                                this.testController,
-                                runInstance,
-                                testItems,
-                                token,
-                                request.profile?.kind,
-                                this.pythonExecFactory,
-                                this.debugLauncher,
-                                await this.interpreterService.getActiveInterpreter(workspace.uri),
-                            );
-                        }
-                    }
-                    if (!settings.testing.pytestEnabled && !settings.testing.unittestEnabled) {
-                        unconfiguredWorkspaces.push(workspace);
-                    }
-                    return Promise.resolve();
-                }),
+                workspaces.map((workspace) =>
+                    this.runTestsForWorkspace(workspace, request, runInstance, token, unconfiguredWorkspaces),
+                ),
             );
         } finally {
             traceVerbose('Finished running tests, ending runInstance.');
@@ -493,6 +427,146 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 this.runWithoutConfigurationEvent.fire(unconfiguredWorkspaces);
             }
         }
+    }
+
+    /**
+     * Gets the list of workspaces to run tests for based on the test run request.
+     */
+    private getWorkspacesForTestRun(request: TestRunRequest): WorkspaceFolder[] {
+        if (request.include) {
+            const workspaces: WorkspaceFolder[] = [];
+            uniq(request.include.map((r) => this.workspaceService.getWorkspaceFolder(r.uri))).forEach((w) => {
+                if (w) {
+                    workspaces.push(w);
+                }
+            });
+            return workspaces;
+        }
+        return Array.from(this.workspaceService.workspaceFolders || []);
+    }
+
+    /**
+     * Runs tests for a single workspace.
+     */
+    private async runTestsForWorkspace(
+        workspace: WorkspaceFolder,
+        request: TestRunRequest,
+        runInstance: TestRun,
+        token: CancellationToken,
+        unconfiguredWorkspaces: WorkspaceFolder[],
+    ): Promise<void> {
+        if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
+            this.commandManager
+                .executeCommand(constants.Commands.TriggerEnvironmentSelection, workspace.uri)
+                .then(noop, noop);
+            return;
+        }
+
+        const testItems = this.getTestItemsForWorkspace(workspace, request);
+        const settings = this.configSettings.getSettings(workspace.uri);
+
+        if (testItems.length === 0) {
+            if (!settings.testing.pytestEnabled && !settings.testing.unittestEnabled) {
+                unconfiguredWorkspaces.push(workspace);
+            }
+            return;
+        }
+
+        const testAdapter =
+            this.testAdapters.get(workspace.uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+
+        this.setupCoverageIfNeeded(request, testAdapter);
+
+        if (settings.testing.pytestEnabled) {
+            await this.executeTestsForProvider(
+                workspace,
+                testAdapter,
+                testItems,
+                runInstance,
+                request,
+                token,
+                'pytest',
+            );
+        } else if (settings.testing.unittestEnabled) {
+            await this.executeTestsForProvider(
+                workspace,
+                testAdapter,
+                testItems,
+                runInstance,
+                request,
+                token,
+                'unittest',
+            );
+        } else {
+            unconfiguredWorkspaces.push(workspace);
+        }
+    }
+
+    /**
+     * Gets test items that belong to a specific workspace from the run request.
+     */
+    private getTestItemsForWorkspace(workspace: WorkspaceFolder, request: TestRunRequest): TestItem[] {
+        const testItems: TestItem[] = [];
+        // If the run request includes test items then collect only items that belong to
+        // `workspace`. If there are no items in the run request then just run the `workspace`
+        // root test node. Include will be `undefined` in the "run all" scenario.
+        (request.include ?? this.testController.items).forEach((i: TestItem) => {
+            const w = this.workspaceService.getWorkspaceFolder(i.uri);
+            if (w?.uri.fsPath === workspace.uri.fsPath) {
+                testItems.push(i);
+            }
+        });
+        return testItems;
+    }
+
+    /**
+     * Sets up detailed coverage loading if the run profile is for coverage.
+     */
+    private setupCoverageIfNeeded(request: TestRunRequest, testAdapter: WorkspaceTestAdapter): void {
+        // no profile will have TestRunProfileKind.Coverage if rewrite isn't enabled
+        if (request.profile?.kind && request.profile?.kind === TestRunProfileKind.Coverage) {
+            request.profile.loadDetailedCoverage = (
+                _testRun: TestRun,
+                fileCoverage,
+                _token,
+            ): Thenable<FileCoverageDetail[]> => {
+                const details = testAdapter.resultResolver.detailedCoverageMap.get(fileCoverage.uri.fsPath);
+                if (details === undefined) {
+                    // given file has no detailed coverage data
+                    return Promise.resolve([]);
+                }
+                return Promise.resolve(details);
+            };
+        }
+    }
+
+    /**
+     * Executes tests using the test adapter for a specific test provider.
+     */
+    private async executeTestsForProvider(
+        workspace: WorkspaceFolder,
+        testAdapter: WorkspaceTestAdapter,
+        testItems: TestItem[],
+        runInstance: TestRun,
+        request: TestRunRequest,
+        token: CancellationToken,
+        provider: TestProvider,
+    ): Promise<void> {
+        sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
+            tool: provider,
+            debugging: request.profile?.kind === TestRunProfileKind.Debug,
+        });
+
+        await testAdapter.executeTests(
+            this.testController,
+            runInstance,
+            testItems,
+            this.pythonExecFactory,
+            token,
+            request.profile?.kind,
+            this.debugLauncher,
+            await this.interpreterService.getActiveInterpreter(workspace.uri),
+        );
     }
 
     private invalidateTests(uri: Uri) {

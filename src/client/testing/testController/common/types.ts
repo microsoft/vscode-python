@@ -155,11 +155,9 @@ export interface ITestResultResolver {
     _resolveCoverage(payload: CoveragePayload, runInstance: TestRun): void;
 }
 export interface ITestDiscoveryAdapter {
-    // ** first line old method signature, second line new method signature
-    discoverTests(uri: Uri): Promise<void>;
     discoverTests(
         uri: Uri,
-        executionFactory?: IPythonExecutionFactory,
+        executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
         interpreter?: PythonEnvironment,
     ): Promise<void>;
@@ -167,21 +165,19 @@ export interface ITestDiscoveryAdapter {
 
 // interface for execution/runner adapter
 export interface ITestExecutionAdapter {
-    // ** first line old method signature, second line new method signature
-    runTests(uri: Uri, testIds: string[], profileKind?: boolean | TestRunProfileKind): Promise<void>;
     runTests(
         uri: Uri,
         testIds: string[],
-        profileKind?: boolean | TestRunProfileKind,
-        runInstance?: TestRun,
-        executionFactory?: IPythonExecutionFactory,
+        profileKind: boolean | TestRunProfileKind | undefined,
+        runInstance: TestRun,
+        executionFactory: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
     ): Promise<void>;
 }
 
 // Same types as in python_files/unittestadapter/utils.py
-export type DiscoveredTestType = 'folder' | 'file' | 'class' | 'test';
+export type DiscoveredTestType = 'folder' | 'file' | 'class' | 'function' | 'test';
 
 export type DiscoveredTestCommon = {
     path: string;
@@ -198,6 +194,7 @@ export type DiscoveredTestItem = DiscoveredTestCommon & {
 
 export type DiscoveredTestNode = DiscoveredTestCommon & {
     children: (DiscoveredTestNode | DiscoveredTestItem)[];
+    lineno?: number | string;
 };
 
 export type DiscoveredTestPayload = {

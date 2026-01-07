@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
-    "version": "2025.13.0-dev",
+    "version": "2026.1.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -1244,6 +1244,13 @@
                     "when": "controllerId == 'python-tests'"
                 }
             ],
+            "testing/item/gutter": [
+                {
+                    "command": "python.copyTestId",
+                    "group": "navigation",
+                    "when": "controllerId == 'python-tests'"
+                }
+            ],
             "commandPalette": [
                 {
                     "category": "Python",
@@ -1688,6 +1695,9 @@
         "lint-fix": "eslint --fix src build pythonExtensionApi gulpfile.js",
         "format-check": "prettier --check 'src/**/*.ts' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
         "format-fix": "prettier --write 'src/**/*.ts' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
+        "check-python": "npm run check-python:ruff && npm run check-python:pyright",
+        "check-python:ruff": "cd python_files && python -m pip install -U ruff && python -m ruff check . && python -m ruff format --check",
+        "check-python:pyright": "cd python_files && npx --yes pyright@1.1.308 .",
         "clean": "gulp clean",
         "addExtensionPackDependencies": "gulp addExtensionPackDependencies",
         "updateBuildNumber": "gulp updateBuildNumber",
@@ -1695,7 +1705,7 @@
         "webpack": "webpack"
     },
     "dependencies": {
-        "@iarna/toml": "^2.2.5",
+        "@iarna/toml": "^3.0.0",
         "@vscode/extension-telemetry": "^0.8.4",
         "arch": "^2.1.0",
         "fs-extra": "^11.2.0",

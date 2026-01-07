@@ -28,7 +28,7 @@ function getInstallableToml(): typemoq.IMock<TextDocument> {
         .setup((p) => p.getText(typemoq.It.isAny()))
         .returns(
             () =>
-                '[project]\nname = "spam"\nversion = "2020.0.0"\n[build-system]\nrequires = ["setuptools ~= 58.0", "cython ~= 0.29.0"]\n[project.optional-dependencies]\ntest = ["pytest"]\ndoc = ["sphinx", "furo"]',
+                '[project]\nname = "spam"\nversion = "2020.0.0"\n[build-system]\nrequires = ["setuptools ~= 58.0", "cython ~= 0.29.0"]\n[dependency-groups]\ndev = ["ruff", { include-group = "test" }]\ntest = ["pytest"]',
         );
     return pyprojectToml;
 }

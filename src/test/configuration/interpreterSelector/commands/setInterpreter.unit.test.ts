@@ -1052,6 +1052,7 @@ suite('Set Interpreter Command', () => {
                 openLabel: InterpreterQuickPickList.browsePath.openButtonLabel,
                 canSelectMany: false,
                 title: InterpreterQuickPickList.browsePath.title,
+                defaultUri: undefined,
             };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             multiStepInput.setup((i) => i.showQuickPick(TypeMoq.It.isAny())).returns(() => Promise.resolve(items[0]));
@@ -1073,6 +1074,27 @@ suite('Set Interpreter Command', () => {
                 openLabel: InterpreterQuickPickList.browsePath.openButtonLabel,
                 canSelectMany: false,
                 title: InterpreterQuickPickList.browsePath.title,
+                defaultUri: undefined,
+            };
+            multiStepInput.setup((i) => i.showQuickPick(TypeMoq.It.isAny())).returns(() => Promise.resolve(items[0]));
+            appShell.setup((a) => a.showOpenDialog(expectedParams)).verifiable(TypeMoq.Times.once());
+            platformService.setup((p) => p.isWindows).returns(() => false);
+
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state).ignoreErrors();
+
+            appShell.verifyAll();
+        });
+
+        test('If `Browse...` option is selected with workspace, file browser opens at workspace root', async () => {
+            const workspaceUri = Uri.parse('file:///workspace/root');
+            const state: InterpreterStateArgs = { path: undefined, workspace: workspaceUri };
+            const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+            const expectedParams = {
+                filters: undefined,
+                openLabel: InterpreterQuickPickList.browsePath.openButtonLabel,
+                canSelectMany: false,
+                title: InterpreterQuickPickList.browsePath.title,
+                defaultUri: workspaceUri,
             };
             multiStepInput.setup((i) => i.showQuickPick(TypeMoq.It.isAny())).returns(() => Promise.resolve(items[0]));
             appShell.setup((a) => a.showOpenDialog(expectedParams)).verifiable(TypeMoq.Times.once());
@@ -1126,6 +1148,7 @@ suite('Set Interpreter Command', () => {
                     openLabel: InterpreterQuickPickList.browsePath.openButtonLabel,
                     canSelectMany: false,
                     title: InterpreterQuickPickList.browsePath.title,
+                    defaultUri: undefined,
                 };
                 multiStepInput
                     .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))

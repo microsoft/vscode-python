@@ -264,17 +264,34 @@ def runner_with_cwd_env(
         pipe_name = generate_random_pipe_name("pytest-discovery-test")
 
     if "COVERAGE_ENABLED" in env_add and "_TEST_VAR_UNITTEST" not in env_add:
-        process_args = [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-p",
-            "vscode_pytest",
-            "--cov=.",
-            "--cov-branch",
-            "-s",
-            *args,
-        ]
+        if "_PYTEST_MANUAL_PLUGIN_LOAD" in env_add:
+            # Test manual plugin loading scenario for issue #25590
+            process_args = [
+                sys.executable,
+                "-m",
+                "pytest",
+                "--disable-plugin-autoload",
+                "-p",
+                "pytest_cov.plugin",
+                "-p",
+                "vscode_pytest",
+                "--cov=.",
+                "--cov-branch",
+                "-s",
+                *args,
+            ]
+        else:
+            process_args = [
+                sys.executable,
+                "-m",
+                "pytest",
+                "-p",
+                "vscode_pytest",
+                "--cov=.",
+                "--cov-branch",
+                "-s",
+                *args,
+            ]
 
     # Generate pipe name, pipe name specific per OS type.
 
@@ -367,6 +384,28 @@ def find_test_line_number(test_name: str, test_file_path) -> str:
             if test_file_unique_id in line:
                 return str(i + 1)
     error_str: str = f"Test {test_name!r} not found on any line in {test_file_path}"
+    raise ValueError(error_str)
+
+
+def find_class_line_number(class_name: str, test_file_path) -> str:
+    """Function which finds the correct line number for a class definition.
+
+    Args:
+    class_name: The name of the class to find the line number for.
+    test_file_path: The path to the test file where the class is located.
+    """
+    # Look for the class definition line (or function for pytest-describe)
+    with open(test_file_path) as f:  # noqa: PTH123
+        for i, line in enumerate(f):
+            # Match "class ClassName" or "class ClassName(" or "class ClassName:"
+            # Also match "def ClassName(" for pytest-describe blocks
+            if (
+                line.strip().startswith(f"class {class_name}")
+                or line.strip().startswith(f"class {class_name}(")
+                or line.strip().startswith(f"def {class_name}(")
+            ):
+                return str(i + 1)
+    error_str: str = f"Class {class_name!r} not found on any line in {test_file_path}"
     raise ValueError(error_str)
 
 

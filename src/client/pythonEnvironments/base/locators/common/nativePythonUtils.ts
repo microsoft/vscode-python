@@ -23,6 +23,7 @@ export enum NativePythonEnvironmentKind {
     VirtualEnvWrapper = 'VirtualEnvWrapper',
     WindowsStore = 'WindowsStore',
     WindowsRegistry = 'WindowsRegistry',
+    VenvUv = 'Uv',
 }
 
 const mapping = new Map<NativePythonEnvironmentKind, PythonEnvKind>([
@@ -36,6 +37,7 @@ const mapping = new Map<NativePythonEnvironmentKind, PythonEnvKind>([
     [NativePythonEnvironmentKind.VirtualEnv, PythonEnvKind.VirtualEnv],
     [NativePythonEnvironmentKind.VirtualEnvWrapper, PythonEnvKind.VirtualEnvWrapper],
     [NativePythonEnvironmentKind.Venv, PythonEnvKind.Venv],
+    [NativePythonEnvironmentKind.VenvUv, PythonEnvKind.Venv],
     [NativePythonEnvironmentKind.WindowsRegistry, PythonEnvKind.System],
     [NativePythonEnvironmentKind.WindowsStore, PythonEnvKind.MicrosoftStore],
     [NativePythonEnvironmentKind.Homebrew, PythonEnvKind.System],
