@@ -211,10 +211,13 @@ export function populateTestTree(
     testRoot: TestItem | undefined,
     resultResolver: ITestResultResolver,
     token?: CancellationToken,
+    projectId?: string,
 ): void {
     // If testRoot is undefined, use the info of the root item of testTreeData to create a test item, and append it to the test controller.
     if (!testRoot) {
-        testRoot = testController.createTestItem(testTreeData.path, testTreeData.name, Uri.file(testTreeData.path));
+        // Create project-scoped ID if projectId is provided
+        const rootId = projectId ? `${projectId}::${testTreeData.path}` : testTreeData.path;
+        testRoot = testController.createTestItem(rootId, testTreeData.name, Uri.file(testTreeData.path));
 
         testRoot.canResolveChildren = true;
         testRoot.tags = [RunTestTag, DebugTestTag];
@@ -226,7 +229,9 @@ export function populateTestTree(
     testTreeData.children.forEach((child) => {
         if (!token?.isCancellationRequested) {
             if (isTestItem(child)) {
-                const testItem = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
+                // Create project-scoped vsId
+                const vsId = projectId ? `${projectId}::${child.id_}` : child.id_;
+                const testItem = testController.createTestItem(vsId, child.name, Uri.file(child.path));
                 testItem.tags = [RunTestTag, DebugTestTag];
 
                 let range: Range | undefined;
@@ -245,15 +250,17 @@ export function populateTestTree(
                 testItem.tags = [RunTestTag, DebugTestTag];
 
                 testRoot!.children.add(testItem);
-                // add to our map
+                // add to our map - use runID as key, vsId as value
                 resultResolver.runIdToTestItem.set(child.runID, testItem);
-                resultResolver.runIdToVSid.set(child.runID, child.id_);
-                resultResolver.vsIdToRunId.set(child.id_, child.runID);
+                resultResolver.runIdToVSid.set(child.runID, vsId);
+                resultResolver.vsIdToRunId.set(vsId, child.runID);
             } else {
                 let node = testController.items.get(child.path);
 
                 if (!node) {
-                    node = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
+                    // Create project-scoped ID for non-test nodes
+                    const nodeId = projectId ? `${projectId}::${child.id_}` : child.id_;
+                    node = testController.createTestItem(nodeId, child.name, Uri.file(child.path));
 
                     node.canResolveChildren = true;
                     node.tags = [RunTestTag, DebugTestTag];
@@ -274,7 +281,7 @@ export function populateTestTree(
 
                     testRoot!.children.add(node);
                 }
-                populateTestTree(testController, child, node, resultResolver, token);
+                populateTestTree(testController, child, node, resultResolver, token, projectId);
             }
         }
     });

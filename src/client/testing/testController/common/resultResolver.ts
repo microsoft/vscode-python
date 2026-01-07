@@ -26,10 +26,23 @@ export class PythonResultResolver implements ITestResultResolver {
 
     public detailedCoverageMap = new Map<string, FileCoverageDetail[]>();
 
-    constructor(testController: TestController, testProvider: TestProvider, private workspaceUri: Uri) {
+    /**
+     * Optional project ID for scoping test IDs.
+     * When set, all test IDs are prefixed with "{projectId}::" for project-based testing.
+     * When undefined, uses legacy workspace-level IDs for backward compatibility.
+     */
+    private projectId?: string;
+
+    constructor(
+        testController: TestController,
+        testProvider: TestProvider,
+        private workspaceUri: Uri,
+        projectId?: string,
+    ) {
         this.testController = testController;
         this.testProvider = testProvider;
-        // Initialize a new TestItemIndex which will be used to track test items in this workspace
+        this.projectId = projectId;
+        // Initialize a new TestItemIndex which will be used to track test items in this workspace/project
         this.testItemIndex = new TestItemIndex();
     }
 
@@ -46,6 +59,14 @@ export class PythonResultResolver implements ITestResultResolver {
         return this.testItemIndex.vsIdToRunIdMap;
     }
 
+    /**
+     * Gets the project ID for this resolver (if any).
+     * Used for project-scoped test ID generation.
+     */
+    public getProjectId(): string | undefined {
+        return this.projectId;
+    }
+
     public resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void {
         PythonResultResolver.discoveryHandler.processDiscovery(
             payload,
@@ -54,6 +75,7 @@ export class PythonResultResolver implements ITestResultResolver {
             this.workspaceUri,
             this.testProvider,
             token,
+            this.projectId,
         );
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
             tool: this.testProvider,
