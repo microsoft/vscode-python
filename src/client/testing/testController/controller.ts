@@ -182,58 +182,110 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
     public async activate(): Promise<void> {
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
+
+        // Try to use project-based testing if enabled
+        if (this.useProjectBasedTesting) {
+            try {
+                await Promise.all(
+                    Array.from(workspaces).map(async (workspace) => {
+                        try {
+                            // Discover projects in this workspace
+                            const projects = await this.discoverWorkspaceProjects(workspace.uri);
+
+                            // Create map for this workspace
+                            const projectsMap = new Map<string, ProjectAdapter>();
+                            projects.forEach((project) => {
+                                projectsMap.set(project.projectId, project);
+                            });
+
+                            this.workspaceProjects.set(workspace.uri, projectsMap);
+
+                            traceVerbose(
+                                `Discovered ${projects.length} project(s) for workspace ${workspace.uri.fsPath}`,
+                            );
+
+                            // Set up file watchers if auto-discovery is enabled
+                            const settings = this.configSettings.getSettings(workspace.uri);
+                            if (settings.testing.autoTestDiscoverOnSaveEnabled) {
+                                traceVerbose(`Testing: Setting up watcher for ${workspace.uri.fsPath}`);
+                                this.watchForSettingsChanges(workspace);
+                                this.watchForTestContentChangeOnSave();
+                            }
+                        } catch (error) {
+                            traceError(`Failed to activate project-based testing for ${workspace.uri.fsPath}:`, error);
+                            // Fall back to legacy mode for this workspace
+                            await this.activateLegacyWorkspace(workspace);
+                        }
+                    }),
+                );
+                return;
+            } catch (error) {
+                traceError('Failed to activate project-based testing, falling back to legacy mode:', error);
+                this.useProjectBasedTesting = false;
+            }
+        }
+
+        // Legacy activation (backward compatibility)
         workspaces.forEach((workspace) => {
-            const settings = this.configSettings.getSettings(workspace.uri);
-
-            let discoveryAdapter: ITestDiscoveryAdapter;
-            let executionAdapter: ITestExecutionAdapter;
-            let testProvider: TestProvider;
-            let resultResolver: PythonResultResolver;
-
-            if (settings.testing.unittestEnabled) {
-                testProvider = UNITTEST_PROVIDER;
-                resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
-                discoveryAdapter = new UnittestTestDiscoveryAdapter(
-                    this.configSettings,
-                    resultResolver,
-                    this.envVarsService,
-                );
-                executionAdapter = new UnittestTestExecutionAdapter(
-                    this.configSettings,
-                    resultResolver,
-                    this.envVarsService,
-                );
-            } else {
-                testProvider = PYTEST_PROVIDER;
-                resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
-                discoveryAdapter = new PytestTestDiscoveryAdapter(
-                    this.configSettings,
-                    resultResolver,
-                    this.envVarsService,
-                );
-                executionAdapter = new PytestTestExecutionAdapter(
-                    this.configSettings,
-                    resultResolver,
-                    this.envVarsService,
-                );
-            }
-
-            const workspaceTestAdapter = new WorkspaceTestAdapter(
-                testProvider,
-                discoveryAdapter,
-                executionAdapter,
-                workspace.uri,
-                resultResolver,
-            );
-
-            this.testAdapters.set(workspace.uri, workspaceTestAdapter);
-
-            if (settings.testing.autoTestDiscoverOnSaveEnabled) {
-                traceVerbose(`Testing: Setting up watcher for ${workspace.uri.fsPath}`);
-                this.watchForSettingsChanges(workspace);
-                this.watchForTestContentChangeOnSave();
-            }
+            this.activateLegacyWorkspace(workspace);
         });
+    }
+
+    /**
+     * Activates testing for a workspace using the legacy single-adapter approach.
+     * Used for backward compatibility when project-based testing is disabled or unavailable.
+     */
+    private activateLegacyWorkspace(workspace: WorkspaceFolder): void {
+        const settings = this.configSettings.getSettings(workspace.uri);
+
+        let discoveryAdapter: ITestDiscoveryAdapter;
+        let executionAdapter: ITestExecutionAdapter;
+        let testProvider: TestProvider;
+        let resultResolver: PythonResultResolver;
+
+        if (settings.testing.unittestEnabled) {
+            testProvider = UNITTEST_PROVIDER;
+            resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
+            discoveryAdapter = new UnittestTestDiscoveryAdapter(
+                this.configSettings,
+                resultResolver,
+                this.envVarsService,
+            );
+            executionAdapter = new UnittestTestExecutionAdapter(
+                this.configSettings,
+                resultResolver,
+                this.envVarsService,
+            );
+        } else {
+            testProvider = PYTEST_PROVIDER;
+            resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
+            discoveryAdapter = new PytestTestDiscoveryAdapter(
+                this.configSettings,
+                resultResolver,
+                this.envVarsService,
+            );
+            executionAdapter = new PytestTestExecutionAdapter(
+                this.configSettings,
+                resultResolver,
+                this.envVarsService,
+            );
+        }
+
+        const workspaceTestAdapter = new WorkspaceTestAdapter(
+            testProvider,
+            discoveryAdapter,
+            executionAdapter,
+            workspace.uri,
+            resultResolver,
+        );
+
+        this.testAdapters.set(workspace.uri, workspaceTestAdapter);
+
+        if (settings.testing.autoTestDiscoverOnSaveEnabled) {
+            traceVerbose(`Testing: Setting up watcher for ${workspace.uri.fsPath}`);
+            this.watchForSettingsChanges(workspace);
+            this.watchForTestContentChangeOnSave();
+        }
     }
 
     /**
