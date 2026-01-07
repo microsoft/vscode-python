@@ -62,7 +62,7 @@ export class WorkspaceTestAdapter {
             // first fetch all the individual test Items that we necessarily want
             includes.forEach((t) => {
                 const nodes = getTestCaseNodes(t);
-                testCaseNodes.push(...nodes);
+                testCaseNodes.push(...nodes); 
             });
             // iterate through testItems nodes and fetch their unittest runID to pass in as argument
             testCaseNodes.forEach((node) => {
