@@ -52,7 +52,7 @@ import { ITestDebugLauncher } from '../common/types';
 import { PythonResultResolver } from './common/resultResolver';
 import { onDidSaveTextDocument } from '../../common/vscodeApis/workspaceApis';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { ProjectAdapter, WorkspaceDiscoveryState } from './common/projectAdapter';
+import { ProjectAdapter } from './common/projectAdapter';
 import { generateProjectId, createProjectDisplayName } from './common/projectUtils';
 import { PythonProject, PythonEnvironment } from '../../envExt/types';
 import { getEnvExtApi, useEnvExtension } from '../../envExt/api.internal';
@@ -73,17 +73,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     // Map of workspace URI -> Map of project ID -> ProjectAdapter
     private readonly workspaceProjects: Map<Uri, Map<string, ProjectAdapter>> = new Map();
 
-    // Fast lookup maps for execution
-    // @ts-expect-error - used when useProjectBasedTesting=true
-    private readonly vsIdToProject: Map<string, ProjectAdapter> = new Map();
-    // @ts-expect-error - used when useProjectBasedTesting=true
-    private readonly fileUriToProject: Map<string, ProjectAdapter> = new Map();
-    // @ts-expect-error - used when useProjectBasedTesting=true
-    private readonly projectToVsIds: Map<string, Set<string>> = new Map();
-
-    // Temporary discovery state (created during discovery, cleared after)
-    // @ts-expect-error - used when useProjectBasedTesting=true
-    private readonly workspaceDiscoveryState: Map<Uri, WorkspaceDiscoveryState> = new Map();
+    // TODO: Phase 3-4 - Add these maps when implementing discovery and execution:
+    // - vsIdToProject: Map<string, ProjectAdapter> - Fast lookup for test execution
+    // - fileUriToProject: Map<string, ProjectAdapter> - File watching and change detection
+    // - projectToVsIds: Map<string, Set<string>> - Project cleanup and refresh
+    // - workspaceDiscoveryState: Map<Uri, WorkspaceDiscoveryState> - Temporary overlap detection
 
     private readonly triggerTypes: TriggerType[] = [];
 
@@ -236,51 +230,49 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         // Try to use project-based testing if environment extension is enabled
         if (useEnvExtension()) {
             traceInfo('[test-by-project] Activating project-based testing mode');
-            try {
-                await Promise.all(
-                    Array.from(workspaces).map(async (workspace) => {
-                        traceInfo(`[test-by-project] Processing workspace: ${workspace.uri.fsPath}`);
-                        try {
-                            // Discover projects in this workspace
-                            const projects = await this.discoverWorkspaceProjects(workspace.uri);
 
-                            // Create map for this workspace
-                            const projectsMap = new Map<string, ProjectAdapter>();
-                            projects.forEach((project) => {
-                                projectsMap.set(project.projectId, project);
-                            });
+            // Use Promise.allSettled to allow partial success in multi-root workspaces
+            const results = await Promise.allSettled(
+                Array.from(workspaces).map(async (workspace) => {
+                    traceInfo(`[test-by-project] Processing workspace: ${workspace.uri.fsPath}`);
 
-                            this.workspaceProjects.set(workspace.uri, projectsMap);
+                    // Discover projects in this workspace
+                    const projects = await this.discoverWorkspaceProjects(workspace.uri);
 
-                            traceInfo(
-                                `[test-by-project] Discovered ${projects.length} project(s) for workspace ${workspace.uri.fsPath}`,
-                            );
+                    // Create map for this workspace
+                    const projectsMap = new Map<string, ProjectAdapter>();
+                    projects.forEach((project) => {
+                        projectsMap.set(project.projectId, project);
+                    });
 
-                            // Set up file watchers if auto-discovery is enabled
-                            const settings = this.configSettings.getSettings(workspace.uri);
-                            if (settings.testing.autoTestDiscoverOnSaveEnabled) {
-                                traceVerbose(`Testing: Setting up watcher for ${workspace.uri.fsPath}`);
-                                this.watchForSettingsChanges(workspace);
-                                this.watchForTestContentChangeOnSave();
-                            }
-                        } catch (error) {
-                            traceError(
-                                `[test-by-project] Failed to activate project-based testing for ${workspace.uri.fsPath}:`,
-                                error,
-                            );
-                            traceInfo('[test-by-project] Falling back to legacy mode for this workspace');
-                            // Fall back to legacy mode for this workspace
-                            await this.activateLegacyWorkspace(workspace);
-                        }
-                    }),
-                );
-                return;
-            } catch (error) {
-                traceError(
-                    '[test-by-project] Failed to activate project-based testing, falling back to legacy mode:',
-                    error,
-                );
-            }
+                    traceInfo(
+                        `[test-by-project] Discovered ${projects.length} project(s) for workspace ${workspace.uri.fsPath}`,
+                    );
+
+                    return { workspace, projectsMap };
+                }),
+            );
+
+            // Handle results individually - allows partial success
+            results.forEach((result, index) => {
+                const workspace = workspaces[index];
+                if (result.status === 'fulfilled') {
+                    this.workspaceProjects.set(workspace.uri, result.value.projectsMap);
+                    traceInfo(
+                        `[test-by-project] Successfully activated ${result.value.projectsMap.size} project(s) for ${workspace.uri.fsPath}`,
+                    );
+                    this.setupFileWatchers(workspace);
+                } else {
+                    traceError(
+                        `[test-by-project] Failed to activate project-based testing for ${workspace.uri.fsPath}:`,
+                        result.reason,
+                    );
+                    traceInfo('[test-by-project] Falling back to legacy mode for this workspace');
+                    // Fall back to legacy mode for this workspace only
+                    this.activateLegacyWorkspace(workspace);
+                }
+            });
+            return;
         }
 
         // Legacy activation (backward compatibility)
