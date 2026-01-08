@@ -22,7 +22,7 @@ import type { IExtensionContext } from '../../../../common/types';
 import { StopWatch } from '../../../../common/utils/stopWatch';
 import { untildify } from '../../../../common/helpers';
 import { traceError } from '../../../../logging';
-import { Common } from '../../../../common/utils/localize';
+import { Common, PythonLocator } from '../../../../common/utils/localize';
 import { Commands } from '../../../../common/constants';
 import { executeCommand } from '../../../../common/vscodeApis/commandApis';
 import { getGlobalStorage, IPersistentStorage } from '../../../../common/persistentState';
@@ -441,21 +441,14 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
 
         // Check for Windows runtime DLL issues
         if (isWindows() && errorMessage.toLowerCase().includes('vcruntime')) {
-            this.outputChannel.error(
-                'Missing Windows runtime dependencies detected. ' +
-                    'The Python Locator requires the Microsoft Visual C++ Redistributable. ' +
-                    'This is often missing on clean Windows installations.',
-            );
+            this.outputChannel.error(PythonLocator.windowsRuntimeMissing);
         } else if (isWindows()) {
-            this.outputChannel.error(
-                'Python Locator failed to start on Windows. ' +
-                    'This might be due to missing system dependencies such as the Microsoft Visual C++ Redistributable.',
-            );
+            this.outputChannel.error(PythonLocator.windowsStartupFailed);
         }
 
         // Show notification to user
         const selection = await showWarningMessage(
-            'Python Locator failed to start. Python environment discovery may not work correctly.',
+            PythonLocator.startupFailedNotification,
             Common.openOutputPanel,
             Common.doNotShowAgain,
         );

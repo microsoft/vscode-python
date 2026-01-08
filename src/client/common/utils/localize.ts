@@ -516,3 +516,15 @@ export namespace CreateEnv {
         );
     }
 }
+
+export namespace PythonLocator {
+    export const startupFailedNotification = l10n.t(
+        'Python Locator failed to start. Python environment discovery may not work correctly.',
+    );
+    export const windowsRuntimeMissing = l10n.t(
+        'Missing Windows runtime dependencies detected. The Python Locator requires the Microsoft Visual C++ Redistributable. This is often missing on clean Windows installations.',
+    );
+    export const windowsStartupFailed = l10n.t(
+        'Python Locator failed to start on Windows. This might be due to missing system dependencies such as the Microsoft Visual C++ Redistributable.',
+    );
+}
