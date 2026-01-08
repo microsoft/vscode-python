@@ -53,7 +53,7 @@ import { PythonResultResolver } from './common/resultResolver';
 import { onDidSaveTextDocument } from '../../common/vscodeApis/workspaceApis';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { ProjectAdapter } from './common/projectAdapter';
-import { generateProjectId, createProjectDisplayName } from './common/projectUtils';
+import { getProjectId, createProjectDisplayName } from './common/projectUtils';
 import { PythonProject, PythonEnvironment } from '../../envExt/types';
 import { getEnvExtApi, useEnvExtension } from '../../envExt/api.internal';
 
@@ -66,11 +66,19 @@ type TriggerType = EventPropertyType[TriggerKeyType];
 export class PythonTestController implements ITestController, IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
 
+    /**
+     * Feature flag for project-based testing.
+     * Set to true to enable multi-project testing support (Phases 2-4 must be complete).
+     * Default: false (use legacy single-workspace mode)
+     */
+    private readonly useProjectBasedTesting = false;
+
     // Legacy: Single workspace test adapter per workspace (backward compatibility)
     private readonly testAdapters: Map<Uri, WorkspaceTestAdapter> = new Map();
 
     // === NEW: PROJECT-BASED STATE ===
-    // Map of workspace URI -> Map of project ID -> ProjectAdapter
+    // Map of workspace URI -> Map of project URI string -> ProjectAdapter
+    // Note: Project URI strings match Python Environments extension's Map<string, PythonProject> keys
     private readonly workspaceProjects: Map<Uri, Map<string, ProjectAdapter>> = new Map();
 
     // TODO: Phase 3-4 - Add these maps when implementing discovery and execution:
@@ -227,8 +235,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     public async activate(): Promise<void> {
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
 
-        // Try to use project-based testing if environment extension is enabled
-        if (useEnvExtension()) {
+        // Try to use project-based testing if feature flag is enabled AND environment extension is available
+        if (this.useProjectBasedTesting && useEnvExtension()) {
             traceInfo('[test-by-project] Activating project-based testing mode');
 
             // Use Promise.allSettled to allow partial success in multi-root workspaces
@@ -239,10 +247,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     // Discover projects in this workspace
                     const projects = await this.discoverWorkspaceProjects(workspace.uri);
 
-                    // Create map for this workspace
+                    // Create map for this workspace, keyed by project URI (matches Python Environments extension)
                     const projectsMap = new Map<string, ProjectAdapter>();
                     projects.forEach((project) => {
-                        projectsMap.set(project.projectId, project);
+                        const projectKey = getProjectId(project.projectUri);
+                        projectsMap.set(projectKey, project);
                     });
 
                     traceInfo(
@@ -374,8 +383,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         traceInfo(
             `[test-by-project] Creating project adapter for: ${pythonProject.name} at ${pythonProject.uri.fsPath}`,
         );
-        // Generate unique project ID
-        const projectId = generateProjectId(pythonProject);
+        // Use project URI as the project ID (no hashing needed)
+        const projectId = getProjectId(pythonProject.uri);
 
         // Resolve the Python environment
         const envExtApi = await getEnvExtApi();
@@ -456,8 +465,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             uri: workspaceUri,
         };
 
-        // Use workspace URI as project ID for default project
-        const projectId = `default-${workspaceUri.fsPath}`;
+        // Use workspace URI as the project ID
+        const projectId = getProjectId(workspaceUri);
 
         return {
             projectId,

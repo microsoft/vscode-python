@@ -4,131 +4,68 @@
 import { expect } from 'chai';
 import { Uri } from 'vscode';
 import {
-    generateProjectId,
+    getProjectId,
     createProjectDisplayName,
     parseVsId,
     PROJECT_ID_SEPARATOR,
 } from '../../../../client/testing/testController/common/projectUtils';
-import { PythonProject } from '../../../../client/envExt/types';
 
 suite('Project Utils Tests', () => {
-    suite('generateProjectId', () => {
-        test('should generate consistent IDs for same project', () => {
-            const project: PythonProject = {
-                name: 'test-project',
-                uri: Uri.file('/workspace/project'),
-            };
+    suite('getProjectId', () => {
+        test('should return URI string representation', () => {
+            const uri = Uri.file('/workspace/project');
 
-            const id1 = generateProjectId(project);
-            const id2 = generateProjectId(project);
+            const id = getProjectId(uri);
+
+            expect(id).to.equal(uri.toString());
+        });
+
+        test('should be consistent for same URI', () => {
+            const uri = Uri.file('/workspace/project');
+
+            const id1 = getProjectId(uri);
+            const id2 = getProjectId(uri);
 
             expect(id1).to.equal(id2);
         });
 
-        test('should generate different IDs for different URIs', () => {
-            const project1: PythonProject = {
-                name: 'test-project',
-                uri: Uri.file('/workspace/project1'),
-            };
+        test('should be different for different URIs', () => {
+            const uri1 = Uri.file('/workspace/project1');
+            const uri2 = Uri.file('/workspace/project2');
 
-            const project2: PythonProject = {
-                name: 'test-project',
-                uri: Uri.file('/workspace/project2'),
-            };
-
-            const id1 = generateProjectId(project1);
-            const id2 = generateProjectId(project2);
+            const id1 = getProjectId(uri1);
+            const id2 = getProjectId(uri2);
 
             expect(id1).to.not.equal(id2);
         });
 
-        test('should generate different IDs for different names with same URI', () => {
+        test('should handle Windows paths', () => {
+            const uri = Uri.file('C:\\workspace\\project');
+
+            const id = getProjectId(uri);
+
+            expect(id).to.be.a('string');
+            expect(id).to.have.length.greaterThan(0);
+        });
+
+        test('should handle nested project paths', () => {
+            const parentUri = Uri.file('/workspace/parent');
+            const childUri = Uri.file('/workspace/parent/child');
+
+            const parentId = getProjectId(parentUri);
+            const childId = getProjectId(childUri);
+
+            expect(parentId).to.not.equal(childId);
+        });
+
+        test('should match Python Environments extension format', () => {
             const uri = Uri.file('/workspace/project');
 
-            const project1: PythonProject = {
-                name: 'project-a',
-                uri,
-            };
+            const id = getProjectId(uri);
 
-            const project2: PythonProject = {
-                name: 'project-b',
-                uri,
-            };
-
-            const id1 = generateProjectId(project1);
-            const id2 = generateProjectId(project2);
-
-            expect(id1).to.not.equal(id2);
-        });
-
-        test('should generate ID with correct format', () => {
-            const project: PythonProject = {
-                name: 'test-project',
-                uri: Uri.file('/workspace/project'),
-            };
-
-            const id = generateProjectId(project);
-
-            expect(id).to.match(/^project-[a-f0-9]{16}$/);
-        });
-
-        test('should use 16 character hash for collision resistance', () => {
-            const project: PythonProject = {
-                name: 'test-project',
-                uri: Uri.file('/workspace/project'),
-            };
-
-            const id = generateProjectId(project);
-            const hashPart = id.substring('project-'.length);
-
-            expect(hashPart).to.have.lengthOf(16);
-        });
-
-        test('should handle Windows paths correctly', () => {
-            const project: PythonProject = {
-                name: 'test-project',
-                uri: Uri.file('C:\\workspace\\project'),
-            };
-
-            const id = generateProjectId(project);
-
-            expect(id).to.match(/^project-[a-f0-9]{16}$/);
-        });
-
-        test('should handle project names with special characters', () => {
-            const project: PythonProject = {
-                name: 'test-project!@#$%^&*()',
-                uri: Uri.file('/workspace/project'),
-            };
-
-            const id = generateProjectId(project);
-
-            expect(id).to.match(/^project-[a-f0-9]{16}$/);
-        });
-
-        test('should handle empty project name', () => {
-            const project: PythonProject = {
-                name: '',
-                uri: Uri.file('/workspace/project'),
-            };
-
-            const id = generateProjectId(project);
-
-            expect(id).to.match(/^project-[a-f0-9]{16}$/);
-        });
-
-        test('should generate stable IDs across multiple calls', () => {
-            const project: PythonProject = {
-                name: 'test-project',
-                uri: Uri.file('/workspace/project'),
-            };
-
-            const ids = new Set<string>();
-            for (let i = 0; i < 100; i++) {
-                ids.add(generateProjectId(project));
-            }
-
-            expect(ids.size).to.equal(1, 'Should generate same ID consistently');
+            // Should match how Python Environments extension keys projects
+            expect(id).to.equal(uri.toString());
+            expect(typeof id).to.equal('string');
         });
     });
 
@@ -184,11 +121,13 @@ suite('Project Utils Tests', () => {
 
     suite('parseVsId', () => {
         test('should parse project-scoped ID correctly', () => {
-            const vsId = `project-abc123def456${PROJECT_ID_SEPARATOR}test_file.py::test_name`;
+            const projectUri = Uri.file('/workspace/project');
+            const projectId = getProjectId(projectUri);
+            const vsId = `${projectId}${PROJECT_ID_SEPARATOR}test_file.py::test_name`;
 
-            const [projectId, runId] = parseVsId(vsId);
+            const [parsedProjectId, runId] = parseVsId(vsId);
 
-            expect(projectId).to.equal('project-abc123def456');
+            expect(parsedProjectId).to.equal(projectId);
             expect(runId).to.equal('test_file.py::test_name');
         });
 
@@ -202,11 +141,13 @@ suite('Project Utils Tests', () => {
         });
 
         test('should handle runId containing separator', () => {
-            const vsId = `project-abc123def456${PROJECT_ID_SEPARATOR}test_file.py::test_class::test_method`;
+            const projectUri = Uri.file('/workspace/project');
+            const projectId = getProjectId(projectUri);
+            const vsId = `${projectId}${PROJECT_ID_SEPARATOR}test_file.py::test_class::test_method`;
 
-            const [projectId, runId] = parseVsId(vsId);
+            const [parsedProjectId, runId] = parseVsId(vsId);
 
-            expect(projectId).to.equal('project-abc123def456');
+            expect(parsedProjectId).to.equal(projectId);
             expect(runId).to.equal('test_file.py::test_class::test_method');
         });
 
@@ -238,70 +179,46 @@ suite('Project Utils Tests', () => {
         });
 
         test('should handle Windows file paths', () => {
-            const vsId = `project-abc123def456${PROJECT_ID_SEPARATOR}C:\\workspace\\tests\\test_file.py`;
+            const projectUri = Uri.file('/workspace/project');
+            const projectId = getProjectId(projectUri);
+            const vsId = `${projectId}${PROJECT_ID_SEPARATOR}C:\\workspace\\tests\\test_file.py`;
 
-            const [projectId, runId] = parseVsId(vsId);
-
-            expect(projectId).to.equal('project-abc123def456');
-            expect(runId).to.equal('C:\\workspace\\tests\\test_file.py');
-        });
-
-        test('should roundtrip with generateProjectId', () => {
-            const project: PythonProject = {
-                name: 'test-project',
-                uri: Uri.file('/workspace/project'),
-            };
-            const runId = 'test_file.py::test_name';
-
-            const projectId = generateProjectId(project);
-            const vsId = `${projectId}${PROJECT_ID_SEPARATOR}${runId}`;
-            const [parsedProjectId, parsedRunId] = parseVsId(vsId);
+            const [parsedProjectId, runId] = parseVsId(vsId);
 
             expect(parsedProjectId).to.equal(projectId);
-            expect(parsedRunId).to.equal(runId);
+            expect(runId).to.equal('C:\\workspace\\tests\\test_file.py');
         });
     });
 
     suite('Integration Tests', () => {
-        test('should generate unique IDs for multiple projects', () => {
-            const projects: PythonProject[] = [
-                { name: 'project-a', uri: Uri.file('/workspace/a') },
-                { name: 'project-b', uri: Uri.file('/workspace/b') },
-                { name: 'project-c', uri: Uri.file('/workspace/c') },
-                { name: 'project-d', uri: Uri.file('/workspace/d') },
-                { name: 'project-e', uri: Uri.file('/workspace/e') },
+        test('should generate unique IDs for different URIs', () => {
+            const uris = [
+                Uri.file('/workspace/a'),
+                Uri.file('/workspace/b'),
+                Uri.file('/workspace/c'),
+                Uri.file('/workspace/d'),
+                Uri.file('/workspace/e'),
             ];
 
-            const ids = projects.map((p) => generateProjectId(p));
+            const ids = uris.map((uri) => getProjectId(uri));
             const uniqueIds = new Set(ids);
 
-            expect(uniqueIds.size).to.equal(projects.length, 'All IDs should be unique');
+            expect(uniqueIds.size).to.equal(uris.length, 'All IDs should be unique');
         });
 
         test('should handle nested project paths', () => {
-            const parentProject: PythonProject = {
-                name: 'parent',
-                uri: Uri.file('/workspace/parent'),
-            };
+            const parentUri = Uri.file('/workspace/parent');
+            const childUri = Uri.file('/workspace/parent/child');
 
-            const childProject: PythonProject = {
-                name: 'child',
-                uri: Uri.file('/workspace/parent/child'),
-            };
-
-            const parentId = generateProjectId(parentProject);
-            const childId = generateProjectId(childProject);
+            const parentId = getProjectId(parentUri);
+            const childId = getProjectId(childUri);
 
             expect(parentId).to.not.equal(childId);
         });
 
         test('should create complete vsId and parse it back', () => {
-            const project: PythonProject = {
-                name: 'MyProject',
-                uri: Uri.file('/workspace/myproject'),
-            };
-
-            const projectId = generateProjectId(project);
+            const projectUri = Uri.file('/workspace/myproject');
+            const projectId = getProjectId(projectUri);
             const runId = 'tests/test_module.py::TestClass::test_method';
             const vsId = `${projectId}${PROJECT_ID_SEPARATOR}${runId}`;
 
@@ -311,20 +228,14 @@ suite('Project Utils Tests', () => {
             expect(parsedRunId).to.equal(runId);
         });
 
-        test('should handle collision probability with many projects', () => {
-            // Generate 1000 projects and ensure no collisions
-            const projects: PythonProject[] = [];
-            for (let i = 0; i < 1000; i++) {
-                projects.push({
-                    name: `project-${i}`,
-                    uri: Uri.file(`/workspace/project-${i}`),
-                });
-            }
+        test('should match Python Environments extension URI format', () => {
+            const uri = Uri.file('/workspace/project');
 
-            const ids = projects.map((p) => generateProjectId(p));
-            const uniqueIds = new Set(ids);
+            const projectId = getProjectId(uri);
 
-            expect(uniqueIds.size).to.equal(projects.length, 'Should have no collisions even with 1000 projects');
+            // Should be string representation of URI
+            expect(projectId).to.equal(uri.toString());
+            expect(typeof projectId).to.equal('string');
         });
     });
 });
