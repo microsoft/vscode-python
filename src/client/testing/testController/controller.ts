@@ -29,7 +29,7 @@ import { IConfigurationService, IDisposableRegistry, Resource } from '../../comm
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { traceError, traceVerbose } from '../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../logging';
 import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
@@ -54,7 +54,7 @@ import { onDidSaveTextDocument } from '../../common/vscodeApis/workspaceApis';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { ProjectAdapter, WorkspaceDiscoveryState } from './common/projectAdapter';
 import { generateProjectId, createProjectDisplayName } from './common/projectUtils';
-import { PythonEnvironmentApi, PythonProject, PythonEnvironment } from '../../envExt/types';
+import { PythonProject, PythonEnvironment } from '../../envExt/types';
 import { getEnvExtApi, useEnvExtension } from '../../envExt/api.internal';
 
 // Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
@@ -73,12 +73,16 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     // Map of workspace URI -> Map of project ID -> ProjectAdapter
     private readonly workspaceProjects: Map<Uri, Map<string, ProjectAdapter>> = new Map();
 
-    // Fast lookup maps for test execution
+    // Fast lookup maps for execution
+    // @ts-expect-error - used when useProjectBasedTesting=true
     private readonly vsIdToProject: Map<string, ProjectAdapter> = new Map();
+    // @ts-expect-error - used when useProjectBasedTesting=true
     private readonly fileUriToProject: Map<string, ProjectAdapter> = new Map();
+    // @ts-expect-error - used when useProjectBasedTesting=true
     private readonly projectToVsIds: Map<string, Set<string>> = new Map();
 
     // Temporary discovery state (created during discovery, cleared after)
+    // @ts-expect-error - used when useProjectBasedTesting=true
     private readonly workspaceDiscoveryState: Map<Uri, WorkspaceDiscoveryState> = new Map();
 
     // Flag to enable/disable project-based testing
@@ -180,14 +184,65 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         };
     }
 
+    /**
+     * Creates test adapters (discovery and execution) for a given test provider.
+     * Centralizes adapter creation to reduce code duplication.
+     */
+    private createTestAdapters(
+        testProvider: TestProvider,
+        resultResolver: PythonResultResolver,
+    ): { discoveryAdapter: ITestDiscoveryAdapter; executionAdapter: ITestExecutionAdapter } {
+        if (testProvider === UNITTEST_PROVIDER) {
+            return {
+                discoveryAdapter: new UnittestTestDiscoveryAdapter(
+                    this.configSettings,
+                    resultResolver,
+                    this.envVarsService,
+                ),
+                executionAdapter: new UnittestTestExecutionAdapter(
+                    this.configSettings,
+                    resultResolver,
+                    this.envVarsService,
+                ),
+            };
+        }
+
+        return {
+            discoveryAdapter: new PytestTestDiscoveryAdapter(this.configSettings, resultResolver, this.envVarsService),
+            executionAdapter: new PytestTestExecutionAdapter(this.configSettings, resultResolver, this.envVarsService),
+        };
+    }
+
+    /**
+     * Determines the test provider (pytest or unittest) based on workspace settings.
+     */
+    private getTestProvider(workspaceUri: Uri): TestProvider {
+        const settings = this.configSettings.getSettings(workspaceUri);
+        return settings.testing.unittestEnabled ? UNITTEST_PROVIDER : PYTEST_PROVIDER;
+    }
+
+    /**
+     * Sets up file watchers for test discovery triggers.
+     */
+    private setupFileWatchers(workspace: WorkspaceFolder): void {
+        const settings = this.configSettings.getSettings(workspace.uri);
+        if (settings.testing.autoTestDiscoverOnSaveEnabled) {
+            traceVerbose(`Testing: Setting up watcher for ${workspace.uri.fsPath}`);
+            this.watchForSettingsChanges(workspace);
+            this.watchForTestContentChangeOnSave();
+        }
+    }
+
     public async activate(): Promise<void> {
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
 
         // Try to use project-based testing if enabled
         if (this.useProjectBasedTesting) {
+            traceInfo('[test-by-project] Activating project-based testing mode');
             try {
                 await Promise.all(
                     Array.from(workspaces).map(async (workspace) => {
+                        traceInfo(`[test-by-project] Processing workspace: ${workspace.uri.fsPath}`);
                         try {
                             // Discover projects in this workspace
                             const projects = await this.discoverWorkspaceProjects(workspace.uri);
@@ -200,8 +255,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
                             this.workspaceProjects.set(workspace.uri, projectsMap);
 
-                            traceVerbose(
-                                `Discovered ${projects.length} project(s) for workspace ${workspace.uri.fsPath}`,
+                            traceInfo(
+                                `[test-by-project] Discovered ${projects.length} project(s) for workspace ${workspace.uri.fsPath}`,
                             );
 
                             // Set up file watchers if auto-discovery is enabled
@@ -212,7 +267,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 this.watchForTestContentChangeOnSave();
                             }
                         } catch (error) {
-                            traceError(`Failed to activate project-based testing for ${workspace.uri.fsPath}:`, error);
+                            traceError(
+                                `[test-by-project] Failed to activate project-based testing for ${workspace.uri.fsPath}:`,
+                                error,
+                            );
+                            traceInfo('[test-by-project] Falling back to legacy mode for this workspace');
                             // Fall back to legacy mode for this workspace
                             await this.activateLegacyWorkspace(workspace);
                         }
@@ -220,7 +279,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 );
                 return;
             } catch (error) {
-                traceError('Failed to activate project-based testing, falling back to legacy mode:', error);
+                traceError(
+                    '[test-by-project] Failed to activate project-based testing, falling back to legacy mode:',
+                    error,
+                );
+                traceInfo('[test-by-project] Disabling project-based testing for this session');
                 this.useProjectBasedTesting = false;
             }
         }
@@ -236,40 +299,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
      * Used for backward compatibility when project-based testing is disabled or unavailable.
      */
     private activateLegacyWorkspace(workspace: WorkspaceFolder): void {
-        const settings = this.configSettings.getSettings(workspace.uri);
-
-        let discoveryAdapter: ITestDiscoveryAdapter;
-        let executionAdapter: ITestExecutionAdapter;
-        let testProvider: TestProvider;
-        let resultResolver: PythonResultResolver;
-
-        if (settings.testing.unittestEnabled) {
-            testProvider = UNITTEST_PROVIDER;
-            resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
-            discoveryAdapter = new UnittestTestDiscoveryAdapter(
-                this.configSettings,
-                resultResolver,
-                this.envVarsService,
-            );
-            executionAdapter = new UnittestTestExecutionAdapter(
-                this.configSettings,
-                resultResolver,
-                this.envVarsService,
-            );
-        } else {
-            testProvider = PYTEST_PROVIDER;
-            resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
-            discoveryAdapter = new PytestTestDiscoveryAdapter(
-                this.configSettings,
-                resultResolver,
-                this.envVarsService,
-            );
-            executionAdapter = new PytestTestExecutionAdapter(
-                this.configSettings,
-                resultResolver,
-                this.envVarsService,
-            );
-        }
+        const testProvider = this.getTestProvider(workspace.uri);
+        const resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
+        const { discoveryAdapter, executionAdapter } = this.createTestAdapters(testProvider, resultResolver);
 
         const workspaceTestAdapter = new WorkspaceTestAdapter(
             testProvider,
@@ -280,12 +312,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         );
 
         this.testAdapters.set(workspace.uri, workspaceTestAdapter);
-
-        if (settings.testing.autoTestDiscoverOnSaveEnabled) {
-            traceVerbose(`Testing: Setting up watcher for ${workspace.uri.fsPath}`);
-            this.watchForSettingsChanges(workspace);
-            this.watchForTestContentChangeOnSave();
-        }
+        this.setupFileWatchers(workspace);
     }
 
     /**
@@ -293,27 +320,31 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
      * Falls back to creating a single default project if API is unavailable or returns no projects.
      */
     private async discoverWorkspaceProjects(workspaceUri: Uri): Promise<ProjectAdapter[]> {
+        traceInfo(`[test-by-project] Discovering projects for workspace: ${workspaceUri.fsPath}`);
         try {
             // Check if we should use the environment extension
             if (!useEnvExtension()) {
-                traceVerbose('Python Environments extension not enabled, using single project mode');
+                traceInfo('[test-by-project] Python Environments extension not enabled, using single project mode');
                 return [await this.createDefaultProject(workspaceUri)];
             }
 
             // Get the environment API
             const envExtApi = await getEnvExtApi();
-            
+            traceInfo('[test-by-project] Successfully retrieved Python Environments API');
+
             // Query for all Python projects in this workspace
             const pythonProjects = envExtApi.getPythonProjects();
-            
+            traceInfo(`[test-by-project] Found ${pythonProjects.length} total Python projects from API`);
+
             // Filter projects to only those in this workspace
-            const workspaceProjects = pythonProjects.filter(
-                (project) => project.uri.fsPath.startsWith(workspaceUri.fsPath),
+            const workspaceProjects = pythonProjects.filter((project) =>
+                project.uri.fsPath.startsWith(workspaceUri.fsPath),
             );
+            traceInfo(`[test-by-project] Filtered to ${workspaceProjects.length} projects in workspace`);
 
             if (workspaceProjects.length === 0) {
-                traceVerbose(
-                    `No Python projects found for workspace ${workspaceUri.fsPath}, creating default project`,
+                traceInfo(
+                    `[test-by-project] No Python projects found for workspace ${workspaceUri.fsPath}, creating default project`,
                 );
                 return [await this.createDefaultProject(workspaceUri)];
             }
@@ -325,19 +356,26 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     const adapter = await this.createProjectAdapter(pythonProject, workspaceUri);
                     projectAdapters.push(adapter);
                 } catch (error) {
-                    traceError(`Failed to create project adapter for ${pythonProject.uri.fsPath}:`, error);
+                    traceError(
+                        `[test-by-project] Failed to create project adapter for ${pythonProject.uri.fsPath}:`,
+                        error,
+                    );
                     // Continue with other projects
                 }
             }
 
             if (projectAdapters.length === 0) {
-                traceVerbose('All project adapters failed to create, falling back to default project');
+                traceInfo('[test-by-project] All project adapters failed to create, falling back to default project');
                 return [await this.createDefaultProject(workspaceUri)];
             }
 
+            traceInfo(`[test-by-project] Successfully created ${projectAdapters.length} project adapter(s)`);
             return projectAdapters;
         } catch (error) {
-            traceError('Failed to discover workspace projects, falling back to single project mode:', error);
+            traceError(
+                '[test-by-project] Failed to discover workspace projects, falling back to single project mode:',
+                error,
+            );
             return [await this.createDefaultProject(workspaceUri)];
         }
     }
@@ -345,10 +383,10 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     /**
      * Creates a ProjectAdapter from a PythonProject object.
      */
-    private async createProjectAdapter(
-        pythonProject: PythonProject,
-        workspaceUri: Uri,
-    ): Promise<ProjectAdapter> {
+    private async createProjectAdapter(pythonProject: PythonProject, workspaceUri: Uri): Promise<ProjectAdapter> {
+        traceInfo(
+            `[test-by-project] Creating project adapter for: ${pythonProject.name} at ${pythonProject.uri.fsPath}`,
+        );
         // Generate unique project ID
         const projectId = generateProjectId(pythonProject);
 
@@ -360,53 +398,20 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             throw new Error(`Failed to resolve Python environment for project ${pythonProject.uri.fsPath}`);
         }
 
-        // Get workspace settings (shared by all projects in workspace)
-        const settings = this.configSettings.getSettings(workspaceUri);
+        // Get test provider and create resolver
+        const testProvider = this.getTestProvider(workspaceUri);
+        const resultResolver = new PythonResultResolver(this.testController, testProvider, workspaceUri, projectId);
 
-        // Determine test provider
-        const testProvider: TestProvider = settings.testing.unittestEnabled ? UNITTEST_PROVIDER : PYTEST_PROVIDER;
-
-        // Create result resolver with project ID
-        const resultResolver = new PythonResultResolver(
-            this.testController,
-            testProvider,
-            workspaceUri,
-            projectId,
-        );
-
-        // Create discovery and execution adapters
-        let discoveryAdapter: ITestDiscoveryAdapter;
-        let executionAdapter: ITestExecutionAdapter;
-
-        if (testProvider === UNITTEST_PROVIDER) {
-            discoveryAdapter = new UnittestTestDiscoveryAdapter(
-                this.configSettings,
-                resultResolver,
-                this.envVarsService,
-            );
-            executionAdapter = new UnittestTestExecutionAdapter(
-                this.configSettings,
-                resultResolver,
-                this.envVarsService,
-            );
-        } else {
-            discoveryAdapter = new PytestTestDiscoveryAdapter(
-                this.configSettings,
-                resultResolver,
-                this.envVarsService,
-            );
-            executionAdapter = new PytestTestExecutionAdapter(
-                this.configSettings,
-                resultResolver,
-                this.envVarsService,
-            );
-        }
+        // Create adapters
+        const { discoveryAdapter, executionAdapter } = this.createTestAdapters(testProvider, resultResolver);
 
         // Create display name with Python version
         const projectName = createProjectDisplayName(pythonProject.name, pythonEnvironment.version);
 
+        traceInfo(`[test-by-project] Created project adapter: ${projectName} (ID: ${projectId})`);
+
         // Create project adapter
-        const projectAdapter: ProjectAdapter = {
+        return {
             projectId,
             projectName,
             projectUri: pythonProject.uri,
@@ -420,8 +425,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             isDiscovering: false,
             isExecuting: false,
         };
-
-        return projectAdapter;
     }
 
     /**
@@ -429,39 +432,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
      * Used for backward compatibility when environment API is unavailable.
      */
     private async createDefaultProject(workspaceUri: Uri): Promise<ProjectAdapter> {
-        const settings = this.configSettings.getSettings(workspaceUri);
-        const testProvider: TestProvider = settings.testing.unittestEnabled ? UNITTEST_PROVIDER : PYTEST_PROVIDER;
-
-        // Create result resolver WITHOUT project ID (legacy mode)
+        traceInfo(`[test-by-project] Creating default project for workspace: ${workspaceUri.fsPath}`);
+        // Get test provider and create resolver (WITHOUT project ID for legacy mode)
+        const testProvider = this.getTestProvider(workspaceUri);
         const resultResolver = new PythonResultResolver(this.testController, testProvider, workspaceUri);
 
-        // Create discovery and execution adapters
-        let discoveryAdapter: ITestDiscoveryAdapter;
-        let executionAdapter: ITestExecutionAdapter;
-
-        if (testProvider === UNITTEST_PROVIDER) {
-            discoveryAdapter = new UnittestTestDiscoveryAdapter(
-                this.configSettings,
-                resultResolver,
-                this.envVarsService,
-            );
-            executionAdapter = new UnittestTestExecutionAdapter(
-                this.configSettings,
-                resultResolver,
-                this.envVarsService,
-            );
-        } else {
-            discoveryAdapter = new PytestTestDiscoveryAdapter(
-                this.configSettings,
-                resultResolver,
-                this.envVarsService,
-            );
-            executionAdapter = new PytestTestExecutionAdapter(
-                this.configSettings,
-                resultResolver,
-                this.envVarsService,
-            );
-        }
+        // Create adapters
+        const { discoveryAdapter, executionAdapter } = this.createTestAdapters(testProvider, resultResolver);
 
         // Get active interpreter
         const interpreter = await this.interpreterService.getActiveInterpreter(workspaceUri);
@@ -495,7 +472,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         // Use workspace URI as project ID for default project
         const projectId = `default-${workspaceUri.fsPath}`;
 
-        const projectAdapter: ProjectAdapter = {
+        return {
             projectId,
             projectName: pythonProject.name,
             projectUri: workspaceUri,
@@ -509,8 +486,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             isDiscovering: false,
             isExecuting: false,
         };
-
-        return projectAdapter;
     }
 
     public refreshTestData(uri?: Resource, options?: TestRefreshOptions): Promise<void> {

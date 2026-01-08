@@ -10,6 +10,7 @@ import { Testing } from '../../../common/utils/localize';
 import { createErrorTestItem } from './testItemUtilities';
 import { buildErrorNodeOptions, populateTestTree } from './utils';
 import { TestItemIndex } from './testItemIndex';
+import { PROJECT_ID_SEPARATOR } from './projectUtils';
 
 /**
  * Stateless handler for processing discovery payloads and building/updating the TestItem tree.
@@ -43,7 +44,7 @@ export class TestDiscoveryHandler {
         } else {
             // remove error node only if no errors exist.
             const errorNodeId = projectId
-                ? `${projectId}::DiscoveryError:${workspacePath}`
+                ? `${projectId}${PROJECT_ID_SEPARATOR}DiscoveryError:${workspacePath}`
                 : `DiscoveryError:${workspacePath}`;
             testController.items.delete(errorNodeId);
         }
@@ -90,7 +91,7 @@ export class TestDiscoveryHandler {
         traceError(testingErrorConst, 'for workspace: ', workspacePath, '\r\n', error?.join('\r\n\r\n') ?? '');
 
         const errorNodeId = projectId
-            ? `${projectId}::DiscoveryError:${workspacePath}`
+            ? `${projectId}${PROJECT_ID_SEPARATOR}DiscoveryError:${workspacePath}`
             : `DiscoveryError:${workspacePath}`;
         let errorNode = testController.items.get(errorNodeId);
         const message = util.format(

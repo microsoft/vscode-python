@@ -28,7 +28,7 @@ export class PythonResultResolver implements ITestResultResolver {
 
     /**
      * Optional project ID for scoping test IDs.
-     * When set, all test IDs are prefixed with "{projectId}::" for project-based testing.
+     * When set, all test IDs are prefixed with "{projectId}|" for project-based testing.
      * When undefined, uses legacy workspace-level IDs for backward compatibility.
      */
     private projectId?: string;

@@ -751,6 +751,34 @@ function createDefaultProject(workspaceUri) {
 }
 ```
 
+**Workspaces Without Environment Extension:**
+
+When the Python Environments extension is not available or returns no projects:
+
+1. **Detection**: `discoverWorkspaceProjects()` catches API errors or empty results
+2. **Fallback Strategy**: Calls `createDefaultProject(workspaceUri)` which:
+   - Uses the workspace's active interpreter via `interpreterService.getActiveInterpreter()`
+   - Creates a mock `PythonProject` with workspace URI as project root
+   - Generates a project ID from the workspace URI: `default-{workspaceUri.fsPath}`
+   - Mimics the legacy single-workspace behavior, but wrapped in `ProjectAdapter` structure
+
+3. **Key Characteristics**:
+   - Single project per workspace (legacy behavior preserved)
+   - No project scoping in test IDs (projectId is optional in resolver)
+   - Uses workspace-level Python interpreter settings
+   - All tests belong to this single "default" project
+   - Fully compatible with existing test discovery/execution flows
+
+4. **Graceful Upgrade Path**:
+   - When user later installs the Python Environments extension, next discovery will:
+     - Detect actual Python projects in the workspace
+     - Replace the default project with real project adapters
+     - Rebuild test tree with proper project scoping
+   - No data migration needed - discovery rebuilds from scratch
+
+This design ensures zero functional degradation for users without the new extension, while providing an instant upgrade path when they adopt it.
+```
+
 ---
 
 ### 5. Project Discovery Triggers

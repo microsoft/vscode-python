@@ -18,6 +18,7 @@ import {
 import { Deferred, createDeferred } from '../../../common/utils/async';
 import { createReaderPipe, generateRandomPipeName } from '../../../common/pipes/namedPipes';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
+import { PROJECT_ID_SEPARATOR } from './projectUtils';
 
 export function fixLogLinesNoTrailing(content: string): string {
     const lines = content.split(/\r?\n/g);
@@ -216,7 +217,7 @@ export function populateTestTree(
     // If testRoot is undefined, use the info of the root item of testTreeData to create a test item, and append it to the test controller.
     if (!testRoot) {
         // Create project-scoped ID if projectId is provided
-        const rootId = projectId ? `${projectId}::${testTreeData.path}` : testTreeData.path;
+        const rootId = projectId ? `${projectId}${PROJECT_ID_SEPARATOR}${testTreeData.path}` : testTreeData.path;
         testRoot = testController.createTestItem(rootId, testTreeData.name, Uri.file(testTreeData.path));
 
         testRoot.canResolveChildren = true;
@@ -230,7 +231,7 @@ export function populateTestTree(
         if (!token?.isCancellationRequested) {
             if (isTestItem(child)) {
                 // Create project-scoped vsId
-                const vsId = projectId ? `${projectId}::${child.id_}` : child.id_;
+                const vsId = projectId ? `${projectId}${PROJECT_ID_SEPARATOR}${child.id_}` : child.id_;
                 const testItem = testController.createTestItem(vsId, child.name, Uri.file(child.path));
                 testItem.tags = [RunTestTag, DebugTestTag];
 
@@ -259,7 +260,7 @@ export function populateTestTree(
 
                 if (!node) {
                     // Create project-scoped ID for non-test nodes
-                    const nodeId = projectId ? `${projectId}::${child.id_}` : child.id_;
+                    const nodeId = projectId ? `${projectId}${PROJECT_ID_SEPARATOR}${child.id_}` : child.id_;
                     node = testController.createTestItem(nodeId, child.name, Uri.file(child.path));
 
                     node.canResolveChildren = true;
