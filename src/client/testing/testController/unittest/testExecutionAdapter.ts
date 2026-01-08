@@ -42,9 +42,9 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
     public async runTests(
         uri: Uri,
         testIds: string[],
-        profileKind?: TestRunProfileKind,
-        runInstance?: TestRun,
-        executionFactory?: IPythonExecutionFactory,
+        profileKind: boolean | TestRunProfileKind | undefined,
+        runInstance: TestRun,
+        executionFactory: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
     ): Promise<void> {
         // deferredTillServerClose awaits named pipe server close
@@ -59,13 +59,13 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             }
         };
         const cSource = new CancellationTokenSource();
-        runInstance?.token.onCancellationRequested(() => cSource.cancel());
+        runInstance.token.onCancellationRequested(() => cSource.cancel());
         const name = await utils.startRunResultNamedPipe(
             dataReceivedCallback, // callback to handle data received
             deferredTillServerClose, // deferred to resolve when server closes
             cSource.token, // token to cancel
         );
-        runInstance?.token.onCancellationRequested(() => {
+        runInstance.token.onCancellationRequested(() => {
             console.log(`Test run cancelled, resolving 'till TillAllServerClose' deferred for ${uri.fsPath}.`);
             // if canceled, stop listening for results
             deferredTillServerClose.resolve();
@@ -93,9 +93,9 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         testIds: string[],
         resultNamedPipeName: string,
         serverCancel: CancellationTokenSource,
-        runInstance?: TestRun,
-        profileKind?: TestRunProfileKind,
-        executionFactory?: IPythonExecutionFactory,
+        runInstance: TestRun,
+        profileKind: boolean | TestRunProfileKind | undefined,
+        executionFactory: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
         const settings = this.configSettings.getSettings(uri);
@@ -119,9 +119,9 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             workspaceFolder: uri,
             command,
             cwd,
-            profileKind,
+            profileKind: typeof profileKind === 'boolean' ? undefined : profileKind,
             testIds,
-            token: runInstance?.token,
+            token: runInstance.token,
         };
         traceLog(`Running UNITTEST execution for the following test ids: ${testIds}`);
 
@@ -145,7 +145,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             allowEnvironmentFetchExceptions: false,
             resource: options.workspaceFolder,
         };
-        const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
+        const execService = await executionFactory.createActivatedEnvironment(creationOptions);
 
         const execInfo = await execService?.getExecutablePath();
         traceVerbose(`Executable path for unittest execution: ${execInfo}.`);
@@ -193,7 +193,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                         args,
                         env: (mutableEnv as unknown) as { [key: string]: string },
                     });
-                    runInstance?.token.onCancellationRequested(() => {
+                    runInstance.token.onCancellationRequested(() => {
                         traceInfo(`Test run cancelled, killing unittest subprocess for workspace ${uri.fsPath}`);
                         proc.kill();
                         deferredTillExecClose.resolve();
@@ -201,11 +201,11 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                     });
                     proc.stdout.on('data', (data) => {
                         const out = utils.fixLogLinesNoTrailing(data.toString());
-                        runInstance?.appendOutput(out);
+                        runInstance.appendOutput(out);
                     });
                     proc.stderr.on('data', (data) => {
                         const out = utils.fixLogLinesNoTrailing(data.toString());
-                        runInstance?.appendOutput(out);
+                        runInstance.appendOutput(out);
                     });
                     proc.onExit((code, signal) => {
                         if (code !== 0) {
@@ -228,7 +228,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
 
                 let resultProc: ChildProcess | undefined;
 
-                runInstance?.token.onCancellationRequested(() => {
+                runInstance.token.onCancellationRequested(() => {
                     traceInfo(`Test run cancelled, killing unittest subprocess for workspace ${cwd}.`);
                     // if the resultProc exists just call kill on it which will handle resolving the ExecClose deferred, otherwise resolve the deferred here.
                     if (resultProc) {
@@ -246,11 +246,11 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
 
                 result?.proc?.stdout?.on('data', (data) => {
                     const out = fixLogLinesNoTrailing(data.toString());
-                    runInstance?.appendOutput(`${out}`);
+                    runInstance.appendOutput(`${out}`);
                 });
                 result?.proc?.stderr?.on('data', (data) => {
                     const out = fixLogLinesNoTrailing(data.toString());
-                    runInstance?.appendOutput(`${out}`);
+                    runInstance.appendOutput(`${out}`);
                 });
 
                 result?.proc?.on('exit', (code, signal) => {

@@ -10,12 +10,22 @@ import os
 import pathlib
 import sys
 import traceback
-from typing import TYPE_CHECKING, Any, Dict, Generator, Literal, TypedDict
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Generator,
+    Literal,
+    Protocol,
+    TypedDict,
+    cast,
+)
 
 import pytest
 
 if TYPE_CHECKING:
     from pluggy import Result
+    from typing_extensions import NotRequired
 
 USES_PYTEST_DESCRIBE = False
 
@@ -23,6 +33,13 @@ with contextlib.suppress(ImportError):
     from pytest_describe.plugin import DescribeBlock
 
     USES_PYTEST_DESCRIBE = True
+
+
+class HasPathOrFspath(Protocol):
+    """Protocol defining objects that have either a path or fspath attribute."""
+
+    path: pathlib.Path | None = None
+    fspath: Any | None = None
 
 
 class TestData(TypedDict):
@@ -45,6 +62,7 @@ class TestNode(TestData):
     """A general class that handles all test data which contains children."""
 
     children: list[TestNode | TestItem | None]
+    lineno: NotRequired[str]  # Optional field for class/function nodes
 
 
 class VSCodePytestError(Exception):
@@ -57,14 +75,21 @@ class VSCodePytestError(Exception):
 ERRORS = []
 IS_DISCOVERY = False
 map_id_to_path = {}
-collected_tests_so_far = []
+collected_tests_so_far = set()
 TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 SYMLINK_PATH = None
 INCLUDE_BRANCHES = False
 
+# Performance optimization caches for path resolution
+_path_cache: dict[int, pathlib.Path] = {}  # Cache node paths by object id
+_path_to_str_cache: dict[pathlib.Path, str] = {}  # Cache path-to-string conversions
+_CACHED_CWD: pathlib.Path | None = None
+
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
-    has_pytest_cov = early_config.pluginmanager.hasplugin("pytest_cov")
+    has_pytest_cov = early_config.pluginmanager.hasplugin(
+        "pytest_cov"
+    ) or early_config.pluginmanager.hasplugin("pytest_cov.plugin")
     has_cov_arg = any("--cov" in arg for arg in args)
     if has_cov_arg and not has_pytest_cov:
         raise VSCodePytestError(
@@ -152,7 +177,7 @@ def pytest_exception_interact(node, call, report):
             report_value = "failure"
         node_id = get_absolute_test_id(node.nodeid, get_node_path(node))
         if node_id not in collected_tests_so_far:
-            collected_tests_so_far.append(node_id)
+            collected_tests_so_far.add(node_id)
             item_result = create_test_outcome(
                 node_id,
                 report_value,
@@ -277,7 +302,7 @@ def pytest_report_teststatus(report, config):  # noqa: ARG001
         # Calculate the absolute test id and use this as the ID moving forward.
         absolute_node_id = get_absolute_test_id(report.nodeid, node_path)
         if absolute_node_id not in collected_tests_so_far:
-            collected_tests_so_far.append(absolute_node_id)
+            collected_tests_so_far.add(absolute_node_id)
             item_result = create_test_outcome(
                 absolute_node_id,
                 report_value,
@@ -311,7 +336,7 @@ def pytest_runtest_protocol(item, nextitem):  # noqa: ARG001
         report_value = "skipped"
         cwd = pathlib.Path.cwd()
         if absolute_node_id not in collected_tests_so_far:
-            collected_tests_so_far.append(absolute_node_id)
+            collected_tests_so_far.add(absolute_node_id)
             item_result = create_test_outcome(
                 absolute_node_id,
                 report_value,
@@ -522,11 +547,131 @@ def pytest_sessionfinish(session, exitstatus):
         send_message(payload)
 
 
+def construct_nested_folders(
+    file_nodes_dict: dict[str, TestNode],
+    session_node: TestNode,
+    session_children_dict: dict[str, TestNode],
+) -> dict[str, TestNode]:
+    """Iterate through all files and construct them into nested folders.
+
+    Keyword arguments:
+    file_nodes_dict -- Dictionary of all file nodes
+    session_node -- The session node that will be parent to the folder structure
+    session_children_dict -- Dictionary of session's children nodes indexed by ID
+
+    Returns:
+    dict[str, TestNode] -- Updated session_children_dict with folder nodes added
+    """
+    created_files_folders_dict: dict[str, TestNode] = {}
+    for file_node in file_nodes_dict.values():
+        # Iterate through all the files that exist and construct them into nested folders.
+        root_folder_node: TestNode
+        try:
+            root_folder_node: TestNode = build_nested_folders(
+                file_node, created_files_folders_dict, session_node
+            )
+        except ValueError:
+            # This exception is raised when the session node is not a parent of the file node.
+            print(
+                "[vscode-pytest]: Session path not a parent of test paths, adjusting session node to common parent."
+            )
+            file_path_str: str = str(file_node["path"])
+            session_path_str: str = str(session_node["path"])
+            common_parent = os.path.commonpath([file_path_str, session_path_str])
+            common_parent_path = pathlib.Path(common_parent)
+            print("[vscode-pytest]: Session node now set to: ", common_parent)
+            session_node["path"] = common_parent_path  # pathlib.Path
+            session_node["id_"] = common_parent  # str
+            session_node["name"] = common_parent_path.name  # str
+            root_folder_node = build_nested_folders(
+                file_node, created_files_folders_dict, session_node
+            )
+        # The final folder we get to is the highest folder in the path
+        # and therefore we add this as a child to the session.
+        root_id = root_folder_node.get("id_")
+        if root_id and root_id not in session_children_dict:
+            session_children_dict[root_id] = root_folder_node
+
+    return session_children_dict
+
+
+def process_parameterized_test(
+    test_case: pytest.Item,
+    test_node: TestItem,
+    function_nodes_dict: dict[str, TestNode],
+    file_nodes_dict: dict[str, TestNode],
+) -> TestNode:
+    """Process a parameterized test case and create appropriate function nodes.
+
+    Keyword arguments:
+    test_case -- the parameterized pytest test case; must have callspec attribute
+    test_node -- the test node created from the test case
+    function_nodes_dict -- dictionary of function nodes indexed by ID
+    file_nodes_dict -- dictionary of file nodes indexed by path
+
+    Returns:
+    TestNode -- the node to use for further processing (function node or original test node)
+    """
+    function_name: str = ""
+    # parameterized test cases cut the repetitive part of the name off.
+    parent_part, parameterized_section = test_node["name"].split("[", 1)
+    test_node["name"] = "[" + parameterized_section
+
+    first_split = test_case.nodeid.rsplit(
+        "::", 1
+    )  # splits the parameterized test name from the rest of the nodeid
+    second_split = first_split[0].rsplit(
+        ".py", 1
+    )  # splits the file path from the rest of the nodeid
+
+    class_and_method = second_split[1] + "::"  # This has "::" separator at both ends
+    # construct the parent id, so it is absolute path :: any class and method :: parent_part
+    parent_id = cached_fsdecode(get_node_path(test_case)) + class_and_method + parent_part
+
+    try:
+        function_name = test_case.originalname  # type: ignore
+    except AttributeError:  # actual error has occurred
+        ERRORS.append(
+            f"unable to find original name for {test_case.name} with parameterization detected."
+        )
+        raise VSCodePytestError(
+            "Unable to find original name for parameterized test case"
+        ) from None
+
+    function_test_node = function_nodes_dict.get(parent_id)
+    if function_test_node is None:
+        function_test_node = create_parameterized_function_node(
+            function_name, get_node_path(test_case), parent_id
+        )
+        function_nodes_dict[parent_id] = function_test_node
+
+    if test_node not in function_test_node["children"]:
+        function_test_node["children"].append(test_node)
+
+    # Check if the parent node of the function is file, if so create/add to this file node.
+    if isinstance(test_case.parent, pytest.File):
+        # calculate the parent path of the test case
+        parent_path = get_node_path(test_case.parent)
+        parent_path_key = cached_fsdecode(parent_path)
+        parent_test_case = file_nodes_dict.get(parent_path_key)
+        if parent_test_case is None:
+            parent_test_case = create_file_node(parent_path)
+            file_nodes_dict[parent_path_key] = parent_test_case
+        if function_test_node not in parent_test_case["children"]:
+            parent_test_case["children"].append(function_test_node)
+
+    # Return the function node as the test node to handle subsequent nesting
+    return function_test_node
+
+
 def build_test_tree(session: pytest.Session) -> TestNode:
     """Builds a tree made up of testing nodes from the pytest session.
 
     Keyword arguments:
-    session -- the pytest session object.
+    session -- the pytest session object that contains test items.
+
+    Returns:
+    TestNode -- The root node of the constructed test tree.
     """
     session_node = create_session_node(session)
     session_children_dict: dict[str, TestNode] = {}
@@ -542,54 +687,10 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     for test_case in session.items:
         test_node = create_test_node(test_case)
         if hasattr(test_case, "callspec"):  # This means it is a parameterized test.
-            function_name: str = ""
-            # parameterized test cases cut the repetitive part of the name off.
-            parent_part, parameterized_section = test_node["name"].split("[", 1)
-            test_node["name"] = "[" + parameterized_section
-
-            first_split = test_case.nodeid.rsplit(
-                "::", 1
-            )  # splits the parameterized test name from the rest of the nodeid
-            second_split = first_split[0].rsplit(
-                ".py", 1
-            )  # splits the file path from the rest of the nodeid
-
-            class_and_method = second_split[1] + "::"  # This has "::" separator at both ends
-            # construct the parent id, so it is absolute path :: any class and method :: parent_part
-            parent_id = os.fspath(get_node_path(test_case)) + class_and_method + parent_part
-            # file, middle, param = test_case.nodeid.rsplit("::", 2)
-            # parent_id = test_case.nodeid.rsplit("::", 1)[0] + "::" + parent_part
-            # parent_path = os.fspath(get_node_path(test_case)) + "::" + parent_part
-            try:
-                function_name = test_case.originalname  # type: ignore
-                function_test_node = function_nodes_dict[parent_id]
-            except AttributeError:  # actual error has occurred
-                ERRORS.append(
-                    f"unable to find original name for {test_case.name} with parameterization detected."
-                )
-                raise VSCodePytestError(
-                    "Unable to find original name for parameterized test case"
-                ) from None
-            except KeyError:
-                function_test_node: TestNode = create_parameterized_function_node(
-                    function_name, get_node_path(test_case), parent_id
-                )
-                function_nodes_dict[parent_id] = function_test_node
-            if test_node not in function_test_node["children"]:
-                function_test_node["children"].append(test_node)
-            # Check if the parent node of the function is file, if so create/add to this file node.
-            if isinstance(test_case.parent, pytest.File):
-                # calculate the parent path of the test case
-                parent_path = get_node_path(test_case.parent)
-                try:
-                    parent_test_case = file_nodes_dict[os.fspath(parent_path)]
-                except KeyError:
-                    parent_test_case = create_file_node(parent_path)
-                    file_nodes_dict[os.fspath(parent_path)] = parent_test_case
-                if function_test_node not in parent_test_case["children"]:
-                    parent_test_case["children"].append(function_test_node)
-            # If the parent is not a file, it is a class, add the function node as the test node to handle subsequent nesting.
-            test_node = function_test_node
+            # Process parameterized test and get the function node to use for further processing
+            test_node = process_parameterized_test(
+                test_case, test_node, function_nodes_dict, file_nodes_dict
+            )
         if isinstance(test_case.parent, pytest.Class) or (
             USES_PYTEST_DESCRIBE and isinstance(test_case.parent, DescribeBlock)
         ):
@@ -600,9 +701,8 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 USES_PYTEST_DESCRIBE and isinstance(case_iter, DescribeBlock)
             ):
                 # While the given node is a class, create a class and nest the previous node as a child.
-                try:
-                    test_class_node = class_nodes_dict[case_iter.nodeid]
-                except KeyError:
+                test_class_node = class_nodes_dict.get(case_iter.nodeid)
+                if test_class_node is None:
                     test_class_node = create_class_node(case_iter)
                     class_nodes_dict[case_iter.nodeid] = test_class_node
                 # Check if the class already has the child node. This will occur if the test is parameterized.
@@ -619,50 +719,35 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 break
             parent_path = get_node_path(parent_module)
             # Create a file node that has the last class as a child.
-            try:
-                test_file_node: TestNode = file_nodes_dict[os.fspath(parent_path)]
-            except KeyError:
+            parent_path_key = cached_fsdecode(parent_path)
+            test_file_node = file_nodes_dict.get(parent_path_key)
+            if test_file_node is None:
                 test_file_node = create_file_node(parent_path)
-                file_nodes_dict[os.fspath(parent_path)] = test_file_node
+                file_nodes_dict[parent_path_key] = test_file_node
             # Check if the class is already a child of the file node.
             if test_class_node is not None and test_class_node not in test_file_node["children"]:
                 test_file_node["children"].append(test_class_node)
         elif not hasattr(test_case, "callspec"):
             # This includes test cases that are pytest functions or a doctests.
-            parent_path = get_node_path(test_case.parent)
-            try:
-                parent_test_case = file_nodes_dict[os.fspath(parent_path)]
-            except KeyError:
+            if test_case.parent is None:
+                ERRORS.append(f"Test case {test_case.name} has no parent")
+                continue
+            parent_path = get_node_path(
+                cast(
+                    "pytest.Session | pytest.Item | pytest.File | pytest.Class | pytest.Module | HasPathOrFspath",
+                    test_case.parent,
+                )
+            )
+            parent_path_key = cached_fsdecode(parent_path)
+            parent_test_case = file_nodes_dict.get(parent_path_key)
+            if parent_test_case is None:
                 parent_test_case = create_file_node(parent_path)
-                file_nodes_dict[os.fspath(parent_path)] = parent_test_case
+                file_nodes_dict[parent_path_key] = parent_test_case
             parent_test_case["children"].append(test_node)
-    created_files_folders_dict: dict[str, TestNode] = {}
-    for file_node in file_nodes_dict.values():
-        # Iterate through all the files that exist and construct them into nested folders.
-        root_folder_node: TestNode
-        try:
-            root_folder_node: TestNode = build_nested_folders(
-                file_node, created_files_folders_dict, session_node
-            )
-        except ValueError:
-            # This exception is raised when the session node is not a parent of the file node.
-            print(
-                "[vscode-pytest]: Session path not a parent of test paths, adjusting session node to common parent."
-            )
-            common_parent = os.path.commonpath([file_node["path"], get_node_path(session)])
-            common_parent_path = pathlib.Path(common_parent)
-            print("[vscode-pytest]: Session node now set to: ", common_parent)
-            session_node["path"] = common_parent_path  # pathlib.Path
-            session_node["id_"] = common_parent  # str
-            session_node["name"] = common_parent_path.name  # str
-            root_folder_node = build_nested_folders(
-                file_node, created_files_folders_dict, session_node
-            )
-        # The final folder we get to is the highest folder in the path
-        # and therefore we add this as a child to the session.
-        root_id = root_folder_node.get("id_")
-        if root_id and root_id not in session_children_dict:
-            session_children_dict[root_id] = root_folder_node
+    # Process all files and construct them into nested folders
+    session_children_dict = construct_nested_folders(
+        file_nodes_dict, session_node, session_children_dict
+    )
     session_node["children"] = list(session_children_dict.values())
     return session_node
 
@@ -698,11 +783,11 @@ def build_nested_folders(
     max_iter = 100
     while iterator_path != session_node_path:
         curr_folder_name = iterator_path.name
-        try:
-            curr_folder_node: TestNode = created_files_folders_dict[os.fspath(iterator_path)]
-        except KeyError:
-            curr_folder_node: TestNode = create_folder_node(curr_folder_name, iterator_path)
-            created_files_folders_dict[os.fspath(iterator_path)] = curr_folder_node
+        iterator_path_key = cached_fsdecode(iterator_path)
+        curr_folder_node = created_files_folders_dict.get(iterator_path_key)
+        if curr_folder_node is None:
+            curr_folder_node = create_folder_node(curr_folder_name, iterator_path)
+            created_files_folders_dict[iterator_path_key] = curr_folder_node
         if prev_folder_node not in curr_folder_node["children"]:
             curr_folder_node["children"].append(prev_folder_node)
         iterator_path = iterator_path.parent
@@ -763,12 +848,25 @@ def create_class_node(class_module: pytest.Class | DescribeBlock) -> TestNode:
     Keyword arguments:
     class_module -- the pytest object representing a class module.
     """
+    # Get line number for the class definition
+    class_line = ""
+    try:
+        if hasattr(class_module, "obj"):
+            import inspect
+
+            _, lineno = inspect.getsourcelines(class_module.obj)
+            class_line = str(lineno)
+    except (OSError, TypeError):
+        # If we can't get the source lines, leave lineno empty
+        pass
+
     return {
         "name": class_module.name,
         "path": get_node_path(class_module),
         "type_": "class",
         "children": [],
         "id_": get_absolute_test_id(class_module.nodeid, get_node_path(class_module)),
+        "lineno": class_line,
     }
 
 
@@ -851,12 +949,50 @@ class CoveragePayloadDict(Dict):
     error: str | None  # Currently unused need to check
 
 
-def get_node_path(node: Any) -> pathlib.Path:
+def cached_fsdecode(path: pathlib.Path) -> str:
+    """Convert path to string with caching for performance.
+
+    This function caches path-to-string conversions to avoid redundant
+    os.fsdecode() calls during test tree building.
+
+    Parameters:
+        path: The pathlib.Path object to convert to string.
+
+    Returns:
+        str: The string representation of the path.
+    """
+    if path not in _path_to_str_cache:
+        _path_to_str_cache[path] = os.fspath(path)
+    return _path_to_str_cache[path]
+
+
+def get_node_path(
+    node: pytest.Session
+    | pytest.Item
+    | pytest.File
+    | pytest.Class
+    | pytest.Module
+    | HasPathOrFspath,
+) -> pathlib.Path:
     """A function that returns the path of a node given the switch to pathlib.Path.
 
     It also evaluates if the node is a symlink and returns the equivalent path.
+
+    Parameters:
+        node: A pytest object or any object that has a path or fspath attribute.
+            Do NOT pass a pathlib.Path object directly; use it directly instead.
+
+    Returns:
+        pathlib.Path: The resolved path for the node.
     """
-    node_path = getattr(node, "path", None) or pathlib.Path(node.fspath)
+    cache_key = id(node)
+    if cache_key in _path_cache:
+        return _path_cache[cache_key]
+
+    node_path = getattr(node, "path", None)
+    if node_path is None:
+        fspath = getattr(node, "fspath", None)
+        node_path = pathlib.Path(fspath) if fspath is not None else None
 
     if not node_path:
         raise VSCodePytestError(
@@ -868,22 +1004,34 @@ def get_node_path(node: Any) -> pathlib.Path:
         # Get relative between the cwd (resolved path) and the node path.
         try:
             # Check to see if the node path contains the symlink root already
-            common_path = os.path.commonpath([SYMLINK_PATH, node_path])
+            # Convert Path objects to strings for os.path.commonpath
+            symlink_str: str = str(SYMLINK_PATH)
+            node_path_str: str = str(node_path)
+            common_path = os.path.commonpath([symlink_str, node_path_str])
             if common_path == os.fsdecode(SYMLINK_PATH):
                 # The node path is already relative to the SYMLINK_PATH root therefore return
-                return node_path
+                result = node_path
             else:
                 # If the node path is not a symlink, then we need to calculate the equivalent symlink path
                 # get the relative path between the cwd and the node path (as the node path is not a symlink).
-                rel_path = node_path.relative_to(pathlib.Path.cwd())
+                # Use cached cwd to avoid repeated system calls
+                global _CACHED_CWD
+                if _CACHED_CWD is None:
+                    _CACHED_CWD = pathlib.Path.cwd()
+                rel_path = node_path.relative_to(_CACHED_CWD)
                 # combine the difference between the cwd and the node path with the symlink path
-                return pathlib.Path(SYMLINK_PATH, rel_path)
+                result = pathlib.Path(SYMLINK_PATH, rel_path)
         except Exception as e:
             raise VSCodePytestError(
                 f"Error occurred while calculating symlink equivalent from node path: {e}"
-                f"\n SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {node_path}, \n cwd: {pathlib.Path.cwd()}"
+                f"\n SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {node_path}, \n cwd: {_CACHED_CWD if _CACHED_CWD else pathlib.Path.cwd()}"
             ) from e
-    return node_path
+    else:
+        result = node_path
+
+    # Cache before returning
+    _path_cache[cache_key] = result
+    return result
 
 
 __writer = None

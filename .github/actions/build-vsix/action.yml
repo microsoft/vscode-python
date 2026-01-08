@@ -22,7 +22,7 @@ runs:
   using: 'composite'
   steps:
     - name: Install Node
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: ${{ inputs.node_version }}
         cache: 'npm'
@@ -93,7 +93,7 @@ runs:
         VSIX_NAME: ${{ inputs.vsix_name }}
 
     - name: Upload VSIX
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ inputs.artifact_name }}
         path: ${{ inputs.vsix_name }}

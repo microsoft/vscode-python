@@ -52,7 +52,9 @@ class PS1:
         result = ""
         # For non-windows allow recent_command history.
         if sys.platform != "win32":
-            result = "{command_executed}{command_line}{command_finished}{prompt_started}{prompt}{command_start}".format(
+            result = "{soh}{command_executed}{command_line}{command_finished}{prompt_started}{stx}{prompt}{soh}{command_start}{stx}".format(
+                soh="\001",
+                stx="\002",
                 command_executed="\x1b]633;C\x07",
                 command_line="\x1b]633;E;" + str(get_last_command()) + "\x07",
                 command_finished="\x1b]633;D;" + str(exit_code) + "\x07",
@@ -72,6 +74,9 @@ class PS1:
         # result = f"{chr(27)}]633;D;{exit_code}{chr(7)}{chr(27)}]633;A{chr(7)}{original_ps1}{chr(27)}]633;B{chr(7)}{chr(27)}]633;C{chr(7)}"
 
         return result
+
+    def __repr__(self):
+        return "<Custom PS1 for VS Code Python Shell Integration>"
 
 
 if sys.platform != "win32" and (not is_wsl):

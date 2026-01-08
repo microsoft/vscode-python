@@ -1,33 +1,43 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
-import { CancellationTokenSource, Uri } from 'vscode';
-import { CancellationToken } from 'vscode-jsonrpc';
+import { CancellationToken, Disposable, Uri } from 'vscode';
 import { ChildProcess } from 'child_process';
 import { IConfigurationService } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import {
-    DiscoveredTestPayload,
-    ITestDiscoveryAdapter,
-    ITestResultResolver,
-    TestCommandOptions,
-    TestDiscoveryCommand,
-} from '../common/types';
-import { createDeferred } from '../../../common/utils/async';
-import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../../../common/variables/types';
+import { ITestDiscoveryAdapter, ITestResultResolver } from '../common/types';
+import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
-    ExecutionResult,
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
-import { createDiscoveryErrorPayload, fixLogLinesNoTrailing, startDiscoveryNamedPipe } from '../common/utils';
-import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../../logging';
 import { getEnvironment, runInBackground, useEnvExtension } from '../../../envExt/api.internal';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { createTestingDeferred } from '../common/utils';
+import { buildDiscoveryCommand, buildUnittestEnv as configureSubprocessEnv } from './unittestHelpers';
+import { cleanupOnCancellation, createProcessHandlers, setupDiscoveryPipe } from '../common/discoveryHelpers';
 
 /**
- * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.
+ * Configures the subprocess environment for unittest discovery.
+ * @param envVarsService Service to retrieve environment variables
+ * @param uri Workspace URI
+ * @param discoveryPipeName Name of the discovery pipe to pass to the subprocess
+ * @returns Configured environment variables for the subprocess
+ */
+async function configureDiscoveryEnv(
+    envVarsService: IEnvironmentVariablesProvider | undefined,
+    uri: Uri,
+    discoveryPipeName: string,
+): Promise<NodeJS.ProcessEnv> {
+    const envVars = await envVarsService?.getEnvironmentVariables(uri);
+    const mutableEnv = configureSubprocessEnv(envVars, discoveryPipeName);
+    return mutableEnv;
+}
+
+/**
+ * Wrapper class for unittest test discovery.
  */
 export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     constructor(
@@ -36,181 +46,156 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         private readonly envVarsService?: IEnvironmentVariablesProvider,
     ) {}
 
-    public async discoverTests(
+    async discoverTests(
         uri: Uri,
-        executionFactory?: IPythonExecutionFactory,
+        executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
+        interpreter?: PythonEnvironment,
     ): Promise<void> {
-        const settings = this.configSettings.getSettings(uri);
-        const { unittestArgs } = settings.testing;
-        const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
+        // Setup discovery pipe and cancellation
+        const {
+            pipeName: discoveryPipeName,
+            cancellation: discoveryPipeCancellation,
+            tokenDisposable,
+        } = await setupDiscoveryPipe(this.resultResolver, token, uri);
 
-        const cSource = new CancellationTokenSource();
-        // Create a deferred to return to the caller
-        const deferredReturn = createDeferred<void>();
+        // Setup process handlers deferred (used by both execution paths)
+        const deferredTillExecClose = createTestingDeferred();
 
-        token?.onCancellationRequested(() => {
-            traceInfo(`Test discovery cancelled.`);
-            cSource.cancel();
-            deferredReturn.resolve();
-        });
-
-        const name = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
-            if (!token?.isCancellationRequested) {
-                this.resultResolver?.resolveDiscovery(data);
-            }
-        }, cSource.token);
-
-        // set up env with the pipe name
-        let env: EnvironmentVariables | undefined = await this.envVarsService?.getEnvironmentVariables(uri);
-        if (env === undefined) {
-            env = {} as EnvironmentVariables;
+        // Collect all disposables for cleanup in finally block
+        const disposables: Disposable[] = [];
+        if (tokenDisposable) {
+            disposables.push(tokenDisposable);
         }
-        env.TEST_RUN_PIPE = name;
+        try {
+            // Build unittest command and arguments
+            const settings = this.configSettings.getSettings(uri);
+            const { unittestArgs } = settings.testing;
+            const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
+            const execArgs = buildDiscoveryCommand(unittestArgs, EXTENSION_ROOT_DIR);
+            traceVerbose(`Running unittest discovery with command: ${execArgs.join(' ')} for workspace ${uri.fsPath}.`);
 
-        const command = buildDiscoveryCommand(unittestArgs);
-        const options: TestCommandOptions = {
-            workspaceFolder: uri,
-            command,
-            cwd,
-            token,
-        };
+            // Configure subprocess environment
+            const mutableEnv = await configureDiscoveryEnv(this.envVarsService, uri, discoveryPipeName);
 
-        this.runDiscovery(uri, options, name, cwd, cSource, executionFactory).then(() => {
-            deferredReturn.resolve();
-        });
+            // Setup process handlers (shared by both execution paths)
+            const handlers = createProcessHandlers('unittest', uri, cwd, this.resultResolver, deferredTillExecClose);
 
-        return deferredReturn.promise;
-    }
-
-    async runDiscovery(
-        uri: Uri,
-        options: TestCommandOptions,
-        testRunPipeName: string,
-        cwd: string,
-        cSource: CancellationTokenSource,
-        executionFactory?: IPythonExecutionFactory,
-    ): Promise<void> {
-        // get and edit env vars
-        const mutableEnv = {
-            ...(await this.envVarsService?.getEnvironmentVariables(uri)),
-        };
-        mutableEnv.TEST_RUN_PIPE = testRunPipeName;
-        const args = [options.command.script].concat(options.command.args);
-
-        if (options.outChannel) {
-            options.outChannel.appendLine(`python ${args.join(' ')}`);
-        }
-
-        if (useEnvExtension()) {
-            const pythonEnv = await getEnvironment(uri);
-            if (pythonEnv) {
-                const deferredTillExecClose = createDeferred();
+            // Execute using environment extension if available
+            if (useEnvExtension()) {
+                traceInfo(`Using environment extension for unittest discovery in workspace ${uri.fsPath}`);
+                const pythonEnv = await getEnvironment(uri);
+                if (!pythonEnv) {
+                    traceError(
+                        `Python environment not found for workspace ${uri.fsPath}. Cannot proceed with test discovery.`,
+                    );
+                    deferredTillExecClose.resolve();
+                    return;
+                }
+                traceVerbose(`Using Python environment: ${JSON.stringify(pythonEnv)}`);
 
                 const proc = await runInBackground(pythonEnv, {
                     cwd,
-                    args,
+                    args: execArgs,
                     env: (mutableEnv as unknown) as { [key: string]: string },
                 });
-                options.token?.onCancellationRequested(() => {
-                    traceInfo(`Test discovery cancelled, killing unittest subprocess for workspace ${uri.fsPath}`);
-                    proc.kill();
-                    deferredTillExecClose.resolve();
-                    cSource.cancel();
+                traceInfo(`Started unittest discovery subprocess (environment extension) for workspace ${uri.fsPath}`);
+
+                // Wire up cancellation and process events
+                const envExtCancellationHandler = token?.onCancellationRequested(() => {
+                    cleanupOnCancellation('unittest', proc, deferredTillExecClose, discoveryPipeCancellation, uri);
                 });
-                proc.stdout.on('data', (data) => {
-                    const out = fixLogLinesNoTrailing(data.toString());
-                    traceInfo(out);
-                });
-                proc.stderr.on('data', (data) => {
-                    const out = fixLogLinesNoTrailing(data.toString());
-                    traceError(out);
-                });
+                if (envExtCancellationHandler) {
+                    disposables.push(envExtCancellationHandler);
+                }
+                proc.stdout.on('data', handlers.onStdout);
+                proc.stderr.on('data', handlers.onStderr);
                 proc.onExit((code, signal) => {
-                    if (code !== 0) {
-                        traceError(
-                            `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
-                        );
-                    }
-                    deferredTillExecClose.resolve();
+                    handlers.onExit(code, signal);
+                    handlers.onClose(code, signal);
                 });
+
                 await deferredTillExecClose.promise;
-            } else {
-                traceError(`Python Environment not found for: ${uri.fsPath}`);
+                traceInfo(`Unittest discovery completed for workspace ${uri.fsPath}`);
+                return;
             }
-            return;
-        }
 
-        const spawnOptions: SpawnOptions = {
-            token: options.token,
-            cwd: options.cwd,
-            throwOnStdErr: true,
-            env: mutableEnv,
-        };
-
-        try {
-            traceLog(`Discovering unittest tests for workspace ${options.cwd} with arguments: ${args}\r\n`);
-            const deferredTillExecClose = createDeferred<ExecutionResult<string>>();
-
-            // Create the Python environment in which to execute the command.
+            // Execute using execution factory (fallback path)
+            traceInfo(`Using execution factory for unittest discovery in workspace ${uri.fsPath}`);
             const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
                 allowEnvironmentFetchExceptions: false,
-                resource: options.workspaceFolder,
+                resource: uri,
+                interpreter,
             };
-            const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
-            const execInfo = await execService?.getExecutablePath();
-            traceVerbose(`Executable path for unittest discovery: ${execInfo}.`);
+            const execService = await executionFactory.createActivatedEnvironment(creationOptions);
+            if (!execService) {
+                traceError(
+                    `Failed to create execution service for workspace ${uri.fsPath}. Cannot proceed with test discovery.`,
+                );
+                deferredTillExecClose.resolve();
+                return;
+            }
+            const execInfo = await execService.getExecutablePath();
+            traceVerbose(`Using Python executable: ${execInfo} for workspace ${uri.fsPath}`);
+
+            // Check for cancellation before spawning process
+            if (token?.isCancellationRequested) {
+                traceInfo(`Unittest discovery cancelled before spawning process for workspace ${uri.fsPath}`);
+                deferredTillExecClose.resolve();
+                return;
+            }
+
+            const spawnOptions: SpawnOptions = {
+                cwd,
+                throwOnStdErr: true,
+                env: mutableEnv,
+                token,
+            };
 
             let resultProc: ChildProcess | undefined;
-            options.token?.onCancellationRequested(() => {
-                traceInfo(`Test discovery cancelled, killing unittest subprocess for workspace ${uri.fsPath}`);
-                // if the resultProc exists just call kill on it which will handle resolving the ExecClose deferred, otherwise resolve the deferred here.
-                if (resultProc) {
-                    resultProc?.kill();
-                } else {
+
+            // Set up cancellation handler after all early return checks
+            const cancellationHandler = token?.onCancellationRequested(() => {
+                traceInfo(`Cancellation requested during unittest discovery for workspace ${uri.fsPath}`);
+                cleanupOnCancellation('unittest', resultProc, deferredTillExecClose, discoveryPipeCancellation, uri);
+            });
+            if (cancellationHandler) {
+                disposables.push(cancellationHandler);
+            }
+
+            try {
+                const result = execService.execObservable(execArgs, spawnOptions);
+                resultProc = result?.proc;
+
+                if (!resultProc) {
+                    traceError(`Failed to spawn unittest discovery subprocess for workspace ${uri.fsPath}`);
                     deferredTillExecClose.resolve();
-                    cSource.cancel();
+                    return;
                 }
-            });
-            const result = execService?.execObservable(args, spawnOptions);
-            resultProc = result?.proc;
-
-            // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
-            result?.proc?.stdout?.on('data', (data) => {
-                const out = fixLogLinesNoTrailing(data.toString());
-                traceInfo(out);
-            });
-            result?.proc?.stderr?.on('data', (data) => {
-                const out = fixLogLinesNoTrailing(data.toString());
-                traceError(out);
-            });
-
-            result?.proc?.on('exit', (code, signal) => {
-                // if the child has testIds then this is a run request
-
-                if (code !== 0) {
-                    // This occurs when we are running discovery
-                    traceError(
-                        `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${options.cwd}. Creating and sending error discovery payload \n`,
-                    );
-                    traceError(
-                        `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}. Creating and sending error discovery payload`,
-                    );
-                    this.resultResolver?.resolveDiscovery(createDiscoveryErrorPayload(code, signal, cwd));
-                }
+                traceInfo(`Started unittest discovery subprocess (execution factory) for workspace ${uri.fsPath}`);
+            } catch (error) {
+                traceError(`Error spawning unittest discovery subprocess for workspace ${uri.fsPath}: ${error}`);
                 deferredTillExecClose.resolve();
-            });
+                throw error;
+            }
+            resultProc.stdout?.on('data', handlers.onStdout);
+            resultProc.stderr?.on('data', handlers.onStderr);
+            resultProc.on('exit', handlers.onExit);
+            resultProc.on('close', handlers.onClose);
+
+            traceVerbose(`Waiting for unittest discovery subprocess to complete for workspace ${uri.fsPath}`);
             await deferredTillExecClose.promise;
-        } catch (ex) {
-            traceError(`Error while server attempting to run unittest command for workspace ${uri.fsPath}: ${ex}`);
+            traceInfo(`Unittest discovery completed for workspace ${uri.fsPath}`);
+        } catch (error) {
+            traceError(`Error during unittest discovery for workspace ${uri.fsPath}: ${error}`);
+            deferredTillExecClose.resolve();
+            throw error;
+        } finally {
+            traceVerbose(`Cleaning up unittest discovery resources for workspace ${uri.fsPath}`);
+            // Dispose all cancellation handlers and event subscriptions
+            disposables.forEach((d) => d.dispose());
+            // Dispose the discovery pipe cancellation token
+            discoveryPipeCancellation.dispose();
         }
     }
-}
-function buildDiscoveryCommand(args: string[]): TestDiscoveryCommand {
-    const discoveryScript = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
-
-    return {
-        script: discoveryScript,
-        args: ['--udiscovery', ...args],
-    };
 }
