@@ -3,7 +3,13 @@
 
 import { TestItem, Uri } from 'vscode';
 import { TestProvider } from '../../types';
-import { ITestDiscoveryAdapter, ITestExecutionAdapter, ITestResultResolver, DiscoveredTestPayload, DiscoveredTestNode } from './types';
+import {
+    ITestDiscoveryAdapter,
+    ITestExecutionAdapter,
+    ITestResultResolver,
+    DiscoveredTestPayload,
+    DiscoveredTestNode,
+} from './types';
 import { PythonEnvironment, PythonProject } from '../../../envExt/types';
 
 /**
