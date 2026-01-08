@@ -85,9 +85,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     // @ts-expect-error - used when useProjectBasedTesting=true
     private readonly workspaceDiscoveryState: Map<Uri, WorkspaceDiscoveryState> = new Map();
 
-    // Flag to enable/disable project-based testing
-    private useProjectBasedTesting = false;
-
     private readonly triggerTypes: TriggerType[] = [];
 
     private readonly testController: TestController;
@@ -236,8 +233,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     public async activate(): Promise<void> {
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
 
-        // Try to use project-based testing if enabled
-        if (this.useProjectBasedTesting) {
+        // Try to use project-based testing if environment extension is enabled
+        if (useEnvExtension()) {
             traceInfo('[test-by-project] Activating project-based testing mode');
             try {
                 await Promise.all(
@@ -283,8 +280,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     '[test-by-project] Failed to activate project-based testing, falling back to legacy mode:',
                     error,
                 );
-                traceInfo('[test-by-project] Disabling project-based testing for this session');
-                this.useProjectBasedTesting = false;
             }
         }
 
