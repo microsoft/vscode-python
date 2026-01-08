@@ -4,6 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import { uniq } from 'lodash';
 import * as minimatch from 'minimatch';
+import * as path from 'path';
 import {
     CancellationToken,
     TestController,
@@ -56,6 +57,7 @@ import { ProjectAdapter } from './common/projectAdapter';
 import { getProjectId, createProjectDisplayName } from './common/projectUtils';
 import { PythonProject, PythonEnvironment } from '../../envExt/types';
 import { getEnvExtApi, useEnvExtension } from '../../envExt/api.internal';
+import { isParentPath } from '../../common/platform/fs-paths';
 
 // Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
 type EventPropertyType = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_TRIGGER];
@@ -332,9 +334,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             const pythonProjects = envExtApi.getPythonProjects();
             traceInfo(`[test-by-project] Found ${pythonProjects.length} total Python projects from API`);
 
-            // Filter projects to only those in this workspace
+            // Filter projects to only those in this workspace TODO; check this
             const workspaceProjects = pythonProjects.filter((project) =>
-                project.uri.fsPath.startsWith(workspaceUri.fsPath),
+                isParentPath(project.uri.fsPath, workspaceUri.fsPath),
             );
             traceInfo(`[test-by-project] Filtered to ${workspaceProjects.length} projects in workspace`);
 
@@ -384,11 +386,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             `[test-by-project] Creating project adapter for: ${pythonProject.name} at ${pythonProject.uri.fsPath}`,
         );
         // Use project URI as the project ID (no hashing needed)
-        const projectId = getProjectId(pythonProject.uri);
+        const projectId = pythonProject.uri.fsPath;
 
         // Resolve the Python environment
         const envExtApi = await getEnvExtApi();
-        const pythonEnvironment = await envExtApi.resolveEnvironment(pythonProject.uri);
+        const pythonEnvironment = await envExtApi.getEnvironment(pythonProject.uri);
 
         if (!pythonEnvironment) {
             throw new Error(`Failed to resolve Python environment for project ${pythonProject.uri.fsPath}`);
@@ -461,7 +463,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
         // Create a mock PythonProject
         const pythonProject: PythonProject = {
-            name: workspaceUri.fsPath.split('/').pop() || 'workspace',
+            // Do not assume path separators (fsPath is platform-specific).
+            name: path.basename(workspaceUri.fsPath) || 'workspace',
             uri: workspaceUri,
         };
 

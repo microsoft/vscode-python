@@ -235,8 +235,14 @@ suite('PythonTestController', () => {
 
             // Should only create adapters for the 2 projects in the workspace.
             assert.strictEqual(createProjectAdapterStub.callCount, 2);
-            assert.strictEqual(createProjectAdapterStub.firstCall.args[0].uri.fsPath, '/workspace/root/p1');
-            assert.strictEqual(createProjectAdapterStub.secondCall.args[0].uri.fsPath, '/workspace/root/nested/p2');
+            assert.strictEqual(
+                createProjectAdapterStub.firstCall.args[0].uri.toString(),
+                pythonProjects[0].uri.toString(),
+            );
+            assert.strictEqual(
+                createProjectAdapterStub.secondCall.args[0].uri.toString(),
+                pythonProjects[1].uri.toString(),
+            );
 
             assert.strictEqual(createDefaultProjectStub.notCalled, true);
             assert.deepStrictEqual(projects, createdAdapters);
