@@ -15,17 +15,23 @@ import { noop } from '../../../../common/utils/misc';
 import { getConfiguration, getWorkspaceFolderPaths, isTrusted } from '../../../../common/vscodeApis/workspaceApis';
 import { CONDAPATH_SETTING_KEY } from '../../../common/environmentManagers/conda';
 import { VENVFOLDERS_SETTING_KEY, VENVPATH_SETTING_KEY } from '../lowLevel/customVirtualEnvLocator';
-import { createLogOutputChannel } from '../../../../common/vscodeApis/windowApis';
+import { createLogOutputChannel, showWarningMessage } from '../../../../common/vscodeApis/windowApis';
 import { sendNativeTelemetry, NativePythonTelemetry } from './nativePythonTelemetry';
 import { NativePythonEnvironmentKind } from './nativePythonUtils';
 import type { IExtensionContext } from '../../../../common/types';
 import { StopWatch } from '../../../../common/utils/stopWatch';
 import { untildify } from '../../../../common/helpers';
 import { traceError } from '../../../../logging';
+import { Common } from '../../../../common/utils/localize';
+import { Commands } from '../../../../common/constants';
+import { executeCommand } from '../../../../common/vscodeApis/commandApis';
+import { getGlobalStorage, IPersistentStorage } from '../../../../common/persistentState';
 
 const PYTHON_ENV_TOOLS_PATH = isWindows()
     ? path.join(EXTENSION_ROOT_DIR, 'python-env-tools', 'bin', 'pet.exe')
     : path.join(EXTENSION_ROOT_DIR, 'python-env-tools', 'bin', 'pet');
+
+const DONT_SHOW_SPAWN_ERROR_AGAIN = 'DONT_SHOW_NATIVE_FINDER_SPAWN_ERROR_AGAIN';
 
 export interface NativeEnvInfo {
     displayName?: string;
@@ -106,8 +112,13 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
         timeToRefresh: 0,
     };
 
-    constructor(private readonly cacheDirectory?: Uri) {
+    private readonly suppressErrorNotification: IPersistentStorage<boolean>;
+
+    constructor(private readonly cacheDirectory?: Uri, private readonly context?: IExtensionContext) {
         super();
+        this.suppressErrorNotification = this.context
+            ? getGlobalStorage<boolean>(this.context, DONT_SHOW_SPAWN_ERROR_AGAIN, false)
+            : ({ get: () => false, set: async () => {} } as IPersistentStorage<boolean>);
         this.connection = this.start();
         void this.configure();
         this.firstRefreshResults = this.refreshFirstTime();
@@ -211,6 +222,30 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
             proc.stdout.pipe(readable, { end: false });
             proc.stderr.on('data', (data) => this.outputChannel.error(data.toString()));
             writable.pipe(proc.stdin, { end: false });
+
+            // Handle spawn errors (e.g., missing DLLs on Windows)
+            proc.on('error', (error) => {
+                this.outputChannel.error(`Python Locator process error: ${error.message}`);
+                this.outputChannel.error(`Error details: ${JSON.stringify(error)}`);
+                this.handleSpawnError(error.message);
+            });
+
+            // Handle immediate exits with error codes
+            let hasStarted = false;
+            setTimeout(() => {
+                hasStarted = true;
+            }, 1000);
+
+            proc.on('exit', (code, signal) => {
+                if (!hasStarted && code !== null && code !== 0) {
+                    const errorMessage = `Python Locator process exited immediately with code ${code}`;
+                    this.outputChannel.error(errorMessage);
+                    if (signal) {
+                        this.outputChannel.error(`Exit signal: ${signal}`);
+                    }
+                    this.handleSpawnError(errorMessage);
+                }
+            });
 
             disposables.push({
                 dispose: () => {
@@ -397,6 +432,40 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
     async getCondaInfo(): Promise<NativeCondaInfo> {
         return this.connection.sendRequest<NativeCondaInfo>('condaInfo');
     }
+
+    private async handleSpawnError(errorMessage: string): Promise<void> {
+        // Check if user has chosen to not see this error again
+        if (this.suppressErrorNotification.get()) {
+            return;
+        }
+
+        // Check for Windows runtime DLL issues
+        if (isWindows() && errorMessage.toLowerCase().includes('vcruntime')) {
+            this.outputChannel.error(
+                'Missing Windows runtime dependencies detected. ' +
+                    'The Python Locator requires the Microsoft Visual C++ Redistributable. ' +
+                    'This is often missing on clean Windows installations.',
+            );
+        } else if (isWindows()) {
+            this.outputChannel.error(
+                'Python Locator failed to start on Windows. ' +
+                    'This might be due to missing system dependencies such as the Microsoft Visual C++ Redistributable.',
+            );
+        }
+
+        // Show notification to user
+        const selection = await showWarningMessage(
+            'Python Locator failed to start. Python environment discovery may not work correctly.',
+            Common.openOutputPanel,
+            Common.doNotShowAgain,
+        );
+
+        if (selection === Common.openOutputPanel) {
+            await executeCommand(Commands.ViewOutput);
+        } else if (selection === Common.doNotShowAgain) {
+            await this.suppressErrorNotification.set(true);
+        }
+    }
 }
 
 type ConfigurationOptions = {
@@ -461,7 +530,7 @@ export function getNativePythonFinder(context?: IExtensionContext): NativePython
     }
     if (!_finder) {
         const cacheDirectory = context ? getCacheDirectory(context) : undefined;
-        _finder = new NativePythonFinderImpl(cacheDirectory);
+        _finder = new NativePythonFinderImpl(cacheDirectory, context);
         if (context) {
             context.subscriptions.push(_finder);
         }
