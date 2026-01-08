@@ -18,7 +18,7 @@ import { IDisposableRegistry, Product } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { EventName } from '../telemetry/constants';
-import { captureTelemetry, sendTelemetryEvent } from '../telemetry/index';
+import { sendTelemetryEvent } from '../telemetry/index';
 import { selectTestWorkspace } from './common/testUtils';
 import { TestSettingsPropertyNames } from './configuration/types';
 import { ITestConfigurationService, ITestsHelper } from './common/types';
@@ -40,6 +40,91 @@ export class TestingService implements ITestingService {
         const helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
         return helper.getSettingsPropertyNames(product);
     }
+}
+
+/**
+ * Registers command handlers but defers service resolution until the commands are actually invoked,
+ * allowing registration to happen before all services are fully initialized.
+ */
+export function registerTestCommands(serviceContainer: IServiceContainer): void {
+    // Resolve only the essential services needed for command registration itself
+    const disposableRegistry = serviceContainer.get<Disposable[]>(IDisposableRegistry);
+    const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
+
+    // Helper function to configure tests - services are resolved when invoked, not at registration time
+    const configureTestsHandler = async (resource?: Uri) => {
+        sendTelemetryEvent(EventName.UNITTEST_CONFIGURE);
+
+        // Resolve services lazily when the command is invoked
+        const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+
+        let wkspace: Uri | undefined;
+        if (resource) {
+            const wkspaceFolder = workspaceService.getWorkspaceFolder(resource);
+            wkspace = wkspaceFolder ? wkspaceFolder.uri : undefined;
+        } else {
+            const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+            wkspace = await selectTestWorkspace(appShell);
+        }
+        if (!wkspace) {
+            return;
+        }
+        const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
+        if (!(await interpreterService.getActiveInterpreter(wkspace))) {
+            cmdManager.executeCommand(constants.Commands.TriggerEnvironmentSelection, wkspace);
+            return;
+        }
+        const configurationService = serviceContainer.get<ITestConfigurationService>(ITestConfigurationService);
+        await configurationService.promptToEnableAndConfigureTestFramework(wkspace);
+    };
+
+    disposableRegistry.push(
+        // Command: python.configureTests - prompts user to configure test framework
+        commandManager.registerCommand(
+            constants.Commands.Tests_Configure,
+            (_, _cmdSource: constants.CommandSource = constants.CommandSource.commandPalette, resource?: Uri) => {
+                // Invoke configuration handler (errors are ignored as this can be called from multiple places)
+                configureTestsHandler(resource).ignoreErrors();
+                traceVerbose('Testing: Trigger refresh after config change');
+                // Refresh test data if test controller is available (resolved lazily)
+                if (tests && !!tests.createTestController) {
+                    const testController = serviceContainer.get<ITestController>(ITestController);
+                    testController?.refreshTestData(resource, { forceRefresh: true });
+                }
+            },
+        ),
+        // Command: python.tests.copilotSetup - Copilot integration for test setup
+        commandManager.registerCommand(constants.Commands.Tests_CopilotSetup, (resource?: Uri):
+            | { message: string; command: Command }
+            | undefined => {
+            // Resolve services lazily when the command is invoked
+            const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+            const wkspaceFolder =
+                workspaceService.getWorkspaceFolder(resource) || workspaceService.workspaceFolders?.at(0);
+            if (!wkspaceFolder) {
+                return undefined;
+            }
+
+            const configurationService = serviceContainer.get<ITestConfigurationService>(ITestConfigurationService);
+            if (configurationService.hasConfiguredTests(wkspaceFolder.uri)) {
+                return undefined;
+            }
+
+            return {
+                message: Testing.copilotSetupMessage,
+                command: {
+                    title: Testing.configureTests,
+                    command: constants.Commands.Tests_Configure,
+                    arguments: [undefined, constants.CommandSource.ui, resource],
+                },
+            };
+        }),
+        // Command: python.copyTestId - copies test ID to clipboard
+        commandManager.registerCommand(constants.Commands.CopyTestId, async (testItem: TestItem) => {
+            writeTestIdToClipboard(testItem);
+        }),
+    );
 }
 
 @injectable()
@@ -80,7 +165,6 @@ export class UnitTestManagementService implements IExtensionActivationService {
         this.activatedOnce = true;
 
         this.registerHandlers();
-        this.registerCommands();
 
         if (!!tests.testResults) {
             await this.updateTestUIButtons();
@@ -128,73 +212,6 @@ export class UnitTestManagementService implements IExtensionActivationService {
             .map((w) => w.uri);
 
         await Promise.all(changedWorkspaces.map((u) => this.testController?.refreshTestData(u)));
-    }
-
-    @captureTelemetry(EventName.UNITTEST_CONFIGURE, undefined, false)
-    private async configureTests(resource?: Uri) {
-        let wkspace: Uri | undefined;
-        if (resource) {
-            const wkspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
-            wkspace = wkspaceFolder ? wkspaceFolder.uri : undefined;
-        } else {
-            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            wkspace = await selectTestWorkspace(appShell);
-        }
-        if (!wkspace) {
-            return;
-        }
-        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
-        if (!(await interpreterService.getActiveInterpreter(wkspace))) {
-            commandManager.executeCommand(constants.Commands.TriggerEnvironmentSelection, wkspace);
-            return;
-        }
-        const configurationService = this.serviceContainer.get<ITestConfigurationService>(ITestConfigurationService);
-        await configurationService.promptToEnableAndConfigureTestFramework(wkspace!);
-    }
-
-    private registerCommands(): void {
-        const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
-        this.disposableRegistry.push(
-            commandManager.registerCommand(
-                constants.Commands.Tests_Configure,
-                (_, _cmdSource: constants.CommandSource = constants.CommandSource.commandPalette, resource?: Uri) => {
-                    // Ignore the exceptions returned.
-                    // This command will be invoked from other places of the extension.
-                    this.configureTests(resource).ignoreErrors();
-                    traceVerbose('Testing: Trigger refresh after config change');
-                    this.testController?.refreshTestData(resource, { forceRefresh: true });
-                },
-            ),
-            commandManager.registerCommand(constants.Commands.Tests_CopilotSetup, (resource?: Uri):
-                | { message: string; command: Command }
-                | undefined => {
-                const wkspaceFolder =
-                    this.workspaceService.getWorkspaceFolder(resource) || this.workspaceService.workspaceFolders?.at(0);
-                if (!wkspaceFolder) {
-                    return undefined;
-                }
-
-                const configurationService = this.serviceContainer.get<ITestConfigurationService>(
-                    ITestConfigurationService,
-                );
-                if (configurationService.hasConfiguredTests(wkspaceFolder.uri)) {
-                    return undefined;
-                }
-
-                return {
-                    message: Testing.copilotSetupMessage,
-                    command: {
-                        title: Testing.configureTests,
-                        command: constants.Commands.Tests_Configure,
-                        arguments: [undefined, constants.CommandSource.ui, resource],
-                    },
-                };
-            }),
-            commandManager.registerCommand(constants.Commands.CopyTestId, async (testItem: TestItem) => {
-                writeTestIdToClipboard(testItem);
-            }),
-        );
     }
 
     private registerHandlers() {

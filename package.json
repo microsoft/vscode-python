@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
-    "version": "2025.21.0-dev",
+    "version": "2026.1.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },

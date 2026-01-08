@@ -33,7 +33,6 @@ import { setExtensionInstallTelemetryProperties } from './telemetry/extensionIns
 import { registerTypes as tensorBoardRegisterTypes } from './tensorBoard/serviceRegistry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionHelper, ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
-import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
 
 // components
 import * as pythonEnvironments from './pythonEnvironments';
@@ -144,7 +143,6 @@ async function activateLegacy(ext: ExtensionState, startupStopWatch: StopWatch):
     const { enableProposedApi } = applicationEnv.packageJson;
     serviceManager.addSingletonInstance<boolean>(UseProposedApi, enableProposedApi);
     // Feature specific registrations.
-    unitTestsRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
