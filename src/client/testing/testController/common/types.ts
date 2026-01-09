@@ -16,6 +16,7 @@ import {
 import { ITestDebugLauncher } from '../../common/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { ProjectAdapter } from './projectAdapter';
 
 export enum TestDataKinds {
     Workspace,
@@ -160,6 +161,7 @@ export interface ITestDiscoveryAdapter {
         executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
         interpreter?: PythonEnvironment,
+        project?: ProjectAdapter,
     ): Promise<void>;
 }
 

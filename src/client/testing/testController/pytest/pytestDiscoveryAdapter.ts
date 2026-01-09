@@ -19,6 +19,7 @@ import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { useEnvExtension, getEnvironment, runInBackground } from '../../../envExt/api.internal';
 import { buildPytestEnv as configureSubprocessEnv, handleSymlinkAndRootDir } from './pytestHelpers';
 import { cleanupOnCancellation, createProcessHandlers, setupDiscoveryPipe } from '../common/discoveryHelpers';
+import { ProjectAdapter } from '../common/projectAdapter';
 
 /**
  * Configures the subprocess environment for pytest discovery.
@@ -53,6 +54,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
         interpreter?: PythonEnvironment,
+        project?: ProjectAdapter,
     ): Promise<void> {
         // Setup discovery pipe and cancellation
         const {
@@ -83,6 +85,17 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
             // Configure subprocess environment
             const mutableEnv = await configureDiscoveryEnv(this.envVarsService, uri, discoveryPipeName);
+
+            // Set PROJECT_ROOT_PATH for project-based testing
+            // This tells Python where to trim the test tree, keeping test paths relative to project root
+            // instead of workspace root, while preserving CWD for user's test configurations.
+            // Using fsPath for cross-platform compatibility (handles Windows vs Unix paths).
+            // TODO: Symlink consideration - PROJECT_ROOT_PATH may contain symlinks. If handleSymlinkAndRootDir()
+            // resolves the CWD to a different path, PROJECT_ROOT_PATH might not match. Consider resolving
+            // PROJECT_ROOT_PATH symlinks before passing, or adjust Python-side logic to handle both paths.
+            if (project) {
+                mutableEnv.PROJECT_ROOT_PATH = project.projectUri.fsPath;
+            }
 
             // Setup process handlers (shared by both execution paths)
             const handlers = createProcessHandlers('pytest', uri, cwd, this.resultResolver, deferredTillExecClose, [5]);

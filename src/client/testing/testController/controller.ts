@@ -53,7 +53,7 @@ import { ITestDebugLauncher } from '../common/types';
 import { PythonResultResolver } from './common/resultResolver';
 import { onDidSaveTextDocument } from '../../common/vscodeApis/workspaceApis';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { ProjectAdapter } from './common/projectAdapter';
+import { ProjectAdapter, WorkspaceDiscoveryState } from './common/projectAdapter';
 import { getProjectId, createProjectDisplayName } from './common/projectUtils';
 import { PythonProject, PythonEnvironment } from '../../envExt/types';
 import { getEnvExtApi, useEnvExtension } from '../../envExt/api.internal';
@@ -73,7 +73,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
      * Set to true to enable multi-project testing support (Phases 2-4 must be complete).
      * Default: false (use legacy single-workspace mode)
      */
-    private readonly useProjectBasedTesting = false;
+    private readonly useProjectBasedTesting = true;
 
     // Legacy: Single workspace test adapter per workspace (backward compatibility)
     private readonly testAdapters: Map<Uri, WorkspaceTestAdapter> = new Map();
@@ -83,11 +83,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     // Note: Project URI strings match Python Environments extension's Map<string, PythonProject> keys
     private readonly workspaceProjects: Map<Uri, Map<string, ProjectAdapter>> = new Map();
 
-    // TODO: Phase 3-4 - Add these maps when implementing discovery and execution:
+    // Temporary state for tracking overlaps during discovery (created/destroyed per refresh)
+    private readonly workspaceDiscoveryState: Map<Uri, WorkspaceDiscoveryState> = new Map();
+
+    // TODO: Phase 3-4 - Add these maps when implementing execution:
     // - vsIdToProject: Map<string, ProjectAdapter> - Fast lookup for test execution
     // - fileUriToProject: Map<string, ProjectAdapter> - File watching and change detection
     // - projectToVsIds: Map<string, Set<string>> - Project cleanup and refresh
-    // - workspaceDiscoveryState: Map<Uri, WorkspaceDiscoveryState> - Temporary overlap detection
 
     private readonly triggerTypes: TriggerType[] = [];
 
@@ -551,6 +553,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         // Ensure we send test telemetry if it gets disabled again
         this.sendTestDisabledTelemetry = true;
 
+        // Branch: Use project-based discovery if feature flag enabled and projects exist
+        if (this.useProjectBasedTesting && this.workspaceProjects.has(workspace.uri)) {
+            await this.refreshWorkspaceProjects(workspace.uri);
+            return;
+        }
+
+        // Legacy mode: Single workspace adapter
         if (settings.testing.pytestEnabled) {
             await this.discoverTestsForProvider(workspace.uri, 'pytest');
         } else if (settings.testing.unittestEnabled) {
@@ -558,6 +567,137 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         } else {
             await this.handleNoTestProviderEnabled(workspace);
         }
+    }
+
+    /**
+     * Phase 2: Discovers tests for all projects within a workspace (project-based testing).
+     * Runs discovery in parallel for all projects and tracks file overlaps for Phase 3.
+     * Each project populates its TestItems independently using the existing discovery flow.
+     */
+    private async refreshWorkspaceProjects(workspaceUri: Uri): Promise<void> {
+        const projectsMap = this.workspaceProjects.get(workspaceUri);
+        if (!projectsMap || projectsMap.size === 0) {
+            traceError(`[test-by-project] No projects found for workspace: ${workspaceUri.fsPath}`);
+            return;
+        }
+
+        const projects = Array.from(projectsMap.values());
+        traceInfo(`[test-by-project] Starting discovery for ${projects.length} project(s) in workspace`);
+
+        // Initialize discovery state for overlap tracking
+        const discoveryState: WorkspaceDiscoveryState = {
+            workspaceUri,
+            fileToProjects: new Map(),
+            fileOwnership: new Map(),
+            projectsCompleted: new Set(),
+            totalProjects: projects.length,
+            isComplete: false,
+        };
+        this.workspaceDiscoveryState.set(workspaceUri, discoveryState);
+
+        try {
+            // Run discovery for all projects in parallel
+            // Each project will populate TestItems independently via existing flow
+            await Promise.all(projects.map((project) => this.discoverProject(project, discoveryState)));
+
+            // Mark discovery complete
+            discoveryState.isComplete = true;
+            traceInfo(
+                `[test-by-project] Discovery complete: ${discoveryState.projectsCompleted.size}/${projects.length} projects succeeded`,
+            );
+
+            // Log overlap information for debugging
+            const overlappingFiles = Array.from(discoveryState.fileToProjects.entries()).filter(
+                ([, projects]) => projects.size > 1,
+            );
+            if (overlappingFiles.length > 0) {
+                traceInfo(`[test-by-project] Found ${overlappingFiles.length} file(s) discovered by multiple projects`);
+            }
+
+            // TODO: Phase 3 - Resolve overlaps and rebuild test tree with proper ownership
+            // await this.resolveOverlapsAndAssignTests(workspaceUri);
+        } finally {
+            // Clean up temporary discovery state
+            this.workspaceDiscoveryState.delete(workspaceUri);
+        }
+    }
+
+    /**
+     * Phase 2: Runs test discovery for a single project.
+     * Uses the existing discovery flow which populates TestItems automatically.
+     * Tracks which files were discovered for overlap detection in Phase 3.
+     */
+    private async discoverProject(project: ProjectAdapter, discoveryState: WorkspaceDiscoveryState): Promise<void> {
+        try {
+            traceInfo(`[test-by-project] Discovering tests for project: ${project.projectName}`);
+            project.isDiscovering = true;
+
+            // Run discovery using project's adapter with project's interpreter
+            // This will call the existing discovery flow which populates TestItems via result resolver
+            // Note: The adapter expects the legacy PythonEnvironment type, but for now we can pass
+            // the environment from the API. The adapters internally use execInfo which both types have.
+            //
+            // Pass the ProjectAdapter so discovery adapters can extract project.projectUri.fsPath
+            // and set PROJECT_ROOT_PATH environment variable. This tells Python subprocess where to
+            // trim the test tree, keeping test paths relative to project root instead of workspace root,
+            // while preserving CWD for user's test configurations.
+            //
+            // TODO: Symlink consideration - If project.projectUri.fsPath contains symlinks,
+            // Python's path resolution may differ from Node.js. Discovery adapters should consider
+            // using fs.promises.realpath() to resolve symlinks before passing PROJECT_ROOT_PATH to Python,
+            // similar to handleSymlinkAndRootDir() in pytest. This ensures PROJECT_ROOT_PATH matches
+            // the resolved path Python will use.
+            await project.discoveryAdapter.discoverTests(
+                project.projectUri,
+                this.pythonExecFactory,
+                this.refreshCancellation.token,
+                project.pythonEnvironment as any, // Type cast needed - API type vs legacy type
+                project, // Pass project for access to projectUri and other project-specific data
+            );
+
+            // Track which files this project discovered by inspecting created TestItems
+            // This data will be used in Phase 3 for overlap resolution
+            this.trackProjectDiscoveredFiles(project, discoveryState);
+
+            // Mark project as completed
+            discoveryState.projectsCompleted.add(project.projectId);
+            traceInfo(`[test-by-project] Project ${project.projectName} discovery completed`);
+        } catch (error) {
+            traceError(`[test-by-project] Discovery failed for project ${project.projectName}:`, error);
+            // Individual project failures don't block others
+            discoveryState.projectsCompleted.add(project.projectId); // Still mark as completed
+        } finally {
+            project.isDiscovering = false;
+        }
+    }
+
+    /**
+     * Tracks which files a project discovered by inspecting its TestItems.
+     * Populates the fileToProjects map for overlap detection in Phase 3.
+     */
+    private trackProjectDiscoveredFiles(project: ProjectAdapter, discoveryState: WorkspaceDiscoveryState): void {
+        // Get all test items for this project from its result resolver
+        const testItems = project.resultResolver.runIdToTestItem;
+
+        // Extract unique file paths from test items
+        const filePaths = new Set<string>();
+        testItems.forEach((testItem) => {
+            if (testItem.uri) {
+                filePaths.add(testItem.uri.fsPath);
+            }
+        });
+
+        // Track which projects discovered each file
+        filePaths.forEach((filePath) => {
+            if (!discoveryState.fileToProjects.has(filePath)) {
+                discoveryState.fileToProjects.set(filePath, new Set());
+            }
+            discoveryState.fileToProjects.get(filePath)!.add(project);
+        });
+
+        traceVerbose(
+            `[test-by-project] Project ${project.projectName} discovered ${filePaths.size} file(s) with ${testItems.size} test(s)`,
+        );
     }
 
     /**

@@ -18,6 +18,7 @@ import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { createTestingDeferred } from '../common/utils';
 import { buildDiscoveryCommand, buildUnittestEnv as configureSubprocessEnv } from './unittestHelpers';
 import { cleanupOnCancellation, createProcessHandlers, setupDiscoveryPipe } from '../common/discoveryHelpers';
+import { ProjectAdapter } from '../common/projectAdapter';
 
 /**
  * Configures the subprocess environment for unittest discovery.
@@ -51,6 +52,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
         interpreter?: PythonEnvironment,
+        project?: ProjectAdapter,
     ): Promise<void> {
         // Setup discovery pipe and cancellation
         const {
@@ -77,6 +79,17 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
             // Configure subprocess environment
             const mutableEnv = await configureDiscoveryEnv(this.envVarsService, uri, discoveryPipeName);
+
+            // Set PROJECT_ROOT_PATH for project-based testing
+            // This tells Python where to trim the test tree, keeping test paths relative to project root
+            // instead of workspace root, while preserving CWD for user's test configurations.
+            // Using fsPath for cross-platform compatibility (handles Windows vs Unix paths).
+            // TODO: Symlink consideration - If CWD or PROJECT_ROOT_PATH contain symlinks, path matching
+            // in Python may fail. Consider resolving symlinks before comparison, or using os.path.realpath()
+            // on the Python side to normalize paths before building test tree.
+            if (project) {
+                mutableEnv.PROJECT_ROOT_PATH = project.projectUri.fsPath;
+            }
 
             // Setup process handlers (shared by both execution paths)
             const handlers = createProcessHandlers('unittest', uri, cwd, this.resultResolver, deferredTillExecClose);
