@@ -78,6 +78,25 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             let { pytestArgs } = settings.testing;
             const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
             pytestArgs = await handleSymlinkAndRootDir(cwd, pytestArgs);
+
+            // PHASE 4: Add --ignore flags for nested projects
+            traceVerbose(
+                `[test-by-project] Checking for nested projects to ignore. Project: ${project?.projectName}, ` +
+                    `nestedProjectPathsToIgnore length: ${project?.nestedProjectPathsToIgnore?.length ?? 0}`,
+            );
+            if (project?.nestedProjectPathsToIgnore?.length) {
+                const ignoreArgs = project.nestedProjectPathsToIgnore.map((nestedPath) => `--ignore=${nestedPath}`);
+                pytestArgs = [...pytestArgs, ...ignoreArgs];
+                traceInfo(
+                    `[test-by-project] Project ${project.projectName} ignoring ${ignoreArgs.length} ` +
+                        `nested project(s): ${ignoreArgs.join(' ')}`,
+                );
+            } else {
+                traceVerbose(
+                    `[test-by-project] No nested projects to ignore for project: ${project?.projectName ?? 'unknown'}`,
+                );
+            }
+
             const commandArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
             traceVerbose(
                 `Running pytest discovery with command: ${commandArgs.join(' ')} for workspace ${uri.fsPath}.`,

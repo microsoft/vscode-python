@@ -85,6 +85,13 @@ export interface ProjectAdapter {
      */
     ownedTests?: DiscoveredTestNode;
 
+    /**
+     * Absolute paths of nested projects to ignore during discovery.
+     * Used to pass --ignore flags to pytest or exclusion filters to unittest.
+     * Only populated for parent projects that contain nested child projects.
+     */
+    nestedProjectPathsToIgnore?: string[];
+
     // === LIFECYCLE ===
     /**
      * Whether discovery is currently running for this project.

@@ -570,6 +570,62 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     }
 
     /**
+     * Phase 3: Identifies which projects are nested within other projects in the same workspace.
+     * Returns a map of parent project ID -> array of nested child project paths to ignore.
+     *
+     * Example: If ProjectB (alice/bob/) is nested in ProjectA (alice/),
+     * returns: { "projectA-id": ["alice/bob"] }
+     *
+     * Uses simple path prefix matching - a project is nested if its path starts with
+     * another project's path followed by a path separator.
+     */
+    private computeNestedProjectIgnores(workspaceUri: Uri): Map<string, string[]> {
+        const projectIgnores = new Map<string, string[]>();
+        const projects = this.workspaceProjects.get(workspaceUri);
+
+        if (!projects || projects.size === 0) {
+            return projectIgnores;
+        }
+
+        const projectArray = Array.from(projects.values());
+
+        // For each project, find all other projects nested within it
+        for (const parentProject of projectArray) {
+            const nestedPaths: string[] = [];
+
+            for (const potentialChild of projectArray) {
+                if (parentProject.projectId === potentialChild.projectId) {
+                    continue; // Skip self
+                }
+
+                // Check if child is nested under parent
+                const parentPath = parentProject.projectUri.fsPath;
+                const childPath = potentialChild.projectUri.fsPath;
+
+                // Use path.sep for cross-platform compatibility (/ on Unix, \\ on Windows)
+                if (childPath.startsWith(parentPath + path.sep)) {
+                    // Child is nested - add its path for ignoring
+                    nestedPaths.push(childPath);
+                    traceVerbose(
+                        `[test-by-project] Detected nested project: ${potentialChild.projectName} ` +
+                            `(${childPath}) under ${parentProject.projectName} (${parentPath})`,
+                    );
+                }
+            }
+
+            if (nestedPaths.length > 0) {
+                projectIgnores.set(parentProject.projectId, nestedPaths);
+                traceInfo(
+                    `[test-by-project] Project ${parentProject.projectName} will ignore ` +
+                        `${nestedPaths.length} nested project(s)`,
+                );
+            }
+        }
+
+        return projectIgnores;
+    }
+
+    /**
      * Phase 2: Discovers tests for all projects within a workspace (project-based testing).
      * Runs discovery in parallel for all projects and tracks file overlaps for Phase 3.
      * Each project populates its TestItems independently using the existing discovery flow.
@@ -596,7 +652,24 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.workspaceDiscoveryState.set(workspaceUri, discoveryState);
 
         try {
-            // Run discovery for all projects in parallel
+            // PHASE 3: Compute nested project relationships BEFORE discovery
+            const projectIgnores = this.computeNestedProjectIgnores(workspaceUri);
+
+            // Populate each project's ignore list by iterating through projects array directly
+            for (const project of projects) {
+                const ignorePaths = projectIgnores.get(project.projectId);
+                if (ignorePaths && ignorePaths.length > 0) {
+                    project.nestedProjectPathsToIgnore = ignorePaths;
+                    traceInfo(
+                        `[test-by-project] Project ${project.projectName} configured to ignore ${ignorePaths.length} nested project(s): ` +
+                            `${ignorePaths.join(', ')}`,
+                    );
+                } else {
+                    traceVerbose(`[test-by-project] Project ${project.projectName} has no nested projects to ignore`);
+                }
+            }
+
+            // Run discovery for all projects in parallel (now with ignore lists populated)
             // Each project will populate TestItems independently via existing flow
             await Promise.all(projects.map((project) => this.discoverProject(project, discoveryState)));
 

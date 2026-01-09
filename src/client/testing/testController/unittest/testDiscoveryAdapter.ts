@@ -91,6 +91,18 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 mutableEnv.PROJECT_ROOT_PATH = project.projectUri.fsPath;
             }
 
+            // PHASE 4: Pass exclusion list via environment variable for unittest
+            // TODO: unittest doesn't have a built-in --ignore flag like pytest, so we'll need to pass the
+            // nested project paths via environment and handle filtering in Python-side discovery.py
+            // Commenting out for now - focusing on pytest implementation first
+            // if (project?.nestedProjectPathsToIgnore?.length) {
+            //     mutableEnv.NESTED_PROJECTS_TO_IGNORE = JSON.stringify(project.nestedProjectPathsToIgnore);
+            //     traceInfo(
+            //         `[test-by-project] Project ${project.projectName} will exclude ${project.nestedProjectPathsToIgnore.length} ` +
+            //         `nested project(s) in Python-side unittest discovery`
+            //     );
+            // }
+
             // Setup process handlers (shared by both execution paths)
             const handlers = createProcessHandlers('unittest', uri, cwd, this.resultResolver, deferredTillExecClose);
 
