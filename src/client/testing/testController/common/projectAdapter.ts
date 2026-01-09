@@ -3,13 +3,7 @@
 
 import { TestItem, Uri } from 'vscode';
 import { TestProvider } from '../../types';
-import {
-    ITestDiscoveryAdapter,
-    ITestExecutionAdapter,
-    ITestResultResolver,
-    DiscoveredTestPayload,
-    DiscoveredTestNode,
-} from './types';
+import { ITestDiscoveryAdapter, ITestExecutionAdapter, ITestResultResolver } from './types';
 import { PythonEnvironment, PythonProject } from '../../../envExt/types';
 
 /**
@@ -72,19 +66,6 @@ export interface ProjectAdapter {
      */
     resultResolver: ITestResultResolver;
 
-    // === DISCOVERY STATE ===
-    /**
-     * Raw discovery data before filtering (all discovered tests).
-     * Cleared after ownership resolution to save memory.
-     */
-    rawDiscoveryData?: DiscoveredTestPayload;
-
-    /**
-     * Filtered tests that this project owns (after API verification).
-     * This is the tree structure passed to populateTestTree().
-     */
-    ownedTests?: DiscoveredTestNode;
-
     /**
      * Absolute paths of nested projects to ignore during discovery.
      * Used to pass --ignore flags to pytest or exclusion filters to unittest.
@@ -108,42 +89,4 @@ export interface ProjectAdapter {
      * All project tests are children of this item.
      */
     projectRootTestItem?: TestItem;
-}
-
-/**
- * Temporary state used during workspace-wide test discovery.
- * Created at the start of discovery and cleared after ownership resolution.
- */
-export interface WorkspaceDiscoveryState {
-    /**
-     * The workspace being discovered.
-     */
-    workspaceUri: Uri;
-
-    /**
-     * Maps test file paths to the set of projects that discovered them.
-     * Used to detect overlapping discovery.
-     */
-    fileToProjects: Map<string, Set<ProjectAdapter>>;
-
-    /**
-     * Maps test file paths to their owning project (after API resolution).
-     * Value is the ProjectAdapter whose pythonProject.uri matches API response.
-     */
-    fileOwnership: Map<string, ProjectAdapter>;
-
-    /**
-     * Progress tracking for parallel discovery.
-     */
-    projectsCompleted: Set<string>;
-
-    /**
-     * Total number of projects in this workspace.
-     */
-    totalProjects: number;
-
-    /**
-     * Whether all projects have completed discovery.
-     */
-    isComplete: boolean;
 }
