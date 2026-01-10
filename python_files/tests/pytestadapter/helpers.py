@@ -144,57 +144,30 @@ def _listen_on_fifo(pipe_name: str, result: List[str], completed: threading.Even
             result.append(data)
 
 
-def _listen_on_pipe_new(listener, result: List[str], completed: threading.Event):
-    """Listen on the named pipe or Unix domain socket for JSON data from the server.
-
-    Created as a separate function for clarity in threading context.
-    """
-    # Windows design
-    if sys.platform == "win32":
-        all_data: list = []
-        stream = listener.wait()
-        while True:
-            # Read data from collection
-            close = stream.closed
-            if close:
-                break
-            data = stream.readlines()
-            if not data:
-                if completed.is_set():
-                    break  # Exit loop if completed event is set
-            else:
-                try:
-                    # Attempt to accept another connection if the current one closes unexpectedly
-                    print("attempt another connection")
-                except socket.timeout:
-                    # On timeout, append all collected data to result and return
-                    # result.append("".join(all_data))
-                    return
-            data_decoded = "".join(data)
-            all_data.append(data_decoded)
-        # Append all collected data to result array
-        result.append("".join(all_data))
-    else:  # Unix design
-        connection, _ = listener.socket.accept()
-        listener.socket.settimeout(1)
-        all_data: list = []
-        while True:
-            # Reading from connection
-            data: bytes = connection.recv(1024 * 1024)
-            if not data:
-                if completed.is_set():
-                    break  # Exit loop if completed event is set
-                else:
-                    try:
-                        # Attempt to accept another connection if the current one closes unexpectedly
-                        connection, _ = listener.socket.accept()
-                    except socket.timeout:
-                        # On timeout, append all collected data to result and return
-                        result.append("".join(all_data))
-                        return
-            all_data.append(data.decode("utf-8"))
-        # Append all collected data to result array
-        result.append("".join(all_data))
+def _listen_win_named_pipe(listener, result: List[str], completed: threading.Event):
+    all_data: list = []
+    stream = listener.wait()
+    while True:
+        # Read data from collection
+        close = stream.closed
+        if close:
+            break
+        data = stream.readlines()
+        if not data:
+            if completed.is_set():
+                break  # Exit loop if completed event is set
+        else:
+            try:
+                # Attempt to accept another connection if the current one closes unexpectedly
+                print("attempt another connection")
+            except socket.timeout:
+                # On timeout, append all collected data to result and return
+                # result.append("".join(all_data))
+                return
+        data_decoded = "".join(data)
+        all_data.append(data_decoded)
+    # Append all collected data to result array
+    result.append("".join(all_data))
 
 
 def _run_test_code(proc_args: List[str], proc_env, proc_cwd: str, completed: threading.Event):
@@ -314,7 +287,7 @@ def runner_with_cwd_env(
 
             result = []  # result is a string array to store the data during threading
             t1: threading.Thread = threading.Thread(
-                target=_listen_on_pipe_new, args=(pipe, result, completed)
+                target=_listen_win_named_pipe, args=(pipe, result, completed)
             )
             t1.start()
 
@@ -340,13 +313,10 @@ def runner_with_cwd_env(
         # if additional environment variables are passed, add them to the environment
         if env_add:
             env.update(env_add)
-        # server = UnixPipeServer(pipe_name)
-        # server.start()
-        #################
+
         # Create the FIFO (named pipe) if it doesn't exist
         # if not pathlib.Path.exists(pipe_name):
         os.mkfifo(pipe_name)
-        #################
 
         completed = threading.Event()
 
@@ -432,38 +402,3 @@ def generate_random_pipe_name(prefix=""):
         return os.path.join(xdg_runtime_dir, f"{prefix}-{random_suffix}")  # noqa: PTH118
     else:
         return os.path.join(tempfile.gettempdir(), f"{prefix}-{random_suffix}")  # noqa: PTH118
-
-
-class UnixPipeServer:
-    def __init__(self, name):
-        self.name = name
-        self.is_windows = sys.platform == "win32"
-        if self.is_windows:
-            raise NotImplementedError(
-                "This class is only intended for Unix-like systems, not Windows."
-            )
-        else:
-            # For Unix-like systems, use a Unix domain socket.
-            self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            # Ensure the socket does not already exist
-            try:
-                os.unlink(self.name)  # noqa: PTH108
-            except OSError:
-                if os.path.exists(self.name):  # noqa: PTH110
-                    raise
-
-    def start(self):
-        if self.is_windows:
-            raise NotImplementedError(
-                "This class is only intended for Unix-like systems, not Windows."
-            )
-        else:
-            # Bind the socket to the address and listen for incoming connections.
-            self.socket.bind(self.name)
-            self.socket.listen(1)
-            print(f"Server listening on {self.name}")
-
-    def stop(self):
-        # Clean up the server socket.
-        self.socket.close()
-        print("Server stopped.")
