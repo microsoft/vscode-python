@@ -6,6 +6,7 @@ import io
 import json
 import os
 import pathlib
+import select
 import socket
 import subprocess
 import sys
@@ -182,18 +183,29 @@ else:
         completed = threading.Event()
 
         def listen():
-            # Open the FIFO for reading
-            with pipe_path.open() as fifo:
-                print("Waiting for data...")
+            # When using blocking IO, open blocks forever if the subprocess compleates but never
+            # opens the pipe for writing (which may happen if there is an error early in the
+            # subprocess.)  Hence we go to the effort of using non-blocking io so that we can
+            # break out of this function if that happens.
+            fd = os.open(pipe_path, os.O_RDONLY | os.O_NONBLOCK)
+            try:
+                all_data = bytearray()
                 while True:
                     if completed.is_set():
-                        break  # Exit loop if completed event is set
-                    data = fifo.read()  # This will block until data is available
-                    if len(data) == 0:
-                        # If data is empty, assume EOF
                         break
-                    print(f"Received: {data}")
-                    result.append(data)
+
+                    # Wait till the pipe has data to read, with a timeout.
+                    rlist, _, _ = select.select([fd], [], [], 0.1)
+                    if rlist:
+                        # Data is available, read it.
+                        data = os.read(fd, 1024)
+                        if not data:
+                            # Empty data indicates EOF.
+                            break
+                        all_data.extend(data)
+                result.append(all_data.decode())
+            finally:
+                os.close(fd)
 
         thread = threading.Thread(target=listen)
         thread.start()
