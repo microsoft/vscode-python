@@ -14,10 +14,6 @@ import threading
 import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
-if sys.platform == "win32":
-    from namedpipe import NPopen
-
-
 script_dir = pathlib.Path(__file__).parent.parent.parent
 script_dir_child = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
@@ -128,52 +124,84 @@ def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
             print("json decode error")
 
 
-def _listen_on_fifo(pipe_name: str, result: List[str], completed: threading.Event):
-    # Open the FIFO for reading
-    fifo_path = pathlib.Path(pipe_name)
-    with fifo_path.open() as fifo:
-        print("Waiting for data...")
-        while True:
-            if completed.is_set():
-                break  # Exit loop if completed event is set
-            data = fifo.read()  # This will block until data is available
-            if len(data) == 0:
-                # If data is empty, assume EOF
-                break
-            print(f"Received: {data}")
-            result.append(data)
+if sys.platform == "win32":
+    from namedpipe import NPopen
 
+    @contextlib.contextmanager
+    def pipe_setup_and_listen(pipe_name: str, result: List[str]):
+        # For Windows, named pipes have a specific naming convention.
+        pipe_path = f"\\\\.\\pipe\\{pipe_name}"
 
-def _listen_win_named_pipe(listener, result: List[str], completed: threading.Event):
-    all_data: list = []
-    stream = listener.wait()
-    while True:
-        # Read data from collection
-        close = stream.closed
-        if close:
-            break
-        data = stream.readlines()
-        if not data:
-            if completed.is_set():
-                break  # Exit loop if completed event is set
-        else:
+        with NPopen("r+t", name=pipe_name, bufsize=0) as pipe:
+            completed = threading.Event()
+
+            def listen():
+                all_data: list = []
+                stream = pipe.wait()
+                while True:
+                    # Read data from collection
+                    close = stream.closed
+                    if close:
+                        break
+                    data = stream.readlines()
+                    if not data:
+                        if completed.is_set():
+                            break  # Exit loop if completed event is set
+                    else:
+                        try:
+                            # Attempt to accept another connection if the current one closes unexpectedly
+                            print("attempt another connection")
+                        except socket.timeout:
+                            # On timeout, append all collected data to result and return
+                            # result.append("".join(all_data))
+                            return
+                    data_decoded = "".join(data)
+                    all_data.append(data_decoded)
+                # Append all collected data to result array
+                result.append("".join(all_data))
+
+            thread = threading.Thread(target=listen)
+            thread.start()
             try:
-                # Attempt to accept another connection if the current one closes unexpectedly
-                print("attempt another connection")
-            except socket.timeout:
-                # On timeout, append all collected data to result and return
-                # result.append("".join(all_data))
-                return
-        data_decoded = "".join(data)
-        all_data.append(data_decoded)
-    # Append all collected data to result array
-    result.append("".join(all_data))
+                yield pipe_path
+            finally:
+                completed.set()
+                thread.join()
+else:
 
+    @contextlib.contextmanager
+    def pipe_setup_and_listen(pipe_name: str, result: List[str]):
+        # For Unix-like systems, use either the XDG_RUNTIME_DIR or a temporary directory.
+        xdg_runtime_dir = os.getenv("XDG_RUNTIME_DIR")
+        pipe_path = pathlib.Path(
+            xdg_runtime_dir if xdg_runtime_dir else tempfile.gettempdir(),
+            pipe_name,
+        )
+        os.mkfifo(pipe_path)
 
-def _run_test_code(proc_args: List[str], proc_env, proc_cwd: str, completed: threading.Event):
-    result = subprocess.run(proc_args, env=proc_env, cwd=proc_cwd)
-    completed.set()
-    return result
+        completed = threading.Event()
+
+        def listen():
+            # Open the FIFO for reading
+            with pipe_path.open() as fifo:
+                print("Waiting for data...")
+                while True:
+                    if completed.is_set():
+                        break  # Exit loop if completed event is set
+                    data = fifo.read()  # This will block until data is available
+                    if len(data) == 0:
+                        # If data is empty, assume EOF
+                        break
+                    print(f"Received: {data}")
+                    result.append(data)
+
+        thread = threading.Thread(target=listen)
+        thread.start()
+        try:
+            yield pipe_path
+        finally:
+            completed.set()
+            thread.join()
 
 
 def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
@@ -266,77 +294,20 @@ def runner_with_cwd_env(
                 *args,
             ]
 
-    # Generate pipe name, pipe name specific per OS type.
-
-    # Windows design
-    if sys.platform == "win32":
-        with NPopen("r+t", name=pipe_name, bufsize=0) as pipe:
-            # Update the environment with the pipe name and PYTHONPATH.
-            env = os.environ.copy()
-            env.update(
-                {
-                    "TEST_RUN_PIPE": pipe.path,
-                    "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
-                }
-            )
-            # if additional environment variables are passed, add them to the environment
-            if env_add:
-                env.update(env_add)
-
-            completed = threading.Event()
-
-            result = []  # result is a string array to store the data during threading
-            t1: threading.Thread = threading.Thread(
-                target=_listen_win_named_pipe, args=(pipe, result, completed)
-            )
-            t1.start()
-
-            t2 = threading.Thread(
-                target=_run_test_code,
-                args=(process_args, env, path, completed),
-            )
-            t2.start()
-
-            t1.join()
-            t2.join()
-
-            return process_data_received(result[0]) if result else None
-    else:  # Unix design
-        # Update the environment with the pipe name and PYTHONPATH.
+    result = []  # result is a string array to store the data during threading
+    with pipe_setup_and_listen(pipe_name, result) as pipe_path:
         env = os.environ.copy()
         env.update(
             {
-                "TEST_RUN_PIPE": pipe_name,
+                "TEST_RUN_PIPE": pipe_path,
                 "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
             }
         )
         # if additional environment variables are passed, add them to the environment
         if env_add:
             env.update(env_add)
-
-        # Create the FIFO (named pipe) if it doesn't exist
-        # if not pathlib.Path.exists(pipe_name):
-        os.mkfifo(pipe_name)
-
-        completed = threading.Event()
-
-        result = []  # result is a string array to store the data during threading
-        t1: threading.Thread = threading.Thread(
-            target=_listen_on_fifo, args=(pipe_name, result, completed)
-        )
-        t1.start()
-
-        t2: threading.Thread = threading.Thread(
-            target=_run_test_code,
-            args=(process_args, env, path, completed),
-        )
-
-        t2.start()
-
-        t1.join()
-        t2.join()
-
-        return process_data_received(result[0]) if result else None
+        subprocess.run(process_args, env=env, cwd=path)
+    return process_data_received(result[0]) if result else None
 
 
 def find_test_line_number(test_name: str, test_file_path) -> str:
@@ -392,13 +363,4 @@ def generate_random_pipe_name(prefix=""):
     if not prefix:
         prefix = "python-ext-rpc"
 
-    # For Windows, named pipes have a specific naming convention.
-    if sys.platform == "win32":
-        return f"\\\\.\\pipe\\{prefix}-{random_suffix}"
-
-    # For Unix-like systems, use either the XDG_RUNTIME_DIR or a temporary directory.
-    xdg_runtime_dir = os.getenv("XDG_RUNTIME_DIR")
-    if xdg_runtime_dir:
-        return os.path.join(xdg_runtime_dir, f"{prefix}-{random_suffix}")  # noqa: PTH118
-    else:
-        return os.path.join(tempfile.gettempdir(), f"{prefix}-{random_suffix}")  # noqa: PTH118
+    return f"{prefix}-{random_suffix}"
