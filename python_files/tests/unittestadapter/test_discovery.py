@@ -9,7 +9,8 @@ from typing import Any, Dict, List
 import pytest
 
 from unittestadapter.discovery import discover_tests
-from unittestadapter.pvsc_utils import TestNodeTypeEnum, parse_unittest_args
+from unittestadapter.pvsc_utils import TestNodeTypeEnum as NodeTypeEnum
+from unittestadapter.pvsc_utils import parse_unittest_args
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
@@ -85,30 +86,30 @@ def test_simple_discovery() -> None:
 
     expected = {
         "path": start_dir,
-        "type_": TestNodeTypeEnum.folder,
+        "type_": NodeTypeEnum.folder,
         "name": ".data",
         "children": [
             {
                 "name": "discovery_simple.py",
-                "type_": TestNodeTypeEnum.file,
+                "type_": NodeTypeEnum.file,
                 "path": file_path,
                 "children": [
                     {
                         "name": "DiscoverySimple",
                         "path": file_path,
-                        "type_": TestNodeTypeEnum.class_,
+                        "type_": NodeTypeEnum.class_,
                         "children": [
                             {
                                 "name": "test_one",
                                 "path": file_path,
-                                "type_": TestNodeTypeEnum.test,
+                                "type_": NodeTypeEnum.test,
                                 "lineno": "14",
                                 "id_": file_path + "\\" + "DiscoverySimple" + "\\" + "test_one",
                             },
                             {
                                 "name": "test_two",
                                 "path": file_path,
-                                "type_": TestNodeTypeEnum.test,
+                                "type_": NodeTypeEnum.test,
                                 "lineno": "17",
                                 "id_": file_path + "\\" + "DiscoverySimple" + "\\" + "test_two",
                             },
@@ -137,30 +138,30 @@ def test_simple_discovery_with_top_dir_calculated() -> None:
 
     expected = {
         "path": os.fsdecode(pathlib.PurePath(TEST_DATA_PATH)),
-        "type_": TestNodeTypeEnum.folder,
+        "type_": NodeTypeEnum.folder,
         "name": ".data",
         "children": [
             {
                 "name": "discovery_simple.py",
-                "type_": TestNodeTypeEnum.file,
+                "type_": NodeTypeEnum.file,
                 "path": file_path,
                 "children": [
                     {
                         "name": "DiscoverySimple",
                         "path": file_path,
-                        "type_": TestNodeTypeEnum.class_,
+                        "type_": NodeTypeEnum.class_,
                         "children": [
                             {
                                 "name": "test_one",
                                 "path": file_path,
-                                "type_": TestNodeTypeEnum.test,
+                                "type_": NodeTypeEnum.test,
                                 "lineno": "14",
                                 "id_": file_path + "\\" + "DiscoverySimple" + "\\" + "test_one",
                             },
                             {
                                 "name": "test_two",
                                 "path": file_path,
-                                "type_": TestNodeTypeEnum.test,
+                                "type_": NodeTypeEnum.test,
                                 "lineno": "17",
                                 "id_": file_path + "\\" + "DiscoverySimple" + "\\" + "test_two",
                             },
@@ -206,30 +207,30 @@ def test_error_discovery() -> None:
 
     expected = {
         "path": start_dir,
-        "type_": TestNodeTypeEnum.folder,
+        "type_": NodeTypeEnum.folder,
         "name": "discovery_error",
         "children": [
             {
                 "name": "file_two.py",
-                "type_": TestNodeTypeEnum.file,
+                "type_": NodeTypeEnum.file,
                 "path": file_path,
                 "children": [
                     {
                         "name": "DiscoveryErrorTwo",
                         "path": file_path,
-                        "type_": TestNodeTypeEnum.class_,
+                        "type_": NodeTypeEnum.class_,
                         "children": [
                             {
                                 "name": "test_one",
                                 "path": file_path,
-                                "type_": TestNodeTypeEnum.test,
+                                "type_": NodeTypeEnum.test,
                                 "lineno": "14",
                                 "id_": file_path + "\\" + "DiscoveryErrorTwo" + "\\" + "test_one",
                             },
                             {
                                 "name": "test_two",
                                 "path": file_path,
-                                "type_": TestNodeTypeEnum.test,
+                                "type_": NodeTypeEnum.test,
                                 "lineno": "17",
                                 "id_": file_path + "\\" + "DiscoveryErrorTwo" + "\\" + "test_two",
                             },
