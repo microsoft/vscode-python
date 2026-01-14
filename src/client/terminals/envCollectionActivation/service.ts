@@ -97,6 +97,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     public async activate(resource: Resource): Promise<void> {
         try {
+            // TODO: Consider activating from somewhere else since we are removing `terminalEnvVar` experiment
             // Check shellIntegration.activate first - this should work regardless of
             // env extension or terminalEnvVar experiment
             const settings = this.configurationService.getSettings(resource);
