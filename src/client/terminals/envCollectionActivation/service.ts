@@ -381,8 +381,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         }
 
         // For virtual environments, get the bin directory
+        // TODO: Make sure we test+get it working for conda, etc as well.
         if (interpreter.envType !== EnvironmentType.Venv && interpreter.type !== PythonEnvType.Virtual) {
-            traceVerbose('Shell integration activation only supports virtual environments');
             envVarCollection.clear();
             return;
         }
