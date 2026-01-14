@@ -102,7 +102,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             // env extension or terminalEnvVar experiment
             const settings = this.configurationService.getSettings(resource);
             if (settings.terminal.shellIntegration.activate) {
-                await this.activateUsingEnvVar(resource);
+                await this.activateUsingShellIntegrationEnvVar(resource);
                 return;
             }
 
@@ -181,9 +181,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     /**
      * Activates environments using shell-specific environment variables (e.g., VSCODE_PYTHON_BASH_ACTIVATE).
-     * This method works independently of the env extension or terminalEnvVar experiment.
      */
-    private async activateUsingEnvVar(resource: Resource): Promise<void> {
+    private async activateUsingShellIntegrationEnvVar(resource: Resource): Promise<void> {
         if (!this.registeredOnce) {
             this.interpreterService.onDidChangeInterpreter(
                 async (r) => {
