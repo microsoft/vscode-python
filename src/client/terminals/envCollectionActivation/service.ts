@@ -97,6 +97,14 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     public async activate(resource: Resource): Promise<void> {
         try {
+            // Check shellIntegration.activate first - this should work regardless of
+            // env extension or terminalEnvVar experiment
+            const settings = this.configurationService.getSettings(resource);
+            if (settings.terminal.shellIntegration.activate) {
+                await this.activateUsingEnvVar(resource);
+                return;
+            }
+
             if (useEnvExtension()) {
                 traceVerbose('Ignoring environment variable experiment since env extension is being used');
                 this.context.environmentVariableCollection.clear();
@@ -170,6 +178,50 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         }
     }
 
+    /**
+     * Activates environments using shell-specific environment variables (e.g., VSCODE_PYTHON_BASH_ACTIVATE).
+     * This method works independently of the env extension or terminalEnvVar experiment.
+     */
+    private async activateUsingEnvVar(resource: Resource): Promise<void> {
+        if (!this.registeredOnce) {
+            this.interpreterService.onDidChangeInterpreter(
+                async (r) => {
+                    const settings = this.configurationService.getSettings(r);
+                    if (settings.terminal.shellIntegration.activate) {
+                        await this.applyActivateEnvVarForResource(r).ignoreErrors();
+                    }
+                },
+                this,
+                this.disposables,
+            );
+            this.applicationEnvironment.onDidChangeShell(
+                async (shell: string) => {
+                    const settings = this.configurationService.getSettings(resource);
+                    if (settings.terminal.shellIntegration.activate) {
+                        await this.applyActivateEnvVarForResource(resource, shell).ignoreErrors();
+                    }
+                },
+                this,
+                this.disposables,
+            );
+            this.registeredOnce = true;
+        }
+        await this.applyActivateEnvVarForResource(resource);
+        await registerPythonStartup(this.context);
+    }
+
+    /**
+     * Applies the shell-specific activate environment variable for a given resource.
+     */
+    private async applyActivateEnvVarForResource(
+        resource: Resource,
+        shell = this.applicationEnvironment.shell,
+    ): Promise<void> {
+        const workspaceFolder = this.getWorkspaceFolder(resource);
+        const envVarCollection = this.getEnvironmentVariableCollection({ workspaceFolder });
+        await this.applyActivateEnvVar(resource, shell, envVarCollection);
+    }
+
     public async _applyCollection(resource: Resource, shell?: string): Promise<void> {
         this.progressService.showProgress({
             location: ProgressLocation.Window,
@@ -197,6 +249,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
             return;
         }
+
         const activatedEnv = await this.environmentActivationService.getActivatedEnvironmentVariables(
             resource,
             undefined,
@@ -306,6 +359,183 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         await this.terminalDeactivateService.initializeScriptParams(shell).catch((ex) => {
             traceError(`Failed to initialize deactivate script`, shell, ex);
         });
+    }
+
+    /**
+     * Applies the VSCODE_PYTHON_*_ACTIVATE environment variables to enable activation
+     * by contributing the full activation command via environment variable
+     * instead of sending activation commands directly to the terminal.
+     * Sets ALL shell-specific variables at once so any shell can be activated.
+     * Supports bash, zsh, fish, PowerShell, and Command Prompt.
+     */
+    private async applyActivateEnvVar(
+        resource: Resource,
+        _shell: string,
+        envVarCollection: ReturnType<typeof this.getEnvironmentVariableCollection>,
+    ): Promise<void> {
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        if (!interpreter) {
+            traceVerbose('No interpreter found for shell integration activation');
+            envVarCollection.clear();
+            return;
+        }
+
+        // For virtual environments, get the bin directory
+        if (interpreter.envType !== EnvironmentType.Venv && interpreter.type !== PythonEnvType.Virtual) {
+            traceVerbose('Shell integration activation only supports virtual environments');
+            envVarCollection.clear();
+            return;
+        }
+
+        const binDir = path.dirname(interpreter.path);
+
+        // Clear any previously set env vars
+        envVarCollection.clear();
+
+        const options = {
+            applyAtShellIntegration: true,
+            applyAtProcessCreation: true,
+        };
+
+        // Set ALL shell-specific environment variables at once
+        // Bash
+        const bashActivate = path.join(binDir, 'activate');
+        if (await pathExists(bashActivate)) {
+            const bashCommand = `source ${bashActivate}`;
+            traceLog(`Setting VSCODE_PYTHON_BASH_ACTIVATE to ${bashCommand}`);
+            envVarCollection.replace('VSCODE_PYTHON_BASH_ACTIVATE', bashCommand, options);
+
+            // ZSH uses the same activate script
+            traceLog(`Setting VSCODE_PYTHON_ZSH_ACTIVATE to ${bashCommand}`);
+            envVarCollection.replace('VSCODE_PYTHON_ZSH_ACTIVATE', bashCommand, options);
+        }
+
+        // Fish
+        const fishActivate = path.join(binDir, 'activate.fish');
+        if (await pathExists(fishActivate)) {
+            const fishCommand = `source ${fishActivate}`;
+            traceLog(`Setting VSCODE_PYTHON_FISH_ACTIVATE to ${fishCommand}`);
+            envVarCollection.replace('VSCODE_PYTHON_FISH_ACTIVATE', fishCommand, options);
+        }
+
+        // PowerShell
+        const pwshActivate = path.join(binDir, 'Activate.ps1');
+        if (await pathExists(pwshActivate)) {
+            const pwshCommand = `& ${pwshActivate}`;
+            traceLog(`Setting VSCODE_PYTHON_PWSH_ACTIVATE to ${pwshCommand}`);
+            envVarCollection.replace('VSCODE_PYTHON_PWSH_ACTIVATE', pwshCommand, options);
+        }
+
+        // Command Prompt
+        const cmdActivate = path.join(binDir, 'activate.bat');
+        if (await pathExists(cmdActivate)) {
+            traceLog(`Setting VSCODE_PYTHON_CMD_ACTIVATE to ${cmdActivate}`);
+            envVarCollection.replace('VSCODE_PYTHON_CMD_ACTIVATE', cmdActivate, options);
+        }
+
+        const workspaceFolder = this.getWorkspaceFolder(resource);
+        const settings = this.configurationService.getSettings(resource);
+        const displayPath = this.pathUtils.getDisplayName(settings.pythonPath, workspaceFolder?.uri.fsPath);
+        const description = new MarkdownString(
+            `${Interpreters.activateTerminalDescription} \`${displayPath}\` (via shell integration)`,
+        );
+        envVarCollection.description = description;
+    }
+
+    /**
+     * Builds the full activation command for the given shell type and script path.
+     */
+    private buildActivateCommand(shellType: TerminalShellType, scriptPath: string): string {
+        switch (shellType) {
+            case TerminalShellType.bash:
+            case TerminalShellType.gitbash:
+            case TerminalShellType.wsl:
+            case TerminalShellType.zsh:
+            case TerminalShellType.fish:
+                return `source ${scriptPath}`;
+            case TerminalShellType.powershell:
+            case TerminalShellType.powershellCore:
+                return `& ${scriptPath}`;
+            case TerminalShellType.commandPrompt:
+                return scriptPath;
+            default:
+                return `source ${scriptPath}`;
+        }
+    }
+
+    /**
+     * Returns the environment variable name for shell integration activation based on shell type.
+     * Only supports bash, fish, PowerShell, and Command Prompt.
+     */
+    private getShellActivateEnvVarName(shellType: TerminalShellType): string | undefined {
+        switch (shellType) {
+            case TerminalShellType.bash:
+            case TerminalShellType.gitbash:
+            case TerminalShellType.wsl:
+                return 'VSCODE_PYTHON_BASH_ACTIVATE';
+            case TerminalShellType.zsh:
+                return 'VSCODE_PYTHON_ZSH_ACTIVATE';
+            case TerminalShellType.fish:
+                return 'VSCODE_PYTHON_FISH_ACTIVATE';
+            case TerminalShellType.powershell:
+            case TerminalShellType.powershellCore:
+                return 'VSCODE_PYTHON_PS1_ACTIVATE';
+            case TerminalShellType.commandPrompt:
+                return 'VSCODE_PYTHON_CMD_ACTIVATE';
+            default:
+                return undefined;
+        }
+    }
+
+    /**
+     * Gets the path to the activate script for the given interpreter.
+     */
+    private async getActivateScriptPath(interpreter: PythonEnvironment, shell: string): Promise<string | undefined> {
+        const shellType = identifyShellFromShellPath(shell);
+
+        // For virtual environments, look for activate script in bin directory
+        if (interpreter.envType === EnvironmentType.Venv || interpreter.type === PythonEnvType.Virtual) {
+            const binDir = path.dirname(interpreter.path);
+            const activateScripts = this.getActivateScriptNames(shellType);
+
+            if (!activateScripts) {
+                return undefined;
+            }
+
+            for (const scriptName of activateScripts) {
+                const scriptPath = path.join(binDir, scriptName);
+                if (await pathExists(scriptPath)) {
+                    return scriptPath;
+                }
+            }
+        }
+
+        // For conda environments, we would need a different approach
+        // For now, return undefined for unsupported environment types
+        return undefined;
+    }
+
+    /**
+     * Returns the activate script names to look for based on shell type.
+     * Only supports bash, fish, PowerShell, and Command Prompt.
+     */
+    private getActivateScriptNames(shellType: TerminalShellType): string[] | undefined {
+        switch (shellType) {
+            case TerminalShellType.bash:
+            case TerminalShellType.gitbash:
+            case TerminalShellType.zsh:
+            case TerminalShellType.wsl:
+                return ['activate', 'activate.sh'];
+            case TerminalShellType.fish:
+                return ['activate.fish'];
+            case TerminalShellType.powershell:
+            case TerminalShellType.powershellCore:
+                return ['Activate.ps1'];
+            case TerminalShellType.commandPrompt:
+                return ['activate.bat'];
+            default:
+                return undefined;
+        }
     }
 
     private isPromptSet = new Map<number | undefined, boolean>();
