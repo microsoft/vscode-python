@@ -380,8 +380,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             return;
         }
 
-        // For virtual environments, get the bin directory
-        // TODO: Make sure we test+get it working for conda, etc as well.
+        // TODO, important: Make sure we test+get it working for conda, etc as well.
         if (interpreter.envType !== EnvironmentType.Venv && interpreter.type !== PythonEnvType.Virtual) {
             envVarCollection.clear();
             return;
@@ -427,6 +426,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         }
 
         // Command Prompt
+        // TODO: We need to modify user's shell init for cmd, shell integration doesnt work for cmd
         const cmdActivate = path.join(binDir, 'activate.bat');
         if (await pathExists(cmdActivate)) {
             traceLog(`Setting VSCODE_PYTHON_CMD_ACTIVATE to ${cmdActivate}`);
