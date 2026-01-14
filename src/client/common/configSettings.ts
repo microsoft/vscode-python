@@ -379,6 +379,7 @@ export class PythonSettings implements IPythonSettings {
                   activateEnvInCurrentTerminal: false,
                   shellIntegration: {
                       enabled: false,
+                      activate: false,
                   },
               };
 

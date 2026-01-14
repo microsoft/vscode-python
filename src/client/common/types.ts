@@ -190,6 +190,7 @@ export interface ITerminalSettings {
     readonly activateEnvInCurrentTerminal: boolean;
     readonly shellIntegration: {
         enabled: boolean;
+        activate: boolean;
     };
 }
 

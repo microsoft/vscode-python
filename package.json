@@ -622,6 +622,12 @@
                     "scope": "resource",
                     "type": "boolean"
                 },
+                "python.terminal.shellIntegration.activate": {
+                    "default": false,
+                    "markdownDescription": "%python.terminal.shellIntegration.activate.description%",
+                    "scope": "resource",
+                    "type": "boolean"
+                },
                 "python.terminal.executeInFileDir": {
                     "default": false,
                     "description": "%python.terminal.executeInFileDir.description%",
