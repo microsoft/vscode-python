@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { EventEmitter, Terminal, Uri, Disposable, ConfigurationTarget } from 'vscode';
+import { EventEmitter, Terminal, Uri, Disposable } from 'vscode';
 import { getExtension } from '../common/vscodeApis/extensionsApi';
 import {
     GetEnvironmentScope,
@@ -126,34 +126,5 @@ export async function clearCache(): Promise<void> {
     const envExtApi = await getEnvExtApi();
     if (envExtApi) {
         await executeCommand('python-envs.clearCache');
-    }
-}
-
-export function registerEnvExtFeatures(
-    disposables: Disposable[],
-    interpreterPathService: IInterpreterPathService,
-): void {
-    if (useEnvExtension()) {
-        disposables.push(
-            onDidChangeEnvironmentEnvExt(async (e: DidChangeEnvironmentEventArgs) => {
-                const previousPath = interpreterPathService.get(e.uri);
-
-                if (previousPath !== e.new?.environmentPath.fsPath) {
-                    if (e.uri) {
-                        await interpreterPathService.update(
-                            e.uri,
-                            ConfigurationTarget.WorkspaceFolder,
-                            e.new?.environmentPath.fsPath,
-                        );
-                    } else {
-                        await interpreterPathService.update(
-                            undefined,
-                            ConfigurationTarget.Global,
-                            e.new?.environmentPath.fsPath,
-                        );
-                    }
-                }
-            }),
-        );
     }
 }
