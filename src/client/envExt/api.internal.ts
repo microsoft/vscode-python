@@ -13,7 +13,6 @@ import {
     DidChangeEnvironmentEventArgs,
 } from './types';
 import { executeCommand } from '../common/vscodeApis/commandApis';
-import { IInterpreterPathService } from '../common/types';
 import { getConfiguration } from '../common/vscodeApis/workspaceApis';
 
 export const ENVS_EXTENSION_ID = 'ms-python.vscode-python-envs';

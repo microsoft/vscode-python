@@ -13,14 +13,7 @@ import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './c
 import { Commands, PYTHON_LANGUAGE, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExtensions,
-    IInterpreterPathService,
-    ILogOutputChannel,
-    IPathUtils,
-} from './common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensions, ILogOutputChannel, IPathUtils } from './common/types';
 import { noop } from './common/utils/misc';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
 import { IDebugConfigurationService } from './debugger/extension/types';
