@@ -227,7 +227,10 @@ export function populateTestTree(
         if (!token?.isCancellationRequested) {
             if (isTestItem(child)) {
                 const testItem = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
-                testItem.tags = [RunTestTag, DebugTestTag];
+
+                // Create tags from pytest marks (if available) and combine with default tags
+                const pytestMarkTags = (child.tags ?? []).map((tag) => ({ id: `mark.${tag}` }));
+                testItem.tags = [RunTestTag, DebugTestTag, ...pytestMarkTags];
 
                 let range: Range | undefined;
                 if (child.lineno) {
@@ -242,7 +245,6 @@ export function populateTestTree(
                 }
                 testItem.canResolveChildren = false;
                 testItem.range = range;
-                testItem.tags = [RunTestTag, DebugTestTag];
 
                 testRoot!.children.add(testItem);
                 // add to our map
