@@ -837,12 +837,11 @@ def create_test_node(
     )
     absolute_test_id = get_absolute_test_id(test_case.nodeid, get_node_path(test_case))
 
-    # Extract pytest marks as tags
-    tags: list[str] = []
-    if hasattr(test_case, "own_markers"):
-        for marker in test_case.own_markers:
-            if marker.name and marker.name != "parametrize":
-                tags.append(marker.name)
+    # Extract pytest marks as tags (deduplicated, preserving order)
+    tags: list[str] = list(dict.fromkeys(
+        marker.name for marker in (getattr(test_case, "own_markers", None) or [])
+        if marker.name and marker.name != "parametrize"
+    ))
 
     return {
         "name": test_case.name,
