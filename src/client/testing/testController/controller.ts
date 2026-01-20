@@ -34,7 +34,7 @@ import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { TestProvider } from '../types';
-import { createErrorTestItem, DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
+import { createErrorTestItem, DebugTestTag, getNodeByUri, isTestItemExcluded, RunTestTag } from './common/testItemUtilities';
 import { buildErrorNodeOptions } from './common/utils';
 import { ITestController, ITestFrameworkController, TestRefreshOptions } from './common/types';
 import { WorkspaceTestAdapter } from './workspaceTestAdapter';
@@ -848,12 +848,14 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
      */
     private getTestItemsForWorkspace(workspace: WorkspaceFolder, request: TestRunRequest): TestItem[] {
         const testItems: TestItem[] = [];
+        const excludeSet = request.exclude?.length ? new Set(request.exclude) : undefined;
         // If the run request includes test items then collect only items that belong to
         // `workspace`. If there are no items in the run request then just run the `workspace`
         // root test node. Include will be `undefined` in the "run all" scenario.
+        // Exclusions are applied after inclusions per VS Code API contract.
         (request.include ?? this.testController.items).forEach((i: TestItem) => {
             const w = this.workspaceService.getWorkspaceFolder(i.uri);
-            if (w?.uri.fsPath === workspace.uri.fsPath) {
+            if (w?.uri.fsPath === workspace.uri.fsPath && !isTestItemExcluded(i, excludeSet)) {
                 testItems.push(i);
             }
         });
@@ -907,6 +909,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             request.profile?.kind,
             this.debugLauncher,
             await this.interpreterService.getActiveInterpreter(workspace.uri),
+            request.exclude,
         );
     }
 

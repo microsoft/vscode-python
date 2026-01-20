@@ -498,14 +498,69 @@ export async function updateTestItemFromRawData(
     item.busy = false;
 }
 
-export function getTestCaseNodes(testNode: TestItem, collection: TestItem[] = []): TestItem[] {
+/**
+ * Checks if a test item or any of its ancestors is in the exclude set.
+ */
+export function isTestItemExcluded(item: TestItem, excludeSet: Set<TestItem> | undefined): boolean {
+    if (!excludeSet || excludeSet.size === 0) {
+        return false;
+    }
+    let current: TestItem | undefined = item;
+    while (current) {
+        if (excludeSet.has(current)) {
+            return true;
+        }
+        current = current.parent;
+    }
+    return false;
+}
+
+/**
+ * Expands an exclude set to include all descendants of excluded items.
+ * After expansion, checking if a node is excluded is O(1) - just check set membership.
+ */
+export function expandExcludeSet(excludeSet: Set<TestItem> | undefined): Set<TestItem> | undefined {
+    if (!excludeSet || excludeSet.size === 0) {
+        return excludeSet;
+    }
+    const expanded = new Set<TestItem>();
+    excludeSet.forEach((item) => {
+        addWithDescendants(item, expanded);
+    });
+    return expanded;
+}
+
+function addWithDescendants(item: TestItem, set: Set<TestItem>): void {
+    if (set.has(item)) {
+        return;
+    }
+    set.add(item);
+    item.children.forEach((child) => addWithDescendants(child, set));
+}
+
+export function getTestCaseNodes(
+    testNode: TestItem,
+    collection: TestItem[] = [],
+    visited?: Set<TestItem>,
+    excludeSet?: Set<TestItem>,
+): TestItem[] {
+    if (visited?.has(testNode)) {
+        return collection;
+    }
+    visited?.add(testNode);
+
+    // Skip excluded nodes (excludeSet should be pre-expanded to include descendants)
+    if (excludeSet?.has(testNode)) {
+        return collection;
+    }
+
     if (!testNode.canResolveChildren && testNode.tags.length > 0) {
         collection.push(testNode);
     }
 
     testNode.children.forEach((c) => {
         if (testNode.canResolveChildren) {
-            getTestCaseNodes(c, collection);
+            getTestCaseNodes(c, collection, visited, excludeSet);
         } else {
             collection.push(testNode);
         }
