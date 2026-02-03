@@ -311,7 +311,7 @@ suite('PythonTestController', () => {
 
             // Should only create adapters for the 2 projects in the workspace (not 'other')
             assert.strictEqual(projects.length, 2);
-            const projectUris = projects.map((p) => p.projectUri.fsPath);
+            const projectUris = projects.map((p: { projectUri: { fsPath: string } }) => p.projectUri.fsPath);
             assert.ok(projectUris.includes('/workspace/root/p1'));
             assert.ok(projectUris.includes('/workspace/root/nested/p2'));
             assert.ok(!projectUris.includes('/other/root/p3'));
