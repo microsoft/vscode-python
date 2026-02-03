@@ -202,6 +202,9 @@ export namespace Interpreters {
     export const shellIntegrationEnvVarCollectionDescription = l10n.t(
         'Enables `python.terminal.shellIntegration.enabled` by modifying `PYTHONSTARTUP` and `PYTHON_BASIC_REPL`',
     );
+    export const shellIntegrationDisabledEnvVarCollectionDescription = l10n.t(
+        'Disables `python.terminal.shellIntegration.enabled` by removing `PYTHONSTARTUP` and `PYTHON_BASIC_REPL`',
+    );
     export const terminalDeactivateProgress = l10n.t('Editing {0}...');
     export const restartingTerminal = l10n.t('Restarting terminal and deactivating...');
     export const terminalDeactivatePrompt = l10n.t(
