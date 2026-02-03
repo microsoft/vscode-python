@@ -499,23 +499,6 @@ export async function updateTestItemFromRawData(
 }
 
 /**
- * Checks if a test item or any of its ancestors is in the exclude set.
- */
-export function isTestItemExcluded(item: TestItem, excludeSet: Set<TestItem> | undefined): boolean {
-    if (!excludeSet || excludeSet.size === 0) {
-        return false;
-    }
-    let current: TestItem | undefined = item;
-    while (current) {
-        if (excludeSet.has(current)) {
-            return true;
-        }
-        current = current.parent;
-    }
-    return false;
-}
-
-/**
  * Expands an exclude set to include all descendants of excluded items.
  * After expansion, checking if a node is excluded is O(1) - just check set membership.
  */

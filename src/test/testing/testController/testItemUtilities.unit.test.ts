@@ -1,7 +1,6 @@
 import * as assert from 'assert';
 import { TestItem } from 'vscode';
 import {
-    isTestItemExcluded,
     expandExcludeSet,
     getTestCaseNodes,
     RunTestTag,
@@ -27,47 +26,6 @@ function createMockTestItem(id: string, canResolveChildren: boolean, children: T
     });
     return item;
 }
-
-suite('isTestItemExcluded', () => {
-    test('should return false when excludeSet is undefined', () => {
-        const item = createMockTestItem('item1', false);
-        assert.strictEqual(isTestItemExcluded(item, undefined), false);
-    });
-
-    test('should return false when excludeSet is empty', () => {
-        const item = createMockTestItem('item1', false);
-        assert.strictEqual(isTestItemExcluded(item, new Set()), false);
-    });
-
-    test('should return true when item is directly in excludeSet', () => {
-        const item = createMockTestItem('item1', false);
-        const excludeSet = new Set([item]);
-        assert.strictEqual(isTestItemExcluded(item, excludeSet), true);
-    });
-
-    test('should return true when ancestor is in excludeSet', () => {
-        const child = createMockTestItem('child', false);
-        const parent = createMockTestItem('parent', true, [child]);
-        const excludeSet = new Set([parent]);
-        assert.strictEqual(isTestItemExcluded(child, excludeSet), true);
-    });
-
-    test('should return false when unrelated item is in excludeSet', () => {
-        const child = createMockTestItem('child', false);
-        createMockTestItem('parent', true, [child]);
-        const other = createMockTestItem('other', false);
-        const excludeSet = new Set([other]);
-        assert.strictEqual(isTestItemExcluded(child, excludeSet), false);
-    });
-
-    test('should walk multiple levels of ancestor chain', () => {
-        const grandchild = createMockTestItem('grandchild', false);
-        const child = createMockTestItem('child', true, [grandchild]);
-        const root = createMockTestItem('root', true, [child]);
-        const excludeSet = new Set([root]);
-        assert.strictEqual(isTestItemExcluded(grandchild, excludeSet), true);
-    });
-});
 
 suite('expandExcludeSet', () => {
     test('should return undefined when excludeSet is undefined', () => {
