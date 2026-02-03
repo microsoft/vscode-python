@@ -1,0 +1,326 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import * as path from 'path';
+import { TestController, Uri } from 'vscode';
+import { IConfigurationService } from '../../../common/types';
+import { IInterpreterService } from '../../../interpreter/contracts';
+import { traceError, traceInfo, traceVerbose } from '../../../logging';
+import { UNITTEST_PROVIDER } from '../../common/constants';
+import { TestProvider } from '../../types';
+import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
+import { PythonProject, PythonEnvironment } from '../../../envExt/types';
+import { getEnvExtApi, useEnvExtension } from '../../../envExt/api.internal';
+import { isParentPath } from '../../../common/platform/fs-paths';
+import { ProjectAdapter } from './projectAdapter';
+import { getProjectId, createProjectDisplayName } from './projectUtils';
+import { PythonResultResolver } from './resultResolver';
+import { ITestDiscoveryAdapter, ITestExecutionAdapter } from './types';
+import { UnittestTestDiscoveryAdapter } from '../unittest/testDiscoveryAdapter';
+import { UnittestTestExecutionAdapter } from '../unittest/testExecutionAdapter';
+import { PytestTestDiscoveryAdapter } from '../pytest/pytestDiscoveryAdapter';
+import { PytestTestExecutionAdapter } from '../pytest/pytestExecutionAdapter';
+
+/**
+ * Registry for Python test projects within workspaces.
+ *
+ * Manages the lifecycle of test projects including:
+ * - Discovering Python projects via Python Environments API
+ * - Creating and storing ProjectAdapter instances per workspace
+ * - Computing nested project relationships for ignore lists
+ * - Fallback to default "legacy" project when API unavailable
+ *
+ * Key concepts:
+ * - Workspace: A VS Code workspace folder (may contain multiple projects)
+ * - Project: A Python project within a workspace (has its own pyproject.toml, etc.)
+ * - Each project gets its own test tree root and Python environment
+ */
+export class TestProjectRegistry {
+    /**
+     * Map of workspace URI -> Map of project ID -> ProjectAdapter
+     * Project IDs match Python Environments extension's Map<string, PythonProject> keys
+     */
+    private readonly workspaceProjects: Map<Uri, Map<string, ProjectAdapter>> = new Map();
+
+    constructor(
+        private readonly testController: TestController,
+        private readonly configSettings: IConfigurationService,
+        private readonly interpreterService: IInterpreterService,
+        private readonly envVarsService: IEnvironmentVariablesProvider,
+    ) {}
+
+    /**
+     * Checks if project-based testing is available (Python Environments API).
+     */
+    public isProjectBasedTestingAvailable(): boolean {
+        return useEnvExtension();
+    }
+
+    /**
+     * Gets the projects map for a workspace, if it exists.
+     */
+    public getWorkspaceProjects(workspaceUri: Uri): Map<string, ProjectAdapter> | undefined {
+        return this.workspaceProjects.get(workspaceUri);
+    }
+
+    /**
+     * Checks if a workspace has been initialized with projects.
+     */
+    public hasProjects(workspaceUri: Uri): boolean {
+        return this.workspaceProjects.has(workspaceUri);
+    }
+
+    /**
+     * Gets all projects for a workspace as an array.
+     */
+    public getProjectsArray(workspaceUri: Uri): ProjectAdapter[] {
+        const projectsMap = this.workspaceProjects.get(workspaceUri);
+        return projectsMap ? Array.from(projectsMap.values()) : [];
+    }
+
+    /**
+     * Discovers and registers all Python projects for a workspace.
+     * Returns the discovered projects for the caller to use.
+     */
+    public async discoverAndRegisterProjects(workspaceUri: Uri): Promise<ProjectAdapter[]> {
+        traceInfo(`[ProjectManager] Discovering projects for workspace: ${workspaceUri.fsPath}`);
+
+        const projects = await this.discoverProjects(workspaceUri);
+
+        // Create map for this workspace, keyed by project URI
+        const projectsMap = new Map<string, ProjectAdapter>();
+        projects.forEach((project) => {
+            projectsMap.set(getProjectId(project.projectUri), project);
+        });
+
+        this.workspaceProjects.set(workspaceUri, projectsMap);
+        traceInfo(`[ProjectManager] Registered ${projects.length} project(s) for ${workspaceUri.fsPath}`);
+
+        return projects;
+    }
+
+    /**
+     * Computes and populates nested project ignore lists for all projects in a workspace.
+     * Must be called before discovery to ensure parent projects ignore nested children.
+     */
+    public configureNestedProjectIgnores(workspaceUri: Uri): void {
+        const projectIgnores = this.computeNestedProjectIgnores(workspaceUri);
+        const projects = this.getProjectsArray(workspaceUri);
+
+        for (const project of projects) {
+            const ignorePaths = projectIgnores.get(project.projectId);
+            if (ignorePaths && ignorePaths.length > 0) {
+                project.nestedProjectPathsToIgnore = ignorePaths;
+                traceInfo(`[ProjectManager] ${project.projectName} will ignore nested: ${ignorePaths.join(', ')}`);
+            }
+        }
+    }
+
+    /**
+     * Clears all projects for a workspace.
+     */
+    public clearWorkspace(workspaceUri: Uri): void {
+        this.workspaceProjects.delete(workspaceUri);
+    }
+
+    // ====== Private Methods ======
+
+    /**
+     * Discovers Python projects in a workspace using the Python Environment API.
+     * Falls back to creating a single default project if API is unavailable.
+     */
+    private async discoverProjects(workspaceUri: Uri): Promise<ProjectAdapter[]> {
+        try {
+            if (!useEnvExtension()) {
+                traceInfo('[ProjectManager] Python Environments API not available, using default project');
+                return [await this.createDefaultProject(workspaceUri)];
+            }
+
+            const envExtApi = await getEnvExtApi();
+            const allProjects = envExtApi.getPythonProjects();
+            traceInfo(`[ProjectManager] Found ${allProjects.length} total Python projects from API`);
+
+            // Filter to projects within this workspace
+            const workspaceProjects = allProjects.filter((project) =>
+                isParentPath(project.uri.fsPath, workspaceUri.fsPath),
+            );
+            traceInfo(`[ProjectManager] Filtered to ${workspaceProjects.length} projects in workspace`);
+
+            if (workspaceProjects.length === 0) {
+                traceInfo('[ProjectManager] No projects found, creating default project');
+                return [await this.createDefaultProject(workspaceUri)];
+            }
+
+            // Create ProjectAdapter for each discovered project
+            const adapters: ProjectAdapter[] = [];
+            for (const pythonProject of workspaceProjects) {
+                try {
+                    const adapter = await this.createProjectAdapter(pythonProject, workspaceUri);
+                    adapters.push(adapter);
+                } catch (error) {
+                    traceError(`[ProjectManager] Failed to create adapter for ${pythonProject.uri.fsPath}:`, error);
+                }
+            }
+
+            if (adapters.length === 0) {
+                traceInfo('[ProjectManager] All adapters failed, falling back to default project');
+                return [await this.createDefaultProject(workspaceUri)];
+            }
+
+            return adapters;
+        } catch (error) {
+            traceError('[ProjectManager] Discovery failed, using default project:', error);
+            return [await this.createDefaultProject(workspaceUri)];
+        }
+    }
+
+    /**
+     * Creates a ProjectAdapter from a PythonProject.
+     */
+    private async createProjectAdapter(pythonProject: PythonProject, workspaceUri: Uri): Promise<ProjectAdapter> {
+        const projectId = pythonProject.uri.fsPath;
+        traceInfo(`[ProjectManager] Creating adapter for: ${pythonProject.name} at ${projectId}`);
+
+        // Resolve Python environment
+        const envExtApi = await getEnvExtApi();
+        const pythonEnvironment = await envExtApi.getEnvironment(pythonProject.uri);
+        if (!pythonEnvironment) {
+            throw new Error(`No Python environment found for project ${projectId}`);
+        }
+
+        // Create test infrastructure
+        const testProvider = this.getTestProvider(workspaceUri);
+        const resultResolver = new PythonResultResolver(this.testController, testProvider, workspaceUri, projectId);
+        const { discoveryAdapter, executionAdapter } = this.createAdapters(testProvider, resultResolver);
+
+        const projectName = createProjectDisplayName(pythonProject.name, pythonEnvironment.version);
+
+        return {
+            projectId,
+            projectName,
+            projectUri: pythonProject.uri,
+            workspaceUri,
+            pythonProject,
+            pythonEnvironment,
+            testProvider,
+            discoveryAdapter,
+            executionAdapter,
+            resultResolver,
+            isDiscovering: false,
+            isExecuting: false,
+        };
+    }
+
+    /**
+     * Creates a default project for legacy/fallback mode.
+     */
+    private async createDefaultProject(workspaceUri: Uri): Promise<ProjectAdapter> {
+        traceInfo(`[ProjectManager] Creating default project for: ${workspaceUri.fsPath}`);
+
+        const testProvider = this.getTestProvider(workspaceUri);
+        const resultResolver = new PythonResultResolver(this.testController, testProvider, workspaceUri);
+        const { discoveryAdapter, executionAdapter } = this.createAdapters(testProvider, resultResolver);
+
+        const interpreter = await this.interpreterService.getActiveInterpreter(workspaceUri);
+
+        const pythonEnvironment: PythonEnvironment = {
+            name: 'default',
+            displayName: interpreter?.displayName || 'Python',
+            shortDisplayName: interpreter?.displayName || 'Python',
+            displayPath: interpreter?.path || 'python',
+            version: interpreter?.version?.raw || '3.x',
+            environmentPath: Uri.file(interpreter?.path || 'python'),
+            sysPrefix: interpreter?.sysPrefix || '',
+            execInfo: { run: { executable: interpreter?.path || 'python' } },
+            envId: { id: 'default', managerId: 'default' },
+        };
+
+        const pythonProject: PythonProject = {
+            name: path.basename(workspaceUri.fsPath) || 'workspace',
+            uri: workspaceUri,
+        };
+
+        return {
+            projectId: getProjectId(workspaceUri),
+            projectName: pythonProject.name,
+            projectUri: workspaceUri,
+            workspaceUri,
+            pythonProject,
+            pythonEnvironment,
+            testProvider,
+            discoveryAdapter,
+            executionAdapter,
+            resultResolver,
+            isDiscovering: false,
+            isExecuting: false,
+        };
+    }
+
+    /**
+     * Identifies nested projects and returns ignore paths for parent projects.
+     */
+    private computeNestedProjectIgnores(workspaceUri: Uri): Map<string, string[]> {
+        const ignoreMap = new Map<string, string[]>();
+        const projects = this.getProjectsArray(workspaceUri);
+
+        if (projects.length === 0) return ignoreMap;
+
+        for (const parent of projects) {
+            const nestedPaths: string[] = [];
+
+            for (const child of projects) {
+                if (parent.projectId === child.projectId) continue;
+
+                const parentPath = parent.projectUri.fsPath;
+                const childPath = child.projectUri.fsPath;
+
+                if (childPath.startsWith(parentPath + path.sep)) {
+                    nestedPaths.push(childPath);
+                    traceVerbose(`[ProjectManager] Nested: ${child.projectName} under ${parent.projectName}`);
+                }
+            }
+
+            if (nestedPaths.length > 0) {
+                ignoreMap.set(parent.projectId, nestedPaths);
+            }
+        }
+
+        return ignoreMap;
+    }
+
+    /**
+     * Determines the test provider based on workspace settings.
+     */
+    private getTestProvider(workspaceUri: Uri): TestProvider {
+        const settings = this.configSettings.getSettings(workspaceUri);
+        return settings.testing.unittestEnabled ? UNITTEST_PROVIDER : 'pytest';
+    }
+
+    /**
+     * Creates discovery and execution adapters for a test provider.
+     */
+    private createAdapters(
+        testProvider: TestProvider,
+        resultResolver: PythonResultResolver,
+    ): { discoveryAdapter: ITestDiscoveryAdapter; executionAdapter: ITestExecutionAdapter } {
+        if (testProvider === UNITTEST_PROVIDER) {
+            return {
+                discoveryAdapter: new UnittestTestDiscoveryAdapter(
+                    this.configSettings,
+                    resultResolver,
+                    this.envVarsService,
+                ),
+                executionAdapter: new UnittestTestExecutionAdapter(
+                    this.configSettings,
+                    resultResolver,
+                    this.envVarsService,
+                ),
+            };
+        }
+
+        return {
+            discoveryAdapter: new PytestTestDiscoveryAdapter(this.configSettings, resultResolver, this.envVarsService),
+            executionAdapter: new PytestTestExecutionAdapter(this.configSettings, resultResolver, this.envVarsService),
+        };
+    }
+}

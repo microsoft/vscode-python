@@ -4,7 +4,6 @@
 import { inject, injectable, named } from 'inversify';
 import { uniq } from 'lodash';
 import * as minimatch from 'minimatch';
-import * as path from 'path';
 import {
     CancellationToken,
     TestController,
@@ -54,10 +53,7 @@ import { PythonResultResolver } from './common/resultResolver';
 import { onDidSaveTextDocument } from '../../common/vscodeApis/workspaceApis';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { ProjectAdapter } from './common/projectAdapter';
-import { getProjectId, createProjectDisplayName } from './common/projectUtils';
-import { PythonProject, PythonEnvironment } from '../../envExt/types';
-import { getEnvExtApi, useEnvExtension } from '../../envExt/api.internal';
-import { isParentPath } from '../../common/platform/fs-paths';
+import { TestProjectRegistry } from './common/testProjectRegistry';
 
 // Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
 type EventPropertyType = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_TRIGGER];
@@ -78,8 +74,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     // Legacy: Single workspace test adapter per workspace (backward compatibility)
     private readonly testAdapters: Map<Uri, WorkspaceTestAdapter> = new Map();
 
-    // Project-based testing: Maps workspace URI -> project ID -> ProjectAdapter
-    private readonly workspaceProjects: Map<Uri, Map<string, ProjectAdapter>> = new Map();
+    // Registry for multi-project testing (one registry instance manages all projects across workspaces)
+    private readonly projectRegistry: TestProjectRegistry;
 
     private readonly triggerTypes: TriggerType[] = [];
 
@@ -121,6 +117,14 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
         this.testController = tests.createTestController('python-tests', 'Python Tests');
         this.disposables.push(this.testController);
+
+        // Initialize project registry for multi-project testing support
+        this.projectRegistry = new TestProjectRegistry(
+            this.testController,
+            this.configSettings,
+            this.interpreterService,
+            this.envVarsService,
+        );
 
         const delayTrigger = new DelayedTrigger(
             (uri: Uri, invalidate: boolean) => {
@@ -226,59 +230,51 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         }
     }
 
+    /**
+     * Activates the test controller for all workspaces.
+     *
+     * Two activation modes:
+     * 1. **Project-based mode** (when Python Environments API available):
+     * 2. **Legacy mode** (fallback):
+     *
+     * Uses `Promise.allSettled` for resilient multi-workspace activation:
+     */
     public async activate(): Promise<void> {
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
 
-        // Try to use project-based testing if feature flag is enabled AND environment extension is available
-        if (this.useProjectBasedTesting && useEnvExtension()) {
+        // PROJECT-BASED MODE: Uses Python Environments API to discover projects
+        // Each project becomes its own test tree root with its own Python environment
+        if (this.useProjectBasedTesting && this.projectRegistry.isProjectBasedTestingAvailable()) {
             traceInfo('[test-by-project] Activating project-based testing mode');
 
-            // Use Promise.allSettled to allow partial success in multi-root workspaces
+            // Discover projects in parallel across all workspaces
+            // Promise.allSettled ensures one workspace failure doesn't block others
             const results = await Promise.allSettled(
                 Array.from(workspaces).map(async (workspace) => {
-                    traceInfo(`[test-by-project] Processing workspace: ${workspace.uri.fsPath}`);
-
-                    // Discover projects in this workspace
-                    const projects = await this.discoverWorkspaceProjects(workspace.uri);
-
-                    // Create map for this workspace, keyed by project URI (matches Python Environments extension)
-                    const projectsMap = new Map<string, ProjectAdapter>();
-                    projects.forEach((project) => {
-                        const projectKey = getProjectId(project.projectUri);
-                        projectsMap.set(projectKey, project);
-                    });
-
-                    traceInfo(
-                        `[test-by-project] Discovered ${projects.length} project(s) for workspace ${workspace.uri.fsPath}`,
-                    );
-
-                    return { workspace, projectsMap };
+                    // Queries Python Environments API and creates ProjectAdapter instances
+                    const projects = await this.projectRegistry.discoverAndRegisterProjects(workspace.uri);
+                    return { workspace, projectCount: projects.length };
                 }),
             );
 
-            // Handle results individually - allows partial success
+            // Process results: successful workspaces get file watchers, failed ones fall back to legacy
             results.forEach((result, index) => {
                 const workspace = workspaces[index];
                 if (result.status === 'fulfilled') {
-                    this.workspaceProjects.set(workspace.uri, result.value.projectsMap);
                     traceInfo(
-                        `[test-by-project] Successfully activated ${result.value.projectsMap.size} project(s) for ${workspace.uri.fsPath}`,
+                        `[test-by-project] Activated ${result.value.projectCount} project(s) for ${workspace.uri.fsPath}`,
                     );
                     this.setupFileWatchers(workspace);
                 } else {
-                    traceError(
-                        `[test-by-project] Failed to activate project-based testing for ${workspace.uri.fsPath}:`,
-                        result.reason,
-                    );
-                    traceInfo('[test-by-project] Falling back to legacy mode for this workspace');
-                    // Fall back to legacy mode for this workspace only
+                    // Graceful degradation: if project discovery fails, use legacy single-adapter mode
+                    traceError(`[test-by-project] Failed for ${workspace.uri.fsPath}:`, result.reason);
                     this.activateLegacyWorkspace(workspace);
                 }
             });
             return;
         }
 
-        // Legacy activation (backward compatibility)
+        // LEGACY MODE: Single WorkspaceTestAdapter per workspace (backward compatibility)
         workspaces.forEach((workspace) => {
             this.activateLegacyWorkspace(workspace);
         });
@@ -303,180 +299,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
         this.testAdapters.set(workspace.uri, workspaceTestAdapter);
         this.setupFileWatchers(workspace);
-    }
-
-    /**
-     * Discovers Python projects in a workspace using the Python Environment API.
-     * Falls back to creating a single default project if API is unavailable or returns no projects.
-     */
-    private async discoverWorkspaceProjects(workspaceUri: Uri): Promise<ProjectAdapter[]> {
-        traceInfo(`[test-by-project] Discovering projects for workspace: ${workspaceUri.fsPath}`);
-        try {
-            // Check if we should use the environment extension
-            if (!useEnvExtension()) {
-                traceInfo('[test-by-project] Python Environments extension not enabled, using single project mode');
-                return [await this.createDefaultProject(workspaceUri)];
-            }
-
-            // Get the environment API
-            const envExtApi = await getEnvExtApi();
-            traceInfo('[test-by-project] Successfully retrieved Python Environments API');
-
-            // Query for all Python projects in this workspace
-            const pythonProjects = envExtApi.getPythonProjects();
-            traceInfo(`[test-by-project] Found ${pythonProjects.length} total Python projects from API`);
-
-            // Filter projects to only those in this workspace
-            const workspaceProjects = pythonProjects.filter((project) =>
-                isParentPath(project.uri.fsPath, workspaceUri.fsPath),
-            );
-            traceInfo(`[test-by-project] Filtered to ${workspaceProjects.length} projects in workspace`);
-
-            if (workspaceProjects.length === 0) {
-                traceInfo(
-                    `[test-by-project] No Python projects found for workspace ${workspaceUri.fsPath}, creating default project`,
-                );
-                return [await this.createDefaultProject(workspaceUri)];
-            }
-
-            // Create ProjectAdapter for each Python project
-            const projectAdapters: ProjectAdapter[] = [];
-            for (const pythonProject of workspaceProjects) {
-                try {
-                    const adapter = await this.createProjectAdapter(pythonProject, workspaceUri);
-                    projectAdapters.push(adapter);
-                } catch (error) {
-                    traceError(
-                        `[test-by-project] Failed to create project adapter for ${pythonProject.uri.fsPath}:`,
-                        error,
-                    );
-                    // Continue with other projects
-                }
-            }
-
-            if (projectAdapters.length === 0) {
-                traceInfo('[test-by-project] All project adapters failed to create, falling back to default project');
-                return [await this.createDefaultProject(workspaceUri)];
-            }
-
-            traceInfo(`[test-by-project] Successfully created ${projectAdapters.length} project adapter(s)`);
-            return projectAdapters;
-        } catch (error) {
-            traceError(
-                '[test-by-project] Failed to discover workspace projects, falling back to single project mode:',
-                error,
-            );
-            return [await this.createDefaultProject(workspaceUri)];
-        }
-    }
-
-    /**
-     * Creates a ProjectAdapter from a PythonProject object.
-     */
-    private async createProjectAdapter(pythonProject: PythonProject, workspaceUri: Uri): Promise<ProjectAdapter> {
-        traceInfo(
-            `[test-by-project] Creating project adapter for: ${pythonProject.name} at ${pythonProject.uri.fsPath}`,
-        );
-        // Use project URI as the project ID (no hashing needed)
-        const projectId = pythonProject.uri.fsPath;
-
-        // Resolve the Python environment
-        const envExtApi = await getEnvExtApi();
-        const pythonEnvironment = await envExtApi.getEnvironment(pythonProject.uri);
-
-        if (!pythonEnvironment) {
-            throw new Error(`Failed to resolve Python environment for project ${pythonProject.uri.fsPath}`);
-        }
-
-        // Get test provider and create resolver
-        const testProvider = this.getTestProvider(workspaceUri);
-        const resultResolver = new PythonResultResolver(this.testController, testProvider, workspaceUri, projectId);
-
-        // Create adapters
-        const { discoveryAdapter, executionAdapter } = this.createTestAdapters(testProvider, resultResolver);
-
-        // Create display name with Python version
-        const projectName = createProjectDisplayName(pythonProject.name, pythonEnvironment.version);
-
-        traceInfo(`[test-by-project] Created project adapter: ${projectName} (ID: ${projectId})`);
-
-        // Create project adapter
-        return {
-            projectId,
-            projectName,
-            projectUri: pythonProject.uri,
-            workspaceUri,
-            pythonProject,
-            pythonEnvironment,
-            testProvider,
-            discoveryAdapter,
-            executionAdapter,
-            resultResolver,
-            isDiscovering: false,
-            isExecuting: false,
-        };
-    }
-
-    /**
-     * Creates a default project adapter using the workspace interpreter.
-     * Used for backward compatibility when environment API is unavailable.
-     */
-    private async createDefaultProject(workspaceUri: Uri): Promise<ProjectAdapter> {
-        traceInfo(`[test-by-project] Creating default project for workspace: ${workspaceUri.fsPath}`);
-        // Get test provider and create resolver (WITHOUT project ID for legacy mode)
-        const testProvider = this.getTestProvider(workspaceUri);
-        const resultResolver = new PythonResultResolver(this.testController, testProvider, workspaceUri);
-
-        // Create adapters
-        const { discoveryAdapter, executionAdapter } = this.createTestAdapters(testProvider, resultResolver);
-
-        // Get active interpreter
-        const interpreter = await this.interpreterService.getActiveInterpreter(workspaceUri);
-
-        // Create a mock PythonEnvironment from the interpreter
-        const pythonEnvironment: PythonEnvironment = {
-            name: 'default',
-            displayName: interpreter?.displayName || 'Python',
-            shortDisplayName: interpreter?.displayName || 'Python',
-            displayPath: interpreter?.path || 'python',
-            version: interpreter?.version?.raw || '3.x',
-            environmentPath: Uri.file(interpreter?.path || 'python'),
-            sysPrefix: interpreter?.sysPrefix || '',
-            execInfo: {
-                run: {
-                    executable: interpreter?.path || 'python',
-                },
-            },
-            envId: {
-                id: 'default',
-                managerId: 'default',
-            },
-        };
-
-        // Create a mock PythonProject
-        const pythonProject: PythonProject = {
-            // Do not assume path separators (fsPath is platform-specific).
-            name: path.basename(workspaceUri.fsPath) || 'workspace',
-            uri: workspaceUri,
-        };
-
-        // Use workspace URI as the project ID
-        const projectId = getProjectId(workspaceUri);
-
-        return {
-            projectId,
-            projectName: pythonProject.name,
-            projectUri: workspaceUri,
-            workspaceUri,
-            pythonProject,
-            pythonEnvironment,
-            testProvider,
-            discoveryAdapter,
-            executionAdapter,
-            resultResolver,
-            isDiscovering: false,
-            isExecuting: false,
-        };
     }
 
     public refreshTestData(uri?: Resource, options?: TestRefreshOptions): Promise<void> {
@@ -518,9 +340,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.refreshingStartedEvent.fire();
         try {
             if (uri) {
-                await this.refreshSingleWorkspace(uri);
+                await this.discoverTestsInWorkspace(uri);
             } else {
-                await this.refreshAllWorkspaces();
+                await this.discoverTestsInAllWorkspaces();
             }
         } finally {
             this.refreshingCompletedEvent.fire();
@@ -529,8 +351,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
     /**
      * Discovers tests for a single workspace.
+     * Delegates to project-based discovery or legacy mode based on configuration.
      */
-    private async refreshSingleWorkspace(uri: Uri): Promise<void> {
+    private async discoverTestsInWorkspace(uri: Uri): Promise<void> {
         const workspace = this.workspaceService.getWorkspaceFolder(uri);
         if (!workspace?.uri) {
             traceError('Unable to find workspace for given file');
@@ -543,113 +366,44 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         // Ensure we send test telemetry if it gets disabled again
         this.sendTestDisabledTelemetry = true;
 
-        // Branch: Use project-based discovery if feature flag enabled and projects exist
-        if (this.useProjectBasedTesting && this.workspaceProjects.has(workspace.uri)) {
-            await this.refreshWorkspaceProjects(workspace.uri);
+        // Use project-based discovery if applicable
+        if (this.useProjectBasedTesting && this.projectRegistry.hasProjects(workspace.uri)) {
+            await this.discoverAllProjectsInWorkspace(workspace.uri);
             return;
         }
 
         // Legacy mode: Single workspace adapter
         if (settings.testing.pytestEnabled) {
-            await this.discoverTestsForProvider(workspace.uri, 'pytest');
+            await this.discoverWorkspaceTestsLegacy(workspace.uri, 'pytest');
         } else if (settings.testing.unittestEnabled) {
-            await this.discoverTestsForProvider(workspace.uri, 'unittest');
+            await this.discoverWorkspaceTestsLegacy(workspace.uri, 'unittest');
         } else {
             await this.handleNoTestProviderEnabled(workspace);
         }
     }
 
     /**
-     * Identifies which projects are nested within other projects in the same workspace.
-     * Returns a map of parent project ID -> array of nested child project paths to ignore.
-     *
-     * Example: If ProjectB (alice/bob/) is nested in ProjectA (alice/),
-     * returns: { "projectA-id": ["alice/bob"] }
+     * Discovers tests for all projects within a workspace (project-based mode).
+     * Runs discovery in parallel for all registered projects and configures nested exclusions.
      */
-    private computeNestedProjectIgnores(workspaceUri: Uri): Map<string, string[]> {
-        const projectIgnores = new Map<string, string[]>();
-        const projects = this.workspaceProjects.get(workspaceUri);
-
-        if (!projects || projects.size === 0) {
-            return projectIgnores;
-        }
-
-        const projectArray = Array.from(projects.values());
-
-        // For each project, find all other projects nested within it
-        for (const parentProject of projectArray) {
-            const nestedPaths: string[] = [];
-
-            for (const potentialChild of projectArray) {
-                if (parentProject.projectId === potentialChild.projectId) {
-                    continue; // Skip self
-                }
-
-                // Check if child is nested under parent
-                const parentPath = parentProject.projectUri.fsPath;
-                const childPath = potentialChild.projectUri.fsPath;
-
-                // Use path.sep for cross-platform compatibility (/ on Unix, \\ on Windows)
-                if (childPath.startsWith(parentPath + path.sep)) {
-                    // Child is nested - add its path for ignoring
-                    nestedPaths.push(childPath);
-                    traceVerbose(
-                        `[test-by-project] Detected nested project: ${potentialChild.projectName} ` +
-                            `(${childPath}) under ${parentProject.projectName} (${parentPath})`,
-                    );
-                }
-            }
-
-            if (nestedPaths.length > 0) {
-                projectIgnores.set(parentProject.projectId, nestedPaths);
-                traceInfo(
-                    `[test-by-project] Project ${parentProject.projectName} will ignore ` +
-                        `${nestedPaths.length} nested project(s)`,
-                );
-            }
-        }
-
-        return projectIgnores;
-    }
-
-    /**
-     * Discovers tests for all projects within a workspace.
-     * Runs discovery in parallel and configures nested project exclusions.
-     */
-    private async refreshWorkspaceProjects(workspaceUri: Uri): Promise<void> {
-        const projectsMap = this.workspaceProjects.get(workspaceUri);
-        if (!projectsMap || projectsMap.size === 0) {
+    private async discoverAllProjectsInWorkspace(workspaceUri: Uri): Promise<void> {
+        const projects = this.projectRegistry.getProjectsArray(workspaceUri);
+        if (projects.length === 0) {
             traceError(`[test-by-project] No projects found for workspace: ${workspaceUri.fsPath}`);
             return;
         }
 
-        const projects = Array.from(projectsMap.values());
         traceInfo(`[test-by-project] Starting discovery for ${projects.length} project(s) in workspace`);
 
         try {
-            // Compute nested project relationships BEFORE discovery
-            const projectIgnores = this.computeNestedProjectIgnores(workspaceUri);
-
-            // Populate each project's ignore list by iterating through projects array directly
-            for (const project of projects) {
-                const ignorePaths = projectIgnores.get(project.projectId);
-                if (ignorePaths && ignorePaths.length > 0) {
-                    project.nestedProjectPathsToIgnore = ignorePaths;
-                    traceInfo(
-                        `[test-by-project] Project ${project.projectName} configured to ignore ${ignorePaths.length} nested project(s): ` +
-                            `${ignorePaths.join(', ')}`,
-                    );
-                } else {
-                    traceVerbose(`[test-by-project] Project ${project.projectName} has no nested projects to ignore`);
-                }
-            }
+            // Configure nested project exclusions before discovery
+            this.projectRegistry.configureNestedProjectIgnores(workspaceUri);
 
             // Track completion for progress logging
             const projectsCompleted = new Set<string>();
 
-            // Run discovery for all projects in parallel (now with ignore lists populated)
-            // Each project will populate TestItems independently via existing flow
-            await Promise.all(projects.map((project) => this.discoverProject(project, projectsCompleted)));
+            // Run discovery for all projects in parallel
+            await Promise.all(projects.map((project) => this.discoverTestsForProject(project, projectsCompleted)));
 
             traceInfo(
                 `[test-by-project] Discovery complete: ${projectsCompleted.size}/${projects.length} projects succeeded`,
@@ -660,9 +414,10 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     }
 
     /**
-     * Runs test discovery for a single project.
+     * Discovers tests for a single project (project-based mode).
+     * Creates test tree items rooted at the project's directory.
      */
-    private async discoverProject(project: ProjectAdapter, projectsCompleted: Set<string>): Promise<void> {
+    private async discoverTestsForProject(project: ProjectAdapter, projectsCompleted: Set<string>): Promise<void> {
         try {
             traceInfo(`[test-by-project] Discovering tests for project: ${project.projectName}`);
             project.isDiscovering = true;
@@ -688,9 +443,10 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     }
 
     /**
-     * Discovers tests for all workspaces in the workspace folders.
+     * Discovers tests across all workspace folders.
+     * Iterates each workspace and triggers discovery.
      */
-    private async refreshAllWorkspaces(): Promise<void> {
+    private async discoverTestsInAllWorkspaces(): Promise<void> {
         traceVerbose('Testing: Refreshing all test data');
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
 
@@ -702,16 +458,15 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                         .then(noop, noop);
                     return;
                 }
-                await this.refreshSingleWorkspace(workspace.uri);
+                await this.discoverTestsInWorkspace(workspace.uri);
             }),
         );
     }
 
     /**
-     * Discovers tests for a specific test provider (pytest or unittest).
-     * Validates that the adapter's provider matches the expected provider.
+     * Discovers tests for a workspace using legacy single-adapter mode.
      */
-    private async discoverTestsForProvider(workspaceUri: Uri, expectedProvider: TestProvider): Promise<void> {
+    private async discoverWorkspaceTestsLegacy(workspaceUri: Uri, expectedProvider: TestProvider): Promise<void> {
         const testAdapter = this.testAdapters.get(workspaceUri);
 
         if (!testAdapter) {
