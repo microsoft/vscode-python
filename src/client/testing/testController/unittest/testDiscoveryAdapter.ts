@@ -80,28 +80,10 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             // Configure subprocess environment
             const mutableEnv = await configureDiscoveryEnv(this.envVarsService, uri, discoveryPipeName);
 
-            // Set PROJECT_ROOT_PATH for project-based testing
-            // This tells Python where to trim the test tree, keeping test paths relative to project root
-            // instead of workspace root, while preserving CWD for user's test configurations.
-            // Using fsPath for cross-platform compatibility (handles Windows vs Unix paths).
-            // TODO: Symlink consideration - If CWD or PROJECT_ROOT_PATH contain symlinks, path matching
-            // in Python may fail. Consider resolving symlinks before comparison, or using os.path.realpath()
-            // on the Python side to normalize paths before building test tree.
+            // Set PROJECT_ROOT_PATH for project-based testing (tells Python where to root the test tree)
             if (project) {
                 mutableEnv.PROJECT_ROOT_PATH = project.projectUri.fsPath;
             }
-
-            // PHASE 4: Pass exclusion list via environment variable for unittest
-            // TODO: unittest doesn't have a built-in --ignore flag like pytest, so we'll need to pass the
-            // nested project paths via environment and handle filtering in Python-side discovery.py
-            // Commenting out for now - focusing on pytest implementation first
-            // if (project?.nestedProjectPathsToIgnore?.length) {
-            //     mutableEnv.NESTED_PROJECTS_TO_IGNORE = JSON.stringify(project.nestedProjectPathsToIgnore);
-            //     traceInfo(
-            //         `[test-by-project] Project ${project.projectName} will exclude ${project.nestedProjectPathsToIgnore.length} ` +
-            //         `nested project(s) in Python-side unittest discovery`
-            //     );
-            // }
 
             // Setup process handlers (shared by both execution paths)
             const handlers = createProcessHandlers('unittest', uri, cwd, this.resultResolver, deferredTillExecClose);

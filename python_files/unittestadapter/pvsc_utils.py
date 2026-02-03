@@ -166,44 +166,6 @@ def get_child_node(name: str, path: str, type_: TestNodeTypeEnum, root: TestNode
     return result  # type:ignore
 
 
-# TODO: Unittest nested project exclusion - commented out for now, focusing on pytest first
-# def should_exclude_file(test_path: str) -> bool:
-#     """Check if a test file should be excluded due to nested project ownership.
-#
-#     Reads NESTED_PROJECTS_TO_IGNORE environment variable (JSON array of paths)
-#     and checks if test_path is under any of those nested project directories.
-#
-#     Args:
-#         test_path: Absolute path to the test file
-#
-#     Returns:
-#         True if the file should be excluded, False otherwise
-#     """
-#     nested_projects_json = os.getenv("NESTED_PROJECTS_TO_IGNORE")
-#     if not nested_projects_json:
-#         return False
-#
-#     try:
-#         nested_paths = json.loads(nested_projects_json)
-#         test_path_obj = pathlib.Path(test_path).resolve()
-#
-#         # Check if test file is under any nested project path
-#         for nested_path in nested_paths:
-#             nested_path_obj = pathlib.Path(nested_path).resolve()
-#             try:
-#                 test_path_obj.relative_to(nested_path_obj)
-#                 # If relative_to succeeds, test_path is under nested_path
-#                 return True
-#             except ValueError:
-#                 # test_path is not under nested_path
-#                 continue
-#
-#         return False
-#     except Exception:
-#         # On any error, don't exclude (safer to show tests than hide them)
-#         return False
-
-
 def build_test_tree(
     suite: unittest.TestSuite, top_level_directory: str
 ) -> Tuple[Union[TestNode, None], List[str]]:
@@ -289,12 +251,6 @@ def build_test_tree(
             # Find/build file node.
             path_components = [top_level_directory, *folders, py_filename]
             file_path = os.fsdecode(pathlib.PurePath("/".join(path_components)))
-
-            # PHASE 4: Check if file should be excluded (nested project ownership)
-            # TODO: Commented out for now - focusing on pytest implementation first
-            # if should_exclude_file(file_path):
-            #     # Skip this test - it belongs to a nested project
-            #     continue
 
             current_node = get_child_node(
                 py_filename, file_path, TestNodeTypeEnum.file, current_node

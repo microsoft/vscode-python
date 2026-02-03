@@ -79,21 +79,14 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
             pytestArgs = await handleSymlinkAndRootDir(cwd, pytestArgs);
 
-            // PHASE 4: Add --ignore flags for nested projects
-            traceVerbose(
-                `[test-by-project] Checking for nested projects to ignore. Project: ${project?.projectName}, ` +
-                    `nestedProjectPathsToIgnore length: ${project?.nestedProjectPathsToIgnore?.length ?? 0}`,
-            );
+            // Add --ignore flags for nested projects to prevent duplicate discovery
             if (project?.nestedProjectPathsToIgnore?.length) {
                 const ignoreArgs = project.nestedProjectPathsToIgnore.map((nestedPath) => `--ignore=${nestedPath}`);
                 pytestArgs = [...pytestArgs, ...ignoreArgs];
                 traceInfo(
-                    `[test-by-project] Project ${project.projectName} ignoring ${ignoreArgs.length} ` +
-                        `nested project(s): ${ignoreArgs.join(' ')}`,
-                );
-            } else {
-                traceVerbose(
-                    `[test-by-project] No nested projects to ignore for project: ${project?.projectName ?? 'unknown'}`,
+                    `[test-by-project] Project ${project.projectName} ignoring nested project(s): ${ignoreArgs.join(
+                        ' ',
+                    )}`,
                 );
             }
 
@@ -105,13 +98,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             // Configure subprocess environment
             const mutableEnv = await configureDiscoveryEnv(this.envVarsService, uri, discoveryPipeName);
 
-            // Set PROJECT_ROOT_PATH for project-based testing
-            // This tells Python where to trim the test tree, keeping test paths relative to project root
-            // instead of workspace root, while preserving CWD for user's test configurations.
-            // Using fsPath for cross-platform compatibility (handles Windows vs Unix paths).
-            // TODO: Symlink consideration - PROJECT_ROOT_PATH may contain symlinks. If handleSymlinkAndRootDir()
-            // resolves the CWD to a different path, PROJECT_ROOT_PATH might not match. Consider resolving
-            // PROJECT_ROOT_PATH symlinks before passing, or adjust Python-side logic to handle both paths.
+            // Set PROJECT_ROOT_PATH for project-based testing (tells Python where to root the test tree)
             if (project) {
                 mutableEnv.PROJECT_ROOT_PATH = project.projectUri.fsPath;
             }

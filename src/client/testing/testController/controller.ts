@@ -70,23 +70,16 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
     /**
      * Feature flag for project-based testing.
-     * Set to true to enable multi-project testing support (Phases 2-4 must be complete).
-     * Default: false (use legacy single-workspace mode)
+     * When true, discovers and manages tests per-project using Python Environments API.
+     * When false, uses legacy single-workspace mode.
      */
     private readonly useProjectBasedTesting = true;
 
     // Legacy: Single workspace test adapter per workspace (backward compatibility)
     private readonly testAdapters: Map<Uri, WorkspaceTestAdapter> = new Map();
 
-    // === NEW: PROJECT-BASED STATE ===
-    // Map of workspace URI -> Map of project URI string -> ProjectAdapter
-    // Note: Project URI strings match Python Environments extension's Map<string, PythonProject> keys
+    // Project-based testing: Maps workspace URI -> project ID -> ProjectAdapter
     private readonly workspaceProjects: Map<Uri, Map<string, ProjectAdapter>> = new Map();
-
-    // TODO: Phase 3-4 - Add these maps when implementing execution:
-    // - vsIdToProject: Map<string, ProjectAdapter> - Fast lookup for test execution
-    // - fileUriToProject: Map<string, ProjectAdapter> - File watching and change detection
-    // - projectToVsIds: Map<string, Set<string>> - Project cleanup and refresh
 
     private readonly triggerTypes: TriggerType[] = [];
 
@@ -333,7 +326,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             const pythonProjects = envExtApi.getPythonProjects();
             traceInfo(`[test-by-project] Found ${pythonProjects.length} total Python projects from API`);
 
-            // Filter projects to only those in this workspace TODO; check this
+            // Filter projects to only those in this workspace
             const workspaceProjects = pythonProjects.filter((project) =>
                 isParentPath(project.uri.fsPath, workspaceUri.fsPath),
             );
@@ -567,14 +560,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     }
 
     /**
-     * Phase 3: Identifies which projects are nested within other projects in the same workspace.
+     * Identifies which projects are nested within other projects in the same workspace.
      * Returns a map of parent project ID -> array of nested child project paths to ignore.
      *
      * Example: If ProjectB (alice/bob/) is nested in ProjectA (alice/),
      * returns: { "projectA-id": ["alice/bob"] }
-     *
-     * Uses simple path prefix matching - a project is nested if its path starts with
-     * another project's path followed by a path separator.
      */
     private computeNestedProjectIgnores(workspaceUri: Uri): Map<string, string[]> {
         const projectIgnores = new Map<string, string[]>();
@@ -623,9 +613,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     }
 
     /**
-     * Phase 2: Discovers tests for all projects within a workspace (project-based testing).
-     * Runs discovery in parallel for all projects and tracks file overlaps for Phase 3.
-     * Each project populates its TestItems independently using the existing discovery flow.
+     * Discovers tests for all projects within a workspace.
+     * Runs discovery in parallel and configures nested project exclusions.
      */
     private async refreshWorkspaceProjects(workspaceUri: Uri): Promise<void> {
         const projectsMap = this.workspaceProjects.get(workspaceUri);
@@ -638,7 +627,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         traceInfo(`[test-by-project] Starting discovery for ${projects.length} project(s) in workspace`);
 
         try {
-            // PHASE 3: Compute nested project relationships BEFORE discovery
+            // Compute nested project relationships BEFORE discovery
             const projectIgnores = this.computeNestedProjectIgnores(workspaceUri);
 
             // Populate each project's ignore list by iterating through projects array directly
@@ -672,34 +661,18 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
     /**
      * Runs test discovery for a single project.
-     * Uses the existing discovery flow which populates TestItems automatically.
      */
     private async discoverProject(project: ProjectAdapter, projectsCompleted: Set<string>): Promise<void> {
         try {
             traceInfo(`[test-by-project] Discovering tests for project: ${project.projectName}`);
             project.isDiscovering = true;
 
-            // Run discovery using project's adapter with project's interpreter
-            // This will call the existing discovery flow which populates TestItems via result resolver
-            // Note: The adapter expects the legacy PythonEnvironment type, but for now we can pass
-            // the environment from the API. The adapters internally use execInfo which both types have.
-            //
-            // Pass the ProjectAdapter so discovery adapters can extract project.projectUri.fsPath
-            // and set PROJECT_ROOT_PATH environment variable. This tells Python subprocess where to
-            // trim the test tree, keeping test paths relative to project root instead of workspace root,
-            // while preserving CWD for user's test configurations.
-            //
-            // TODO: Symlink consideration - If project.projectUri.fsPath contains symlinks,
-            // Python's path resolution may differ from Node.js. Discovery adapters should consider
-            // using fs.promises.realpath() to resolve symlinks before passing PROJECT_ROOT_PATH to Python,
-            // similar to handleSymlinkAndRootDir() in pytest. This ensures PROJECT_ROOT_PATH matches
-            // the resolved path Python will use.
             await project.discoveryAdapter.discoverTests(
                 project.projectUri,
                 this.pythonExecFactory,
                 this.refreshCancellation.token,
-                project.pythonEnvironment as any, // Type cast needed - API type vs legacy type
-                project, // Pass project for access to projectUri and other project-specific data
+                project.pythonEnvironment as any,
+                project,
             );
 
             // Mark project as completed
