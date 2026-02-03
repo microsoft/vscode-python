@@ -13,6 +13,7 @@ const vscodeApi = require('vscode') as typeof import('vscode');
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
 import * as envExtApiInternal from '../../../client/envExt/api.internal';
 import { getProjectId } from '../../../client/testing/testController/common/projectUtils';
+import * as projectUtils from '../../../client/testing/testController/common/projectUtils';
 
 function createStubTestController(): TestController {
     const disposable = { dispose: () => undefined };
@@ -62,6 +63,8 @@ ensureVscodeTestsNamespace();
 // Dynamically require AFTER the vscode.tests namespace exists.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { PythonTestController } = require('../../../client/testing/testController/controller');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { TestProjectRegistry } = require('../../../client/testing/testController/common/testProjectRegistry');
 
 suite('PythonTestController', () => {
     let sandbox: sinon.SinonSandbox;
@@ -143,7 +146,7 @@ suite('PythonTestController', () => {
         });
     });
 
-    suite('createDefaultProject', () => {
+    suite('createDefaultProject (via TestProjectRegistry)', () => {
         test('creates a single default project using active interpreter', async () => {
             const workspaceUri: Uri = vscodeApi.Uri.file('/workspace/myws');
             const interpreter = {
@@ -153,16 +156,40 @@ suite('PythonTestController', () => {
                 sysPrefix: '/opt/py',
             };
 
-            const controller = createController({ unittestEnabled: false, interpreter });
-
             const fakeDiscoveryAdapter = { kind: 'discovery' };
             const fakeExecutionAdapter = { kind: 'execution' };
-            sandbox
-                .stub(controller as any, 'createTestAdapters')
-                .returns({ discoveryAdapter: fakeDiscoveryAdapter, executionAdapter: fakeExecutionAdapter });
+            sandbox.stub(projectUtils, 'createTestAdapters').returns({
+                discoveryAdapter: fakeDiscoveryAdapter,
+                executionAdapter: fakeExecutionAdapter,
+            } as any);
 
-            const project = await (controller as any).createDefaultProject(workspaceUri);
+            // Stub useEnvExtension to return false so createDefaultProject is called
+            sandbox.stub(envExtApiInternal, 'useEnvExtension').returns(false);
 
+            const interpreterService = {
+                getActiveInterpreter: sandbox.stub().resolves(interpreter),
+            } as any;
+
+            const configSettings = {
+                getSettings: sandbox.stub().returns({
+                    testing: { unittestEnabled: false },
+                }),
+            } as any;
+
+            const testController = createStubTestController();
+            const envVarsService = {} as any;
+
+            const registry = new TestProjectRegistry(
+                testController,
+                configSettings,
+                interpreterService,
+                envVarsService,
+            );
+
+            const projects = await registry.discoverAndRegisterProjects(workspaceUri);
+            const project = projects[0];
+
+            assert.strictEqual(projects.length, 1);
             assert.strictEqual(project.workspaceUri.toString(), workspaceUri.toString());
             assert.strictEqual(project.projectUri.toString(), workspaceUri.toString());
             assert.strictEqual(project.projectId, getProjectId(workspaceUri));
@@ -181,29 +208,54 @@ suite('PythonTestController', () => {
         });
     });
 
-    suite('discoverWorkspaceProjects', () => {
+    suite('discoverWorkspaceProjects (via TestProjectRegistry)', () => {
         test('respects useEnvExtension() == false and falls back to single default project', async () => {
-            const controller = createController();
             const workspaceUri: Uri = vscodeApi.Uri.file('/workspace/a');
-
-            const defaultProject = { projectId: 'default', projectUri: workspaceUri };
-            const createDefaultProjectStub = sandbox
-                .stub(controller as any, 'createDefaultProject')
-                .resolves(defaultProject as any);
 
             const useEnvExtensionStub = sandbox.stub(envExtApiInternal, 'useEnvExtension').returns(false);
             const getEnvExtApiStub = sandbox.stub(envExtApiInternal, 'getEnvExtApi');
 
-            const projects = await (controller as any).discoverWorkspaceProjects(workspaceUri);
+            const fakeDiscoveryAdapter = { kind: 'discovery' };
+            const fakeExecutionAdapter = { kind: 'execution' };
+            sandbox.stub(projectUtils, 'createTestAdapters').returns({
+                discoveryAdapter: fakeDiscoveryAdapter,
+                executionAdapter: fakeExecutionAdapter,
+            } as any);
+
+            const interpreterService = {
+                getActiveInterpreter: sandbox.stub().resolves({
+                    displayName: 'Python 3.11',
+                    path: '/usr/bin/python3',
+                    version: { raw: '3.11.8' },
+                    sysPrefix: '/usr',
+                }),
+            } as any;
+
+            const configSettings = {
+                getSettings: sandbox.stub().returns({
+                    testing: { unittestEnabled: false },
+                }),
+            } as any;
+
+            const testController = createStubTestController();
+            const envVarsService = {} as any;
+
+            const registry = new TestProjectRegistry(
+                testController,
+                configSettings,
+                interpreterService,
+                envVarsService,
+            );
+
+            const projects = await registry.discoverAndRegisterProjects(workspaceUri);
 
             assert.strictEqual(useEnvExtensionStub.called, true);
             assert.strictEqual(getEnvExtApiStub.notCalled, true);
-            assert.strictEqual(createDefaultProjectStub.calledOnceWithExactly(workspaceUri), true);
-            assert.deepStrictEqual(projects, [defaultProject]);
+            assert.strictEqual(projects.length, 1);
+            assert.strictEqual(projects[0].projectUri.toString(), workspaceUri.toString());
         });
 
         test('filters Python projects to workspace and creates adapters for each', async () => {
-            const controller = createController();
             const workspaceUri: Uri = vscodeApi.Uri.file('/workspace/root');
 
             const pythonProjects = [
@@ -215,41 +267,57 @@ suite('PythonTestController', () => {
             sandbox.stub(envExtApiInternal, 'useEnvExtension').returns(true);
             sandbox.stub(envExtApiInternal, 'getEnvExtApi').resolves({
                 getPythonProjects: () => pythonProjects,
+                getEnvironment: sandbox.stub().resolves({
+                    name: 'env',
+                    displayName: 'Python 3.11',
+                    shortDisplayName: 'Python 3.11',
+                    displayPath: '/usr/bin/python3',
+                    version: '3.11.8',
+                    environmentPath: vscodeApi.Uri.file('/usr/bin/python3'),
+                    sysPrefix: '/usr',
+                    execInfo: { run: { executable: '/usr/bin/python3' } },
+                    envId: { id: 'test', managerId: 'test' },
+                }),
             } as any);
 
-            const createdAdapters = [
-                { projectId: 'p1', projectUri: pythonProjects[0].uri },
-                { projectId: 'p2', projectUri: pythonProjects[1].uri },
-            ];
+            const fakeDiscoveryAdapter = { kind: 'discovery' };
+            const fakeExecutionAdapter = { kind: 'execution' };
+            sandbox.stub(projectUtils, 'createTestAdapters').returns({
+                discoveryAdapter: fakeDiscoveryAdapter,
+                executionAdapter: fakeExecutionAdapter,
+            } as any);
 
-            const createProjectAdapterStub = sandbox
-                .stub(controller as any, 'createProjectAdapter')
-                .onFirstCall()
-                .resolves(createdAdapters[0] as any)
-                .onSecondCall()
-                .resolves(createdAdapters[1] as any);
+            const interpreterService = {
+                getActiveInterpreter: sandbox.stub().resolves(null),
+            } as any;
 
-            const createDefaultProjectStub = sandbox.stub(controller as any, 'createDefaultProject');
+            const configSettings = {
+                getSettings: sandbox.stub().returns({
+                    testing: { unittestEnabled: false },
+                }),
+            } as any;
 
-            const projects = await (controller as any).discoverWorkspaceProjects(workspaceUri);
+            const testController = createStubTestController();
+            const envVarsService = {} as any;
 
-            // Should only create adapters for the 2 projects in the workspace.
-            assert.strictEqual(createProjectAdapterStub.callCount, 2);
-            assert.strictEqual(
-                createProjectAdapterStub.firstCall.args[0].uri.toString(),
-                pythonProjects[0].uri.toString(),
+            const registry = new TestProjectRegistry(
+                testController,
+                configSettings,
+                interpreterService,
+                envVarsService,
             );
-            assert.strictEqual(
-                createProjectAdapterStub.secondCall.args[0].uri.toString(),
-                pythonProjects[1].uri.toString(),
-            );
 
-            assert.strictEqual(createDefaultProjectStub.notCalled, true);
-            assert.deepStrictEqual(projects, createdAdapters);
+            const projects = await registry.discoverAndRegisterProjects(workspaceUri);
+
+            // Should only create adapters for the 2 projects in the workspace (not 'other')
+            assert.strictEqual(projects.length, 2);
+            const projectUris = projects.map((p) => p.projectUri.fsPath);
+            assert.ok(projectUris.includes('/workspace/root/p1'));
+            assert.ok(projectUris.includes('/workspace/root/nested/p2'));
+            assert.ok(!projectUris.includes('/other/root/p3'));
         });
 
         test('falls back to default project when no projects are in the workspace', async () => {
-            const controller = createController();
             const workspaceUri: Uri = vscodeApi.Uri.file('/workspace/root');
 
             sandbox.stub(envExtApiInternal, 'useEnvExtension').returns(true);
@@ -257,18 +325,45 @@ suite('PythonTestController', () => {
                 getPythonProjects: () => [{ name: 'other', uri: vscodeApi.Uri.file('/other/root/p3') }],
             } as any);
 
-            const defaultProject = { projectId: 'default', projectUri: workspaceUri };
-            const createDefaultProjectStub = sandbox
-                .stub(controller as any, 'createDefaultProject')
-                .resolves(defaultProject as any);
+            const fakeDiscoveryAdapter = { kind: 'discovery' };
+            const fakeExecutionAdapter = { kind: 'execution' };
+            sandbox.stub(projectUtils, 'createTestAdapters').returns({
+                discoveryAdapter: fakeDiscoveryAdapter,
+                executionAdapter: fakeExecutionAdapter,
+            } as any);
 
-            const createProjectAdapterStub = sandbox.stub(controller as any, 'createProjectAdapter');
+            const interpreter = {
+                displayName: 'Python 3.11',
+                path: '/usr/bin/python3',
+                version: { raw: '3.11.8' },
+                sysPrefix: '/usr',
+            };
 
-            const projects = await (controller as any).discoverWorkspaceProjects(workspaceUri);
+            const interpreterService = {
+                getActiveInterpreter: sandbox.stub().resolves(interpreter),
+            } as any;
 
-            assert.strictEqual(createProjectAdapterStub.notCalled, true);
-            assert.strictEqual(createDefaultProjectStub.calledOnceWithExactly(workspaceUri), true);
-            assert.deepStrictEqual(projects, [defaultProject]);
+            const configSettings = {
+                getSettings: sandbox.stub().returns({
+                    testing: { unittestEnabled: false },
+                }),
+            } as any;
+
+            const testController = createStubTestController();
+            const envVarsService = {} as any;
+
+            const registry = new TestProjectRegistry(
+                testController,
+                configSettings,
+                interpreterService,
+                envVarsService,
+            );
+
+            const projects = await registry.discoverAndRegisterProjects(workspaceUri);
+
+            // Should fall back to default project since no projects are in the workspace
+            assert.strictEqual(projects.length, 1);
+            assert.strictEqual(projects[0].projectUri.toString(), workspaceUri.toString());
         });
     });
 });
