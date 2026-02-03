@@ -628,6 +628,142 @@ suite('populateTestTree tests', () => {
         assert.deepStrictEqual(mockNestedNode.tags, [RunTestTag, DebugTestTag]);
         assert.deepStrictEqual(mockTestItem.tags, [RunTestTag, DebugTestTag]);
     });
+
+    test('should add pytest mark tags with mark. prefix to test items', () => {
+        // Arrange
+        const testItem: DiscoveredTestItem = {
+            path: '/test/path/test.py',
+            name: 'test_marked',
+            type_: 'test',
+            id_: 'test-marked-id',
+            lineno: 5,
+            runID: 'run-marked',
+            tags: ['slow', 'integration'],
+        };
+
+        const testTreeData: DiscoveredTestNode = {
+            path: '/test/path/root',
+            name: 'RootTest',
+            type_: 'folder',
+            id_: 'root-id',
+            children: [testItem],
+        };
+
+        const mockRootItem: TestItem = {
+            id: 'root-id',
+            tags: [],
+            canResolveChildren: true,
+            children: { add: sandbox.stub() },
+        } as any;
+
+        const mockTestItem: TestItem = {
+            id: 'test-marked-id',
+            tags: [],
+            canResolveChildren: false,
+        } as any;
+
+        createTestItemStub.onCall(0).returns(mockRootItem);
+        createTestItemStub.onCall(1).returns(mockTestItem);
+
+        // Act
+        populateTestTree(testController, testTreeData, undefined, resultResolver, cancelationToken);
+
+        // Assert
+        assert.deepStrictEqual(mockRootItem.tags, [RunTestTag, DebugTestTag]);
+        assert.deepStrictEqual(mockTestItem.tags, [
+            RunTestTag,
+            DebugTestTag,
+            { id: 'mark.slow' },
+            { id: 'mark.integration' },
+        ]);
+    });
+
+    test('should handle test items with empty tags array', () => {
+        // Arrange
+        const testItem: DiscoveredTestItem = {
+            path: '/test/path/test.py',
+            name: 'test_no_tags',
+            type_: 'test',
+            id_: 'test-no-tags-id',
+            lineno: 5,
+            runID: 'run-no-tags',
+            tags: [],
+        };
+
+        const testTreeData: DiscoveredTestNode = {
+            path: '/test/path/root',
+            name: 'RootTest',
+            type_: 'folder',
+            id_: 'root-id',
+            children: [testItem],
+        };
+
+        const mockRootItem: TestItem = {
+            id: 'root-id',
+            tags: [],
+            canResolveChildren: true,
+            children: { add: sandbox.stub() },
+        } as any;
+
+        const mockTestItem: TestItem = {
+            id: 'test-no-tags-id',
+            tags: [],
+            canResolveChildren: false,
+        } as any;
+
+        createTestItemStub.onCall(0).returns(mockRootItem);
+        createTestItemStub.onCall(1).returns(mockTestItem);
+
+        // Act
+        populateTestTree(testController, testTreeData, undefined, resultResolver, cancelationToken);
+
+        // Assert
+        assert.deepStrictEqual(mockTestItem.tags, [RunTestTag, DebugTestTag]);
+    });
+
+    test('should handle test items with undefined tags', () => {
+        // Arrange
+        const testItem: DiscoveredTestItem = {
+            path: '/test/path/test.py',
+            name: 'test_undef_tags',
+            type_: 'test',
+            id_: 'test-undef-id',
+            lineno: 5,
+            runID: 'run-undef',
+            // tags intentionally omitted
+        };
+
+        const testTreeData: DiscoveredTestNode = {
+            path: '/test/path/root',
+            name: 'RootTest',
+            type_: 'folder',
+            id_: 'root-id',
+            children: [testItem],
+        };
+
+        const mockRootItem: TestItem = {
+            id: 'root-id',
+            tags: [],
+            canResolveChildren: true,
+            children: { add: sandbox.stub() },
+        } as any;
+
+        const mockTestItem: TestItem = {
+            id: 'test-undef-id',
+            tags: [],
+            canResolveChildren: false,
+        } as any;
+
+        createTestItemStub.onCall(0).returns(mockRootItem);
+        createTestItemStub.onCall(1).returns(mockTestItem);
+
+        // Act
+        populateTestTree(testController, testTreeData, undefined, resultResolver, cancelationToken);
+
+        // Assert
+        assert.deepStrictEqual(mockTestItem.tags, [RunTestTag, DebugTestTag]);
+    });
+
     test('should handle a test node with no lineno property', () => {
         // Arrange
         // Tree structure:
