@@ -325,3 +325,76 @@ def test_simple_django_collect():
         assert (
             len(actual_item["tests"]["children"][0]["children"][0]["children"][0]["children"]) == 3
         )
+
+
+def test_project_root_path_with_cwd_override() -> None:
+    """Test unittest discovery with cwd_override parameter.
+
+    This simulates project-based testing where the cwd in the payload should be
+    the project root (cwd_override) rather than the start_dir.
+
+    When cwd_override is provided:
+    - The cwd in the response should match cwd_override
+    - The test tree root should still be built correctly based on top_level_dir
+    """
+    # Use unittest_skip folder as our "project" directory
+    project_path = TEST_DATA_PATH / "unittest_skip"
+    start_dir = os.fsdecode(project_path)
+    pattern = "unittest_*"
+
+    # Call discover_tests with cwd_override to simulate PROJECT_ROOT_PATH
+    actual = discover_tests(start_dir, pattern, None, cwd_override=start_dir)
+
+    assert actual["status"] == "success"
+    # cwd in response should match the cwd_override (project root)
+    assert actual["cwd"] == os.fsdecode(project_path), (
+        f"Expected cwd '{os.fsdecode(project_path)}', got '{actual['cwd']}'"
+    )
+    assert "tests" in actual
+    # Verify the test tree structure matches expected output
+    assert is_same_tree(
+        actual.get("tests"),
+        expected_discovery_test_output.skip_unittest_folder_discovery_output,
+        ["id_", "lineno", "name"],
+    )
+    assert "error" not in actual
+
+
+def test_project_root_path_with_different_cwd_and_start_dir() -> None:
+    """Test unittest discovery where cwd_override differs from start_dir.
+
+    This simulates the scenario where:
+    - start_dir points to a subfolder where tests are located
+    - cwd_override (PROJECT_ROOT_PATH) points to the project root
+
+    The cwd in the response should be the project root, while discovery
+    still runs from the start_dir.
+    """
+    # Use utils_complex_tree as our test case - discovery from a subfolder
+    project_path = TEST_DATA_PATH / "utils_complex_tree"
+    start_dir = os.fsdecode(
+        pathlib.PurePath(
+            TEST_DATA_PATH,
+            "utils_complex_tree",
+            "test_outer_folder",
+            "test_inner_folder",
+        )
+    )
+    pattern = "test_*.py"
+    top_level_dir = os.fsdecode(project_path)
+
+    # Call discover_tests with cwd_override set to project root
+    actual = discover_tests(start_dir, pattern, top_level_dir, cwd_override=top_level_dir)
+
+    assert actual["status"] == "success"
+    # cwd should be the project root (cwd_override), not the start_dir
+    assert actual["cwd"] == os.fsdecode(project_path), (
+        f"Expected cwd '{os.fsdecode(project_path)}', got '{actual['cwd']}'"
+    )
+    assert "error" not in actual
+    # Test tree should still be structured correctly with top_level_dir as root
+    assert is_same_tree(
+        actual.get("tests"),
+        expected_discovery_test_output.complex_tree_expected_output,
+        ["id_", "lineno", "name"],
+    )
