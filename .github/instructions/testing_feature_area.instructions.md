@@ -26,6 +26,10 @@ This document maps the testing support in the extension: discovery, execution (r
     -   `src/client/testing/serviceRegistry.ts` — DI/wiring for testing services.
 -   Workspace orchestration
     -   `src/client/testing/testController/workspaceTestAdapter.ts` — `WorkspaceTestAdapter` (provider-agnostic entry used by controller).
+-   **Project-based testing (multi-project workspaces)**
+    -   `src/client/testing/testController/common/testProjectRegistry.ts` — `TestProjectRegistry` (manages project lifecycle, discovery, and nested project handling).
+    -   `src/client/testing/testController/common/projectAdapter.ts` — `ProjectAdapter` interface (represents a single Python project with its own test infrastructure).
+    -   `src/client/testing/testController/common/projectUtils.ts` — utilities for project ID generation, display names, and shared adapter creation.
 -   Provider adapters
     -   Unittest
         -   `src/client/testing/testController/unittest/testDiscoveryAdapter.ts`
@@ -150,6 +154,51 @@ The adapters in the extension don't implement test discovery/run logic themselve
 -   Where to look in the code:
     -   Settings are consumed by `src/client/testing/common/testConfigurationManager.ts`, `src/client/testing/configurationFactory.ts`, and adapters under `src/client/testing/testController/*` which read settings to build CLI args and env for subprocesses.
     -   The setting definitions and descriptions are in `package.json` and localized strings in `package.nls.json`.
+
+## Project-based testing (multi-project workspaces)
+
+Project-based testing enables multi-project workspace support where each Python project gets its own test tree root with its own Python environment.
+
+> **⚠️ Note: unittest support for project-based testing is NOT yet implemented.** Project-based testing currently only works with pytest. unittest support will be added in a future PR.
+
+### Architecture
+
+-   **TestProjectRegistry** (`testProjectRegistry.ts`): Central registry that:
+
+    -   Discovers Python projects via the Python Environments API
+    -   Creates and manages `ProjectAdapter` instances per workspace
+    -   Computes nested project relationships and configures ignore lists
+    -   Falls back to "legacy" single-adapter mode when API unavailable
+
+-   **ProjectAdapter** (`projectAdapter.ts`): Interface representing a single project with:
+    -   Project identity (ID, name, URI from Python Environments API)
+    -   Python environment with execution details
+    -   Test framework adapters (discovery/execution)
+    -   Nested project ignore paths (for parent projects)
+
+### How it works
+
+1. **Activation**: When the extension activates, `PythonTestController` checks if the Python Environments API is available.
+2. **Project discovery**: `TestProjectRegistry.discoverAndRegisterProjects()` queries the API for all Python projects in each workspace.
+3. **Nested handling**: `configureNestedProjectIgnores()` identifies child projects and adds their paths to parent projects' ignore lists.
+4. **Test discovery**: For each project, the controller calls `project.discoveryAdapter.discoverTests()` with the project's URI. The adapter sets `PROJECT_ROOT_PATH` environment variable for the Python runner.
+5. **Python side**: `get_test_root_path()` in `vscode_pytest/__init__.py` returns `PROJECT_ROOT_PATH` (if set) or falls back to `cwd`.
+6. **Test tree**: Each project gets its own root node in the Test Explorer, with test IDs scoped by project ID using the `||` separator.
+
+### Logging prefix
+
+All project-based testing logs use the `[test-by-project]` prefix for easy filtering in the output channel.
+
+### Key files
+
+-   Python side: `python_files/vscode_pytest/__init__.py` — `get_test_root_path()` function and `PROJECT_ROOT_PATH` environment variable.
+-   TypeScript: `testProjectRegistry.ts`, `projectAdapter.ts`, `projectUtils.ts`, and the discovery adapters.
+
+### Tests
+
+-   `src/test/testing/testController/common/testProjectRegistry.unit.test.ts` — TestProjectRegistry tests
+-   `src/test/testing/testController/common/projectUtils.unit.test.ts` — Project utility function tests
+-   `python_files/tests/pytestadapter/test_get_test_root_path.py` — Python-side get_test_root_path() tests
 
 ## Coverage support (how it works)
 

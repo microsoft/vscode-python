@@ -2,6 +2,15 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
+import { IConfigurationService } from '../../../common/types';
+import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
+import { UNITTEST_PROVIDER } from '../../common/constants';
+import { TestProvider } from '../../types';
+import { ITestDiscoveryAdapter, ITestExecutionAdapter, ITestResultResolver } from './types';
+import { UnittestTestDiscoveryAdapter } from '../unittest/testDiscoveryAdapter';
+import { UnittestTestExecutionAdapter } from '../unittest/testExecutionAdapter';
+import { PytestTestDiscoveryAdapter } from '../pytest/pytestDiscoveryAdapter';
+import { PytestTestExecutionAdapter } from '../pytest/pytestExecutionAdapter';
 
 /**
  * Separator used to scope test IDs to a specific project.
@@ -51,4 +60,33 @@ export function createProjectDisplayName(projectName: string, pythonVersion: str
     const shortVersion = versionMatch ? versionMatch[1] : pythonVersion;
 
     return `${projectName} (Python ${shortVersion})`;
+}
+
+/**
+ * Creates test adapters (discovery and execution) for a given test provider.
+ * Centralizes adapter creation to avoid code duplication across Controller and TestProjectRegistry.
+ *
+ * @param testProvider The test framework provider ('pytest' | 'unittest')
+ * @param resultResolver The result resolver to use for test results
+ * @param configSettings The configuration service
+ * @param envVarsService The environment variables provider
+ * @returns An object containing the discovery and execution adapters
+ */
+export function createTestAdapters(
+    testProvider: TestProvider,
+    resultResolver: ITestResultResolver,
+    configSettings: IConfigurationService,
+    envVarsService: IEnvironmentVariablesProvider,
+): { discoveryAdapter: ITestDiscoveryAdapter; executionAdapter: ITestExecutionAdapter } {
+    if (testProvider === UNITTEST_PROVIDER) {
+        return {
+            discoveryAdapter: new UnittestTestDiscoveryAdapter(configSettings, resultResolver, envVarsService),
+            executionAdapter: new UnittestTestExecutionAdapter(configSettings, resultResolver, envVarsService),
+        };
+    }
+
+    return {
+        discoveryAdapter: new PytestTestDiscoveryAdapter(configSettings, resultResolver, envVarsService),
+        executionAdapter: new PytestTestExecutionAdapter(configSettings, resultResolver, envVarsService),
+    };
 }

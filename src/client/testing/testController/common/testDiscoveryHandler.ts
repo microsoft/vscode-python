@@ -67,7 +67,7 @@ export class TestDiscoveryHandler {
                     runIdToTestItem: testItemIndex.runIdToTestItemMap,
                     runIdToVSid: testItemIndex.runIdToVSidMap,
                     vsIdToRunId: testItemIndex.vsIdToRunIdMap,
-                } as any,
+                },
                 token,
                 projectId,
             );

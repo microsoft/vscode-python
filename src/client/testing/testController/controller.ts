@@ -36,17 +36,7 @@ import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { TestProvider } from '../types';
 import { createErrorTestItem, DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
 import { buildErrorNodeOptions } from './common/utils';
-import {
-    ITestController,
-    ITestDiscoveryAdapter,
-    ITestFrameworkController,
-    TestRefreshOptions,
-    ITestExecutionAdapter,
-} from './common/types';
-import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
-import { UnittestTestExecutionAdapter } from './unittest/testExecutionAdapter';
-import { PytestTestDiscoveryAdapter } from './pytest/pytestDiscoveryAdapter';
-import { PytestTestExecutionAdapter } from './pytest/pytestExecutionAdapter';
+import { ITestController, ITestFrameworkController, TestRefreshOptions } from './common/types';
 import { WorkspaceTestAdapter } from './workspaceTestAdapter';
 import { ITestDebugLauncher } from '../common/types';
 import { PythonResultResolver } from './common/resultResolver';
@@ -54,6 +44,7 @@ import { onDidSaveTextDocument } from '../../common/vscodeApis/workspaceApis';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { ProjectAdapter } from './common/projectAdapter';
 import { TestProjectRegistry } from './common/testProjectRegistry';
+import { createTestAdapters } from './common/projectUtils';
 
 // Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
 type EventPropertyType = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_TRIGGER];
@@ -182,35 +173,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     }
 
     /**
-     * Creates test adapters (discovery and execution) for a given test provider.
-     * Centralizes adapter creation to reduce code duplication.
-     */
-    private createTestAdapters(
-        testProvider: TestProvider,
-        resultResolver: PythonResultResolver,
-    ): { discoveryAdapter: ITestDiscoveryAdapter; executionAdapter: ITestExecutionAdapter } {
-        if (testProvider === UNITTEST_PROVIDER) {
-            return {
-                discoveryAdapter: new UnittestTestDiscoveryAdapter(
-                    this.configSettings,
-                    resultResolver,
-                    this.envVarsService,
-                ),
-                executionAdapter: new UnittestTestExecutionAdapter(
-                    this.configSettings,
-                    resultResolver,
-                    this.envVarsService,
-                ),
-            };
-        }
-
-        return {
-            discoveryAdapter: new PytestTestDiscoveryAdapter(this.configSettings, resultResolver, this.envVarsService),
-            executionAdapter: new PytestTestExecutionAdapter(this.configSettings, resultResolver, this.envVarsService),
-        };
-    }
-
-    /**
      * Determines the test provider (pytest or unittest) based on workspace settings.
      */
     private getTestProvider(workspaceUri: Uri): TestProvider {
@@ -287,7 +249,12 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     private activateLegacyWorkspace(workspace: WorkspaceFolder): void {
         const testProvider = this.getTestProvider(workspace.uri);
         const resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
-        const { discoveryAdapter, executionAdapter } = this.createTestAdapters(testProvider, resultResolver);
+        const { discoveryAdapter, executionAdapter } = createTestAdapters(
+            testProvider,
+            resultResolver,
+            this.configSettings,
+            this.envVarsService,
+        );
 
         const workspaceTestAdapter = new WorkspaceTestAdapter(
             testProvider,
@@ -422,11 +389,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             traceInfo(`[test-by-project] Discovering tests for project: ${project.projectName}`);
             project.isDiscovering = true;
 
+            // In project-based mode, the discovery adapter uses the Python Environments API
+            // to get the environment directly, so we don't need to pass the interpreter
             await project.discoveryAdapter.discoverTests(
                 project.projectUri,
                 this.pythonExecFactory,
                 this.refreshCancellation.token,
-                project.pythonEnvironment as any,
+                undefined, // Interpreter not needed; adapter uses Python Environments API
                 project,
             );
 

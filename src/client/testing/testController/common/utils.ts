@@ -13,7 +13,7 @@ import {
     DiscoveredTestNode,
     DiscoveredTestPayload,
     ExecutionTestPayload,
-    ITestResultResolver,
+    ITestItemMappings,
 } from './types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
 import { createReaderPipe, generateRandomPipeName } from '../../../common/pipes/namedPipes';
@@ -210,7 +210,7 @@ export function populateTestTree(
     testController: TestController,
     testTreeData: DiscoveredTestNode,
     testRoot: TestItem | undefined,
-    resultResolver: ITestResultResolver,
+    testItemMappings: ITestItemMappings,
     token?: CancellationToken,
     projectId?: string,
 ): void {
@@ -252,9 +252,9 @@ export function populateTestTree(
 
                 testRoot!.children.add(testItem);
                 // add to our map - use runID as key, vsId as value
-                resultResolver.runIdToTestItem.set(child.runID, testItem);
-                resultResolver.runIdToVSid.set(child.runID, vsId);
-                resultResolver.vsIdToRunId.set(vsId, child.runID);
+                testItemMappings.runIdToTestItem.set(child.runID, testItem);
+                testItemMappings.runIdToVSid.set(child.runID, vsId);
+                testItemMappings.vsIdToRunId.set(vsId, child.runID);
             } else {
                 let node = testController.items.get(child.path);
 
@@ -282,7 +282,7 @@ export function populateTestTree(
 
                     testRoot!.children.add(node);
                 }
-                populateTestTree(testController, child, node, resultResolver, token, projectId);
+                populateTestTree(testController, child, node, testItemMappings, token, projectId);
             }
         }
     });

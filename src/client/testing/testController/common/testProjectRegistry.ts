@@ -13,13 +13,8 @@ import { PythonProject, PythonEnvironment } from '../../../envExt/types';
 import { getEnvExtApi, useEnvExtension } from '../../../envExt/api.internal';
 import { isParentPath } from '../../../common/platform/fs-paths';
 import { ProjectAdapter } from './projectAdapter';
-import { getProjectId, createProjectDisplayName } from './projectUtils';
+import { getProjectId, createProjectDisplayName, createTestAdapters } from './projectUtils';
 import { PythonResultResolver } from './resultResolver';
-import { ITestDiscoveryAdapter, ITestExecutionAdapter } from './types';
-import { UnittestTestDiscoveryAdapter } from '../unittest/testDiscoveryAdapter';
-import { UnittestTestExecutionAdapter } from '../unittest/testExecutionAdapter';
-import { PytestTestDiscoveryAdapter } from '../pytest/pytestDiscoveryAdapter';
-import { PytestTestExecutionAdapter } from '../pytest/pytestExecutionAdapter';
 
 /**
  * Registry for Python test projects within workspaces.
@@ -83,7 +78,7 @@ export class TestProjectRegistry {
      * Returns the discovered projects for the caller to use.
      */
     public async discoverAndRegisterProjects(workspaceUri: Uri): Promise<ProjectAdapter[]> {
-        traceInfo(`[ProjectManager] Discovering projects for workspace: ${workspaceUri.fsPath}`);
+        traceInfo(`[test-by-project] Discovering projects for workspace: ${workspaceUri.fsPath}`);
 
         const projects = await this.discoverProjects(workspaceUri);
 
@@ -94,7 +89,7 @@ export class TestProjectRegistry {
         });
 
         this.workspaceProjects.set(workspaceUri, projectsMap);
-        traceInfo(`[ProjectManager] Registered ${projects.length} project(s) for ${workspaceUri.fsPath}`);
+        traceInfo(`[test-by-project] Registered ${projects.length} project(s) for ${workspaceUri.fsPath}`);
 
         return projects;
     }
@@ -111,7 +106,7 @@ export class TestProjectRegistry {
             const ignorePaths = projectIgnores.get(project.projectId);
             if (ignorePaths && ignorePaths.length > 0) {
                 project.nestedProjectPathsToIgnore = ignorePaths;
-                traceInfo(`[ProjectManager] ${project.projectName} will ignore nested: ${ignorePaths.join(', ')}`);
+                traceInfo(`[test-by-project] ${project.projectName} will ignore nested: ${ignorePaths.join(', ')}`);
             }
         }
     }
@@ -132,22 +127,22 @@ export class TestProjectRegistry {
     private async discoverProjects(workspaceUri: Uri): Promise<ProjectAdapter[]> {
         try {
             if (!useEnvExtension()) {
-                traceInfo('[ProjectManager] Python Environments API not available, using default project');
+                traceInfo('[test-by-project] Python Environments API not available, using default project');
                 return [await this.createDefaultProject(workspaceUri)];
             }
 
             const envExtApi = await getEnvExtApi();
             const allProjects = envExtApi.getPythonProjects();
-            traceInfo(`[ProjectManager] Found ${allProjects.length} total Python projects from API`);
+            traceInfo(`[test-by-project] Found ${allProjects.length} total Python projects from API`);
 
             // Filter to projects within this workspace
             const workspaceProjects = allProjects.filter((project) =>
                 isParentPath(project.uri.fsPath, workspaceUri.fsPath),
             );
-            traceInfo(`[ProjectManager] Filtered to ${workspaceProjects.length} projects in workspace`);
+            traceInfo(`[test-by-project] Filtered to ${workspaceProjects.length} projects in workspace`);
 
             if (workspaceProjects.length === 0) {
-                traceInfo('[ProjectManager] No projects found, creating default project');
+                traceInfo('[test-by-project] No projects found, creating default project');
                 return [await this.createDefaultProject(workspaceUri)];
             }
 
@@ -158,18 +153,18 @@ export class TestProjectRegistry {
                     const adapter = await this.createProjectAdapter(pythonProject, workspaceUri);
                     adapters.push(adapter);
                 } catch (error) {
-                    traceError(`[ProjectManager] Failed to create adapter for ${pythonProject.uri.fsPath}:`, error);
+                    traceError(`[test-by-project] Failed to create adapter for ${pythonProject.uri.fsPath}:`, error);
                 }
             }
 
             if (adapters.length === 0) {
-                traceInfo('[ProjectManager] All adapters failed, falling back to default project');
+                traceInfo('[test-by-project] All adapters failed, falling back to default project');
                 return [await this.createDefaultProject(workspaceUri)];
             }
 
             return adapters;
         } catch (error) {
-            traceError('[ProjectManager] Discovery failed, using default project:', error);
+            traceError('[test-by-project] Discovery failed, using default project:', error);
             return [await this.createDefaultProject(workspaceUri)];
         }
     }
@@ -179,7 +174,7 @@ export class TestProjectRegistry {
      */
     private async createProjectAdapter(pythonProject: PythonProject, workspaceUri: Uri): Promise<ProjectAdapter> {
         const projectId = pythonProject.uri.fsPath;
-        traceInfo(`[ProjectManager] Creating adapter for: ${pythonProject.name} at ${projectId}`);
+        traceInfo(`[test-by-project] Creating adapter for: ${pythonProject.name} at ${projectId}`);
 
         // Resolve Python environment
         const envExtApi = await getEnvExtApi();
@@ -191,7 +186,12 @@ export class TestProjectRegistry {
         // Create test infrastructure
         const testProvider = this.getTestProvider(workspaceUri);
         const resultResolver = new PythonResultResolver(this.testController, testProvider, workspaceUri, projectId);
-        const { discoveryAdapter, executionAdapter } = this.createAdapters(testProvider, resultResolver);
+        const { discoveryAdapter, executionAdapter } = createTestAdapters(
+            testProvider,
+            resultResolver,
+            this.configSettings,
+            this.envVarsService,
+        );
 
         const projectName = createProjectDisplayName(pythonProject.name, pythonEnvironment.version);
 
@@ -215,11 +215,16 @@ export class TestProjectRegistry {
      * Creates a default project for legacy/fallback mode.
      */
     private async createDefaultProject(workspaceUri: Uri): Promise<ProjectAdapter> {
-        traceInfo(`[ProjectManager] Creating default project for: ${workspaceUri.fsPath}`);
+        traceInfo(`[test-by-project] Creating default project for: ${workspaceUri.fsPath}`);
 
         const testProvider = this.getTestProvider(workspaceUri);
         const resultResolver = new PythonResultResolver(this.testController, testProvider, workspaceUri);
-        const { discoveryAdapter, executionAdapter } = this.createAdapters(testProvider, resultResolver);
+        const { discoveryAdapter, executionAdapter } = createTestAdapters(
+            testProvider,
+            resultResolver,
+            this.configSettings,
+            this.envVarsService,
+        );
 
         const interpreter = await this.interpreterService.getActiveInterpreter(workspaceUri);
 
@@ -276,7 +281,7 @@ export class TestProjectRegistry {
 
                 if (childPath.startsWith(parentPath + path.sep)) {
                     nestedPaths.push(childPath);
-                    traceVerbose(`[ProjectManager] Nested: ${child.projectName} under ${parent.projectName}`);
+                    traceVerbose(`[test-by-project] Nested: ${child.projectName} under ${parent.projectName}`);
                 }
             }
 
@@ -294,33 +299,5 @@ export class TestProjectRegistry {
     private getTestProvider(workspaceUri: Uri): TestProvider {
         const settings = this.configSettings.getSettings(workspaceUri);
         return settings.testing.unittestEnabled ? UNITTEST_PROVIDER : 'pytest';
-    }
-
-    /**
-     * Creates discovery and execution adapters for a test provider.
-     */
-    private createAdapters(
-        testProvider: TestProvider,
-        resultResolver: PythonResultResolver,
-    ): { discoveryAdapter: ITestDiscoveryAdapter; executionAdapter: ITestExecutionAdapter } {
-        if (testProvider === UNITTEST_PROVIDER) {
-            return {
-                discoveryAdapter: new UnittestTestDiscoveryAdapter(
-                    this.configSettings,
-                    resultResolver,
-                    this.envVarsService,
-                ),
-                executionAdapter: new UnittestTestExecutionAdapter(
-                    this.configSettings,
-                    resultResolver,
-                    this.envVarsService,
-                ),
-            };
-        }
-
-        return {
-            discoveryAdapter: new PytestTestDiscoveryAdapter(this.configSettings, resultResolver, this.envVarsService),
-            executionAdapter: new PytestTestExecutionAdapter(this.configSettings, resultResolver, this.envVarsService),
-        };
     }
 }
