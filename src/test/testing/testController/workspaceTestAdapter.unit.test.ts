@@ -355,12 +355,14 @@ suite('Workspace test adapter', () => {
             );
             resultResolver.runIdToVSid.set('mockTestItem1', 'mockTestItem1');
 
-            sinon.stub(testItemUtilities, 'getTestCaseNodes').callsFake((testNode: TestItem) =>
-                // Custom implementation logic here based on the provided testNode and collection
-
-                // Example implementation: returning a predefined array of TestItem objects
-                [testNode],
-            );
+            sinon
+                .stub(testItemUtilities, 'getTestCaseNodes')
+                .callsFake((testNode: TestItem, collection: TestItem[] = []) => {
+                    // Custom implementation logic here based on the provided testNode and collection
+                    // Push the testNode to the collection (matching the real implementation behavior)
+                    collection.push(testNode);
+                    return collection;
+                });
 
             const mockTestItem1 = createMockTestItem('mockTestItem1');
             const mockTestItem2 = createMockTestItem('mockTestItem2');
