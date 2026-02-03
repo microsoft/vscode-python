@@ -15,9 +15,9 @@ import { PytestTestExecutionAdapter } from '../pytest/pytestExecutionAdapter';
 /**
  * Separator used to scope test IDs to a specific project.
  * Format: {projectId}{SEPARATOR}{testPath}
- * Example: "file:///workspace/project||test_file.py::test_name"
+ * Example: "file:///workspace/project@@PROJECT@@test_file.py::test_name"
  */
-export const PROJECT_ID_SEPARATOR = '||';
+export const PROJECT_ID_SEPARATOR = '@@vsc@@';
 
 /**
  * Gets the project ID from a project URI.

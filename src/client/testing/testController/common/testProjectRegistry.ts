@@ -173,7 +173,7 @@ export class TestProjectRegistry {
      * Creates a ProjectAdapter from a PythonProject.
      */
     private async createProjectAdapter(pythonProject: PythonProject, workspaceUri: Uri): Promise<ProjectAdapter> {
-        const projectId = pythonProject.uri.fsPath;
+        const projectId = getProjectId(pythonProject.uri);
         traceInfo(`[test-by-project] Creating adapter for: ${pythonProject.name} at ${projectId}`);
 
         // Resolve Python environment
