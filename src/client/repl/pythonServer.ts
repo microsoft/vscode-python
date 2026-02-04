@@ -16,6 +16,8 @@ export interface ExecutionResult {
 
 export interface PythonServer extends Disposable {
     onCodeExecuted: Event<void>;
+    readonly isExecuting: boolean;
+    readonly isDisposed: boolean;
     execute(code: string): Promise<ExecutionResult | undefined>;
     executeSilently(code: string): Promise<ExecutionResult | undefined>;
     interrupt(): void;
@@ -30,6 +32,18 @@ class PythonServerImpl implements PythonServer, Disposable {
 
     onCodeExecuted = this._onCodeExecuted.event;
 
+    private inFlightRequests = 0;
+
+    private disposed = false;
+
+    public get isExecuting(): boolean {
+        return this.inFlightRequests > 0;
+    }
+
+    public get isDisposed(): boolean {
+        return this.disposed;
+    }
+
     constructor(private connection: rpc.MessageConnection, private pythonServer: ch.ChildProcess) {
         this.initialize();
         this.input();
@@ -41,6 +55,14 @@ class PythonServerImpl implements PythonServer, Disposable {
                 traceLog('Log:', message);
             }),
         );
+        this.pythonServer.on('exit', (code) => {
+            traceError(`Python server exited with code ${code}`);
+            this.markDisposed();
+        });
+        this.pythonServer.on('error', (err) => {
+            traceError(err);
+            this.markDisposed();
+        });
         this.connection.listen();
     }
 
@@ -75,12 +97,15 @@ class PythonServerImpl implements PythonServer, Disposable {
     }
 
     private async executeCode(code: string): Promise<ExecutionResult | undefined> {
+        this.inFlightRequests += 1;
         try {
             const result = await this.connection.sendRequest('execute', code);
             return result as ExecutionResult;
         } catch (err) {
             const error = err as Error;
             traceError(`Error getting response from REPL server:`, error);
+        } finally {
+            this.inFlightRequests -= 1;
         }
         return undefined;
     }
@@ -93,38 +118,46 @@ class PythonServerImpl implements PythonServer, Disposable {
     }
 
     public async checkValidCommand(code: string): Promise<boolean> {
-        const completeCode: ExecutionResult = await this.connection.sendRequest('check_valid_command', code);
-        if (completeCode.output === 'True') {
-            return new Promise((resolve) => resolve(true));
+        this.inFlightRequests += 1;
+        try {
+            const completeCode: ExecutionResult = await this.connection.sendRequest('check_valid_command', code);
+            return completeCode.output === 'True';
+        } finally {
+            this.inFlightRequests -= 1;
         }
-        return new Promise((resolve) => resolve(false));
     }
 
     public dispose(): void {
+        if (this.disposed) {
+            return;
+        }
+        this.disposed = true;
         this.connection.sendNotification('exit');
         this.disposables.forEach((d) => d.dispose());
+        this.connection.dispose();
+        serverInstance = undefined;
+    }
+
+    private markDisposed(): void {
+        if (this.disposed) {
+            return;
+        }
+        this.disposed = true;
         this.connection.dispose();
         serverInstance = undefined;
     }
 }
 
 export function createPythonServer(interpreter: string[], cwd?: string): PythonServer {
-    if (serverInstance) {
+    if (serverInstance && !serverInstance.isDisposed) {
         return serverInstance;
     }
 
     const pythonServer = ch.spawn(interpreter[0], [...interpreter.slice(1), SERVER_PATH], {
         cwd, // Launch with correct workspace directory
     });
-
     pythonServer.stderr.on('data', (data) => {
         traceError(data.toString());
-    });
-    pythonServer.on('exit', (code) => {
-        traceError(`Python server exited with code ${code}`);
-    });
-    pythonServer.on('error', (err) => {
-        traceError(err);
     });
     const connection = rpc.createMessageConnection(
         new rpc.StreamMessageReader(pythonServer.stdout),
