@@ -6,6 +6,7 @@ import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
 import {
+    clearNativePythonFinder,
     getNativePythonFinder,
     isNativeEnvInfo,
     NativeEnvInfo,
@@ -23,6 +24,9 @@ suite('Native Python Finder', () => {
     let getWorkspaceFolderPathsStub: sinon.SinonStub;
 
     setup(() => {
+        // Clear singleton before each test to ensure fresh state
+        clearNativePythonFinder();
+
         createLogOutputChannelStub = sinon.stub(windowsApis, 'createLogOutputChannel');
         createLogOutputChannelStub.returns(new MockOutputChannel('locator'));
 
@@ -41,11 +45,14 @@ suite('Native Python Finder', () => {
     });
 
     teardown(() => {
+        // Clean up finder before restoring stubs to avoid issues with mock references
+        clearNativePythonFinder();
         sinon.restore();
     });
 
     suiteTeardown(() => {
-        finder.dispose();
+        // Final cleanup (finder may already be disposed by teardown)
+        clearNativePythonFinder();
     });
 
     test('Refresh should return python environments', async () => {
