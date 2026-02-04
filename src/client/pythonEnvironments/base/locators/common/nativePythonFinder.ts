@@ -521,6 +521,9 @@ export function getNativePythonFinder(context?: IExtensionContext): NativePython
             },
         };
     }
+    if (_finder && isFinderDisposed(_finder)) {
+        _finder = undefined;
+    }
     if (!_finder) {
         const cacheDirectory = context ? getCacheDirectory(context) : undefined;
         _finder = new NativePythonFinderImpl(cacheDirectory, context);
@@ -529,6 +532,10 @@ export function getNativePythonFinder(context?: IExtensionContext): NativePython
         }
     }
     return _finder;
+}
+
+function isFinderDisposed(finder: NativePythonFinder): boolean {
+    return 'isDisposed' in finder && Boolean((finder as { isDisposed?: boolean }).isDisposed);
 }
 
 export function getCacheDirectory(context: IExtensionContext): Uri {
