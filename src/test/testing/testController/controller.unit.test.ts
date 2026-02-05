@@ -312,9 +312,16 @@ suite('PythonTestController', () => {
             // Should only create adapters for the 2 projects in the workspace (not 'other')
             assert.strictEqual(projects.length, 2);
             const projectUris = projects.map((p: { projectUri: { fsPath: string } }) => p.projectUri.fsPath);
-            assert.ok(projectUris.includes('/workspace/root/p1'));
-            assert.ok(projectUris.includes('/workspace/root/nested/p2'));
-            assert.ok(!projectUris.includes('/other/root/p3'));
+            const expectedInWorkspace = [
+                vscodeApi.Uri.file('/workspace/root/p1').fsPath,
+                vscodeApi.Uri.file('/workspace/root/nested/p2').fsPath,
+            ];
+            const expectedOutOfWorkspace = vscodeApi.Uri.file('/other/root/p3').fsPath;
+
+            expectedInWorkspace.forEach((expectedPath) => {
+                assert.ok(projectUris.includes(expectedPath));
+            });
+            assert.ok(!projectUris.includes(expectedOutOfWorkspace));
         });
 
         test('falls back to default project when no projects are in the workspace', async () => {
