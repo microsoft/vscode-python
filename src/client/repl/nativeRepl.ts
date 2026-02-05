@@ -55,6 +55,7 @@ export class NativeRepl implements Disposable {
         nativeRepl.interpreter = interpreter;
         await nativeRepl.setReplDirectory();
         nativeRepl.pythonServer = createPythonServer([interpreter.path as string], nativeRepl.cwd);
+        nativeRepl.disposables.push(nativeRepl.pythonServer);
         nativeRepl.setReplController();
         nativeRepl.registerInterpreterChangeHandler();
 
@@ -62,6 +63,9 @@ export class NativeRepl implements Disposable {
     }
 
     dispose(): void {
+        if (this.pendingInterpreterChangeTimer) {
+            clearTimeout(this.pendingInterpreterChangeTimer);
+        }
         this.disposables.forEach((d) => d.dispose());
     }
 
@@ -165,6 +169,7 @@ export class NativeRepl implements Disposable {
         this.interpreter = interpreter;
         this.pythonServer.dispose();
         this.pythonServer = createPythonServer([interpreter.path as string], this.cwd);
+        this.disposables.push(this.pythonServer);
         if (this.replController) {
             this.replController.dispose();
         }
