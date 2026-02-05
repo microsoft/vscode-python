@@ -114,6 +114,16 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
 
     private readonly suppressErrorNotification: IPersistentStorage<boolean>;
 
+    /**
+     * Tracks whether the internal JSON-RPC connection has been closed.
+     * This can happen independently of the finder being disposed.
+     */
+    private _connectionClosed = false;
+
+    public get isConnectionClosed(): boolean {
+        return this._connectionClosed;
+    }
+
     constructor(private readonly cacheDirectory?: Uri, private readonly context?: IExtensionContext) {
         super();
         this.suppressErrorNotification = this.context
@@ -125,7 +135,18 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
     }
 
     public async resolve(executable: string): Promise<NativeEnvInfo> {
+        this.outputChannel.info(
+            `[test-failure-log] resolve() called: executable=${executable}, connectionClosed=${this._connectionClosed}, isDisposed=${this.isDisposed}`,
+        );
+        if (this._connectionClosed || this.isDisposed) {
+            const error = new Error(
+                `[test-failure-log] Cannot resolve: connection is ${this._connectionClosed ? 'closed' : 'disposed'}`,
+            );
+            this.outputChannel.error(error.message);
+            throw error;
+        }
         await this.configure();
+        this.outputChannel.info(`[test-failure-log] resolve() sending request for ${executable}`);
         const environment = await this.connection.sendRequest<NativeEnvInfo>('resolve', {
             executable,
         });
@@ -135,14 +156,29 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
     }
 
     async *refresh(options?: NativePythonEnvironmentKind | Uri[]): AsyncIterable<NativeEnvInfo> {
+        this.outputChannel.info(
+            `[test-failure-log] refresh() called: firstRefreshResults=${!!this.firstRefreshResults}, connectionClosed=${
+                this._connectionClosed
+            }, isDisposed=${this.isDisposed}`,
+        );
+        if (this._connectionClosed || this.isDisposed) {
+            this.outputChannel.error(
+                `[test-failure-log] refresh() called but connection is ${
+                    this._connectionClosed ? 'closed' : 'disposed'
+                }`,
+            );
+            return;
+        }
         if (this.firstRefreshResults) {
             // If this is the first time we are refreshing,
             // Then get the results from the first refresh.
             // Those would have started earlier and cached in memory.
+            this.outputChannel.info('[test-failure-log] Using firstRefreshResults');
             const results = this.firstRefreshResults();
             this.firstRefreshResults = undefined;
             yield* results;
         } else {
+            this.outputChannel.info('[test-failure-log] Calling doRefresh');
             const result = this.doRefresh(options);
             let completed = false;
             void result.completed.finally(() => {
@@ -298,6 +334,8 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
                 sendNativeTelemetry(data, this.initialRefreshMetrics),
             ),
             connection.onClose(() => {
+                this.outputChannel.info('[test-failure-log] JSON-RPC connection closed, marking connection as closed');
+                this._connectionClosed = true;
                 disposables.forEach((d) => d.dispose());
             }),
         );
@@ -310,6 +348,21 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
     private doRefresh(
         options?: NativePythonEnvironmentKind | Uri[],
     ): { completed: Promise<void>; discovered: Event<NativeEnvInfo | NativeEnvManagerInfo> } {
+        this.outputChannel.info(
+            `[test-failure-log] doRefresh() called: connectionClosed=${this._connectionClosed}, isDisposed=${this.isDisposed}`,
+        );
+        if (this._connectionClosed || this.isDisposed) {
+            this.outputChannel.error(
+                `[test-failure-log] doRefresh() called but connection is ${
+                    this._connectionClosed ? 'closed' : 'disposed'
+                }`,
+            );
+            const emptyEmitter = new EventEmitter<NativeEnvInfo | NativeEnvManagerInfo>();
+            return {
+                completed: Promise.resolve(),
+                discovered: emptyEmitter.event,
+            };
+        }
         const disposable = this._register(new DisposableStore());
         const discovered = disposable.add(new EventEmitter<NativeEnvInfo | NativeEnvManagerInfo>());
         const completed = createDeferred<void>();
@@ -500,7 +553,17 @@ function getPythonSettingAndUntildify<T>(name: string, scope?: Uri): T | undefin
     return value;
 }
 
+type NativePythonFinderFactory = (cacheDirectory?: Uri, context?: IExtensionContext) => NativePythonFinder;
+
 let _finder: NativePythonFinder | undefined;
+let _finderFactory: NativePythonFinderFactory | undefined;
+
+// For tests to inject a stable finder implementation.
+export function setNativePythonFinderFactory(factory?: NativePythonFinderFactory): void {
+    _finderFactory = factory;
+    clearNativePythonFinder();
+}
+
 export function getNativePythonFinder(context?: IExtensionContext): NativePythonFinder {
     if (!isTrusted()) {
         return {
@@ -521,14 +584,30 @@ export function getNativePythonFinder(context?: IExtensionContext): NativePython
             },
         };
     }
+    if (_finder && isFinderDisposed(_finder)) {
+        _finder = undefined;
+    }
     if (!_finder) {
         const cacheDirectory = context ? getCacheDirectory(context) : undefined;
-        _finder = new NativePythonFinderImpl(cacheDirectory, context);
+        const factory = _finderFactory ?? ((cacheDir, ctx) => new NativePythonFinderImpl(cacheDir, ctx));
+        _finder = factory(cacheDirectory, context);
         if (context) {
             context.subscriptions.push(_finder);
         }
     }
     return _finder;
+}
+
+function isFinderDisposed(finder: NativePythonFinder): boolean {
+    const finderImpl = finder as { isDisposed?: boolean; isConnectionClosed?: boolean };
+    const disposed = Boolean(finderImpl.isDisposed);
+    const connectionClosed = Boolean(finderImpl.isConnectionClosed);
+    if (disposed || connectionClosed) {
+        traceError(
+            `[test-failure-log] [NativePythonFinder] Finder needs recreation: isDisposed=${disposed}, isConnectionClosed=${connectionClosed}`,
+        );
+    }
+    return disposed || connectionClosed;
 }
 
 export function getCacheDirectory(context: IExtensionContext): Uri {
@@ -538,4 +617,15 @@ export function getCacheDirectory(context: IExtensionContext): Uri {
 export async function clearCacheDirectory(context: IExtensionContext): Promise<void> {
     const cacheDirectory = getCacheDirectory(context);
     await fs.emptyDir(cacheDirectory.fsPath).catch(noop);
+}
+
+/**
+ * Clears the singleton finder instance. For testing purposes only.
+ * @internal
+ */
+export function clearNativePythonFinder(): void {
+    if (_finder) {
+        _finder.dispose();
+        _finder = undefined;
+    }
 }
