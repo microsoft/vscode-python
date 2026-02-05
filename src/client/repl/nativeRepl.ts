@@ -42,7 +42,7 @@ export class NativeRepl implements Disposable {
 
     private envChangeListenerRegistered = false;
 
-    private pendingInterpreterChangeTimer?: NodeJS.Timeout;
+    private pendingInterpreterChange?: { resource?: Uri };
 
     // TODO: In the future, could also have attribute of URI for file specific REPL.
     private constructor() {
@@ -63,9 +63,6 @@ export class NativeRepl implements Disposable {
     }
 
     dispose(): void {
-        if (this.pendingInterpreterChangeTimer) {
-            clearTimeout(this.pendingInterpreterChangeTimer);
-        }
         this.disposables.forEach((d) => d.dispose());
     }
 
@@ -150,11 +147,20 @@ export class NativeRepl implements Disposable {
                 this.updateInterpreterForChange(event.uri).catch(() => undefined);
             }),
         );
+        this.disposables.push(
+            this.pythonServer.onCodeExecuted(() => {
+                if (this.pendingInterpreterChange) {
+                    const { resource } = this.pendingInterpreterChange;
+                    this.pendingInterpreterChange = undefined;
+                    this.updateInterpreterForChange(resource).catch(() => undefined);
+                }
+            }),
+        );
     }
 
     private async updateInterpreterForChange(resource?: Uri): Promise<void> {
         if (this.pythonServer?.isExecuting) {
-            this.scheduleInterpreterUpdate(resource);
+            this.pendingInterpreterChange = { resource };
             return;
         }
         if (!this.shouldApplyInterpreterChange(resource)) {
@@ -179,16 +185,6 @@ export class NativeRepl implements Disposable {
             const notebookEditor = await showNotebookDocument(this.notebookDocument, { preserveFocus: true });
             await selectNotebookKernel(notebookEditor, this.replController.id, PVSC_EXTENSION_ID);
         }
-    }
-
-    private scheduleInterpreterUpdate(resource?: Uri): void {
-        if (this.pendingInterpreterChangeTimer) {
-            clearTimeout(this.pendingInterpreterChangeTimer);
-        }
-        this.pendingInterpreterChangeTimer = setTimeout(() => {
-            this.pendingInterpreterChangeTimer = undefined;
-            this.updateInterpreterForChange(resource).catch(() => undefined);
-        }, 200);
     }
 
     private shouldApplyInterpreterChange(resource?: Uri): boolean {
