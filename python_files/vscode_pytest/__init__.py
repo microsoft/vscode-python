@@ -190,7 +190,7 @@ def pytest_exception_interact(node, call, report):
             send_execution_message(
                 os.fsdecode(cwd),
                 "success",
-                collected_test if collected_test else None,
+                collected_test or None,
             )
 
 
@@ -314,7 +314,7 @@ def pytest_report_teststatus(report, config):  # noqa: ARG001
             send_execution_message(
                 os.fsdecode(cwd),
                 "success",
-                collected_test if collected_test else None,
+                collected_test or None,
             )
     yield
 
@@ -348,7 +348,7 @@ def pytest_runtest_protocol(item, nextitem):  # noqa: ARG001
             send_execution_message(
                 os.fsdecode(cwd),
                 "success",
-                collected_test if collected_test else None,
+                collected_test or None,
             )
     yield
 
@@ -1024,7 +1024,7 @@ def get_node_path(
         except Exception as e:
             raise VSCodePytestError(
                 f"Error occurred while calculating symlink equivalent from node path: {e}"
-                f"\n SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {node_path}, \n cwd: {_CACHED_CWD if _CACHED_CWD else pathlib.Path.cwd()}"
+                f"\n SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {node_path}, \n cwd: {_CACHED_CWD or pathlib.Path.cwd()}"
             ) from e
     else:
         result = node_path
