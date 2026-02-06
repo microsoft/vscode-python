@@ -7,191 +7,84 @@ import * as typemoq from 'typemoq';
 import {
     CancellationToken,
     CancellationTokenSource,
-    TestItem,
-    TestItemCollection,
     TestRun,
     TestRunProfile,
     TestRunProfileKind,
     TestRunRequest,
     Uri,
 } from 'vscode';
-import { IPythonExecutionFactory } from '../../../../client/common/process/types';
-import { ITestDebugLauncher } from '../../../../client/testing/common/types';
-import { ProjectAdapter } from '../../../../client/testing/testController/common/projectAdapter';
+import {
+    createMockDependencies,
+    createMockProjectAdapter,
+    createMockTestItem,
+    createMockTestItemWithoutUri,
+    createMockTestRun,
+} from '../testMocks';
 import {
     executeTestsForProject,
     executeTestsForProjects,
     findProjectForTestItem,
     getTestCaseNodesRecursive,
     groupTestItemsByProject,
-    ProjectExecutionDependencies,
     setupCoverageForProject,
 } from '../../../../client/testing/testController/common/projectTestExecution';
-import { TestProjectRegistry } from '../../../../client/testing/testController/common/testProjectRegistry';
-import { ITestExecutionAdapter, ITestResultResolver } from '../../../../client/testing/testController/common/types';
 import * as telemetry from '../../../../client/telemetry';
+import * as envExtApi from '../../../../client/envExt/api.internal';
 
 suite('Project Test Execution', () => {
     let sandbox: sinon.SinonSandbox;
+    let useEnvExtensionStub: sinon.SinonStub;
 
     setup(() => {
         sandbox = sinon.createSandbox();
+        // Default to disabled env extension for path-based fallback tests
+        useEnvExtensionStub = sandbox.stub(envExtApi, 'useEnvExtension').returns(false);
     });
 
     teardown(() => {
         sandbox.restore();
     });
 
-    // ===== HELPER FUNCTIONS =====
-
-    function createMockTestItem(id: string, uriPath: string, children?: TestItem[]): TestItem {
-        const childMap = new Map<string, TestItem>();
-        children?.forEach((c) => childMap.set(c.id, c));
-
-        const mockChildren: TestItemCollection = {
-            size: childMap.size,
-            forEach: (callback: (item: TestItem, collection: TestItemCollection) => void) => {
-                childMap.forEach((item) => callback(item, mockChildren));
-            },
-            get: (itemId: string) => childMap.get(itemId),
-            add: () => {},
-            delete: () => {},
-            replace: () => {},
-            [Symbol.iterator]: function* () {
-                for (const [key, value] of childMap) {
-                    yield [key, value] as [string, TestItem];
-                }
-            },
-        } as TestItemCollection;
-
-        return ({
-            id,
-            uri: Uri.file(uriPath),
-            children: mockChildren,
-            label: id,
-            canResolveChildren: false,
-            busy: false,
-            tags: [],
-            range: undefined,
-            error: undefined,
-            parent: undefined,
-        } as unknown) as TestItem;
-    }
-
-    function createMockTestItemWithoutUri(id: string): TestItem {
-        return ({
-            id,
-            uri: undefined,
-            children: ({ size: 0, forEach: () => {} } as unknown) as TestItemCollection,
-            label: id,
-        } as unknown) as TestItem;
-    }
-
-    function createMockProjectAdapter(config: {
-        projectPath: string;
-        projectName: string;
-        pythonPath?: string;
-        testProvider?: 'pytest' | 'unittest';
-    }): ProjectAdapter & { executionAdapterStub: sinon.SinonStub } {
-        // Use a plain stub instead of TypeMoq for easier testing
-        const runTestsStub = sinon.stub().resolves();
-        const executionAdapter: ITestExecutionAdapter = ({
-            runTests: runTestsStub,
-        } as unknown) as ITestExecutionAdapter;
-
-        const resultResolverMock: ITestResultResolver = ({
-            vsIdToRunId: new Map<string, string>(),
-            runIdToVSid: new Map<string, string>(),
-            runIdToTestItem: new Map<string, TestItem>(),
-            detailedCoverageMap: new Map(),
-            resolveDiscovery: () => Promise.resolve(),
-            resolveExecution: () => {},
-        } as unknown) as ITestResultResolver;
-
-        const adapter = ({
-            projectUri: Uri.file(config.projectPath),
-            projectName: config.projectName,
-            workspaceUri: Uri.file(config.projectPath),
-            testProvider: config.testProvider ?? 'pytest',
-            pythonEnvironment: config.pythonPath
-                ? {
-                      execInfo: { run: { executable: config.pythonPath } },
-                  }
-                : undefined,
-            pythonProject: {
-                name: config.projectName,
-                uri: Uri.file(config.projectPath),
-            },
-            executionAdapter,
-            discoveryAdapter: {} as any,
-            resultResolver: resultResolverMock,
-            isDiscovering: false,
-            isExecuting: false,
-            // Expose the stub for testing
-            executionAdapterStub: runTestsStub,
-        } as unknown) as ProjectAdapter & { executionAdapterStub: sinon.SinonStub };
-
-        return adapter;
-    }
-
-    function createMockDependencies(): ProjectExecutionDependencies {
-        return {
-            projectRegistry: typemoq.Mock.ofType<TestProjectRegistry>().object,
-            pythonExecFactory: typemoq.Mock.ofType<IPythonExecutionFactory>().object,
-            debugLauncher: typemoq.Mock.ofType<ITestDebugLauncher>().object,
-        };
-    }
-
-    function createMockTestRun(): typemoq.IMock<TestRun> {
-        const runMock = typemoq.Mock.ofType<TestRun>();
-        runMock.setup((r) => r.started(typemoq.It.isAny()));
-        runMock.setup((r) => r.passed(typemoq.It.isAny(), typemoq.It.isAny()));
-        runMock.setup((r) => r.failed(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()));
-        runMock.setup((r) => r.skipped(typemoq.It.isAny()));
-        runMock.setup((r) => r.end());
-        return runMock;
-    }
-
     // ===== findProjectForTestItem Tests =====
 
     suite('findProjectForTestItem', () => {
-        test('should return undefined when test item has no URI', () => {
+        test('should return undefined when test item has no URI', async () => {
             // Mock
             const item = createMockTestItemWithoutUri('test1');
             const projects = [createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' })];
 
             // Run
-            const result = findProjectForTestItem(item, projects);
+            const result = await findProjectForTestItem(item, projects);
 
             // Assert
             expect(result).to.be.undefined;
         });
 
-        test('should return matching project when item path is within project directory', () => {
+        test('should return matching project when item path is within project directory', async () => {
             // Mock
             const item = createMockTestItem('test1', '/workspace/proj/tests/test_file.py');
             const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
 
             // Run
-            const result = findProjectForTestItem(item, [project]);
+            const result = await findProjectForTestItem(item, [project]);
 
             // Assert
             expect(result).to.equal(project);
         });
 
-        test('should return undefined when item path is outside all project directories', () => {
+        test('should return undefined when item path is outside all project directories', async () => {
             // Mock
             const item = createMockTestItem('test1', '/other/path/test.py');
             const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
 
             // Run
-            const result = findProjectForTestItem(item, [project]);
+            const result = await findProjectForTestItem(item, [project]);
 
             // Assert
             expect(result).to.be.undefined;
         });
 
-        test('should return most specific (deepest) project when nested projects exist', () => {
+        test('should return most specific (deepest) project when nested projects exist', async () => {
             // Mock - parent and child project with overlapping paths
             const item = createMockTestItem('test1', '/workspace/parent/child/tests/test.py');
             const parentProject = createMockProjectAdapter({ projectPath: '/workspace/parent', projectName: 'parent' });
@@ -201,13 +94,13 @@ suite('Project Test Execution', () => {
             });
 
             // Run
-            const result = findProjectForTestItem(item, [parentProject, childProject]);
+            const result = await findProjectForTestItem(item, [parentProject, childProject]);
 
             // Assert - should match child (longer path) not parent
             expect(result).to.equal(childProject);
         });
 
-        test('should return most specific project regardless of input order', () => {
+        test('should return most specific project regardless of input order', async () => {
             // Mock - same as above but different order
             const item = createMockTestItem('test1', '/workspace/parent/child/tests/test.py');
             const parentProject = createMockProjectAdapter({ projectPath: '/workspace/parent', projectName: 'parent' });
@@ -217,21 +110,58 @@ suite('Project Test Execution', () => {
             });
 
             // Run - pass child first, then parent
-            const result = findProjectForTestItem(item, [childProject, parentProject]);
+            const result = await findProjectForTestItem(item, [childProject, parentProject]);
 
             // Assert - order shouldn't affect result
             expect(result).to.equal(childProject);
         });
 
-        test('should match item at project root level', () => {
+        test('should match item at project root level', async () => {
             // Mock
             const item = createMockTestItem('test1', '/workspace/proj/test.py');
             const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
 
             // Run
-            const result = findProjectForTestItem(item, [project]);
+            const result = await findProjectForTestItem(item, [project]);
 
             // Assert
+            expect(result).to.equal(project);
+        });
+
+        test('should use env extension API when available', async () => {
+            // Enable env extension
+            useEnvExtensionStub.returns(true);
+
+            // Mock the env extension API
+            const item = createMockTestItem('test1', '/workspace/proj/tests/test_file.py');
+            const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
+
+            const mockEnvApi = {
+                getPythonProject: sandbox.stub().returns({ uri: project.projectUri }),
+            };
+            sandbox.stub(envExtApi, 'getEnvExtApi').resolves(mockEnvApi as any);
+
+            // Run
+            const result = await findProjectForTestItem(item, [project]);
+
+            // Assert
+            expect(result).to.equal(project);
+            expect(mockEnvApi.getPythonProject.calledOnceWith(item.uri)).to.be.true;
+        });
+
+        test('should fall back to path matching when env extension API is unavailable', async () => {
+            // Env extension enabled but throws
+            useEnvExtensionStub.returns(true);
+            sandbox.stub(envExtApi, 'getEnvExtApi').rejects(new Error('API unavailable'));
+
+            // Mock
+            const item = createMockTestItem('test1', '/workspace/proj/tests/test_file.py');
+            const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
+
+            // Run
+            const result = await findProjectForTestItem(item, [project]);
+
+            // Assert - should still work via fallback
             expect(result).to.equal(project);
         });
     });
