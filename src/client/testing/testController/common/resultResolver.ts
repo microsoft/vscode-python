@@ -33,15 +33,23 @@ export class PythonResultResolver implements ITestResultResolver {
      */
     private projectId?: string;
 
+    /**
+     * Optional project display name for labeling the test tree root.
+     * When set, the root node label will be "project: {projectName}" instead of the folder name.
+     */
+    private projectName?: string;
+
     constructor(
         testController: TestController,
         testProvider: TestProvider,
         private workspaceUri: Uri,
         projectId?: string,
+        projectName?: string,
     ) {
         this.testController = testController;
         this.testProvider = testProvider;
         this.projectId = projectId;
+        this.projectName = projectName;
         // Initialize a new TestItemIndex which will be used to track test items in this workspace/project
         this.testItemIndex = new TestItemIndex();
     }
@@ -76,6 +84,7 @@ export class PythonResultResolver implements ITestResultResolver {
             this.testProvider,
             token,
             this.projectId,
+            this.projectName,
         );
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
             tool: this.testProvider,

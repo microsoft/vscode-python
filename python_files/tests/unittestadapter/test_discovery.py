@@ -325,3 +325,123 @@ def test_simple_django_collect():
         assert (
             len(actual_item["tests"]["children"][0]["children"][0]["children"][0]["children"]) == 3
         )
+
+
+def test_project_root_path_with_cwd_override() -> None:
+    """Test unittest discovery with project_root_path parameter.
+
+    This simulates project-based testing where the cwd in the payload should be
+    the project root (project_root_path) rather than the start_dir.
+
+    When project_root_path is provided:
+    - The cwd in the response should match project_root_path
+    - The test tree root should still be built correctly based on top_level_dir
+    """
+    # Use unittest_skip folder as our "project" directory
+    project_path = TEST_DATA_PATH / "unittest_skip"
+    start_dir = os.fsdecode(project_path)
+    pattern = "unittest_*"
+
+    # Call discover_tests with project_root_path to simulate PROJECT_ROOT_PATH
+    actual = discover_tests(start_dir, pattern, None, project_root_path=start_dir)
+
+    assert actual["status"] == "success"
+    # cwd in response should match the project_root_path (project root)
+    assert actual["cwd"] == os.fsdecode(project_path), (
+        f"Expected cwd '{os.fsdecode(project_path)}', got '{actual['cwd']}'"
+    )
+    assert "tests" in actual
+    # Verify the test tree structure matches expected output
+    assert is_same_tree(
+        actual.get("tests"),
+        expected_discovery_test_output.skip_unittest_folder_discovery_output,
+        ["id_", "lineno", "name"],
+    )
+    assert "error" not in actual
+
+
+def test_project_root_path_with_different_cwd_and_start_dir() -> None:
+    """Test unittest discovery where project_root_path differs from start_dir.
+
+    This simulates the scenario where:
+    - start_dir points to a subfolder where tests are located
+    - project_root_path (PROJECT_ROOT_PATH) points to the project root
+
+    The cwd in the response should be the project root, while discovery
+    still runs from the start_dir.
+    """
+    # Use utils_complex_tree as our test case - discovery from a subfolder
+    project_path = TEST_DATA_PATH / "utils_complex_tree"
+    start_dir = os.fsdecode(
+        pathlib.PurePath(
+            TEST_DATA_PATH,
+            "utils_complex_tree",
+            "test_outer_folder",
+            "test_inner_folder",
+        )
+    )
+    pattern = "test_*.py"
+    top_level_dir = os.fsdecode(project_path)
+
+    # Call discover_tests with project_root_path set to project root
+    actual = discover_tests(start_dir, pattern, top_level_dir, project_root_path=top_level_dir)
+
+    assert actual["status"] == "success"
+    # cwd should be the project root (project_root_path), not the start_dir
+    assert actual["cwd"] == os.fsdecode(project_path), (
+        f"Expected cwd '{os.fsdecode(project_path)}', got '{actual['cwd']}'"
+    )
+    assert "error" not in actual
+    # Test tree should still be structured correctly with top_level_dir as root
+    assert is_same_tree(
+        actual.get("tests"),
+        expected_discovery_test_output.complex_tree_expected_output,
+        ["id_", "lineno", "name"],
+    )
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Symlinks require elevated privileges on Windows",
+)
+def test_symlink_with_project_root_path() -> None:
+    """Test unittest discovery with both symlink and PROJECT_ROOT_PATH set.
+
+    This tests the combination of:
+    1. A symlinked test directory
+    2. project_root_path (PROJECT_ROOT_PATH) set to the symlink path
+
+    This simulates project-based testing where the project root is a symlink,
+    ensuring test IDs and paths are correctly resolved through the symlink.
+    """
+    with helpers.create_symlink(TEST_DATA_PATH, "unittest_skip", "symlink_unittest") as (
+        _source,
+        destination,
+    ):
+        assert destination.is_symlink()
+
+        # Run discovery with:
+        # - start_dir pointing to the symlink destination
+        # - project_root_path set to the symlink destination (simulating PROJECT_ROOT_PATH)
+        start_dir = os.fsdecode(destination)
+        pattern = "unittest_*"
+
+        actual = discover_tests(start_dir, pattern, None, project_root_path=start_dir)
+
+        assert actual["status"] == "success", (
+            f"Status is not 'success', error is: {actual.get('error')}"
+        )
+        # cwd should be the symlink path (project_root_path)
+        assert actual["cwd"] == os.fsdecode(destination), (
+            f"CWD does not match symlink path: expected {os.fsdecode(destination)}, got {actual['cwd']}"
+        )
+        assert "tests" in actual
+        assert actual["tests"] is not None
+        # The test tree root should be named after the symlink directory
+        assert actual["tests"]["name"] == "symlink_unittest", (
+            f"Expected root name 'symlink_unittest', got '{actual['tests']['name']}'"
+        )
+        # The test tree root path should use the symlink path
+        assert actual["tests"]["path"] == os.fsdecode(destination), (
+            f"Expected root path to be symlink, got '{actual['tests']['path']}'"
+        )

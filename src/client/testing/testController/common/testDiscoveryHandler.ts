@@ -29,6 +29,7 @@ export class TestDiscoveryHandler {
         testProvider: TestProvider,
         token?: CancellationToken,
         projectId?: string,
+        projectName?: string,
     ): void {
         if (!payload) {
             // No test data is available
@@ -70,6 +71,7 @@ export class TestDiscoveryHandler {
                 },
                 token,
                 projectId,
+                projectName,
             );
         }
     }

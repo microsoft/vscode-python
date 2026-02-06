@@ -213,12 +213,15 @@ export function populateTestTree(
     testItemMappings: ITestItemMappings,
     token?: CancellationToken,
     projectId?: string,
+    projectName?: string,
 ): void {
     // If testRoot is undefined, use the info of the root item of testTreeData to create a test item, and append it to the test controller.
     if (!testRoot) {
         // Create project-scoped ID if projectId is provided
         const rootId = projectId ? `${projectId}${PROJECT_ID_SEPARATOR}${testTreeData.path}` : testTreeData.path;
-        testRoot = testController.createTestItem(rootId, testTreeData.name, Uri.file(testTreeData.path));
+        // Use "Project: {name}" label for project-based testing, otherwise use folder name
+        const rootLabel = projectName ? `Project: ${projectName}` : testTreeData.name;
+        testRoot = testController.createTestItem(rootId, rootLabel, Uri.file(testTreeData.path));
 
         testRoot.canResolveChildren = true;
         testRoot.tags = [RunTestTag, DebugTestTag];
@@ -282,7 +285,7 @@ export function populateTestTree(
 
                     testRoot!.children.add(node);
                 }
-                populateTestTree(testController, child, node, testItemMappings, token, projectId);
+                populateTestTree(testController, child, node, testItemMappings, token, projectId, projectName);
             }
         }
     });

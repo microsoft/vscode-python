@@ -21,6 +21,7 @@ import * as utils from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { getEnvironment, runInBackground, useEnvExtension } from '../../../envExt/api.internal';
+import { ProjectAdapter } from '../common/projectAdapter';
 
 export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     constructor(
@@ -37,6 +38,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         executionFactory: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
+        project?: ProjectAdapter,
     ): Promise<void> {
         const deferredTillServerClose: Deferred<void> = utils.createTestingDeferred();
 
@@ -71,6 +73,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 executionFactory,
                 debugLauncher,
                 interpreter,
+                project,
             );
         } finally {
             await deferredTillServerClose.promise;
@@ -87,6 +90,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         executionFactory: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
+        project?: ProjectAdapter,
     ): Promise<ExecutionTestPayload> {
         const relativePathToPytest = 'python_files';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
@@ -102,6 +106,13 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
         mutableEnv.PYTHONPATH = pythonPathCommand;
         mutableEnv.TEST_RUN_PIPE = resultNamedPipeName;
+
+        // Set PROJECT_ROOT_PATH for project-based testing (tells Python where to root the test tree)
+        if (project) {
+            mutableEnv.PROJECT_ROOT_PATH = project.projectUri.fsPath;
+            traceInfo(`[test-by-project] Setting PROJECT_ROOT_PATH=${project.projectUri.fsPath} for pytest execution`);
+        }
+
         if (profileKind && profileKind === TestRunProfileKind.Coverage) {
             mutableEnv.COVERAGE_ENABLED = 'True';
         }
