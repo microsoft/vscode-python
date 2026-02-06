@@ -22,7 +22,7 @@ import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { MockChildProcess } from '../../../mocks/mockChildProcess';
 import { traceInfo } from '../../../../client/logging';
 import * as extapi from '../../../../client/envExt/api.internal';
-import { ProjectAdapter } from '../../../../client/testing/testController/common/projectAdapter';
+import { createMockProjectAdapter } from '../testMocks';
 
 suite('pytest test execution adapter', () => {
     let useEnvExtensionStub: sinon.SinonStub;
@@ -330,27 +330,6 @@ suite('pytest test execution adapter', () => {
     // ===== PROJECT-BASED EXECUTION TESTS =====
 
     suite('project-based execution', () => {
-        function createMockProjectAdapter(projectPath: string, projectName: string): ProjectAdapter {
-            return ({
-                projectUri: Uri.file(projectPath),
-                projectName,
-                workspaceUri: Uri.file(projectPath),
-                testProvider: 'pytest',
-                pythonEnvironment: {
-                    execInfo: { run: { executable: '/custom/python/path' } },
-                },
-                pythonProject: {
-                    name: projectName,
-                    uri: Uri.file(projectPath),
-                },
-                executionAdapter: {},
-                discoveryAdapter: {},
-                resultResolver: {},
-                isDiscovering: false,
-                isExecuting: false,
-            } as unknown) as ProjectAdapter;
-        }
-
         test('should set PROJECT_ROOT_PATH env var when project provided', async () => {
             const deferred2 = createDeferred();
             const deferred3 = createDeferred();
@@ -369,7 +348,11 @@ suite('pytest test execution adapter', () => {
             testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
 
             const projectPath = path.join('/', 'workspace', 'myproject');
-            const mockProject = createMockProjectAdapter(projectPath, 'myproject');
+            const mockProject = createMockProjectAdapter({
+                projectPath,
+                projectName: 'myproject',
+                pythonPath: '/custom/python/path',
+            });
 
             const uri = Uri.file(myTestPath);
             adapter = new PytestTestExecutionAdapter(configService);
@@ -427,7 +410,11 @@ suite('pytest test execution adapter', () => {
                 );
 
             const projectPath = path.join('/', 'workspace', 'myproject');
-            const mockProject = createMockProjectAdapter(projectPath, 'myproject (Python 3.11)');
+            const mockProject = createMockProjectAdapter({
+                projectPath,
+                projectName: 'myproject (Python 3.11)',
+                pythonPath: '/custom/python/path',
+            });
 
             const uri = Uri.file(myTestPath);
             adapter = new PytestTestExecutionAdapter(configService);
@@ -448,8 +435,10 @@ suite('pytest test execution adapter', () => {
                 (x) =>
                     x.launchDebugger(
                         typeMoq.It.is<LaunchOptions>((launchOptions) => {
-                            assert.equal(launchOptions.debugSessionName, 'myproject (Python 3.11)');
-                            assert.equal(launchOptions.pythonPath, '/custom/python/path');
+                            // Project should be passed for project-based debugging
+                            assert.ok(launchOptions.project, 'project should be defined');
+                            assert.equal(launchOptions.project?.name, 'myproject (Python 3.11)');
+                            assert.equal(launchOptions.project?.uri.fsPath, projectPath);
                             return true;
                         }),
                         typeMoq.It.isAny(),
@@ -499,7 +488,7 @@ suite('pytest test execution adapter', () => {
             );
         });
 
-        test('should not set debugSessionName or pythonPath in LaunchOptions when no project', async () => {
+        test('should not set project in LaunchOptions when no project provided', async () => {
             const deferred3 = createDeferred();
             utilsWriteTestIdsFileStub.callsFake(() => Promise.resolve('testIdPipe-mockName'));
 
@@ -533,8 +522,7 @@ suite('pytest test execution adapter', () => {
                 (x) =>
                     x.launchDebugger(
                         typeMoq.It.is<LaunchOptions>((launchOptions) => {
-                            assert.equal(launchOptions.debugSessionName, undefined);
-                            assert.equal(launchOptions.pythonPath, undefined);
+                            assert.equal(launchOptions.project, undefined);
                             return true;
                         }),
                         typeMoq.It.isAny(),
