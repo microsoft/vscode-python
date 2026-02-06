@@ -436,6 +436,7 @@ def test_symlink_with_project_root_path() -> None:
             f"CWD does not match symlink path: expected {os.fsdecode(destination)}, got {actual['cwd']}"
         )
         assert "tests" in actual
+        assert actual["tests"] is not None
         # The test tree root should be named after the symlink directory
         assert actual["tests"]["name"] == "symlink_unittest", (
             f"Expected root name 'symlink_unittest', got '{actual['tests']['name']}'"
