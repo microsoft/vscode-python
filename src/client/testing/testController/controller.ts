@@ -44,7 +44,9 @@ import { onDidSaveTextDocument } from '../../common/vscodeApis/workspaceApis';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { ProjectAdapter } from './common/projectAdapter';
 import { TestProjectRegistry } from './common/testProjectRegistry';
-import { createTestAdapters } from './common/projectUtils';
+import { createTestAdapters, getProjectId } from './common/projectUtils';
+import { useEnvExtension, getEnvExtApi } from '../../envExt/api.internal';
+import { DidChangePythonProjectsEventArgs, PythonProject } from '../../envExt/types';
 
 // Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
 type EventPropertyType = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_TRIGGER];
@@ -54,13 +56,6 @@ type TriggerType = EventPropertyType[TriggerKeyType];
 @injectable()
 export class PythonTestController implements ITestController, IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
-
-    /**
-     * Feature flag for project-based testing.
-     * When true, discovers and manages tests per-project using Python Environments API.
-     * When false, uses legacy single-workspace mode.
-     */
-    private readonly useProjectBasedTesting = true;
 
     // Legacy: Single workspace test adapter per workspace (backward compatibility)
     private readonly testAdapters: Map<Uri, WorkspaceTestAdapter> = new Map();
@@ -206,7 +201,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
         // PROJECT-BASED MODE: Uses Python Environments API to discover projects
         // Each project becomes its own test tree root with its own Python environment
-        if (this.useProjectBasedTesting && this.projectRegistry.isProjectBasedTestingAvailable()) {
+        if (useEnvExtension()) {
             traceInfo('[test-by-project] Activating project-based testing mode');
 
             // Discover projects in parallel across all workspaces
@@ -233,6 +228,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     this.activateLegacyWorkspace(workspace);
                 }
             });
+            // Subscribe to project changes to update test tree when projects are added/removed
+            await this.subscribeToProjectChanges();
             return;
         }
 
@@ -240,6 +237,166 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         workspaces.forEach((workspace) => {
             this.activateLegacyWorkspace(workspace);
         });
+    }
+
+    /**
+     * Subscribes to Python project changes from the Python Environments API.
+     * When projects are added or removed, updates the test tree accordingly.
+     */
+    private async subscribeToProjectChanges(): Promise<void> {
+        try {
+            const envExtApi = await getEnvExtApi();
+            this.disposables.push(
+                envExtApi.onDidChangePythonProjects((event: DidChangePythonProjectsEventArgs) => {
+                    this.handleProjectChanges(event).catch((error) => {
+                        traceError('[test-by-project] Error handling project changes:', error);
+                    });
+                }),
+            );
+            traceInfo('[test-by-project] Subscribed to Python project changes');
+        } catch (error) {
+            traceError('[test-by-project] Failed to subscribe to project changes:', error);
+        }
+    }
+
+    /**
+     * Handles changes to Python projects (added or removed).
+     * Cleans up stale test items and re-discovers projects and tests for affected workspaces.
+     */
+    private async handleProjectChanges(event: DidChangePythonProjectsEventArgs): Promise<void> {
+        const { added, removed } = event;
+
+        if (added.length === 0 && removed.length === 0) {
+            return;
+        }
+
+        traceInfo(`[test-by-project] Project changes detected: ${added.length} added, ${removed.length} removed`);
+
+        // Find all affected workspaces
+        const affectedWorkspaces = new Set<WorkspaceFolder>();
+
+        const findWorkspace = (project: PythonProject): WorkspaceFolder | undefined => {
+            return this.workspaceService.getWorkspaceFolder(project.uri);
+        };
+
+        for (const project of [...added, ...removed]) {
+            const workspace = findWorkspace(project);
+            if (workspace) {
+                affectedWorkspaces.add(workspace);
+            }
+        }
+
+        // For each affected workspace, clean up and re-discover
+        for (const workspace of affectedWorkspaces) {
+            traceInfo(`[test-by-project] Re-discovering projects for workspace: ${workspace.uri.fsPath}`);
+
+            // Get the current projects before clearing to know what to clean up
+            const existingProjects = this.projectRegistry.getProjectsArray(workspace.uri);
+
+            // Remove ALL test items for the affected workspace's projects
+            // This ensures no stale items remain from deleted/changed projects
+            this.removeWorkspaceProjectTestItems(workspace.uri, existingProjects);
+
+            // Also explicitly remove test items for removed projects (in case they weren't tracked)
+            for (const project of removed) {
+                const projectWorkspace = findWorkspace(project);
+                if (projectWorkspace?.uri.toString() === workspace.uri.toString()) {
+                    this.removeProjectTestItems(project);
+                }
+            }
+
+            // Clear registry and re-discover all projects for the workspace
+            this.projectRegistry.clearWorkspace(workspace.uri);
+            await this.projectRegistry.discoverAndRegisterProjects(workspace.uri);
+
+            // Re-run test discovery for the workspace to populate fresh test items
+            await this.discoverTestsInWorkspace(workspace.uri);
+        }
+    }
+
+    /**
+     * Removes all test items associated with projects in a workspace.
+     * Used to clean up stale items before re-discovery.
+     */
+    private removeWorkspaceProjectTestItems(workspaceUri: Uri, projects: ProjectAdapter[]): void {
+        const idsToRemove: string[] = [];
+
+        // Collect IDs of test items belonging to any project in this workspace
+        for (const project of projects) {
+            const projectIdPrefix = getProjectId(project.projectUri);
+            const projectFsPath = project.projectUri.fsPath;
+
+            this.testController.items.forEach((item) => {
+                // Match by project ID prefix (e.g., "file:///path@@vsc@@...")
+                if (item.id.startsWith(projectIdPrefix)) {
+                    idsToRemove.push(item.id);
+                }
+                // Match by fsPath in ID (legacy items might use path directly)
+                else if (item.id.includes(projectFsPath)) {
+                    idsToRemove.push(item.id);
+                }
+                // Match by item URI being within project directory
+                else if (item.uri && item.uri.fsPath.startsWith(projectFsPath)) {
+                    idsToRemove.push(item.id);
+                }
+            });
+        }
+
+        // Also remove any items whose URI is within the workspace (catch-all for edge cases)
+        this.testController.items.forEach((item) => {
+            if (
+                item.uri &&
+                this.workspaceService.getWorkspaceFolder(item.uri)?.uri.toString() === workspaceUri.toString()
+            ) {
+                if (!idsToRemove.includes(item.id)) {
+                    idsToRemove.push(item.id);
+                }
+            }
+        });
+
+        // Remove all collected items
+        for (const id of idsToRemove) {
+            this.testController.items.delete(id);
+        }
+
+        traceInfo(
+            `[test-by-project] Cleaned up ${idsToRemove.length} test items for workspace: ${workspaceUri.fsPath}`,
+        );
+    }
+
+    /**
+     * Removes test items associated with a specific project from the test controller.
+     * Matches items by project ID prefix, fsPath, or URI.
+     */
+    private removeProjectTestItems(project: PythonProject): void {
+        const projectId = getProjectId(project.uri);
+        const projectFsPath = project.uri.fsPath;
+        const idsToRemove: string[] = [];
+
+        // Find all root items that belong to this project
+        this.testController.items.forEach((item) => {
+            // Match by project ID prefix (e.g., "file:///path@@vsc@@...")
+            if (item.id.startsWith(projectId)) {
+                idsToRemove.push(item.id);
+            }
+            // Match by fsPath in ID (items might use path directly without URI prefix)
+            else if (item.id.startsWith(projectFsPath) || item.id.includes(projectFsPath)) {
+                idsToRemove.push(item.id);
+            }
+            // Match by item URI being within project directory
+            else if (item.uri && item.uri.fsPath.startsWith(projectFsPath)) {
+                idsToRemove.push(item.id);
+            }
+        });
+
+        for (const id of idsToRemove) {
+            this.testController.items.delete(id);
+            traceVerbose(`[test-by-project] Removed test item: ${id}`);
+        }
+
+        if (idsToRemove.length > 0) {
+            traceInfo(`[test-by-project] Removed ${idsToRemove.length} test items for project: ${project.name}`);
+        }
     }
 
     /**
@@ -318,7 +475,16 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
     /**
      * Discovers tests for a single workspace.
-     * Delegates to project-based discovery or legacy mode based on configuration.
+     *
+     * **Discovery flow:**
+     * 1. If the workspace has registered projects (via Python Environments API),
+     *    uses project-based discovery: each project is discovered independently
+     *    with its own Python environment and test adapters.
+     * 2. Otherwise, falls back to legacy mode: a single WorkspaceTestAdapter
+     *    discovers all tests in the workspace using the active interpreter.
+     *
+     * In project-based mode, the test tree will have separate roots for each project.
+     * In legacy mode, the workspace folder is the single test tree root.
      */
     private async discoverTestsInWorkspace(uri: Uri): Promise<void> {
         const workspace = this.workspaceService.getWorkspaceFolder(uri);
@@ -334,7 +500,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.sendTestDisabledTelemetry = true;
 
         // Use project-based discovery if applicable
-        if (this.useProjectBasedTesting && this.projectRegistry.hasProjects(workspace.uri)) {
+        if (this.projectRegistry.hasProjects(workspace.uri)) {
             await this.discoverAllProjectsInWorkspace(workspace.uri);
             return;
         }
@@ -351,10 +517,22 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
     /**
      * Discovers tests for all projects within a workspace (project-based mode).
-     * Runs discovery in parallel for all registered projects and configures nested exclusions.
+     * Re-discovers projects from the Python Environments API before running test discovery.
+     * This ensures the test tree stays in sync with project changes.
      */
     private async discoverAllProjectsInWorkspace(workspaceUri: Uri): Promise<void> {
-        const projects = this.projectRegistry.getProjectsArray(workspaceUri);
+        // Get existing projects before re-discovery for cleanup
+        const existingProjects = this.projectRegistry.getProjectsArray(workspaceUri);
+
+        // Clean up all existing test items for this workspace
+        // This ensures stale items from deleted/changed projects are removed
+        this.removeWorkspaceProjectTestItems(workspaceUri, existingProjects);
+
+        // Re-discover projects from Python Environments API
+        // This picks up any added/removed projects since last discovery
+        this.projectRegistry.clearWorkspace(workspaceUri);
+        const projects = await this.projectRegistry.discoverAndRegisterProjects(workspaceUri);
+
         if (projects.length === 0) {
             traceError(`[test-by-project] No projects found for workspace: ${workspaceUri.fsPath}`);
             return;
@@ -399,13 +577,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 project,
             );
 
-            // Mark project as completed
-            projectsCompleted.add(project.projectId);
+            // Mark project as completed (use URI string as unique key)
+            projectsCompleted.add(project.projectUri.toString());
             traceInfo(`[test-by-project] Project ${project.projectName} discovery completed`);
         } catch (error) {
             traceError(`[test-by-project] Discovery failed for project ${project.projectName}:`, error);
             // Individual project failures don't block others
-            projectsCompleted.add(project.projectId); // Still mark as completed
+            projectsCompleted.add(project.projectUri.toString()); // Still mark as completed
         } finally {
             project.isDiscovering = false;
         }

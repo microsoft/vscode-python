@@ -9,15 +9,10 @@ import { PythonEnvironment, PythonProject } from '../../../envExt/types';
 /**
  * Represents a single Python project with its own test infrastructure.
  * A project is defined as a combination of a Python executable + URI (folder/file).
- * Projects are keyed by projectUri.toString()
+ * Projects are uniquely identified by their projectUri (use projectUri.toString() for map keys).
  */
 export interface ProjectAdapter {
     // === IDENTITY ===
-    /**
-     * Project identifier, which is the string representation of the project URI.
-     */
-    projectId: string;
-
     /**
      * Display name for the project (e.g., "alice (Python 3.11)").
      */
@@ -25,6 +20,7 @@ export interface ProjectAdapter {
 
     /**
      * URI of the project root folder or file.
+     * This is the unique identifier for the project.
      */
     projectUri: Uri;
 

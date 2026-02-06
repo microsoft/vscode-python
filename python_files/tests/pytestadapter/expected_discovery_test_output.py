@@ -1879,19 +1879,32 @@ black_formatter_expected_output = {
 
 # This is the expected output for unittest_folder when PROJECT_ROOT_PATH is set to unittest_folder.
 # The root of the tree is unittest_folder (not .data), simulating project-based testing.
-# └── unittest_folder (ROOT - set via PROJECT_ROOT_PATH)
-#    ├── test_add.py
-#    │   └── TestAddFunction
-#    │       ├── test_add_negative_numbers
-#    │       └── test_add_positive_numbers
-#    │   └── TestDuplicateFunction
-#    │       └── test_dup_a
-#    └── test_subtract.py
-#        └── TestSubtractFunction
-#            ├── test_subtract_negative_numbers
-#            └── test_subtract_positive_numbers
-#        └── TestDuplicateFunction
-#            └── test_dup_s
+#
+# **Project Configuration:**
+# In the VS Code Python extension, projects are defined by the Python Environments extension.
+# Each project has a root directory (identified by pyproject.toml, setup.py, etc.).
+# When PROJECT_ROOT_PATH is set, pytest uses that path as the test tree root instead of cwd.
+#
+# **Test Tree Structure:**
+# Without PROJECT_ROOT_PATH (legacy mode):
+#   └── .data (cwd = workspace root)
+#       └── unittest_folder
+#           └── test_add.py, test_subtract.py...
+#
+# With PROJECT_ROOT_PATH set to unittest_folder (project-based mode):
+#   └── unittest_folder (ROOT - set via PROJECT_ROOT_PATH env var)
+#       ├── test_add.py
+#       │   └── TestAddFunction
+#       │       ├── test_add_negative_numbers
+#       │       └── test_add_positive_numbers
+#       │   └── TestDuplicateFunction
+#       │       └── test_dup_a
+#       └── test_subtract.py
+#           └── TestSubtractFunction
+#               ├── test_subtract_negative_numbers
+#               └── test_subtract_positive_numbers
+#           └── TestDuplicateFunction
+#               └── test_dup_s
 #
 # Note: This reuses the unittest_folder paths defined earlier in this file.
 project_root_unittest_folder_expected_output = {

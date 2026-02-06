@@ -67,24 +67,6 @@ suite('TestProjectRegistry', () => {
         sandbox.restore();
     });
 
-    suite('isProjectBasedTestingAvailable', () => {
-        test('should return true when useEnvExtension returns true', () => {
-            sandbox.stub(envExtApiInternal, 'useEnvExtension').returns(true);
-
-            const result = registry.isProjectBasedTestingAvailable();
-
-            expect(result).to.be.true;
-        });
-
-        test('should return false when useEnvExtension returns false', () => {
-            sandbox.stub(envExtApiInternal, 'useEnvExtension').returns(false);
-
-            const result = registry.isProjectBasedTestingAvailable();
-
-            expect(result).to.be.false;
-        });
-    });
-
     suite('hasProjects', () => {
         test('should return false for uninitialized workspace', () => {
             const workspaceUri = Uri.file('/workspace');
@@ -431,7 +413,6 @@ suite('TestProjectRegistry', () => {
             const projects = await registry.discoverAndRegisterProjects(workspaceUri);
             const project = projects[0];
 
-            expect(project.projectId).to.be.a('string');
             expect(project.projectName).to.be.a('string');
             expect(project.projectUri.fsPath).to.equal(workspaceUri.fsPath);
             expect(project.workspaceUri.fsPath).to.equal(workspaceUri.fsPath);

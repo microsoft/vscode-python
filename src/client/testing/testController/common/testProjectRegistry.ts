@@ -25,15 +25,23 @@ import { PythonResultResolver } from './resultResolver';
  * - Computing nested project relationships for ignore lists
  * - Fallback to default "legacy" project when API unavailable
  *
- * Key concepts:
- * - Workspace: A VS Code workspace folder (may contain multiple projects)
- * - Project: A Python project within a workspace (has its own pyproject.toml, etc.)
- * - Each project gets its own test tree root and Python environment
+ * **Key concepts:**
+ * - **Workspace:** A VS Code workspace folder (may contain multiple projects)
+ * - **Project:** A Python project within a workspace (identified by pyproject.toml, setup.py, etc.)
+ * - **ProjectUri:** The unique identifier for a project (the URI of the project root directory)
+ * - Each project gets its own test tree root, Python environment, and test adapters
+ *
+ * **Project identification:**
+ * Projects are identified and tracked by their URI (projectUri.toString()). This matches
+ * how the Python Environments extension stores projects in its Map<string, PythonProject>.
  */
 export class TestProjectRegistry {
     /**
-     * Map of workspace URI -> Map of project ID -> ProjectAdapter
-     * Project IDs match Python Environments extension's Map<string, PythonProject> keys
+     * Map of workspace URI -> Map of project URI string -> ProjectAdapter
+     *
+     * Projects are keyed by their URI string (projectUri.toString()) which matches how
+     * the Python Environments extension identifies projects. This enables O(1) lookups
+     * when given a project URI.
      */
     private readonly workspaceProjects: Map<Uri, Map<string, ProjectAdapter>> = new Map();
 
@@ -43,13 +51,6 @@ export class TestProjectRegistry {
         private readonly interpreterService: IInterpreterService,
         private readonly envVarsService: IEnvironmentVariablesProvider,
     ) {}
-
-    /**
-     * Checks if project-based testing is available (Python Environments API).
-     */
-    public isProjectBasedTestingAvailable(): boolean {
-        return useEnvExtension();
-    }
 
     /**
      * Gets the projects map for a workspace, if it exists.
@@ -103,7 +104,7 @@ export class TestProjectRegistry {
         const projects = this.getProjectsArray(workspaceUri);
 
         for (const project of projects) {
-            const ignorePaths = projectIgnores.get(project.projectId);
+            const ignorePaths = projectIgnores.get(getProjectId(project.projectUri));
             if (ignorePaths && ignorePaths.length > 0) {
                 project.nestedProjectPathsToIgnore = ignorePaths;
                 traceInfo(`[test-by-project] ${project.projectName} will ignore nested: ${ignorePaths.join(', ')}`);
@@ -171,6 +172,12 @@ export class TestProjectRegistry {
 
     /**
      * Creates a ProjectAdapter from a PythonProject.
+     *
+     * Each project gets its own isolated test infrastructure:
+     * - **ResultResolver:** Handles mapping test IDs and processing results for this project
+     * - **DiscoveryAdapter:** Discovers tests scoped to this project's root directory
+     * - **ExecutionAdapter:** Runs tests for this project using its Python environment
+     *
      */
     private async createProjectAdapter(pythonProject: PythonProject, workspaceUri: Uri): Promise<ProjectAdapter> {
         const projectId = getProjectId(pythonProject.uri);
@@ -196,7 +203,6 @@ export class TestProjectRegistry {
         const projectName = createProjectDisplayName(pythonProject.name, pythonEnvironment.version);
 
         return {
-            projectId,
             projectName,
             projectUri: pythonProject.uri,
             workspaceUri,
@@ -246,7 +252,6 @@ export class TestProjectRegistry {
         };
 
         return {
-            projectId: getProjectId(workspaceUri),
             projectName: pythonProject.name,
             projectUri: workspaceUri,
             workspaceUri,
@@ -263,6 +268,9 @@ export class TestProjectRegistry {
 
     /**
      * Identifies nested projects and returns ignore paths for parent projects.
+     *
+     * **Time complexity:** O(n²) where n is the number of projects in the workspace.
+     * For each project, checks all other projects to find nested relationships.
      */
     private computeNestedProjectIgnores(workspaceUri: Uri): Map<string, string[]> {
         const ignoreMap = new Map<string, string[]>();
@@ -274,7 +282,8 @@ export class TestProjectRegistry {
             const nestedPaths: string[] = [];
 
             for (const child of projects) {
-                if (parent.projectId === child.projectId) continue;
+                // Skip self-comparison using URI
+                if (parent.projectUri.toString() === child.projectUri.toString()) continue;
 
                 const parentPath = parent.projectUri.fsPath;
                 const childPath = child.projectUri.fsPath;
@@ -286,7 +295,7 @@ export class TestProjectRegistry {
             }
 
             if (nestedPaths.length > 0) {
-                ignoreMap.set(parent.projectId, nestedPaths);
+                ignoreMap.set(getProjectId(parent.projectUri), nestedPaths);
             }
         }
 

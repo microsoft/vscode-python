@@ -64,7 +64,6 @@ export function createProjectDisplayName(projectName: string, pythonVersion: str
 
 /**
  * Creates test adapters (discovery and execution) for a given test provider.
- * Centralizes adapter creation to avoid code duplication across Controller and TestProjectRegistry.
  *
  * @param testProvider The test framework provider ('pytest' | 'unittest')
  * @param resultResolver The result resolver to use for test results
