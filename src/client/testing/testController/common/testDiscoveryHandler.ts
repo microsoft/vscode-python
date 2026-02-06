@@ -41,7 +41,7 @@ export class TestDiscoveryHandler {
 
         // Check if there were any errors in the discovery process.
         if (rawTestData.status === 'error') {
-            this.createErrorNode(testController, workspaceUri, rawTestData.error, testProvider, projectId);
+            this.createErrorNode(testController, workspaceUri, rawTestData.error, testProvider, projectId, projectName);
         } else {
             // remove error node only if no errors exist.
             const errorNodeId = projectId
@@ -85,6 +85,7 @@ export class TestDiscoveryHandler {
         error: string[] | undefined,
         testProvider: TestProvider,
         projectId?: string,
+        projectName?: string,
     ): void {
         const workspacePath = workspaceUri.fsPath;
         const testingErrorConst =
@@ -102,7 +103,7 @@ export class TestDiscoveryHandler {
         );
 
         if (errorNode === undefined) {
-            const options = buildErrorNodeOptions(workspaceUri, message, testProvider);
+            const options = buildErrorNodeOptions(workspaceUri, message, testProvider, projectName);
             // Update the error node ID to include project scope if applicable
             options.id = errorNodeId;
             errorNode = createErrorTestItem(testController, options);
