@@ -192,7 +192,14 @@ export class TestProjectRegistry {
 
         // Create test infrastructure
         const testProvider = this.getTestProvider(workspaceUri);
-        const resultResolver = new PythonResultResolver(this.testController, testProvider, workspaceUri, projectId);
+        const projectDisplayName = createProjectDisplayName(pythonProject.name, pythonEnvironment.version);
+        const resultResolver = new PythonResultResolver(
+            this.testController,
+            testProvider,
+            workspaceUri,
+            projectId,
+            pythonProject.name, // Use simple project name for test tree label (without version)
+        );
         const { discoveryAdapter, executionAdapter } = createTestAdapters(
             testProvider,
             resultResolver,
@@ -200,10 +207,8 @@ export class TestProjectRegistry {
             this.envVarsService,
         );
 
-        const projectName = createProjectDisplayName(pythonProject.name, pythonEnvironment.version);
-
         return {
-            projectName,
+            projectName: projectDisplayName,
             projectUri: pythonProject.uri,
             workspaceUri,
             pythonProject,

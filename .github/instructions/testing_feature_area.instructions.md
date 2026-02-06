@@ -201,6 +201,10 @@ This approach was chosen because:
 2. Implementing custom exclusion would add significant complexity with minimal benefit
 3. The existing approach is transparent and predictable - each project shows what it finds
 
+### Empty projects and hidden root nodes
+
+**Important:** If a project discovers zero tests, its root node will **not appear** in the Test Explorer. This is by design - the test tree only shows projects that have actual tests.
+
 ### Logging prefix
 
 All project-based testing logs use the `[test-by-project]` prefix for easy filtering in the output channel.
