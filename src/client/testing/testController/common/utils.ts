@@ -188,7 +188,12 @@ function isPytestNotInstalledError(message: string): boolean {
     );
 }
 
-export function buildErrorNodeOptions(uri: Uri, message: string, testType: string): ErrorTestItemOptions {
+export function buildErrorNodeOptions(
+    uri: Uri,
+    message: string,
+    testType: string,
+    projectName?: string,
+): ErrorTestItemOptions {
     let labelText = testType === 'pytest' ? 'pytest Discovery Error' : 'Unittest Discovery Error';
     let errorMessage = message;
 
@@ -199,9 +204,12 @@ export function buildErrorNodeOptions(uri: Uri, message: string, testType: strin
             'pytest is not installed in the selected Python environment. Please install pytest to enable test discovery and execution.';
     }
 
+    // Use project name for label if available (project-based testing), otherwise use folder name
+    const displayName = projectName ?? path.basename(uri.fsPath);
+
     return {
         id: `DiscoveryError:${uri.fsPath}`,
-        label: `${labelText} [${path.basename(uri.fsPath)}]`,
+        label: `${labelText} [${displayName}]`,
         error: errorMessage,
     };
 }
