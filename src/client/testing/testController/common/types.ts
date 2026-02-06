@@ -183,6 +183,7 @@ export interface ITestExecutionAdapter {
         executionFactory: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
+        project?: ProjectAdapter,
     ): Promise<void>;
 }
 

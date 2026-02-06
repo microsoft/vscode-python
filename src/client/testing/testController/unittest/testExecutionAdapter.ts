@@ -27,6 +27,8 @@ import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import * as utils from '../common/utils';
 import { getEnvironment, runInBackground, useEnvExtension } from '../../../envExt/api.internal';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { ProjectAdapter } from '../common/projectAdapter';
 
 /**
  * Wrapper Class for unittest test execution. This is where we call `runTestCommand`?
@@ -46,7 +48,18 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         runInstance: TestRun,
         executionFactory: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
+        interpreter?: PythonEnvironment,
+        project?: ProjectAdapter,
     ): Promise<void> {
+        // Note: project parameter is currently unused for unittest.
+        // Project-based unittest execution will be implemented in a future PR.
+        console.log(
+            'interpreter, project parameters are currently unused in UnittestTestExecutionAdapter, they will be used in a future implementation of project-based unittest execution.:',
+            {
+                interpreter,
+                project,
+            },
+        );
         // deferredTillServerClose awaits named pipe server close
         const deferredTillServerClose: Deferred<void> = utils.createTestingDeferred();
 

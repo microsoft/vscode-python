@@ -26,6 +26,16 @@ export type LaunchOptions = {
     pytestPort?: string;
     pytestUUID?: string;
     runTestIdsPort?: string;
+    /**
+     * Optional explicit Python path for project-based execution.
+     * When provided, debug sessions should use this interpreter instead of the workspace default.
+     */
+    pythonPath?: string;
+    /**
+     * Optional name for the debug session (e.g., project name).
+     * Used to identify debug sessions in the VS Code debug panel.
+     */
+    debugSessionName?: string;
 };
 
 export enum TestFilter {
