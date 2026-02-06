@@ -10,6 +10,7 @@ import { Testing } from '../../../common/utils/localize';
 import { createErrorTestItem } from './testItemUtilities';
 import { buildErrorNodeOptions, populateTestTree } from './utils';
 import { TestItemIndex } from './testItemIndex';
+import { PROJECT_ID_SEPARATOR } from './projectUtils';
 
 /**
  * Stateless handler for processing discovery payloads and building/updating the TestItem tree.
@@ -27,6 +28,7 @@ export class TestDiscoveryHandler {
         workspaceUri: Uri,
         testProvider: TestProvider,
         token?: CancellationToken,
+        projectId?: string,
     ): void {
         if (!payload) {
             // No test data is available
@@ -38,10 +40,13 @@ export class TestDiscoveryHandler {
 
         // Check if there were any errors in the discovery process.
         if (rawTestData.status === 'error') {
-            this.createErrorNode(testController, workspaceUri, rawTestData.error, testProvider);
+            this.createErrorNode(testController, workspaceUri, rawTestData.error, testProvider, projectId);
         } else {
             // remove error node only if no errors exist.
-            testController.items.delete(`DiscoveryError:${workspacePath}`);
+            const errorNodeId = projectId
+                ? `${projectId}${PROJECT_ID_SEPARATOR}DiscoveryError:${workspacePath}`
+                : `DiscoveryError:${workspacePath}`;
+            testController.items.delete(errorNodeId);
         }
 
         if (rawTestData.tests || rawTestData.tests === null) {
@@ -62,8 +67,9 @@ export class TestDiscoveryHandler {
                     runIdToTestItem: testItemIndex.runIdToTestItemMap,
                     runIdToVSid: testItemIndex.runIdToVSidMap,
                     vsIdToRunId: testItemIndex.vsIdToRunIdMap,
-                } as any,
+                },
                 token,
+                projectId,
             );
         }
     }
@@ -76,6 +82,7 @@ export class TestDiscoveryHandler {
         workspaceUri: Uri,
         error: string[] | undefined,
         testProvider: TestProvider,
+        projectId?: string,
     ): void {
         const workspacePath = workspaceUri.fsPath;
         const testingErrorConst =
@@ -83,7 +90,10 @@ export class TestDiscoveryHandler {
 
         traceError(testingErrorConst, 'for workspace: ', workspacePath, '\r\n', error?.join('\r\n\r\n') ?? '');
 
-        let errorNode = testController.items.get(`DiscoveryError:${workspacePath}`);
+        const errorNodeId = projectId
+            ? `${projectId}${PROJECT_ID_SEPARATOR}DiscoveryError:${workspacePath}`
+            : `DiscoveryError:${workspacePath}`;
+        let errorNode = testController.items.get(errorNodeId);
         const message = util.format(
             `${testingErrorConst} ${Testing.seePythonOutput}\r\n`,
             error?.join('\r\n\r\n') ?? '',
@@ -91,6 +101,8 @@ export class TestDiscoveryHandler {
 
         if (errorNode === undefined) {
             const options = buildErrorNodeOptions(workspaceUri, message, testProvider);
+            // Update the error node ID to include project scope if applicable
+            options.id = errorNodeId;
             errorNode = createErrorTestItem(testController, options);
             testController.items.add(errorNode);
         }

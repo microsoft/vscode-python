@@ -77,6 +77,9 @@ IS_DISCOVERY = False
 map_id_to_path = {}
 collected_tests_so_far = set()
 TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
+PROJECT_ROOT_PATH = os.getenv(
+    "PROJECT_ROOT_PATH"
+)  # Path to project root for multi-project workspaces
 SYMLINK_PATH = None
 INCLUDE_BRANCHES = False
 
@@ -84,6 +87,20 @@ INCLUDE_BRANCHES = False
 _path_cache: dict[int, pathlib.Path] = {}  # Cache node paths by object id
 _path_to_str_cache: dict[pathlib.Path, str] = {}  # Cache path-to-string conversions
 _CACHED_CWD: pathlib.Path | None = None
+
+
+def get_test_root_path() -> pathlib.Path:
+    """Get the root path for the test tree.
+
+    For project-based testing, this returns PROJECT_ROOT_PATH (the project root).
+    For legacy mode, this returns the current working directory.
+
+    Returns:
+        pathlib.Path: The root path to use for the test tree.
+    """
+    if PROJECT_ROOT_PATH:
+        return pathlib.Path(PROJECT_ROOT_PATH)
+    return pathlib.Path.cwd()
 
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
@@ -190,7 +207,7 @@ def pytest_exception_interact(node, call, report):
             send_execution_message(
                 os.fsdecode(cwd),
                 "success",
-                collected_test if collected_test else None,
+                collected_test or None,
             )
 
 
@@ -314,7 +331,7 @@ def pytest_report_teststatus(report, config):  # noqa: ARG001
             send_execution_message(
                 os.fsdecode(cwd),
                 "success",
-                collected_test if collected_test else None,
+                collected_test or None,
             )
     yield
 
@@ -348,7 +365,7 @@ def pytest_runtest_protocol(item, nextitem):  # noqa: ARG001
             send_execution_message(
                 os.fsdecode(cwd),
                 "success",
-                collected_test if collected_test else None,
+                collected_test or None,
             )
     yield
 
@@ -409,21 +426,23 @@ def pytest_sessionfinish(session, exitstatus):
     Exit code 4: pytest command line usage error
     Exit code 5: No tests were collected
     """
-    cwd = pathlib.Path.cwd()
+    # Get the root path for the test tree structure (not the CWD for test execution)
+    # This is PROJECT_ROOT_PATH in project-based mode, or cwd in legacy mode
+    test_root_path = get_test_root_path()
     if SYMLINK_PATH:
-        print("Plugin warning[vscode-pytest]: SYMLINK set, adjusting cwd.")
-        cwd = pathlib.Path(SYMLINK_PATH)
+        print("Plugin warning[vscode-pytest]: SYMLINK set, adjusting test root path.")
+        test_root_path = pathlib.Path(SYMLINK_PATH)
 
     if IS_DISCOVERY:
         if not (exitstatus == 0 or exitstatus == 1 or exitstatus == 5):
             error_node: TestNode = {
                 "name": "",
-                "path": cwd,
+                "path": test_root_path,
                 "type_": "error",
                 "children": [],
                 "id_": "",
             }
-            send_discovery_message(os.fsdecode(cwd), error_node)
+            send_discovery_message(os.fsdecode(test_root_path), error_node)
         try:
             session_node: TestNode | None = build_test_tree(session)
             if not session_node:
@@ -431,19 +450,19 @@ def pytest_sessionfinish(session, exitstatus):
                     "Something went wrong following pytest finish, \
                         no session node was created"
                 )
-            send_discovery_message(os.fsdecode(cwd), session_node)
+            send_discovery_message(os.fsdecode(test_root_path), session_node)
         except Exception as e:
             ERRORS.append(
                 f"Error Occurred, traceback: {(traceback.format_exc() if e.__traceback__ else '')}"
             )
             error_node: TestNode = {
                 "name": "",
-                "path": cwd,
+                "path": test_root_path,
                 "type_": "error",
                 "children": [],
                 "id_": "",
             }
-            send_discovery_message(os.fsdecode(cwd), error_node)
+            send_discovery_message(os.fsdecode(test_root_path), error_node)
     else:
         if exitstatus == 0 or exitstatus == 1:
             exitstatus_bool = "success"
@@ -454,7 +473,7 @@ def pytest_sessionfinish(session, exitstatus):
             exitstatus_bool = "error"
 
             send_execution_message(
-                os.fsdecode(cwd),
+                os.fsdecode(test_root_path),
                 exitstatus_bool,
                 None,
             )
@@ -540,7 +559,7 @@ def pytest_sessionfinish(session, exitstatus):
 
         payload: CoveragePayloadDict = CoveragePayloadDict(
             coverage=True,
-            cwd=os.fspath(cwd),
+            cwd=os.fspath(test_root_path),
             result=file_coverage_map,
             error=None,
         )
@@ -832,7 +851,8 @@ def create_session_node(session: pytest.Session) -> TestNode:
     Keyword arguments:
     session -- the pytest session.
     """
-    node_path = get_node_path(session)
+    # Use PROJECT_ROOT_PATH if set (project-based testing), otherwise use session path (legacy)
+    node_path = pathlib.Path(PROJECT_ROOT_PATH) if PROJECT_ROOT_PATH else get_node_path(session)
     return {
         "name": node_path.name,
         "path": node_path,
@@ -1024,7 +1044,7 @@ def get_node_path(
         except Exception as e:
             raise VSCodePytestError(
                 f"Error occurred while calculating symlink equivalent from node path: {e}"
-                f"\n SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {node_path}, \n cwd: {_CACHED_CWD if _CACHED_CWD else pathlib.Path.cwd()}"
+                f"\n SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {node_path}, \n cwd: {_CACHED_CWD or pathlib.Path.cwd()}"
             ) from e
     else:
         result = node_path

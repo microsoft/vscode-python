@@ -386,3 +386,97 @@ def test_plugin_collect(file, expected_const, extra_arg):
         ), (
             f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_const, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
         )
+
+
+def test_project_root_path_env_var():
+    """Test pytest discovery with PROJECT_ROOT_PATH environment variable set.
+
+    This simulates project-based testing where the test tree root should be
+    the project root (PROJECT_ROOT_PATH) rather than the workspace cwd.
+
+    When PROJECT_ROOT_PATH is set:
+    - The test tree root (name, path, id_) should match PROJECT_ROOT_PATH
+    - The cwd in the response should match PROJECT_ROOT_PATH
+    - Test files should be direct children of the root (not nested under a subfolder)
+    """
+    # Use unittest_folder as our "project" subdirectory
+    project_path = helpers.TEST_DATA_PATH / "unittest_folder"
+
+    actual = helpers.runner_with_cwd_env(
+        [os.fspath(project_path), "--collect-only"],
+        helpers.TEST_DATA_PATH,  # cwd is parent of project
+        {"PROJECT_ROOT_PATH": os.fspath(project_path)},  # Set project root
+    )
+
+    assert actual
+    actual_list: List[Dict[str, Any]] = actual
+    if actual_list is not None:
+        actual_item = actual_list.pop(0)
+
+        assert all(item in actual_item for item in ("status", "cwd", "error"))
+        assert actual_item.get("status") == "success", (
+            f"Status is not 'success', error is: {actual_item.get('error')}"
+        )
+        # cwd in response should be PROJECT_ROOT_PATH
+        assert actual_item.get("cwd") == os.fspath(project_path), (
+            f"Expected cwd '{os.fspath(project_path)}', got '{actual_item.get('cwd')}'"
+        )
+        assert is_same_tree(
+            actual_item.get("tests"),
+            expected_discovery_test_output.project_root_unittest_folder_expected_output,
+            ["id_", "lineno", "name", "runID"],
+        ), (
+            f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_discovery_test_output.project_root_unittest_folder_expected_output, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
+        )
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Symlinks require elevated privileges on Windows",
+)
+def test_symlink_with_project_root_path():
+    """Test pytest discovery with both symlink and PROJECT_ROOT_PATH set.
+
+    This tests the combination of:
+    1. A symlinked test directory (--rootdir points to symlink)
+    2. PROJECT_ROOT_PATH set to the symlink path
+
+    This simulates project-based testing where the project root is a symlink,
+    ensuring test IDs and paths are correctly resolved through the symlink.
+    """
+    with helpers.create_symlink(helpers.TEST_DATA_PATH, "root", "symlink_folder") as (
+        source,
+        destination,
+    ):
+        assert destination.is_symlink()
+
+        # Run pytest with:
+        # - cwd being the resolved symlink path (simulating subprocess from node)
+        # - PROJECT_ROOT_PATH set to the symlink destination
+        actual = helpers.runner_with_cwd_env(
+            ["--collect-only", f"--rootdir={os.fspath(destination)}"],
+            source,  # cwd is the resolved (non-symlink) path
+            {"PROJECT_ROOT_PATH": os.fspath(destination)},  # Project root is the symlink
+        )
+
+        expected = expected_discovery_test_output.symlink_expected_discovery_output
+        assert actual
+        actual_list: List[Dict[str, Any]] = actual
+        if actual_list is not None:
+            actual_item = actual_list.pop(0)
+            try:
+                assert all(item in actual_item for item in ("status", "cwd", "error")), (
+                    "Required keys are missing"
+                )
+                assert actual_item.get("status") == "success", (
+                    f"Status is not 'success', error is: {actual_item.get('error')}"
+                )
+                # cwd should be the PROJECT_ROOT_PATH (the symlink destination)
+                assert actual_item.get("cwd") == os.fspath(destination), (
+                    f"CWD does not match symlink path: expected {os.fspath(destination)}, got {actual_item.get('cwd')}"
+                )
+                assert actual_item.get("tests") == expected, "Tests do not match expected value"
+            except AssertionError as e:
+                # Print the actual_item in JSON format if an assertion fails
+                print(json.dumps(actual_item, indent=4))
+                pytest.fail(str(e))
