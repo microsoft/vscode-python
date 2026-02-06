@@ -432,6 +432,7 @@ def test_project_root_path_env_var():
 
 @pytest.mark.skipif(
     sys.platform == "win32",
+    reason="Symlinks require elevated privileges on Windows",
 )
 def test_symlink_with_project_root_path():
     """Test pytest discovery with both symlink and PROJECT_ROOT_PATH set.
