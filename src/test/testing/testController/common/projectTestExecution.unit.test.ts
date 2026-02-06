@@ -30,7 +30,6 @@ import {
 import { TestProjectRegistry } from '../../../../client/testing/testController/common/testProjectRegistry';
 import { ITestExecutionAdapter, ITestResultResolver } from '../../../../client/testing/testController/common/types';
 import * as telemetry from '../../../../client/telemetry';
-import { createDeferred } from '../../../../client/common/utils/async';
 
 suite('Project Test Execution', () => {
     let sandbox: sinon.SinonSandbox;
@@ -240,13 +239,13 @@ suite('Project Test Execution', () => {
     // ===== groupTestItemsByProject Tests =====
 
     suite('groupTestItemsByProject', () => {
-        test('should group single test item to its matching project', () => {
+        test('should group single test item to its matching project', async () => {
             // Mock
             const item = createMockTestItem('test1', '/workspace/proj/test.py');
             const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
 
             // Run
-            const result = groupTestItemsByProject([item], [project]);
+            const result = await groupTestItemsByProject([item], [project]);
 
             // Assert
             expect(result.size).to.equal(1);
@@ -255,7 +254,7 @@ suite('Project Test Execution', () => {
             expect(entry.items).to.deep.equal([item]);
         });
 
-        test('should aggregate multiple items belonging to same project', () => {
+        test('should aggregate multiple items belonging to same project', async () => {
             // Mock
             const item1 = createMockTestItem('test1', '/workspace/proj/tests/test1.py');
             const item2 = createMockTestItem('test2', '/workspace/proj/tests/test2.py');
@@ -263,7 +262,7 @@ suite('Project Test Execution', () => {
             const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
 
             // Run
-            const result = groupTestItemsByProject([item1, item2, item3], [project]);
+            const result = await groupTestItemsByProject([item1, item2, item3], [project]);
 
             // Assert - use Set for order-agnostic comparison
             expect(result.size).to.equal(1);
@@ -272,7 +271,7 @@ suite('Project Test Execution', () => {
             expect(new Set(entry.items)).to.deep.equal(new Set([item1, item2, item3]));
         });
 
-        test('should separate items into groups by their owning project', () => {
+        test('should separate items into groups by their owning project', async () => {
             // Mock
             const item1 = createMockTestItem('test1', '/workspace/proj1/test.py');
             const item2 = createMockTestItem('test2', '/workspace/proj2/test.py');
@@ -281,7 +280,7 @@ suite('Project Test Execution', () => {
             const proj2 = createMockProjectAdapter({ projectPath: '/workspace/proj2', projectName: 'proj2' });
 
             // Run
-            const result = groupTestItemsByProject([item1, item2, item3], [proj1, proj2]);
+            const result = await groupTestItemsByProject([item1, item2, item3], [proj1, proj2]);
 
             // Assert - use Set for order-agnostic comparison
             expect(result.size).to.equal(2);
@@ -292,30 +291,30 @@ suite('Project Test Execution', () => {
             expect(proj2Entry?.items).to.deep.equal([item2]);
         });
 
-        test('should return empty map when no test items provided', () => {
+        test('should return empty map when no test items provided', async () => {
             // Mock
             const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
 
             // Run
-            const result = groupTestItemsByProject([], [project]);
+            const result = await groupTestItemsByProject([], [project]);
 
             // Assert
             expect(result.size).to.equal(0);
         });
 
-        test('should exclude items that do not match any project path', () => {
+        test('should exclude items that do not match any project path', async () => {
             // Mock
             const item = createMockTestItem('test1', '/other/path/test.py');
             const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
 
             // Run
-            const result = groupTestItemsByProject([item], [project]);
+            const result = await groupTestItemsByProject([item], [project]);
 
             // Assert
             expect(result.size).to.equal(0);
         });
 
-        test('should assign item to most specific (deepest) project for nested paths', () => {
+        test('should assign item to most specific (deepest) project for nested paths', async () => {
             // Mock
             const item = createMockTestItem('test1', '/workspace/parent/child/test.py');
             const parentProject = createMockProjectAdapter({ projectPath: '/workspace/parent', projectName: 'parent' });
@@ -325,7 +324,7 @@ suite('Project Test Execution', () => {
             });
 
             // Run
-            const result = groupTestItemsByProject([item], [parentProject, childProject]);
+            const result = await groupTestItemsByProject([item], [parentProject, childProject]);
 
             // Assert
             expect(result.size).to.equal(1);
@@ -334,14 +333,14 @@ suite('Project Test Execution', () => {
             expect(entry?.items).to.deep.equal([item]);
         });
 
-        test('should omit projects that have no matching test items', () => {
+        test('should omit projects that have no matching test items', async () => {
             // Mock
             const item = createMockTestItem('test1', '/workspace/proj1/test.py');
             const proj1 = createMockProjectAdapter({ projectPath: '/workspace/proj1', projectName: 'proj1' });
             const proj2 = createMockProjectAdapter({ projectPath: '/workspace/proj2', projectName: 'proj2' });
 
             // Run
-            const result = groupTestItemsByProject([item], [proj1, proj2]);
+            const result = await groupTestItemsByProject([item], [proj1, proj2]);
 
             // Assert
             expect(result.size).to.equal(1);
