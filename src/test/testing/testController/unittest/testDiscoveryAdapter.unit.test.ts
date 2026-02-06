@@ -248,12 +248,12 @@ suite('Unittest test discovery adapter', () => {
 
     test('DiscoverTests should set PROJECT_ROOT_PATH when project is provided', async () => {
         const projectPath = path.join('/', 'workspace', 'myproject');
-        const mockProject = {
+        const mockProject = ({
             projectId: 'file:///workspace/myproject',
             projectUri: Uri.file(projectPath),
             projectName: 'myproject',
             workspaceUri: Uri.file('/workspace'),
-        } as ProjectAdapter;
+        } as unknown) as ProjectAdapter;
 
         const adapter = new UnittestTestDiscoveryAdapter(configService);
         adapter.discoverTests(uri, execFactory.object, undefined, undefined, mockProject);

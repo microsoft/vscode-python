@@ -398,3 +398,49 @@ def test_project_root_path_with_different_cwd_and_start_dir() -> None:
         expected_discovery_test_output.complex_tree_expected_output,
         ["id_", "lineno", "name"],
     )
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Symlinks require elevated privileges on Windows",
+)
+def test_symlink_with_project_root_path() -> None:
+    """Test unittest discovery with both symlink and PROJECT_ROOT_PATH set.
+
+    This tests the combination of:
+    1. A symlinked test directory
+    2. cwd_override (PROJECT_ROOT_PATH) set to the symlink path
+
+    This simulates project-based testing where the project root is a symlink,
+    ensuring test IDs and paths are correctly resolved through the symlink.
+    """
+    with helpers.create_symlink(TEST_DATA_PATH, "unittest_skip", "symlink_unittest") as (
+        source,
+        destination,
+    ):
+        assert destination.is_symlink()
+
+        # Run discovery with:
+        # - start_dir pointing to the symlink destination
+        # - cwd_override set to the symlink destination (simulating PROJECT_ROOT_PATH)
+        start_dir = os.fsdecode(destination)
+        pattern = "unittest_*"
+
+        actual = discover_tests(start_dir, pattern, None, cwd_override=start_dir)
+
+        assert actual["status"] == "success", (
+            f"Status is not 'success', error is: {actual.get('error')}"
+        )
+        # cwd should be the symlink path (cwd_override)
+        assert actual["cwd"] == os.fsdecode(destination), (
+            f"CWD does not match symlink path: expected {os.fsdecode(destination)}, got {actual['cwd']}"
+        )
+        assert "tests" in actual
+        # The test tree root should be named after the symlink directory
+        assert actual["tests"]["name"] == "symlink_unittest", (
+            f"Expected root name 'symlink_unittest', got '{actual['tests']['name']}'"
+        )
+        # The test tree root path should use the symlink path
+        assert actual["tests"]["path"] == os.fsdecode(destination), (
+            f"Expected root path to be symlink, got '{actual['tests']['path']}'"
+        )
