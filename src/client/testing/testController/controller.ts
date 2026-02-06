@@ -499,7 +499,14 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         // Ensure we send test telemetry if it gets disabled again
         this.sendTestDisabledTelemetry = true;
 
-        // Use project-based discovery if applicable
+        // Check if any test framework is enabled BEFORE project-based discovery
+        // This ensures the config screen stays visible when testing is disabled
+        if (!settings.testing.pytestEnabled && !settings.testing.unittestEnabled) {
+            await this.handleNoTestProviderEnabled(workspace);
+            return;
+        }
+
+        // Use project-based discovery if applicable (only reached if testing is enabled)
         if (this.projectRegistry.hasProjects(workspace.uri)) {
             await this.discoverAllProjectsInWorkspace(workspace.uri);
             return;
@@ -510,8 +517,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             await this.discoverWorkspaceTestsLegacy(workspace.uri, 'pytest');
         } else if (settings.testing.unittestEnabled) {
             await this.discoverWorkspaceTestsLegacy(workspace.uri, 'unittest');
-        } else {
-            await this.handleNoTestProviderEnabled(workspace);
         }
     }
 
@@ -521,6 +526,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
      * This ensures the test tree stays in sync with project changes.
      */
     private async discoverAllProjectsInWorkspace(workspaceUri: Uri): Promise<void> {
+        // Defensive check: ensure testing is enabled (should be checked by caller, but be safe)
+        const settings = this.configSettings.getSettings(workspaceUri);
+        if (!settings.testing.pytestEnabled && !settings.testing.unittestEnabled) {
+            traceVerbose('[test-by-project] Skipping discovery - no test framework enabled');
+            return;
+        }
+
         // Get existing projects before re-discovery for cleanup
         const existingProjects = this.projectRegistry.getProjectsArray(workspaceUri);
 
