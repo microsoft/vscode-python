@@ -17,6 +17,7 @@ import { getWorkspaceFolder, getWorkspaceFolders } from '../../common/vscodeApis
 import { showErrorMessage } from '../../common/vscodeApis/windowApis';
 import { createDeferred } from '../../common/utils/async';
 import { addPathToPythonpath } from './helpers';
+import * as envExtApi from '../../envExt/api.internal';
 
 /**
  * Key used to mark debug configurations with a unique session identifier.
@@ -186,8 +187,8 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
 
         // Use project name in debug session name if provided
-        if (options.debugSessionName) {
-            debugConfig.name = `Debug Tests: ${options.debugSessionName}`;
+        if (options.project) {
+            debugConfig.name = `Debug Tests: ${options.project.name}`;
         }
 
         if (!debugConfig.rules) {
@@ -339,11 +340,20 @@ export class DebugLauncher implements ITestDebugLauncher {
         // run via F5 style debugging.
         launchArgs.purpose = [];
 
-        // For project-based execution, use the explicit Python path if provided.
+        // For project-based execution, get the Python path from the project's environment.
         // This ensures debug sessions use the correct interpreter for each project.
-        if (options.pythonPath) {
-            launchArgs.python = options.pythonPath;
-            traceVerbose(`[test-by-project] Debug session using explicit Python path: ${options.pythonPath}`);
+        if (options.project && envExtApi.useEnvExtension()) {
+            try {
+                const pythonEnv = await envExtApi.getEnvironment(options.project.uri);
+                if (pythonEnv?.execInfo?.run?.executable) {
+                    launchArgs.python = pythonEnv.execInfo.run.executable;
+                    traceVerbose(
+                        `[test-by-project] Debug session using Python path from project: ${launchArgs.python}`,
+                    );
+                }
+            } catch (error) {
+                traceVerbose(`[test-by-project] Could not get environment for project, using default: ${error}`);
+            }
         }
 
         return launchArgs;

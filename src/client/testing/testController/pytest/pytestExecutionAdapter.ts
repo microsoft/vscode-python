@@ -176,10 +176,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     testProvider: PYTEST_PROVIDER,
                     runTestIdsPort: testIdsFileName,
                     pytestPort: resultNamedPipeName,
-                    // Pass explicit Python path for project-based debugging
-                    pythonPath: project?.pythonEnvironment.execInfo?.run?.executable,
-                    // Pass project name for debug session identification
-                    debugSessionName: project?.projectName,
+                    // Pass project for project-based debugging (Python path and session name derived from this)
+                    project: project?.pythonProject,
                 };
                 const sessionOptions: DebugSessionOptions = {
                     testRun: runInstance,

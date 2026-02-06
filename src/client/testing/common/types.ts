@@ -2,6 +2,7 @@ import { CancellationToken, DebugSessionOptions, OutputChannel, Uri } from 'vsco
 import { Product } from '../../common/types';
 import { TestSettingsPropertyNames } from '../configuration/types';
 import { TestProvider } from '../types';
+import { PythonProject } from '../../envExt/types';
 
 export type UnitTestProduct = Product.pytest | Product.unittest;
 
@@ -27,15 +28,12 @@ export type LaunchOptions = {
     pytestUUID?: string;
     runTestIdsPort?: string;
     /**
-     * Optional explicit Python path for project-based execution.
-     * When provided, debug sessions should use this interpreter instead of the workspace default.
+     * Optional Python project for project-based execution.
+     * When provided, the debug launcher will:
+     * - Use the project's associated Python environment
+     * - Name the debug session after the project
      */
-    pythonPath?: string;
-    /**
-     * Optional name for the debug session (e.g., project name).
-     * Used to identify debug sessions in the VS Code debug panel.
-     */
-    debugSessionName?: string;
+    project?: PythonProject;
 };
 
 export enum TestFilter {

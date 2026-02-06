@@ -10,6 +10,7 @@ import { ITestDebugLauncher } from '../../common/types';
 import { ProjectAdapter } from './projectAdapter';
 import { TestProjectRegistry } from './testProjectRegistry';
 import { getProjectId } from './projectUtils';
+import { getEnvExtApi, useEnvExtension } from '../../../envExt/api.internal';
 
 /**
  * Dependencies required for project-based test execution.
@@ -50,7 +51,7 @@ export async function executeTestsForProjects(
     }
 
     // Group test items by project
-    const testsByProject = groupTestItemsByProject(testItems, projects);
+    const testsByProject = await groupTestItemsByProject(testItems, projects);
 
     const isDebugMode = request.profile?.kind === TestRunProfileKind.Debug;
     traceInfo(`[test-by-project] Executing tests across ${testsByProject.size} project(s), debug=${isDebugMode}`);
@@ -99,13 +100,33 @@ export async function executeTestsForProjects(
 }
 
 /**
- * Groups test items by their owning project based on file path matching.
- * Each test item's URI is matched against project root paths.
+ * Lookup context for project resolution during a single test run.
+ * Maps file paths to their resolved ProjectAdapter to avoid
+ * repeated API calls and linear searches.
+ * Created fresh per run and discarded after grouping completes.
  */
-export function groupTestItemsByProject(
+interface ProjectLookupContext {
+    /** Maps file URI fsPath → resolved ProjectAdapter (or undefined if no match) */
+    uriToAdapter: Map<string, ProjectAdapter | undefined>;
+    /** Maps project URI fsPath → ProjectAdapter for O(1) adapter lookup */
+    projectPathToAdapter: Map<string, ProjectAdapter>;
+}
+
+/**
+ * Groups test items by their owning project using the Python Environment API.
+ * Each test item's URI is matched to a project via the API's getPythonProject method.
+ * Falls back to path-based matching when the extension API is not available.
+ *
+ * Uses a per-run cache to avoid redundant API calls for test items sharing the same file.
+ *
+ * Time complexity: O(n + p) amortized, where n = test items, p = projects
+ * - Building adapter lookup map: O(p)
+ * - Each test item: O(1) amortized (cached after first lookup per unique file)
+ */
+export async function groupTestItemsByProject(
     testItems: TestItem[],
     projects: ProjectAdapter[],
-): Map<string, { project: ProjectAdapter; items: TestItem[] }> {
+): Promise<Map<string, { project: ProjectAdapter; items: TestItem[] }>> {
     const result = new Map<string, { project: ProjectAdapter; items: TestItem[] }>();
 
     // Initialize entries for all projects
@@ -113,9 +134,15 @@ export function groupTestItemsByProject(
         result.set(getProjectId(project.projectUri), { project, items: [] });
     }
 
+    // Build lookup context for this run - O(p) setup, enables O(1) lookups
+    const lookupContext: ProjectLookupContext = {
+        uriToAdapter: new Map(),
+        projectPathToAdapter: new Map(projects.map((p) => [p.projectUri.fsPath, p])),
+    };
+
     // Assign each test item to its project
     for (const item of testItems) {
-        const project = findProjectForTestItem(item, projects);
+        const project = await findProjectForTestItem(item, projects, lookupContext);
         if (project) {
             const entry = result.get(getProjectId(project.projectUri));
             if (entry) {
@@ -139,9 +166,64 @@ export function groupTestItemsByProject(
 
 /**
  * Finds the project that owns a test item based on the test item's URI.
+ * Uses the Python Environment extension API when available, falling back
+ * to path-based matching (longest matching path prefix).
+ *
+ * Results are stored in the lookup context to avoid redundant API calls for items in the same file.
+ * Time complexity: O(1) amortized with context, O(p) worst case on context miss.
+ */
+export async function findProjectForTestItem(
+    item: TestItem,
+    projects: ProjectAdapter[],
+    lookupContext?: ProjectLookupContext,
+): Promise<ProjectAdapter | undefined> {
+    if (!item.uri) return undefined;
+
+    const uriPath = item.uri.fsPath;
+
+    // Check lookup context first - O(1)
+    if (lookupContext?.uriToAdapter.has(uriPath)) {
+        return lookupContext.uriToAdapter.get(uriPath);
+    }
+
+    let result: ProjectAdapter | undefined;
+
+    // Try using the Python Environment extension API first
+    if (useEnvExtension()) {
+        try {
+            const envExtApi = await getEnvExtApi();
+            const pythonProject = envExtApi.getPythonProject(item.uri);
+            if (pythonProject) {
+                // Use lookup context for O(1) adapter lookup instead of O(p) linear search
+                result = lookupContext?.projectPathToAdapter.get(pythonProject.uri.fsPath);
+                if (!result) {
+                    // Fallback to linear search if lookup context not available
+                    result = projects.find((p) => p.projectUri.fsPath === pythonProject.uri.fsPath);
+                }
+            }
+        } catch (error) {
+            traceVerbose(`[test-by-project] Failed to use env extension API, falling back to path matching: ${error}`);
+        }
+    }
+
+    // Fallback: path-based matching (most specific/longest path wins)
+    if (!result) {
+        result = findProjectByPath(item, projects);
+    }
+
+    // Store result for future lookups of same file within this run - O(1)
+    if (lookupContext) {
+        lookupContext.uriToAdapter.set(uriPath, result);
+    }
+
+    return result;
+}
+
+/**
+ * Finds the project that owns a test item using path-based matching.
  * Returns the most specific (longest path) matching project.
  */
-export function findProjectForTestItem(item: TestItem, projects: ProjectAdapter[]): ProjectAdapter | undefined {
+function findProjectByPath(item: TestItem, projects: ProjectAdapter[]): ProjectAdapter | undefined {
     if (!item.uri) return undefined;
 
     const itemPath = item.uri.fsPath;
