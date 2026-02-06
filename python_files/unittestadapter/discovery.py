@@ -27,13 +27,13 @@ def discover_tests(
     start_dir: str,
     pattern: str,
     top_level_dir: Optional[str],
-    cwd_override: Optional[str] = None,
+    project_root_path: Optional[str] = None,
 ) -> DiscoveryPayloadDict:
     """Returns a dictionary containing details of the discovered tests.
 
     The returned dict has the following keys:
 
-    - cwd: Absolute path to the test start directory (or cwd_override if provided);
+    - cwd: Absolute path to the test start directory (or project_root_path if provided);
     - status: Test discovery status, can be "success" or "error";
     - tests: Discoverered tests if any, not present otherwise. Note that the status can be "error" but the payload can still contain tests;
     - error: Discovery error if any, not present otherwise.
@@ -62,10 +62,10 @@ def discover_tests(
         start_dir: Directory where test discovery starts
         pattern: Pattern to match test files (e.g., "test*.py")
         top_level_dir: Top-level directory for the test tree hierarchy
-        cwd_override: Optional override for the cwd in the response payload
-                     (used for project-based testing to set project root)
+        project_root_path: Optional project root path for the cwd in the response payload
+                          (used for project-based testing to root test tree at project)
     """
-    cwd = os.path.abspath(cwd_override if cwd_override else start_dir)  # noqa: PTH100
+    cwd = os.path.abspath(project_root_path or start_dir)  # noqa: PTH100
     if "/" in start_dir:  #  is a subdir
         parent_dir = os.path.dirname(start_dir)  # noqa: PTH120
         sys.path.insert(0, parent_dir)
@@ -91,10 +91,9 @@ def discover_tests(
     except Exception:
         error.append(traceback.format_exc())
 
-    # Only include tests in the payload if tests were discovered.
-    # If no tests found (tests is None), omit the tests key per the docstring contract.
-    if tests is not None:
-        payload["tests"] = tests
+    # Still include the tests in the payload even if there are errors so that the TS
+    # side can determine if it is from run or discovery.
+    payload["tests"] = tests if tests is not None else None
 
     if len(error):
         payload["status"] = "error"
@@ -152,7 +151,9 @@ if __name__ == "__main__":
             )
 
         # Perform regular unittest test discovery.
-        # Pass project_root_path as cwd_override so the payload's cwd matches the project root.
-        payload = discover_tests(start_dir, pattern, top_level_dir, cwd_override=project_root_path)
+        # Pass project_root_path so the payload's cwd matches the project root.
+        payload = discover_tests(
+            start_dir, pattern, top_level_dir, project_root_path=project_root_path
+        )
         # Post this discovery payload.
         send_post_request(payload, test_run_pipe)

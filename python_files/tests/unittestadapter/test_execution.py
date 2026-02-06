@@ -344,13 +344,13 @@ def test_basic_run_django():
 
 
 def test_project_root_path_with_cwd_override(mock_send_run_data) -> None:  # noqa: ARG001
-    """Test unittest execution with cwd_override parameter.
+    """Test unittest execution with project_root_path parameter.
 
     This simulates project-based testing where the cwd in the payload should be
-    the project root (cwd_override) rather than the start_dir.
+    the project root (project_root_path) rather than the start_dir.
 
-    When cwd_override is provided:
-    - The cwd in the response should match cwd_override
+    When project_root_path is provided:
+    - The cwd in the response should match project_root_path
     - Test execution should still work correctly with start_dir
     """
     # Use unittest_folder as our "project" directory
@@ -363,7 +363,7 @@ def test_project_root_path_with_cwd_override(mock_send_run_data) -> None:  # noq
 
     os.environ["TEST_RUN_PIPE"] = "fake"
 
-    # Call run_tests with cwd_override to simulate PROJECT_ROOT_PATH
+    # Call run_tests with project_root_path to simulate PROJECT_ROOT_PATH
     actual = run_tests(
         start_dir,
         test_ids,
@@ -371,11 +371,11 @@ def test_project_root_path_with_cwd_override(mock_send_run_data) -> None:  # noq
         None,
         1,
         None,
-        cwd_override=start_dir,
+        project_root_path=start_dir,
     )
 
     assert actual["status"] == "success"
-    # cwd in response should match the cwd_override (project root)
+    # cwd in response should match the project_root_path (project root)
     assert actual["cwd"] == os.fsdecode(project_path), (
         f"Expected cwd '{os.fsdecode(project_path)}', got '{actual['cwd']}'"
     )
@@ -384,12 +384,12 @@ def test_project_root_path_with_cwd_override(mock_send_run_data) -> None:  # noq
     assert actual["result"][test_ids[0]]["outcome"] == "success"
 
 
-def test_project_root_path_with_different_cwd_and_start_dir() -> None:
-    """Test unittest execution where cwd_override differs from start_dir.
+def test_project_root_path_with_different_cwd_and_start_dir(mock_send_run_data) -> None:  # noqa: ARG001
+    """Test unittest execution where project_root_path differs from start_dir.
 
     This simulates the scenario where:
     - start_dir points to a subfolder where tests are located
-    - cwd_override (PROJECT_ROOT_PATH) points to the project root
+    - project_root_path (PROJECT_ROOT_PATH) points to the project root
 
     The cwd in the response should be the project root, while execution
     still runs from the start_dir.
@@ -404,7 +404,7 @@ def test_project_root_path_with_different_cwd_and_start_dir() -> None:
 
     os.environ["TEST_RUN_PIPE"] = "fake"
 
-    # Call run_tests with cwd_override set to project root
+    # Call run_tests with project_root_path set to project root
     actual = run_tests(
         start_dir,
         test_ids,
@@ -412,11 +412,11 @@ def test_project_root_path_with_different_cwd_and_start_dir() -> None:
         None,
         1,
         None,
-        cwd_override=os.fsdecode(project_path),
+        project_root_path=os.fsdecode(project_path),
     )
 
     assert actual["status"] == "success"
-    # cwd should be the project root (cwd_override)
+    # cwd should be the project root (project_root_path)
     assert actual["cwd"] == os.fsdecode(project_path), (
         f"Expected cwd '{os.fsdecode(project_path)}', got '{actual['cwd']}'"
     )
@@ -429,11 +429,11 @@ def test_project_root_path_with_different_cwd_and_start_dir() -> None:
     reason="Symlinks require elevated privileges on Windows",
 )
 def test_symlink_with_project_root_path(mock_send_run_data) -> None:  # noqa: ARG001
-    """Test unittest execution with both symlink and cwd_override set.
+    """Test unittest execution with both symlink and project_root_path set.
 
     This tests the combination of:
     1. A symlinked test directory
-    2. cwd_override (PROJECT_ROOT_PATH) set to the symlink path
+    2. project_root_path (PROJECT_ROOT_PATH) set to the symlink path
 
     This simulates project-based testing where the project root is a symlink,
     ensuring execution payloads correctly use the symlink path.
@@ -446,7 +446,7 @@ def test_symlink_with_project_root_path(mock_send_run_data) -> None:  # noqa: AR
 
         # Run execution with:
         # - start_dir pointing to the symlink destination
-        # - cwd_override set to the symlink destination (simulating PROJECT_ROOT_PATH)
+        # - project_root_path set to the symlink destination (simulating PROJECT_ROOT_PATH)
         start_dir = os.fsdecode(destination)
         pattern = "test_add*"
         test_ids = [
@@ -462,13 +462,13 @@ def test_symlink_with_project_root_path(mock_send_run_data) -> None:  # noqa: AR
             None,
             1,
             None,
-            cwd_override=start_dir,
+            project_root_path=start_dir,
         )
 
         assert actual["status"] == "success", (
             f"Status is not 'success', error is: {actual.get('error')}"
         )
-        # cwd should be the symlink path (cwd_override)
+        # cwd should be the symlink path (project_root_path)
         assert actual["cwd"] == os.fsdecode(destination), (
             f"CWD does not match symlink path: expected {os.fsdecode(destination)}, got {actual['cwd']}"
         )

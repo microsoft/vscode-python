@@ -194,7 +194,7 @@ def run_tests(
     verbosity: int,
     failfast: Optional[bool],  # noqa: FBT001
     locals_: Optional[bool] = None,  # noqa: FBT001
-    cwd_override: Optional[str] = None,
+    project_root_path: Optional[str] = None,
 ) -> ExecutionPayloadDict:
     """Run unittests and return the execution payload.
 
@@ -206,10 +206,10 @@ def run_tests(
         verbosity: Verbosity level for test output
         failfast: Stop on first failure
         locals_: Show local variables in tracebacks
-        cwd_override: Optional override for the cwd in the response payload
-                     (used for project-based testing to set project root)
+        project_root_path: Optional project root path for the cwd in the response payload
+                          (used for project-based testing to root test tree at project)
     """
-    cwd = os.path.abspath(cwd_override or start_dir)  # noqa: PTH100
+    cwd = os.path.abspath(project_root_path or start_dir)  # noqa: PTH100
     if "/" in start_dir:  #  is a subdir
         parent_dir = os.path.dirname(start_dir)  # noqa: PTH120
         sys.path.insert(0, parent_dir)
@@ -378,7 +378,7 @@ if __name__ == "__main__":
             )
 
         # Perform regular unittest execution.
-        # Pass project_root_path as cwd_override so the payload's cwd matches the project root.
+        # Pass project_root_path so the payload's cwd matches the project root.
         payload = run_tests(
             start_dir,
             test_ids,
@@ -387,7 +387,7 @@ if __name__ == "__main__":
             verbosity,
             failfast,
             locals_,
-            cwd_override=project_root_path,
+            project_root_path=project_root_path,
         )
 
     if is_coverage_run:

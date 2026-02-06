@@ -191,8 +191,7 @@ def test_empty_discovery() -> None:
     actual = discover_tests(start_dir, pattern, None)
 
     assert actual["status"] == "success"
-    # When no tests are found, the tests key should not be present in the payload
-    assert "tests" not in actual
+    assert "tests" in actual
     assert "error" not in actual
 
 
@@ -329,13 +328,13 @@ def test_simple_django_collect():
 
 
 def test_project_root_path_with_cwd_override() -> None:
-    """Test unittest discovery with cwd_override parameter.
+    """Test unittest discovery with project_root_path parameter.
 
     This simulates project-based testing where the cwd in the payload should be
-    the project root (cwd_override) rather than the start_dir.
+    the project root (project_root_path) rather than the start_dir.
 
-    When cwd_override is provided:
-    - The cwd in the response should match cwd_override
+    When project_root_path is provided:
+    - The cwd in the response should match project_root_path
     - The test tree root should still be built correctly based on top_level_dir
     """
     # Use unittest_skip folder as our "project" directory
@@ -343,11 +342,11 @@ def test_project_root_path_with_cwd_override() -> None:
     start_dir = os.fsdecode(project_path)
     pattern = "unittest_*"
 
-    # Call discover_tests with cwd_override to simulate PROJECT_ROOT_PATH
-    actual = discover_tests(start_dir, pattern, None, cwd_override=start_dir)
+    # Call discover_tests with project_root_path to simulate PROJECT_ROOT_PATH
+    actual = discover_tests(start_dir, pattern, None, project_root_path=start_dir)
 
     assert actual["status"] == "success"
-    # cwd in response should match the cwd_override (project root)
+    # cwd in response should match the project_root_path (project root)
     assert actual["cwd"] == os.fsdecode(project_path), (
         f"Expected cwd '{os.fsdecode(project_path)}', got '{actual['cwd']}'"
     )
@@ -362,11 +361,11 @@ def test_project_root_path_with_cwd_override() -> None:
 
 
 def test_project_root_path_with_different_cwd_and_start_dir() -> None:
-    """Test unittest discovery where cwd_override differs from start_dir.
+    """Test unittest discovery where project_root_path differs from start_dir.
 
     This simulates the scenario where:
     - start_dir points to a subfolder where tests are located
-    - cwd_override (PROJECT_ROOT_PATH) points to the project root
+    - project_root_path (PROJECT_ROOT_PATH) points to the project root
 
     The cwd in the response should be the project root, while discovery
     still runs from the start_dir.
@@ -384,11 +383,11 @@ def test_project_root_path_with_different_cwd_and_start_dir() -> None:
     pattern = "test_*.py"
     top_level_dir = os.fsdecode(project_path)
 
-    # Call discover_tests with cwd_override set to project root
-    actual = discover_tests(start_dir, pattern, top_level_dir, cwd_override=top_level_dir)
+    # Call discover_tests with project_root_path set to project root
+    actual = discover_tests(start_dir, pattern, top_level_dir, project_root_path=top_level_dir)
 
     assert actual["status"] == "success"
-    # cwd should be the project root (cwd_override), not the start_dir
+    # cwd should be the project root (project_root_path), not the start_dir
     assert actual["cwd"] == os.fsdecode(project_path), (
         f"Expected cwd '{os.fsdecode(project_path)}', got '{actual['cwd']}'"
     )
@@ -410,29 +409,29 @@ def test_symlink_with_project_root_path() -> None:
 
     This tests the combination of:
     1. A symlinked test directory
-    2. cwd_override (PROJECT_ROOT_PATH) set to the symlink path
+    2. project_root_path (PROJECT_ROOT_PATH) set to the symlink path
 
     This simulates project-based testing where the project root is a symlink,
     ensuring test IDs and paths are correctly resolved through the symlink.
     """
     with helpers.create_symlink(TEST_DATA_PATH, "unittest_skip", "symlink_unittest") as (
-        source,
+        _source,
         destination,
     ):
         assert destination.is_symlink()
 
         # Run discovery with:
         # - start_dir pointing to the symlink destination
-        # - cwd_override set to the symlink destination (simulating PROJECT_ROOT_PATH)
+        # - project_root_path set to the symlink destination (simulating PROJECT_ROOT_PATH)
         start_dir = os.fsdecode(destination)
         pattern = "unittest_*"
 
-        actual = discover_tests(start_dir, pattern, None, cwd_override=start_dir)
+        actual = discover_tests(start_dir, pattern, None, project_root_path=start_dir)
 
         assert actual["status"] == "success", (
             f"Status is not 'success', error is: {actual.get('error')}"
         )
-        # cwd should be the symlink path (cwd_override)
+        # cwd should be the symlink path (project_root_path)
         assert actual["cwd"] == os.fsdecode(destination), (
             f"CWD does not match symlink path: expected {os.fsdecode(destination)}, got {actual['cwd']}"
         )
