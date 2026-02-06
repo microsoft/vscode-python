@@ -1,6 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { DebugConfiguration, l10n, Uri, WorkspaceFolder, DebugSession, DebugSessionOptions } from 'vscode';
+import { DebugConfiguration, l10n, Uri, WorkspaceFolder, DebugSession, DebugSessionOptions, Disposable } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import * as internalScripts from '../../common/process/internal/scripts';
@@ -18,6 +18,13 @@ import { showErrorMessage } from '../../common/vscodeApis/windowApis';
 import { createDeferred } from '../../common/utils/async';
 import { addPathToPythonpath } from './helpers';
 
+/**
+ * Key used to mark debug configurations with a unique session identifier.
+ * This allows us to track which debug session belongs to which launchDebugger() call
+ * when multiple debug sessions are launched in parallel.
+ */
+const TEST_SESSION_MARKER_KEY = '__vscodeTestSessionMarker';
+
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
     private readonly configService: IConfigurationService;
@@ -31,6 +38,27 @@ export class DebugLauncher implements ITestDebugLauncher {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
+    /**
+     * Launches a debug session for test execution.
+     *
+     * **Cancellation handling:**
+     * Cancellation can occur from multiple sources, all properly handled:
+     * 1. **Pre-check**: If already cancelled before starting, returns immediately
+     * 2. **Token cancellation**: If the parent CancellationToken fires during debugging,
+     *    the deferred resolves and the callback is invoked to clean up resources
+     * 3. **Session termination**: When the user stops debugging (via UI or completes),
+     *    the onDidTerminateDebugSession event fires and we resolve
+     *
+     * **Multi-session support:**
+     * When debugging tests from multiple projects simultaneously, each launchDebugger()
+     * call needs to track its own debug session independently. We use a unique marker
+     * in the launch configuration to identify which session belongs to which call,
+     * avoiding race conditions with the global `activeDebugSession` property.
+     *
+     * @param options Launch configuration including test provider, args, and optional project info
+     * @param callback Called when the debug session ends (for cleanup like closing named pipes)
+     * @param sessionOptions VS Code debug session options (e.g., testRun association)
+     */
     public async launchDebugger(
         options: LaunchOptions,
         callback?: () => void,
@@ -38,18 +66,35 @@ export class DebugLauncher implements ITestDebugLauncher {
     ): Promise<void> {
         const deferred = createDeferred<void>();
         let hasCallbackBeenCalled = false;
+
+        // Collect disposables for cleanup when debugging completes
+        const disposables: Disposable[] = [];
+
+        // Ensure callback is only invoked once, even if multiple termination paths fire
+        const callCallbackOnce = () => {
+            if (!hasCallbackBeenCalled) {
+                hasCallbackBeenCalled = true;
+                callback?.();
+            }
+        };
+
+        // Early exit if already cancelled before we start
         if (options.token && options.token.isCancellationRequested) {
-            hasCallbackBeenCalled = true;
-            return undefined;
+            callCallbackOnce();
             deferred.resolve();
-            callback?.();
+            return deferred.promise;
         }
 
-        options.token?.onCancellationRequested(() => {
-            deferred.resolve();
-            callback?.();
-            hasCallbackBeenCalled = true;
-        });
+        // Listen for cancellation from the test run (e.g., user clicks stop in Test Explorer)
+        // This allows the caller to clean up resources even if the debug session is still running
+        if (options.token) {
+            disposables.push(
+                options.token.onCancellationRequested(() => {
+                    deferred.resolve();
+                    callCallbackOnce();
+                }),
+            );
+        }
 
         const workspaceFolder = DebugLauncher.resolveWorkspaceFolder(options.cwd);
         const launchArgs = await this.getLaunchArgs(
@@ -59,23 +104,54 @@ export class DebugLauncher implements ITestDebugLauncher {
         );
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
-        let activatedDebugSession: DebugSession | undefined;
-        debugManager.startDebugging(workspaceFolder, launchArgs, sessionOptions).then(() => {
-            // Save the debug session after it is started so we can check if it is the one that was terminated.
-            activatedDebugSession = debugManager.activeDebugSession;
+        // Generate a unique marker for this debug session.
+        // When multiple debug sessions start in parallel (e.g., debugging tests from
+        // multiple projects), we can't rely on debugManager.activeDebugSession because
+        // it's a global that could be overwritten by another concurrent session start.
+        // Instead, we embed a unique marker in our launch configuration and match it
+        // when the session starts to identify which session is ours.
+        const sessionMarker = `test-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+        launchArgs[TEST_SESSION_MARKER_KEY] = sessionMarker;
+
+        let ourSession: DebugSession | undefined;
+
+        // Capture our specific debug session when it starts by matching the marker.
+        // This fires for ALL debug sessions, so we filter to only our marker.
+        disposables.push(
+            debugManager.onDidStartDebugSession((session) => {
+                if (session.configuration[TEST_SESSION_MARKER_KEY] === sessionMarker) {
+                    ourSession = session;
+                    traceVerbose(`[test-debug] Debug session started: ${session.name} (${session.id})`);
+                }
+            }),
+        );
+
+        // Handle debug session termination (user stops debugging, or tests complete).
+        // Only react to OUR session terminating - other parallel sessions should
+        // continue running independently.
+        disposables.push(
+            debugManager.onDidTerminateDebugSession((session) => {
+                if (ourSession && session.id === ourSession.id) {
+                    traceVerbose(`[test-debug] Debug session terminated: ${session.name} (${session.id})`);
+                    deferred.resolve();
+                    callCallbackOnce();
+                }
+            }),
+        );
+
+        // Start the debug session
+        const started = await debugManager.startDebugging(workspaceFolder, launchArgs, sessionOptions);
+        if (!started) {
+            traceError('Failed to start debug session');
+            deferred.resolve();
+            callCallbackOnce();
+        }
+
+        // Clean up event subscriptions when debugging completes (success, failure, or cancellation)
+        deferred.promise.finally(() => {
+            disposables.forEach((d) => d.dispose());
         });
-        debugManager.onDidTerminateDebugSession((session) => {
-            traceVerbose(`Debug session terminated. sessionId: ${session.id}`);
-            // Only resolve no callback has been made and the session is the one that was started.
-            if (
-                !hasCallbackBeenCalled &&
-                activatedDebugSession !== undefined &&
-                session.id === activatedDebugSession?.id
-            ) {
-                deferred.resolve();
-                callback?.();
-            }
-        });
+
         return deferred.promise;
     }
 
@@ -108,6 +184,12 @@ export class DebugLauncher implements ITestDebugLauncher {
                 subProcess: true,
             };
         }
+
+        // Use project name in debug session name if provided
+        if (options.debugSessionName) {
+            debugConfig.name = `Debug Tests: ${options.debugSessionName}`;
+        }
+
         if (!debugConfig.rules) {
             debugConfig.rules = [];
         }
@@ -256,6 +338,13 @@ export class DebugLauncher implements ITestDebugLauncher {
         // Clear out purpose so we can detect if the configuration was used to
         // run via F5 style debugging.
         launchArgs.purpose = [];
+
+        // For project-based execution, use the explicit Python path if provided.
+        // This ensures debug sessions use the correct interpreter for each project.
+        if (options.pythonPath) {
+            launchArgs.python = options.pythonPath;
+            traceVerbose(`[test-by-project] Debug session using explicit Python path: ${options.pythonPath}`);
+        }
 
         return launchArgs;
     }

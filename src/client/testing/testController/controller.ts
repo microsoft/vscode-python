@@ -45,6 +45,7 @@ import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { ProjectAdapter } from './common/projectAdapter';
 import { TestProjectRegistry } from './common/testProjectRegistry';
 import { createTestAdapters, getProjectId } from './common/projectUtils';
+import { executeTestsForProjects } from './common/projectTestExecution';
 import { useEnvExtension, getEnvExtApi } from '../../envExt/api.internal';
 import { DidChangePythonProjectsEventArgs, PythonProject } from '../../envExt/types';
 
@@ -781,6 +782,17 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             if (!settings.testing.pytestEnabled && !settings.testing.unittestEnabled) {
                 unconfiguredWorkspaces.push(workspace);
             }
+            return;
+        }
+
+        // Check if we're in project-based mode and should use project-specific execution
+        if (this.projectRegistry.hasProjects(workspace.uri) && settings.testing.pytestEnabled) {
+            const projects = this.projectRegistry.getProjectsArray(workspace.uri);
+            await executeTestsForProjects(projects, testItems, runInstance, request, token, {
+                projectRegistry: this.projectRegistry,
+                pythonExecFactory: this.pythonExecFactory,
+                debugLauncher: this.debugLauncher,
+            });
             return;
         }
 

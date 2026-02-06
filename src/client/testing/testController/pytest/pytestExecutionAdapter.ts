@@ -116,6 +116,16 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         if (profileKind && profileKind === TestRunProfileKind.Coverage) {
             mutableEnv.COVERAGE_ENABLED = 'True';
         }
+
+        // Set PROJECT_ROOT_PATH for project-based testing
+        // This tells the Python side where to root the test tree for multi-project workspaces
+        if (project) {
+            mutableEnv.PROJECT_ROOT_PATH = project.projectUri.fsPath;
+            traceInfo(
+                `[test-by-project] Setting PROJECT_ROOT_PATH=${project.projectUri.fsPath} for ${project.projectName}`,
+            );
+        }
+
         const debugBool = profileKind && profileKind === TestRunProfileKind.Debug;
 
         // Create the Python environment in which to execute the command.
@@ -166,6 +176,10 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     testProvider: PYTEST_PROVIDER,
                     runTestIdsPort: testIdsFileName,
                     pytestPort: resultNamedPipeName,
+                    // Pass explicit Python path for project-based debugging
+                    pythonPath: project?.pythonEnvironment.execInfo?.run?.executable,
+                    // Pass project name for debug session identification
+                    debugSessionName: project?.projectName,
                 };
                 const sessionOptions: DebugSessionOptions = {
                     testRun: runInstance,
@@ -179,7 +193,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     sessionOptions,
                 );
             } else if (useEnvExtension()) {
-                const pythonEnv = await getEnvironment(uri);
+                // For project-based execution, use the project's Python environment
+                // Otherwise, fall back to getting the environment from the URI
+                const pythonEnv = project?.pythonEnvironment ?? (await getEnvironment(uri));
                 if (pythonEnv) {
                     const deferredTillExecClose: Deferred<void> = utils.createTestingDeferred();
 
