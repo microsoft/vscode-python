@@ -98,8 +98,6 @@ export class TestProjectRegistry {
     /**
      * Computes and populates nested project ignore lists for all projects in a workspace.
      * Must be called before discovery to ensure parent projects ignore nested children.
-     *
-     * **Time complexity:** O(n²) where n is the number of projects (calls computeNestedProjectIgnores).
      */
     public configureNestedProjectIgnores(workspaceUri: Uri): void {
         const projectIgnores = this.computeNestedProjectIgnores(workspaceUri);
