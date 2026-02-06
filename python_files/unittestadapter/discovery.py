@@ -91,9 +91,10 @@ def discover_tests(
     except Exception:
         error.append(traceback.format_exc())
 
-    # Still include the tests in the payload even if there are errors so that the TS
-    # side can determine if it is from run or discovery.
-    payload["tests"] = tests if tests is not None else None
+    # Only include tests in the payload if tests were discovered.
+    # If no tests found (tests is None), omit the tests key per the docstring contract.
+    if tests is not None:
+        payload["tests"] = tests
 
     if len(error):
         payload["status"] = "error"

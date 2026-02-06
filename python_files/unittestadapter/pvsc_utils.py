@@ -281,6 +281,10 @@ def build_test_tree(
             }  # concatenate class name and function test name
             current_node["children"].append(test_node)
 
+    # If no tests were discovered, return None instead of an empty root node
+    if not root["children"]:
+        return None, error
+
     return root, error
 
 

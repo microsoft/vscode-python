@@ -191,7 +191,8 @@ def test_empty_discovery() -> None:
     actual = discover_tests(start_dir, pattern, None)
 
     assert actual["status"] == "success"
-    assert "tests" in actual
+    # When no tests are found, the tests key should not be present in the payload
+    assert "tests" not in actual
     assert "error" not in actual
 
 
