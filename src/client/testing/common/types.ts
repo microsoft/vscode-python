@@ -27,12 +27,7 @@ export type LaunchOptions = {
     pytestPort?: string;
     pytestUUID?: string;
     runTestIdsPort?: string;
-    /**
-     * Optional Python project for project-based execution.
-     * When provided, the debug launcher will:
-     * - Use the project's associated Python environment
-     * - Name the debug session after the project
-     */
+    /** Optional Python project for project-based execution. */
     project?: PythonProject;
 };
 

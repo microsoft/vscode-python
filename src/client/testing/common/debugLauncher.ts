@@ -41,24 +41,7 @@ export class DebugLauncher implements ITestDebugLauncher {
 
     /**
      * Launches a debug session for test execution.
-     *
-     * **Cancellation handling:**
-     * Cancellation can occur from multiple sources, all properly handled:
-     * 1. **Pre-check**: If already cancelled before starting, returns immediately
-     * 2. **Token cancellation**: If the parent CancellationToken fires during debugging,
-     *    the deferred resolves and the callback is invoked to clean up resources
-     * 3. **Session termination**: When the user stops debugging (via UI or completes),
-     *    the onDidTerminateDebugSession event fires and we resolve
-     *
-     * **Multi-session support:**
-     * When debugging tests from multiple projects simultaneously, each launchDebugger()
-     * call needs to track its own debug session independently. We use a unique marker
-     * in the launch configuration to identify which session belongs to which call,
-     * avoiding race conditions with the global `activeDebugSession` property.
-     *
-     * @param options Launch configuration including test provider, args, and optional project info
-     * @param callback Called when the debug session ends (for cleanup like closing named pipes)
-     * @param sessionOptions VS Code debug session options (e.g., testRun association)
+     * Handles cancellation, multi-session support via unique markers, and cleanup.
      */
     public async launchDebugger(
         options: LaunchOptions,
@@ -105,12 +88,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         );
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
-        // Generate a unique marker for this debug session.
-        // When multiple debug sessions start in parallel (e.g., debugging tests from
-        // multiple projects), we can't rely on debugManager.activeDebugSession because
-        // it's a global that could be overwritten by another concurrent session start.
-        // Instead, we embed a unique marker in our launch configuration and match it
-        // when the session starts to identify which session is ours.
+        // Unique marker to identify this session among concurrent debug sessions
         const sessionMarker = `test-${Date.now()}-${Math.random().toString(36).substring(7)}`;
         launchArgs[TEST_SESSION_MARKER_KEY] = sessionMarker;
 
@@ -341,7 +319,8 @@ export class DebugLauncher implements ITestDebugLauncher {
         launchArgs.purpose = [];
 
         // For project-based execution, get the Python path from the project's environment.
-        // This ensures debug sessions use the correct interpreter for each project.
+        // Fallback: if env API unavailable or fails, LaunchConfigurationResolver already set
+        // launchArgs.python from the active interpreter, so debugging still works.
         if (options.project && envExtApi.useEnvExtension()) {
             try {
                 const pythonEnv = await envExtApi.getEnvironment(options.project.uri);

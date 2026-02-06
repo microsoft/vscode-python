@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, FileCoverageDetail, TestItem, TestRun, TestRunProfileKind, TestRunRequest } from 'vscode';
-import { traceError, traceInfo, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceVerbose, traceWarn } from '../../../logging';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { IPythonExecutionFactory } from '../../../common/process/types';
@@ -71,7 +71,7 @@ export async function executeTestsForProjects(
         traceInfo(`[test-by-project] Executing ${items.length} test item(s) for project: ${project.projectName}`);
 
         sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
-            tool: 'pytest',
+            tool: project.testProvider,
             debugging: isDebugMode,
         });
 
@@ -100,10 +100,7 @@ export async function executeTestsForProjects(
 }
 
 /**
- * Lookup context for project resolution during a single test run.
- * Maps file paths to their resolved ProjectAdapter to avoid
- * repeated API calls and linear searches.
- * Created fresh per run and discarded after grouping completes.
+ * Lookup context for avoiding redundant API calls within a single test run.
  */
 interface ProjectLookupContext {
     /** Maps file URI fsPath → resolved ProjectAdapter (or undefined if no match) */
@@ -113,15 +110,8 @@ interface ProjectLookupContext {
 }
 
 /**
- * Groups test items by their owning project using the Python Environment API.
- * Each test item's URI is matched to a project via the API's getPythonProject method.
- * Falls back to path-based matching when the extension API is not available.
- *
- * Uses a per-run cache to avoid redundant API calls for test items sharing the same file.
- *
- * Time complexity: O(n + p) amortized, where n = test items, p = projects
- * - Building adapter lookup map: O(p)
- * - Each test item: O(1) amortized (cached after first lookup per unique file)
+ * Groups test items by their owning project. Uses env API when available, else falls back to path matching.
+ * Time complexity: O(n + p) amortized via per-run caching.
  */
 export async function groupTestItemsByProject(
     testItems: TestItem[],
@@ -134,7 +124,8 @@ export async function groupTestItemsByProject(
         result.set(getProjectId(project.projectUri), { project, items: [] });
     }
 
-    // Build lookup context for this run - O(p) setup, enables O(1) lookups
+    // Build lookup context for this run - O(p) one-time setup, enables O(1) lookups per item.
+    // When tests are from a single project, most lookups hit the cache after the first item.
     const lookupContext: ProjectLookupContext = {
         uriToAdapter: new Map(),
         projectPathToAdapter: new Map(projects.map((p) => [p.projectUri.fsPath, p])),
@@ -150,7 +141,7 @@ export async function groupTestItemsByProject(
             }
         } else {
             // If no project matches, log it
-            traceVerbose(`[test-by-project] Could not match test item ${item.id} to a project`);
+            traceWarn(`[test-by-project] Could not match test item ${item.id} to a project`);
         }
     }
 
@@ -165,12 +156,7 @@ export async function groupTestItemsByProject(
 }
 
 /**
- * Finds the project that owns a test item based on the test item's URI.
- * Uses the Python Environment extension API when available, falling back
- * to path-based matching (longest matching path prefix).
- *
- * Results are stored in the lookup context to avoid redundant API calls for items in the same file.
- * Time complexity: O(1) amortized with context, O(p) worst case on context miss.
+ * Finds the project that owns a test item. Uses env API when available, else path-based matching.
  */
 export async function findProjectForTestItem(
     item: TestItem,
@@ -188,7 +174,9 @@ export async function findProjectForTestItem(
 
     let result: ProjectAdapter | undefined;
 
-    // Try using the Python Environment extension API first
+    // Try using the Python Environment extension API first.
+    // Legacy path: when useEnvExtension() is false, this block is skipped and we go
+    // directly to findProjectByPath() below (path-based matching).
     if (useEnvExtension()) {
         try {
             const envExtApi = await getEnvExtApi();
@@ -206,7 +194,8 @@ export async function findProjectForTestItem(
         }
     }
 
-    // Fallback: path-based matching (most specific/longest path wins)
+    // Fallback: path-based matching when env API unavailable or didn't find a match.
+    // O(p) time complexity where p = number of projects.
     if (!result) {
         result = findProjectByPath(item, projects);
     }
@@ -220,8 +209,7 @@ export async function findProjectForTestItem(
 }
 
 /**
- * Finds the project that owns a test item using path-based matching.
- * Returns the most specific (longest path) matching project.
+ * Fallback: finds project using path-based matching. O(p) time complexity.
  */
 function findProjectByPath(item: TestItem, projects: ProjectAdapter[]): ProjectAdapter | undefined {
     if (!item.uri) return undefined;
