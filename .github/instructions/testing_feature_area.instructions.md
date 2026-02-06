@@ -185,6 +185,22 @@ Project-based testing enables multi-project workspace support where each Python 
     - For unittest: `discovery.py` uses `PROJECT_ROOT_PATH` as `top_level_dir` and `cwd_override` to root the test tree at the project directory.
 6. **Test tree**: Each project gets its own root node in the Test Explorer, with test IDs scoped by project ID using the `@@vsc@@` separator (defined in `projectUtils.ts`).
 
+### Nested project handling: pytest vs unittest
+
+**pytest** supports the `--ignore` flag to exclude paths during test collection. When nested projects are detected, parent projects automatically receive `--ignore` flags for child project paths. This ensures each test appears under exactly one project in the test tree.
+
+**unittest** does not support path exclusion during `discover()`. Therefore, tests in nested project directories may appear under multiple project roots (both the parent and the child project). This is **expected behavior** for unittest:
+
+-   Each project discovers and displays all tests it finds within its directory structure
+-   There is no deduplication or collision detection
+-   Users may see the same test file under multiple project roots if their project structure has nesting
+
+This approach was chosen because:
+
+1. unittest's `TestLoader.discover()` has no built-in path exclusion mechanism
+2. Implementing custom exclusion would add significant complexity with minimal benefit
+3. The existing approach is transparent and predictable - each project shows what it finds
+
 ### Logging prefix
 
 All project-based testing logs use the `[test-by-project]` prefix for easy filtering in the output channel.
@@ -193,15 +209,19 @@ All project-based testing logs use the `[test-by-project]` prefix for easy filte
 
 -   Python side:
     -   `python_files/vscode_pytest/__init__.py` — `get_test_root_path()` function and `PROJECT_ROOT_PATH` environment variable for pytest.
-    -   `python_files/unittestadapter/discovery.py` — `discover_tests()` with `cwd_override` parameter and `PROJECT_ROOT_PATH` handling for unittest.
--   TypeScript: `testProjectRegistry.ts`, `projectAdapter.ts`, `projectUtils.ts`, and the discovery adapters.
+    -   `python_files/unittestadapter/discovery.py` — `discover_tests()` with `cwd_override` parameter and `PROJECT_ROOT_PATH` handling for unittest discovery.
+    -   `python_files/unittestadapter/execution.py` — `run_tests()` with `cwd_override` parameter and `PROJECT_ROOT_PATH` handling for unittest execution.
+-   TypeScript: `testProjectRegistry.ts`, `projectAdapter.ts`, `projectUtils.ts`, and the discovery/execution adapters.
 
 ### Tests
 
 -   `src/test/testing/testController/common/testProjectRegistry.unit.test.ts` — TestProjectRegistry tests
 -   `src/test/testing/testController/common/projectUtils.unit.test.ts` — Project utility function tests
 -   `python_files/tests/pytestadapter/test_discovery.py` — pytest PROJECT_ROOT_PATH tests (see `test_project_root_path_env_var()` and `test_symlink_with_project_root_path()`)
--   `python_files/tests/unittestadapter/test_discovery.py` — unittest `cwd_override` / PROJECT_ROOT_PATH tests
+-   `python_files/tests/unittestadapter/test_discovery.py` — unittest `cwd_override` / PROJECT_ROOT_PATH discovery tests
+-   `python_files/tests/unittestadapter/test_execution.py` — unittest `cwd_override` / PROJECT_ROOT_PATH execution tests
+-   `src/test/testing/testController/unittest/testDiscoveryAdapter.unit.test.ts` — unittest discovery adapter PROJECT_ROOT_PATH tests
+-   `src/test/testing/testController/unittest/testExecutionAdapter.unit.test.ts` — unittest execution adapter PROJECT_ROOT_PATH tests
 
 ## Coverage support (how it works)
 
