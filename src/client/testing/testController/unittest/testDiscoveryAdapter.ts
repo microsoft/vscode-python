@@ -94,7 +94,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             // Execute using environment extension if available
             if (useEnvExtension()) {
                 traceInfo(`Using environment extension for unittest discovery in workspace ${uri.fsPath}`);
-                const pythonEnv = await getEnvironment(uri);
+                const pythonEnv = project?.pythonEnvironment ?? (await getEnvironment(uri));
                 if (!pythonEnv) {
                     traceError(
                         `Python environment not found for workspace ${uri.fsPath}. Cannot proceed with test discovery.`,

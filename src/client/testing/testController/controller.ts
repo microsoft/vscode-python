@@ -794,7 +794,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         }
 
         // Check if we're in project-based mode and should use project-specific execution
-        if (this.projectRegistry.hasProjects(workspace.uri) && settings.testing.pytestEnabled) {
+        if (this.projectRegistry.hasProjects(workspace.uri)) {
             const projects = this.projectRegistry.getProjectsArray(workspace.uri);
             await executeTestsForProjects(projects, testItems, runInstance, request, token, {
                 projectRegistry: this.projectRegistry,
