@@ -612,11 +612,15 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
         await Promise.all(
             workspaces.map(async (workspace) => {
-                if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
-                    this.commandManager
-                        .executeCommand(constants.Commands.TriggerEnvironmentSelection, workspace.uri)
-                        .then(noop, noop);
-                    return;
+                // In project-based mode, each project has its own environment,
+                // so we don't require a global active interpreter
+                if (!useEnvExtension()) {
+                    if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
+                        this.commandManager
+                            .executeCommand(constants.Commands.TriggerEnvironmentSelection, workspace.uri)
+                            .then(noop, noop);
+                        return;
+                    }
                 }
                 await this.discoverTestsInWorkspace(workspace.uri);
             }),
@@ -699,9 +703,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
             await Promise.all(
                 workspaces.map(async (workspace) => {
-                    if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
-                        traceError('Cannot trigger test discovery as a valid interpreter is not selected');
-                        return;
+                    // In project-based mode, each project has its own environment,
+                    // so we don't require a global active interpreter
+                    if (!useEnvExtension()) {
+                        if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
+                            traceError('Cannot trigger test discovery as a valid interpreter is not selected');
+                            return;
+                        }
                     }
                     await this.refreshTestDataInternal(workspace.uri);
                 }),
