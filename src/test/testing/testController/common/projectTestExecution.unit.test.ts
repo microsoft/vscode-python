@@ -653,7 +653,9 @@ suite('Project Test Execution', () => {
             // Mock
             const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
             const mockCoverageDetails = [{ line: 1, executed: true }];
-            project.resultResolver.detailedCoverageMap.set('/workspace/proj/file.py', mockCoverageDetails as any);
+            // Use Uri.fsPath as the key to match the implementation's lookup
+            const fileUri = Uri.file('/workspace/proj/file.py');
+            project.resultResolver.detailedCoverageMap.set(fileUri.fsPath, mockCoverageDetails as any);
             const profileMock = ({
                 kind: TestRunProfileKind.Coverage,
                 loadDetailedCoverage: undefined,
@@ -664,7 +666,7 @@ suite('Project Test Execution', () => {
             setupCoverageForProject(request, project);
 
             // Run - call the configured callback
-            const fileCoverage = { uri: Uri.file('/workspace/proj/file.py') };
+            const fileCoverage = { uri: fileUri };
             const result = await profileMock.loadDetailedCoverage!(
                 {} as TestRun,
                 fileCoverage as any,
