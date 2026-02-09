@@ -177,7 +177,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             include: false,
         });
 
-        DebugLauncher.applyDefaults(debugConfig!, workspaceFolder, configSettings);
+        DebugLauncher.applyDefaults(debugConfig!, workspaceFolder, configSettings, options.cwd);
 
         return this.convertConfigToArgs(debugConfig!, workspaceFolder, options);
     }
@@ -224,6 +224,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         cfg: LaunchRequestArguments,
         workspaceFolder: WorkspaceFolder,
         configSettings: IPythonSettings,
+        optionsCwd?: string,
     ) {
         // cfg.pythonPath is handled by LaunchConfigurationResolver.
 
@@ -231,7 +232,9 @@ export class DebugLauncher implements ITestDebugLauncher {
             cfg.console = 'internalConsole';
         }
         if (!cfg.cwd) {
-            cfg.cwd = configSettings.testing.cwd || workspaceFolder.uri.fsPath;
+            // For project-based testing, use the project's cwd (optionsCwd) if provided.
+            // Otherwise fall back to settings.testing.cwd or the workspace folder.
+            cfg.cwd = optionsCwd || configSettings.testing.cwd || workspaceFolder.uri.fsPath;
         }
         if (!cfg.env) {
             cfg.env = {};
