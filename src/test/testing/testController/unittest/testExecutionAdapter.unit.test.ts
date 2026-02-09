@@ -534,6 +534,14 @@ suite('Unittest test execution adapter', () => {
         };
         runInBackgroundStub.resolves(mockProc2 as any);
 
+        // Create a promise that resolves when runInBackground is called
+        const runInBackgroundCalled = new Promise<void>((resolve) => {
+            runInBackgroundStub.callsFake(() => {
+                resolve();
+                return Promise.resolve(mockProc2 as any);
+            });
+        });
+
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)
@@ -557,8 +565,8 @@ suite('Unittest test execution adapter', () => {
             mockProject,
         );
 
-        // Wait for the runInBackground to be called
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        // Wait for runInBackground to be called
+        await runInBackgroundCalled;
 
         // Simulate process exit to complete the test
         exitCallbacks.forEach((cb) => cb(0, null));

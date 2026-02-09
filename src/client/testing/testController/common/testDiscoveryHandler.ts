@@ -104,14 +104,14 @@ export class TestDiscoveryHandler {
                 errorText.includes('No module named');
 
             if (isImportError) {
-                traceWarn(
-                    `---
-                    [test-by-project] Import error during unittest discovery for project at ${workspacePath}. ` +
-                        `This may be caused by test files in nested project directories that require different dependencies. ` +
-                        `If these tests are discovered successfully by their own project (with the correct Python environment), ` +
-                        `this error can be safely ignored. To avoid this, consider excluding nested project paths from parent project discovery.
-                        ---`,
-                );
+                const warningMessage =
+                    '--- ' +
+                    `[test-by-project] Import error during unittest discovery for project at ${workspacePath}. ` +
+                    'This may be caused by test files in nested project directories that require different dependencies. ' +
+                    'If these tests are discovered successfully by their own project (with the correct Python environment), ' +
+                    'this error can be safely ignored. To avoid this, consider excluding nested project paths from parent project discovery. ' +
+                    '---';
+                traceWarn(warningMessage);
             }
         }
 
