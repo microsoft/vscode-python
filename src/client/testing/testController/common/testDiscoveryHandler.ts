@@ -5,7 +5,7 @@ import { CancellationToken, TestController, Uri, MarkdownString } from 'vscode';
 import * as util from 'util';
 import { DiscoveredTestPayload } from './types';
 import { TestProvider } from '../../types';
-import { traceError } from '../../../logging';
+import { traceError, traceWarn } from '../../../logging';
 import { Testing } from '../../../common/utils/localize';
 import { createErrorTestItem } from './testItemUtilities';
 import { buildErrorNodeOptions, populateTestTree } from './utils';
@@ -92,6 +92,28 @@ export class TestDiscoveryHandler {
             testProvider === 'pytest' ? Testing.errorPytestDiscovery : Testing.errorUnittestDiscovery;
 
         traceError(testingErrorConst, 'for workspace: ', workspacePath, '\r\n', error?.join('\r\n\r\n') ?? '');
+
+        // For unittest in project-based mode, check if the error might be caused by nested project imports
+        // This helps users understand that import errors from nested projects can be safely ignored
+        // if those tests are covered by a different project with the correct environment.
+        if (testProvider === 'unittest' && projectId) {
+            const errorText = error?.join(' ') ?? '';
+            const isImportError =
+                errorText.includes('ModuleNotFoundError') ||
+                errorText.includes('ImportError') ||
+                errorText.includes('No module named');
+
+            if (isImportError) {
+                const warningMessage =
+                    '--- ' +
+                    `[test-by-project] Import error during unittest discovery for project at ${workspacePath}. ` +
+                    'This may be caused by test files in nested project directories that require different dependencies. ' +
+                    'If these tests are discovered successfully by their own project (with the correct Python environment), ' +
+                    'this error can be safely ignored. To avoid this, consider excluding nested project paths from parent project discovery. ' +
+                    '---';
+                traceWarn(warningMessage);
+            }
+        }
 
         const errorNodeId = projectId
             ? `${projectId}${PROJECT_ID_SEPARATOR}DiscoveryError:${workspacePath}`

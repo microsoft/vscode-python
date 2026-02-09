@@ -109,7 +109,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             // Execute using environment extension if available
             if (useEnvExtension()) {
                 traceInfo(`Using environment extension for pytest discovery in workspace ${uri.fsPath}`);
-                const pythonEnv = await getEnvironment(uri);
+                const pythonEnv = project?.pythonEnvironment ?? (await getEnvironment(uri));
                 if (!pythonEnv) {
                     traceError(
                         `Python environment not found for workspace ${uri.fsPath}. Cannot proceed with test discovery.`,

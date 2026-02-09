@@ -48,18 +48,9 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         runInstance: TestRun,
         executionFactory: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
-        interpreter?: PythonEnvironment,
+        _interpreter?: PythonEnvironment,
         project?: ProjectAdapter,
     ): Promise<void> {
-        // Note: project parameter is currently unused for unittest.
-        // Project-based unittest execution will be implemented in a future PR.
-        console.log(
-            'interpreter, project parameters are currently unused in UnittestTestExecutionAdapter, they will be used in a future implementation of project-based unittest execution.:',
-            {
-                interpreter,
-                project,
-            },
-        );
         // deferredTillServerClose awaits named pipe server close
         const deferredTillServerClose: Deferred<void> = utils.createTestingDeferred();
 
@@ -189,6 +180,8 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                     testProvider: UNITTEST_PROVIDER,
                     runTestIdsPort: testIdsFileName,
                     pytestPort: resultNamedPipeName, // change this from pytest
+                    // Pass project for project-based debugging (Python path and session name derived from this)
+                    project: project?.pythonProject,
                 };
                 const sessionOptions: DebugSessionOptions = {
                     testRun: runInstance,
@@ -207,7 +200,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                     sessionOptions,
                 );
             } else if (useEnvExtension()) {
-                const pythonEnv = await getEnvironment(uri);
+                const pythonEnv = project?.pythonEnvironment ?? (await getEnvironment(uri));
                 if (pythonEnv) {
                     traceInfo(`Running unittest with arguments: ${args.join(' ')} for workspace ${uri.fsPath} \r\n`);
                     const deferredTillExecClose = createDeferred();
