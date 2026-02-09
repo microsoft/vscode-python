@@ -26,7 +26,7 @@ import {
     findProjectForTestItem,
     getTestCaseNodesRecursive,
     groupTestItemsByProject,
-    setupCoverageForProject,
+    setupCoverageForProjects,
 } from '../../../../client/testing/testController/common/projectTestExecution';
 import * as telemetry from '../../../../client/telemetry';
 import * as envExtApi from '../../../../client/envExt/api.internal';
@@ -614,9 +614,9 @@ suite('Project Test Execution', () => {
         });
     });
 
-    // ===== setupCoverageForProject Tests =====
+    // ===== setupCoverageForProjects Tests =====
 
-    suite('setupCoverageForProject', () => {
+    suite('setupCoverageForProjects', () => {
         test('should configure loadDetailedCoverage callback when profile kind is Coverage', () => {
             // Mock
             const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
@@ -627,7 +627,7 @@ suite('Project Test Execution', () => {
             const request = { profile: profileMock } as TestRunRequest;
 
             // Run
-            setupCoverageForProject(request, project);
+            setupCoverageForProjects(request, [project]);
 
             // Assert
             expect(profileMock.loadDetailedCoverage).to.be.a('function');
@@ -643,7 +643,7 @@ suite('Project Test Execution', () => {
             const request = { profile: profileMock } as TestRunRequest;
 
             // Run
-            setupCoverageForProject(request, project);
+            setupCoverageForProjects(request, [project]);
 
             // Assert
             expect(profileMock.loadDetailedCoverage).to.be.undefined;
@@ -663,7 +663,7 @@ suite('Project Test Execution', () => {
             const request = { profile: profileMock } as TestRunRequest;
 
             // Run - configure coverage
-            setupCoverageForProject(request, project);
+            setupCoverageForProjects(request, [project]);
 
             // Run - call the configured callback
             const fileCoverage = { uri: fileUri };
@@ -687,7 +687,7 @@ suite('Project Test Execution', () => {
             const request = { profile: profileMock } as TestRunRequest;
 
             // Run - configure coverage
-            setupCoverageForProject(request, project);
+            setupCoverageForProjects(request, [project]);
 
             // Run - call callback for file not in map
             const fileCoverage = { uri: Uri.file('/workspace/proj/uncovered_file.py') };
@@ -699,6 +699,42 @@ suite('Project Test Execution', () => {
 
             // Assert
             expect(result).to.deep.equal([]);
+        });
+
+        test('should route to correct project when multiple projects have coverage data', async () => {
+            // Mock - two projects with different coverage data
+            const project1 = createMockProjectAdapter({ projectPath: '/workspace/proj1', projectName: 'proj1' });
+            const project2 = createMockProjectAdapter({ projectPath: '/workspace/proj2', projectName: 'proj2' });
+            const coverage1 = [{ line: 1, executed: true }];
+            const coverage2 = [{ line: 2, executed: false }];
+            const file1Uri = Uri.file('/workspace/proj1/file1.py');
+            const file2Uri = Uri.file('/workspace/proj2/file2.py');
+            project1.resultResolver.detailedCoverageMap.set(file1Uri.fsPath, coverage1 as any);
+            project2.resultResolver.detailedCoverageMap.set(file2Uri.fsPath, coverage2 as any);
+
+            const profileMock = ({
+                kind: TestRunProfileKind.Coverage,
+                loadDetailedCoverage: undefined,
+            } as unknown) as TestRunProfile;
+            const request = { profile: profileMock } as TestRunRequest;
+
+            // Run - configure coverage with both projects
+            setupCoverageForProjects(request, [project1, project2]);
+
+            // Assert - can get coverage from both projects through single callback
+            const result1 = await profileMock.loadDetailedCoverage!(
+                {} as TestRun,
+                { uri: file1Uri } as any,
+                {} as CancellationToken,
+            );
+            const result2 = await profileMock.loadDetailedCoverage!(
+                {} as TestRun,
+                { uri: file2Uri } as any,
+                {} as CancellationToken,
+            );
+
+            expect(result1).to.deep.equal(coverage1);
+            expect(result2).to.deep.equal(coverage2);
         });
     });
 });

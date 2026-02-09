@@ -89,7 +89,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
         // Unique marker to identify this session among concurrent debug sessions
-        const sessionMarker = `test-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+        const sessionMarker = `test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
         launchArgs[TEST_SESSION_MARKER_KEY] = sessionMarker;
 
         let ourSession: DebugSession | undefined;

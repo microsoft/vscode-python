@@ -804,8 +804,19 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             return;
         }
 
-        const testAdapter =
-            this.testAdapters.get(workspace.uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+        // For unittest (or pytest when not in project mode), use the legacy WorkspaceTestAdapter.
+        // In project mode, legacy adapters may not be initialized, so create one on demand.
+        let testAdapter = this.testAdapters.get(workspace.uri);
+        if (!testAdapter) {
+            // Initialize legacy adapter on demand (needed for unittest in project mode)
+            this.activateLegacyWorkspace(workspace);
+            testAdapter = this.testAdapters.get(workspace.uri);
+        }
+
+        if (!testAdapter) {
+            traceError(`[test] No test adapter available for workspace: ${workspace.uri.fsPath}`);
+            return;
+        }
 
         this.setupCoverageIfNeeded(request, testAdapter);
 

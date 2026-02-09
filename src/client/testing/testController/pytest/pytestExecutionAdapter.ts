@@ -117,15 +117,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             mutableEnv.COVERAGE_ENABLED = 'True';
         }
 
-        // Set PROJECT_ROOT_PATH for project-based testing
-        // This tells the Python side where to root the test tree for multi-project workspaces
-        if (project) {
-            mutableEnv.PROJECT_ROOT_PATH = project.projectUri.fsPath;
-            traceInfo(
-                `[test-by-project] Setting PROJECT_ROOT_PATH=${project.projectUri.fsPath} for ${project.projectName}`,
-            );
-        }
-
         const debugBool = profileKind && profileKind === TestRunProfileKind.Debug;
 
         // Create the Python environment in which to execute the command.

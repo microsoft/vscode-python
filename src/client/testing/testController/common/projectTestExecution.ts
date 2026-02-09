@@ -11,26 +11,16 @@ import { ProjectAdapter } from './projectAdapter';
 import { TestProjectRegistry } from './testProjectRegistry';
 import { getProjectId } from './projectUtils';
 import { getEnvExtApi, useEnvExtension } from '../../../envExt/api.internal';
+import { isParentPath } from '../../../pythonEnvironments/common/externalDependencies';
 
-/**
- * Dependencies required for project-based test execution.
- * Passed to execution functions to avoid tight coupling to the controller.
- */
+/** Dependencies for project-based test execution. */
 export interface ProjectExecutionDependencies {
     projectRegistry: TestProjectRegistry;
     pythonExecFactory: IPythonExecutionFactory;
     debugLauncher: ITestDebugLauncher;
 }
 
-/**
- * Executes tests for multiple projects within a workspace (project-based mode).
- * Groups test items by their owning project and executes each project's tests
- * using that project's Python environment.
- *
- * Cancellation is handled at multiple levels:
- * 1. Before starting each project's execution (checked here)
- * 2. Within each execution adapter (via runInstance.token)
- */
+/** Executes tests for multiple projects, grouping by project and using each project's Python environment. */
 export async function executeTestsForProjects(
     projects: ProjectAdapter[],
     testItems: TestItem[],
@@ -56,6 +46,11 @@ export async function executeTestsForProjects(
     const isDebugMode = request.profile?.kind === TestRunProfileKind.Debug;
     traceInfo(`[test-by-project] Executing tests across ${testsByProject.size} project(s), debug=${isDebugMode}`);
 
+    // Setup coverage once for all projects (single callback that routes by file path)
+    if (request.profile?.kind === TestRunProfileKind.Coverage) {
+        setupCoverageForProjects(request, projects);
+    }
+
     // Execute tests for each project in parallel
     // For debug mode, multiple debug sessions will be launched in parallel
     // Each execution respects cancellation via runInstance.token
@@ -74,11 +69,6 @@ export async function executeTestsForProjects(
             tool: project.testProvider,
             debugging: isDebugMode,
         });
-
-        // Setup coverage for this project if needed
-        if (request.profile?.kind === TestRunProfileKind.Coverage) {
-            setupCoverageForProject(request, project);
-        }
 
         try {
             await executeTestsForProject(project, items, runInstance, request, deps);
@@ -99,20 +89,13 @@ export async function executeTestsForProjects(
     }
 }
 
-/**
- * Lookup context for avoiding redundant API calls within a single test run.
- */
+/** Lookup context for caching project lookups within a single test run. */
 interface ProjectLookupContext {
-    /** Maps file URI fsPath → resolved ProjectAdapter (or undefined if no match) */
     uriToAdapter: Map<string, ProjectAdapter | undefined>;
-    /** Maps project URI fsPath → ProjectAdapter for O(1) adapter lookup */
     projectPathToAdapter: Map<string, ProjectAdapter>;
 }
 
-/**
- * Groups test items by their owning project. Uses env API when available, else falls back to path matching.
- * Time complexity: O(n + p) amortized via per-run caching.
- */
+/** Groups test items by owning project using env API or path-based matching as fallback. */
 export async function groupTestItemsByProject(
     testItems: TestItem[],
     projects: ProjectAdapter[],
@@ -155,9 +138,7 @@ export async function groupTestItemsByProject(
     return result;
 }
 
-/**
- * Finds the project that owns a test item. Uses env API when available, else path-based matching.
- */
+/** Finds the project that owns a test item. */
 export async function findProjectForTestItem(
     item: TestItem,
     projects: ProjectAdapter[],
@@ -208,9 +189,7 @@ export async function findProjectForTestItem(
     return result;
 }
 
-/**
- * Fallback: finds project using path-based matching. O(p) time complexity.
- */
+/** Fallback: finds project using path-based matching. */
 function findProjectByPath(item: TestItem, projects: ProjectAdapter[]): ProjectAdapter | undefined {
     if (!item.uri) return undefined;
 
@@ -220,8 +199,8 @@ function findProjectByPath(item: TestItem, projects: ProjectAdapter[]): ProjectA
 
     for (const project of projects) {
         const projectPath = project.projectUri.fsPath;
-        // Check if the item's path starts with the project's path
-        if (itemPath.startsWith(projectPath) && projectPath.length > bestMatchLength) {
+        // Use isParentPath for safe path-boundary matching (handles separators and case normalization)
+        if (isParentPath(itemPath, projectPath) && projectPath.length > bestMatchLength) {
             bestMatch = project;
             bestMatchLength = projectPath.length;
         }
@@ -230,9 +209,7 @@ function findProjectByPath(item: TestItem, projects: ProjectAdapter[]): ProjectA
     return bestMatch;
 }
 
-/**
- * Executes tests for a single project using the project's Python environment.
- */
+/** Executes tests for a single project using the project's Python environment. */
 export async function executeTestsForProject(
     project: ProjectAdapter,
     testItems: TestItem[],
@@ -240,20 +217,26 @@ export async function executeTestsForProject(
     request: TestRunRequest,
     deps: ProjectExecutionDependencies,
 ): Promise<void> {
-    const testCaseIds: string[] = [];
+    const processedTestItemIds = new Set<string>();
+    const uniqueTestCaseIds = new Set<string>();
 
-    // Mark items as started and collect test IDs
+    // Mark items as started and collect test IDs (deduplicated to handle overlapping selections)
     for (const item of testItems) {
-        // Recursively get test case nodes if this is a parent node
         const testCaseNodes = getTestCaseNodesRecursive(item);
         for (const node of testCaseNodes) {
+            if (processedTestItemIds.has(node.id)) {
+                continue;
+            }
+            processedTestItemIds.add(node.id);
             runInstance.started(node);
             const runId = project.resultResolver.vsIdToRunId.get(node.id);
             if (runId) {
-                testCaseIds.push(runId);
+                uniqueTestCaseIds.add(runId);
             }
         }
     }
+
+    const testCaseIds = Array.from(uniqueTestCaseIds);
 
     if (testCaseIds.length === 0) {
         traceVerbose(`[test-by-project] No test IDs found for project ${project.projectName}`);
@@ -275,9 +258,7 @@ export async function executeTestsForProject(
     );
 }
 
-/**
- * Recursively gets all test case nodes from a test item tree.
- */
+/** Recursively gets all leaf test case nodes from a test item tree. */
 export function getTestCaseNodesRecursive(item: TestItem): TestItem[] {
     const results: TestItem[] = [];
     if (item.children.size === 0) {
@@ -292,18 +273,24 @@ export function getTestCaseNodesRecursive(item: TestItem): TestItem[] {
     return results;
 }
 
-/**
- * Sets up detailed coverage loading for a project.
- */
-export function setupCoverageForProject(request: TestRunRequest, project: ProjectAdapter): void {
+/** Sets up detailed coverage loading that routes to the correct project by file path. */
+export function setupCoverageForProjects(request: TestRunRequest, projects: ProjectAdapter[]): void {
     if (request.profile?.kind === TestRunProfileKind.Coverage) {
+        // Create a single callback that routes to the correct project's coverage map by file path
         request.profile.loadDetailedCoverage = (
             _testRun: TestRun,
             fileCoverage,
             _token,
         ): Thenable<FileCoverageDetail[]> => {
-            const details = project.resultResolver.detailedCoverageMap.get(fileCoverage.uri.fsPath);
-            return Promise.resolve(details ?? []);
+            const filePath = fileCoverage.uri.fsPath;
+            // Find the project that has coverage data for this file
+            for (const project of projects) {
+                const details = project.resultResolver.detailedCoverageMap.get(filePath);
+                if (details) {
+                    return Promise.resolve(details);
+                }
+            }
+            return Promise.resolve([]);
         };
     }
 }
