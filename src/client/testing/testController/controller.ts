@@ -45,6 +45,7 @@ import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { ProjectAdapter } from './common/projectAdapter';
 import { TestProjectRegistry } from './common/testProjectRegistry';
 import { createTestAdapters, getProjectId } from './common/projectUtils';
+import { executeTestsForProjects } from './common/projectTestExecution';
 import { useEnvExtension, getEnvExtApi } from '../../envExt/api.internal';
 import { DidChangePythonProjectsEventArgs, PythonProject } from '../../envExt/types';
 
@@ -611,11 +612,15 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
         await Promise.all(
             workspaces.map(async (workspace) => {
-                if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
-                    this.commandManager
-                        .executeCommand(constants.Commands.TriggerEnvironmentSelection, workspace.uri)
-                        .then(noop, noop);
-                    return;
+                // In project-based mode, each project has its own environment,
+                // so we don't require a global active interpreter
+                if (!useEnvExtension()) {
+                    if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
+                        this.commandManager
+                            .executeCommand(constants.Commands.TriggerEnvironmentSelection, workspace.uri)
+                            .then(noop, noop);
+                        return;
+                    }
                 }
                 await this.discoverTestsInWorkspace(workspace.uri);
             }),
@@ -698,9 +703,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
             await Promise.all(
                 workspaces.map(async (workspace) => {
-                    if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
-                        traceError('Cannot trigger test discovery as a valid interpreter is not selected');
-                        return;
+                    // In project-based mode, each project has its own environment,
+                    // so we don't require a global active interpreter
+                    if (!useEnvExtension()) {
+                        if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
+                            traceError('Cannot trigger test discovery as a valid interpreter is not selected');
+                            return;
+                        }
                     }
                     await this.refreshTestDataInternal(workspace.uri);
                 }),
@@ -784,8 +793,30 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             return;
         }
 
-        const testAdapter =
-            this.testAdapters.get(workspace.uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+        // Check if we're in project-based mode and should use project-specific execution
+        if (this.projectRegistry.hasProjects(workspace.uri) && settings.testing.pytestEnabled) {
+            const projects = this.projectRegistry.getProjectsArray(workspace.uri);
+            await executeTestsForProjects(projects, testItems, runInstance, request, token, {
+                projectRegistry: this.projectRegistry,
+                pythonExecFactory: this.pythonExecFactory,
+                debugLauncher: this.debugLauncher,
+            });
+            return;
+        }
+
+        // For unittest (or pytest when not in project mode), use the legacy WorkspaceTestAdapter.
+        // In project mode, legacy adapters may not be initialized, so create one on demand.
+        let testAdapter = this.testAdapters.get(workspace.uri);
+        if (!testAdapter) {
+            // Initialize legacy adapter on demand (needed for unittest in project mode)
+            this.activateLegacyWorkspace(workspace);
+            testAdapter = this.testAdapters.get(workspace.uri);
+        }
+
+        if (!testAdapter) {
+            traceError(`[test] No test adapter available for workspace: ${workspace.uri.fsPath}`);
+            return;
+        }
 
         this.setupCoverageIfNeeded(request, testAdapter);
 

@@ -116,6 +116,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         if (profileKind && profileKind === TestRunProfileKind.Coverage) {
             mutableEnv.COVERAGE_ENABLED = 'True';
         }
+
         const debugBool = profileKind && profileKind === TestRunProfileKind.Debug;
 
         // Create the Python environment in which to execute the command.
@@ -166,6 +167,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     testProvider: PYTEST_PROVIDER,
                     runTestIdsPort: testIdsFileName,
                     pytestPort: resultNamedPipeName,
+                    // Pass project for project-based debugging (Python path and session name derived from this)
+                    project: project?.pythonProject,
                 };
                 const sessionOptions: DebugSessionOptions = {
                     testRun: runInstance,
@@ -179,7 +182,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     sessionOptions,
                 );
             } else if (useEnvExtension()) {
-                const pythonEnv = await getEnvironment(uri);
+                // For project-based execution, use the project's Python environment
+                // Otherwise, fall back to getting the environment from the URI
+                const pythonEnv = project?.pythonEnvironment ?? (await getEnvironment(uri));
                 if (pythonEnv) {
                     const deferredTillExecClose: Deferred<void> = utils.createTestingDeferred();
 
