@@ -524,23 +524,18 @@ suite('Unittest test execution adapter', () => {
         // Stub runInBackground to capture which environment was used
         const runInBackgroundStub = sinon.stub(extapi, 'runInBackground');
         const exitCallbacks: ((code: number, signal: string | null) => void)[] = [];
+        // Promise that resolves when the production code registers its onExit handler
+        const onExitRegistered = createDeferred<void>();
         const mockProc2 = {
             stdout: { on: sinon.stub() },
             stderr: { on: sinon.stub() },
             onExit: (cb: (code: number, signal: string | null) => void) => {
                 exitCallbacks.push(cb);
+                onExitRegistered.resolve();
             },
             kill: sinon.stub(),
         };
-        runInBackgroundStub.resolves(mockProc2 as any);
-
-        // Create a promise that resolves when runInBackground is called
-        const runInBackgroundCalled = new Promise<void>((resolve) => {
-            runInBackgroundStub.callsFake(() => {
-                resolve();
-                return Promise.resolve(mockProc2 as any);
-            });
-        });
+        runInBackgroundStub.callsFake(() => Promise.resolve(mockProc2 as any));
 
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
@@ -565,8 +560,8 @@ suite('Unittest test execution adapter', () => {
             mockProject,
         );
 
-        // Wait for runInBackground to be called
-        await runInBackgroundCalled;
+        // Wait for production code to register its onExit handler
+        await onExitRegistered.promise;
 
         // Simulate process exit to complete the test
         exitCallbacks.forEach((cb) => cb(0, null));
