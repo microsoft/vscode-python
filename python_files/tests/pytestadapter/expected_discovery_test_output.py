@@ -1870,3 +1870,214 @@ black_formatter_expected_output = {
     ],
     "id_": TEST_DATA_PATH_STR,
 }
+
+# =====================================================================================
+# PROJECT_ROOT_PATH environment variable tests
+# These test the project-based testing feature where PROJECT_ROOT_PATH changes
+# the test tree root from cwd to the specified project path.
+# =====================================================================================
+
+# This is the expected output for unittest_folder when PROJECT_ROOT_PATH is set to unittest_folder.
+# The root of the tree is unittest_folder (not .data), simulating project-based testing.
+#
+# **Project Configuration:**
+# In the VS Code Python extension, projects are defined by the Python Environments extension.
+# Each project has a root directory (identified by pyproject.toml, setup.py, etc.).
+# When PROJECT_ROOT_PATH is set, pytest uses that path as the test tree root instead of cwd.
+#
+# **Test Tree Structure:**
+# Without PROJECT_ROOT_PATH (legacy mode):
+#   └── .data (cwd = workspace root)
+#       └── unittest_folder
+#           └── test_add.py, test_subtract.py...
+#
+# With PROJECT_ROOT_PATH set to unittest_folder (project-based mode):
+#   └── unittest_folder (ROOT - set via PROJECT_ROOT_PATH env var)
+#       ├── test_add.py
+#       │   └── TestAddFunction
+#       │       ├── test_add_negative_numbers
+#       │       └── test_add_positive_numbers
+#       │   └── TestDuplicateFunction
+#       │       └── test_dup_a
+#       └── test_subtract.py
+#           └── TestSubtractFunction
+#               ├── test_subtract_negative_numbers
+#               └── test_subtract_positive_numbers
+#           └── TestDuplicateFunction
+#               └── test_dup_s
+#
+# Note: This reuses the unittest_folder paths defined earlier in this file.
+project_root_unittest_folder_expected_output = {
+    "name": "unittest_folder",
+    "path": os.fspath(unittest_folder_path),
+    "type_": "folder",
+    "children": [
+        {
+            "name": "test_add.py",
+            "path": os.fspath(test_add_path),
+            "type_": "file",
+            "id_": os.fspath(test_add_path),
+            "children": [
+                {
+                    "name": "TestAddFunction",
+                    "path": os.fspath(test_add_path),
+                    "type_": "class",
+                    "children": [
+                        {
+                            "name": "test_add_negative_numbers",
+                            "path": os.fspath(test_add_path),
+                            "lineno": find_test_line_number(
+                                "test_add_negative_numbers",
+                                os.fspath(test_add_path),
+                            ),
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "test_add.py::TestAddFunction::test_add_negative_numbers",
+                                test_add_path,
+                            ),
+                            "runID": get_absolute_test_id(
+                                "test_add.py::TestAddFunction::test_add_negative_numbers",
+                                test_add_path,
+                            ),
+                        },
+                        {
+                            "name": "test_add_positive_numbers",
+                            "path": os.fspath(test_add_path),
+                            "lineno": find_test_line_number(
+                                "test_add_positive_numbers",
+                                os.fspath(test_add_path),
+                            ),
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "test_add.py::TestAddFunction::test_add_positive_numbers",
+                                test_add_path,
+                            ),
+                            "runID": get_absolute_test_id(
+                                "test_add.py::TestAddFunction::test_add_positive_numbers",
+                                test_add_path,
+                            ),
+                        },
+                    ],
+                    "id_": get_absolute_test_id(
+                        "test_add.py::TestAddFunction",
+                        test_add_path,
+                    ),
+                    "lineno": find_class_line_number("TestAddFunction", test_add_path),
+                },
+                {
+                    "name": "TestDuplicateFunction",
+                    "path": os.fspath(test_add_path),
+                    "type_": "class",
+                    "children": [
+                        {
+                            "name": "test_dup_a",
+                            "path": os.fspath(test_add_path),
+                            "lineno": find_test_line_number(
+                                "test_dup_a",
+                                os.fspath(test_add_path),
+                            ),
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "test_add.py::TestDuplicateFunction::test_dup_a",
+                                test_add_path,
+                            ),
+                            "runID": get_absolute_test_id(
+                                "test_add.py::TestDuplicateFunction::test_dup_a",
+                                test_add_path,
+                            ),
+                        },
+                    ],
+                    "id_": get_absolute_test_id(
+                        "test_add.py::TestDuplicateFunction",
+                        test_add_path,
+                    ),
+                    "lineno": find_class_line_number("TestDuplicateFunction", test_add_path),
+                },
+            ],
+        },
+        {
+            "name": "test_subtract.py",
+            "path": os.fspath(test_subtract_path),
+            "type_": "file",
+            "id_": os.fspath(test_subtract_path),
+            "children": [
+                {
+                    "name": "TestSubtractFunction",
+                    "path": os.fspath(test_subtract_path),
+                    "type_": "class",
+                    "children": [
+                        {
+                            "name": "test_subtract_negative_numbers",
+                            "path": os.fspath(test_subtract_path),
+                            "lineno": find_test_line_number(
+                                "test_subtract_negative_numbers",
+                                os.fspath(test_subtract_path),
+                            ),
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "test_subtract.py::TestSubtractFunction::test_subtract_negative_numbers",
+                                test_subtract_path,
+                            ),
+                            "runID": get_absolute_test_id(
+                                "test_subtract.py::TestSubtractFunction::test_subtract_negative_numbers",
+                                test_subtract_path,
+                            ),
+                        },
+                        {
+                            "name": "test_subtract_positive_numbers",
+                            "path": os.fspath(test_subtract_path),
+                            "lineno": find_test_line_number(
+                                "test_subtract_positive_numbers",
+                                os.fspath(test_subtract_path),
+                            ),
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "test_subtract.py::TestSubtractFunction::test_subtract_positive_numbers",
+                                test_subtract_path,
+                            ),
+                            "runID": get_absolute_test_id(
+                                "test_subtract.py::TestSubtractFunction::test_subtract_positive_numbers",
+                                test_subtract_path,
+                            ),
+                        },
+                    ],
+                    "id_": get_absolute_test_id(
+                        "test_subtract.py::TestSubtractFunction",
+                        test_subtract_path,
+                    ),
+                    "lineno": find_class_line_number("TestSubtractFunction", test_subtract_path),
+                },
+                {
+                    "name": "TestDuplicateFunction",
+                    "path": os.fspath(test_subtract_path),
+                    "type_": "class",
+                    "children": [
+                        {
+                            "name": "test_dup_s",
+                            "path": os.fspath(test_subtract_path),
+                            "lineno": find_test_line_number(
+                                "test_dup_s",
+                                os.fspath(test_subtract_path),
+                            ),
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "test_subtract.py::TestDuplicateFunction::test_dup_s",
+                                test_subtract_path,
+                            ),
+                            "runID": get_absolute_test_id(
+                                "test_subtract.py::TestDuplicateFunction::test_dup_s",
+                                test_subtract_path,
+                            ),
+                        },
+                    ],
+                    "id_": get_absolute_test_id(
+                        "test_subtract.py::TestDuplicateFunction",
+                        test_subtract_path,
+                    ),
+                    "lineno": find_class_line_number("TestDuplicateFunction", test_subtract_path),
+                },
+            ],
+        },
+    ],
+    "id_": os.fspath(unittest_folder_path),
+}

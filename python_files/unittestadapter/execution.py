@@ -36,6 +36,9 @@ from unittestadapter.pvsc_utils import (  # noqa: E402
 ErrorType = Union[Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]]
 test_run_pipe = ""
 START_DIR = ""
+# PROJECT_ROOT_PATH: Used for project-based testing to override cwd in payload
+# When set, this should be used as the cwd in all execution payloads
+PROJECT_ROOT_PATH = None  # type: Optional[str]
 
 
 class TestOutcomeEnum(str, enum.Enum):
@@ -191,8 +194,22 @@ def run_tests(
     verbosity: int,
     failfast: Optional[bool],  # noqa: FBT001
     locals_: Optional[bool] = None,  # noqa: FBT001
+    project_root_path: Optional[str] = None,
 ) -> ExecutionPayloadDict:
-    cwd = os.path.abspath(start_dir)  # noqa: PTH100
+    """Run unittests and return the execution payload.
+
+    Args:
+        start_dir: Directory where test discovery starts
+        test_ids: List of test IDs to run
+        pattern: Pattern to match test files
+        top_level_dir: Top-level directory for test tree hierarchy
+        verbosity: Verbosity level for test output
+        failfast: Stop on first failure
+        locals_: Show local variables in tracebacks
+        project_root_path: Optional project root path for the cwd in the response payload
+                          (used for project-based testing to root test tree at project)
+    """
+    cwd = os.path.abspath(project_root_path or start_dir)  # noqa: PTH100
     if "/" in start_dir:  #  is a subdir
         parent_dir = os.path.dirname(start_dir)  # noqa: PTH120
         sys.path.insert(0, parent_dir)
@@ -259,7 +276,8 @@ atexit.register(lambda: __socket.close() if __socket else None)
 
 def send_run_data(raw_data, test_run_pipe):
     status = raw_data["outcome"]
-    cwd = os.path.abspath(START_DIR)  # noqa: PTH100
+    # Use PROJECT_ROOT_PATH if set (project-based testing), otherwise use START_DIR
+    cwd = os.path.abspath(PROJECT_ROOT_PATH or START_DIR)  # noqa: PTH100
     test_id = raw_data["subtest"] or raw_data["test"]
     test_dict = {}
     test_dict[test_id] = raw_data
@@ -348,7 +366,19 @@ if __name__ == "__main__":
         args = argv[index + 1 :] or []
         django_execution_runner(manage_py_path, test_ids, args)
     else:
+        # Check for PROJECT_ROOT_PATH environment variable (project-based testing).
+        # When set, this overrides the cwd in the payload to match the project root.
+        project_root_path = os.environ.get("PROJECT_ROOT_PATH")
+        if project_root_path:
+            # Update the module-level variable for send_run_data to use
+            # pylint: disable=global-statement
+            globals()["PROJECT_ROOT_PATH"] = project_root_path
+            print(
+                f"PROJECT_ROOT_PATH is set, using {project_root_path} as cwd for execution payload"
+            )
+
         # Perform regular unittest execution.
+        # Pass project_root_path so the payload's cwd matches the project root.
         payload = run_tests(
             start_dir,
             test_ids,
@@ -357,6 +387,7 @@ if __name__ == "__main__":
             verbosity,
             failfast,
             locals_,
+            project_root_path=project_root_path,
         )
 
     if is_coverage_run:

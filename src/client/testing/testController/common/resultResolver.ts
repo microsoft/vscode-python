@@ -26,10 +26,31 @@ export class PythonResultResolver implements ITestResultResolver {
 
     public detailedCoverageMap = new Map<string, FileCoverageDetail[]>();
 
-    constructor(testController: TestController, testProvider: TestProvider, private workspaceUri: Uri) {
+    /**
+     * Optional project ID for scoping test IDs.
+     * When set, all test IDs are prefixed with `{projectId}@@vsc@@` for project-based testing.
+     * When undefined, uses legacy workspace-level IDs for backward compatibility.
+     */
+    private projectId?: string;
+
+    /**
+     * Optional project display name for labeling the test tree root.
+     * When set, the root node label will be "project: {projectName}" instead of the folder name.
+     */
+    private projectName?: string;
+
+    constructor(
+        testController: TestController,
+        testProvider: TestProvider,
+        private workspaceUri: Uri,
+        projectId?: string,
+        projectName?: string,
+    ) {
         this.testController = testController;
         this.testProvider = testProvider;
-        // Initialize a new TestItemIndex which will be used to track test items in this workspace
+        this.projectId = projectId;
+        this.projectName = projectName;
+        // Initialize a new TestItemIndex which will be used to track test items in this workspace/project
         this.testItemIndex = new TestItemIndex();
     }
 
@@ -46,6 +67,14 @@ export class PythonResultResolver implements ITestResultResolver {
         return this.testItemIndex.vsIdToRunIdMap;
     }
 
+    /**
+     * Gets the project ID for this resolver (if any).
+     * Used for project-scoped test ID generation.
+     */
+    public getProjectId(): string | undefined {
+        return this.projectId;
+    }
+
     public resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void {
         PythonResultResolver.discoveryHandler.processDiscovery(
             payload,
@@ -54,6 +83,8 @@ export class PythonResultResolver implements ITestResultResolver {
             this.workspaceUri,
             this.testProvider,
             token,
+            this.projectId,
+            this.projectName,
         );
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
             tool: this.testProvider,
