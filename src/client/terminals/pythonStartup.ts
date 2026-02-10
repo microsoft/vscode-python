@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ExtensionContext, Uri } from 'vscode';
+import { ExtensionContext, MarkdownString, Uri } from 'vscode';
 import * as path from 'path';
 import { copy, createDirectory, getConfiguration, onDidChangeConfiguration } from '../common/vscodeApis/workspaceApis';
 import { EXTENSION_ROOT_DIR } from '../constants';
+import { Interpreters } from '../common/utils/localize';
 
 async function applyPythonStartupSetting(context: ExtensionContext): Promise<void> {
     const config = getConfiguration('python');
@@ -21,11 +22,17 @@ async function applyPythonStartupSetting(context: ExtensionContext): Promise<voi
         const sourcePath = path.join(EXTENSION_ROOT_DIR, 'python_files', 'pythonrc.py');
         await copy(Uri.file(sourcePath), destPath, { overwrite: true });
         context.environmentVariableCollection.replace('PYTHONSTARTUP', destPath.fsPath);
-        // When shell integration is  enabled, we disable PyREPL from cpython.
+        // When shell integration is enabled, we disable PyREPL from cpython.
         context.environmentVariableCollection.replace('PYTHON_BASIC_REPL', '1');
+        context.environmentVariableCollection.description = new MarkdownString(
+            Interpreters.shellIntegrationEnvVarCollectionDescription,
+        );
     } else {
         context.environmentVariableCollection.delete('PYTHONSTARTUP');
         context.environmentVariableCollection.delete('PYTHON_BASIC_REPL');
+        context.environmentVariableCollection.description = new MarkdownString(
+            Interpreters.shellIntegrationDisabledEnvVarCollectionDescription,
+        );
     }
 }
 
