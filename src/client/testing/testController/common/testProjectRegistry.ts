@@ -3,15 +3,15 @@
 
 import * as path from 'path';
 import { TestController, Uri } from 'vscode';
+import { isParentPath } from '../../../common/platform/fs-paths';
 import { IConfigurationService } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { traceError, traceInfo, traceVerbose } from '../../../logging';
+import { traceError, traceInfo } from '../../../logging';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import { TestProvider } from '../../types';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 import { PythonProject, PythonEnvironment } from '../../../envExt/types';
 import { getEnvExtApi, useEnvExtension } from '../../../envExt/api.internal';
-import { isParentPath } from '../../../common/platform/fs-paths';
 import { ProjectAdapter } from './projectAdapter';
 import { getProjectId, createProjectDisplayName, createTestAdapters } from './projectUtils';
 import { PythonResultResolver } from './resultResolver';
@@ -276,6 +276,9 @@ export class TestProjectRegistry {
      *
      * **Time complexity:** O(n²) where n is the number of projects in the workspace.
      * For each project, checks all other projects to find nested relationships.
+     *
+     * Note: Uses path.normalize() to handle Windows path separator inconsistencies
+     * (e.g., paths from URI.fsPath may have mixed separators).
      */
     private computeNestedProjectIgnores(workspaceUri: Uri): Map<string, string[]> {
         const ignoreMap = new Map<string, string[]>();
@@ -290,12 +293,22 @@ export class TestProjectRegistry {
                 // Skip self-comparison using URI
                 if (parent.projectUri.toString() === child.projectUri.toString()) continue;
 
-                const parentPath = parent.projectUri.fsPath;
-                const childPath = child.projectUri.fsPath;
+                // Normalize paths to handle Windows path separator inconsistencies
+                const parentNormalized = path.normalize(parent.projectUri.fsPath);
+                const childNormalized = path.normalize(child.projectUri.fsPath);
 
-                if (isParentPath(childPath, parentPath)) {
-                    nestedPaths.push(childPath);
-                    traceVerbose(`[test-by-project] Nested: ${child.projectName} under ${parent.projectName}`);
+                // Add trailing separator to ensure we match directory boundaries
+                const parentWithSep = parentNormalized.endsWith(path.sep)
+                    ? parentNormalized
+                    : parentNormalized + path.sep;
+                const childWithSep = childNormalized.endsWith(path.sep) ? childNormalized : childNormalized + path.sep;
+
+                // Check if child is inside parent (case-insensitive for Windows)
+                const childIsInsideParent = childWithSep.toLowerCase().startsWith(parentWithSep.toLowerCase());
+
+                if (childIsInsideParent) {
+                    nestedPaths.push(child.projectUri.fsPath);
+                    traceInfo(`[test-by-project] Nested: ${child.projectName} is inside ${parent.projectName}`);
                 }
             }
 
