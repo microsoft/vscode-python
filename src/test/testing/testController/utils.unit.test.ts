@@ -393,16 +393,18 @@ suite('populateTestTree tests', () => {
         };
 
         const rootChildrenAddStub = sandbox.stub();
+        const rootChildrenGetStub = sandbox.stub().returns(undefined);
         const mockRootItem: TestItem = {
-            children: { add: rootChildrenAddStub },
+            children: { add: rootChildrenAddStub, get: rootChildrenGetStub },
         } as any;
 
         const nestedChildrenAddStub = sandbox.stub();
+        const nestedChildrenGetStub = sandbox.stub().returns(undefined);
         const mockNestedNode: TestItem = {
             id: 'nested-id',
             canResolveChildren: true,
             tags: [],
-            children: { add: nestedChildrenAddStub },
+            children: { add: nestedChildrenAddStub, get: nestedChildrenGetStub },
         } as any;
 
         const mockNestedTestItem: TestItem = {
@@ -460,14 +462,15 @@ suite('populateTestTree tests', () => {
         };
 
         const rootChildrenAddStub = sandbox.stub();
-        const mockRootItem: TestItem = {
-            children: { add: rootChildrenAddStub },
-        } as any;
-
         const existingChildrenAddStub = sandbox.stub();
+        const existingChildrenGetStub = sandbox.stub().returns(undefined);
         const existingNode: TestItem = {
             id: 'existing-id',
-            children: { add: existingChildrenAddStub },
+            children: { add: existingChildrenAddStub, get: existingChildrenGetStub },
+        } as any;
+        const rootChildrenGetStub = sandbox.stub().withArgs('existing-id').returns(existingNode);
+        const mockRootItem: TestItem = {
+            children: { add: rootChildrenAddStub, get: rootChildrenGetStub },
         } as any;
 
         const mockTestItem: TestItem = {
@@ -597,14 +600,14 @@ suite('populateTestTree tests', () => {
             id: 'root-id',
             tags: [],
             canResolveChildren: true,
-            children: { add: sandbox.stub() },
+            children: { add: sandbox.stub(), get: sandbox.stub().returns(undefined) },
         } as any;
 
         const mockNestedNode: TestItem = {
             id: 'nested-id',
             tags: [],
             canResolveChildren: true,
-            children: { add: sandbox.stub() },
+            children: { add: sandbox.stub(), get: sandbox.stub().returns(undefined) },
         } as any;
 
         const mockTestItem: TestItem = {
