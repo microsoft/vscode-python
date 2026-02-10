@@ -175,27 +175,38 @@ export async function startDiscoveryNamedPipe(
 }
 
 /**
- * Detects if an error message indicates that pytest is not installed.
- * @param message The error message to check
- * @returns True if the error indicates pytest is not installed
+ * Extracts the missing module name from a ModuleNotFoundError or ImportError message.
+ * @param message The error message to parse
+ * @returns The module name if found, undefined otherwise
  */
-function isPytestNotInstalledError(message: string): boolean {
-    return (
-        (message.includes('ModuleNotFoundError') && message.includes('pytest')) ||
-        (message.includes('No module named') && message.includes('pytest')) ||
-        (message.includes('ImportError') && message.includes('pytest'))
-    );
+function extractMissingModuleName(message: string): string | undefined {
+    // Match patterns like:
+    // - No module named 'requests'
+    // - No module named "requests"
+    // - ModuleNotFoundError: No module named 'requests'
+    // - ImportError: No module named requests
+    const patterns = [/No module named ['"]([^'"]+)['"]/, /No module named (\S+)/];
+
+    for (const pattern of patterns) {
+        const match = message.match(pattern);
+        if (match) {
+            return match[1];
+        }
+    }
+    return undefined;
 }
 
 export function buildErrorNodeOptions(uri: Uri, message: string, testType: string): ErrorTestItemOptions {
     let labelText = testType === 'pytest' ? 'pytest Discovery Error' : 'Unittest Discovery Error';
     let errorMessage = message;
 
-    // Provide more specific error message if pytest is not installed
-    if (testType === 'pytest' && isPytestNotInstalledError(message)) {
-        labelText = 'pytest Not Installed';
-        errorMessage =
-            'pytest is not installed in the selected Python environment. Please install pytest to enable test discovery and execution.';
+    // Check for missing module errors and provide specific messaging
+    if (testType === 'pytest') {
+        const missingModule = extractMissingModuleName(message);
+        if (missingModule) {
+            labelText = `Missing Module: ${missingModule}`;
+            errorMessage = `The module '${missingModule}' is not installed in the selected Python environment. Please install it to enable test discovery.`;
+        }
     }
 
     return {
