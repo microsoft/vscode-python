@@ -639,6 +639,8 @@ jobs:
           TEST_FILES_SUFFIX: testvirtualenvs
           CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
           CI_DISABLE_AUTO_SELECTION: 1
+          DONT_PROMPT_WSL_INSTALL: 1
+          SHELL: /bin/bash
         uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: npm run testSingleWorkspace:cover
@@ -647,6 +649,8 @@ jobs:
         env:
           CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
           CI_DISABLE_AUTO_SELECTION: 1
+          DONT_PROMPT_WSL_INSTALL: 1
+          SHELL: /bin/bash
         uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: npm run testSingleWorkspace:cover

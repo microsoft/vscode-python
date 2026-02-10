@@ -77,6 +77,13 @@ async function installPylanceExtension(vscodeExecutablePath: string) {
 async function start() {
     console.log('*'.repeat(100));
     console.log('Start Standard tests');
+    console.log('Environment variables:');
+    console.log('  SHELL:', process.env.SHELL);
+    console.log('  DONT_PROMPT_WSL_INSTALL:', process.env.DONT_PROMPT_WSL_INSTALL);
+    console.log('  HOME:', process.env.HOME);
+    console.log('  USER:', process.env.USER);
+    console.log('  DISPLAY:', process.env.DISPLAY);
+    console.log('  DBUS_SESSION_BUS_ADDRESS:', process.env.DBUS_SESSION_BUS_ADDRESS);
     const channel = getChannel();
     console.log(`Using ${channel} build of VS Code.`);
     const vscodeExecutablePath = await downloadAndUnzipVSCode(channel);
