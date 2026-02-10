@@ -63,12 +63,23 @@ suite('buildErrorNodeOptions - missing module detection', () => {
         expect(result.error).to.equal('Some other error occurred');
     });
 
-    test('Should use generic error for unittest errors', () => {
-        const errorMessage = "ModuleNotFoundError: No module named 'pytest'";
+    test('Should detect missing module for unittest errors', () => {
+        const errorMessage = "ModuleNotFoundError: No module named 'pandas'";
+
+        const result = buildErrorNodeOptions(workspaceUri, errorMessage, 'unittest');
+
+        expect(result.label).to.equal('Missing Module: pandas [workspace]');
+        expect(result.error).to.equal(
+            "The module 'pandas' is not installed in the selected Python environment. Please install it to enable test discovery.",
+        );
+    });
+
+    test('Should use generic error for unittest non-module errors', () => {
+        const errorMessage = 'Some other error occurred';
 
         const result = buildErrorNodeOptions(workspaceUri, errorMessage, 'unittest');
 
         expect(result.label).to.equal('Unittest Discovery Error [workspace]');
-        expect(result.error).to.equal("ModuleNotFoundError: No module named 'pytest'");
+        expect(result.error).to.equal('Some other error occurred');
     });
 });

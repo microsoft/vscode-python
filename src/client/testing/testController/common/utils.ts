@@ -201,12 +201,10 @@ export function buildErrorNodeOptions(uri: Uri, message: string, testType: strin
     let errorMessage = message;
 
     // Check for missing module errors and provide specific messaging
-    if (testType === 'pytest') {
-        const missingModule = extractMissingModuleName(message);
-        if (missingModule) {
-            labelText = `Missing Module: ${missingModule}`;
-            errorMessage = `The module '${missingModule}' is not installed in the selected Python environment. Please install it to enable test discovery.`;
-        }
+    const missingModule = extractMissingModuleName(message);
+    if (missingModule) {
+        labelText = `Missing Module: ${missingModule}`;
+        errorMessage = `The module '${missingModule}' is not installed in the selected Python environment. Please install it to enable test discovery.`;
     }
 
     return {
