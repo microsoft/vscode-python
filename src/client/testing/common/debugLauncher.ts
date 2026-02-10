@@ -118,18 +118,26 @@ export class DebugLauncher implements ITestDebugLauncher {
             }),
         );
 
+        // Clean up event subscriptions when debugging completes (success, failure, or cancellation)
+        deferred.promise.finally(() => {
+            disposables.forEach((d) => d.dispose());
+        });
+
         // Start the debug session
-        const started = await debugManager.startDebugging(workspaceFolder, launchArgs, sessionOptions);
+        let started = false;
+        try {
+            started = await debugManager.startDebugging(workspaceFolder, launchArgs, sessionOptions);
+        } catch (error) {
+            traceError('Error starting debug session', error);
+            deferred.reject(error);
+            callCallbackOnce();
+            return deferred.promise;
+        }
         if (!started) {
             traceError('Failed to start debug session');
             deferred.resolve();
             callCallbackOnce();
         }
-
-        // Clean up event subscriptions when debugging completes (success, failure, or cancellation)
-        deferred.promise.finally(() => {
-            disposables.forEach((d) => d.dispose());
-        });
 
         return deferred.promise;
     }

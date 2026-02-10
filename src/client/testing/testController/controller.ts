@@ -306,12 +306,10 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 }
             }
 
-            // Clear registry and re-discover all projects for the workspace
-            this.projectRegistry.clearWorkspace(workspace.uri);
-            await this.projectRegistry.discoverAndRegisterProjects(workspace.uri);
-
-            // Re-run test discovery for the workspace to populate fresh test items
-            await this.discoverTestsInWorkspace(workspace.uri);
+            // Re-discover all projects and tests for the workspace in a single pass.
+            // discoverAllProjectsInWorkspace is responsible for clearing/re-registering
+            // projects and performing test discovery for the workspace.
+            await this.discoverAllProjectsInWorkspace(workspace.uri);
         }
     }
 
