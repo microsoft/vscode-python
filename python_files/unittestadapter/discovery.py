@@ -27,12 +27,13 @@ def discover_tests(
     start_dir: str,
     pattern: str,
     top_level_dir: Optional[str],
+    project_root_path: Optional[str] = None,
 ) -> DiscoveryPayloadDict:
     """Returns a dictionary containing details of the discovered tests.
 
     The returned dict has the following keys:
 
-    - cwd: Absolute path to the test start directory;
+    - cwd: Absolute path to the test start directory (or project_root_path if provided);
     - status: Test discovery status, can be "success" or "error";
     - tests: Discoverered tests if any, not present otherwise. Note that the status can be "error" but the payload can still contain tests;
     - error: Discovery error if any, not present otherwise.
@@ -56,8 +57,15 @@ def discover_tests(
         "": [list of errors]
         "status": "error",
     }
+
+    Args:
+        start_dir: Directory where test discovery starts
+        pattern: Pattern to match test files (e.g., "test*.py")
+        top_level_dir: Top-level directory for the test tree hierarchy
+        project_root_path: Optional project root path for the cwd in the response payload
+                          (used for project-based testing to root test tree at project)
     """
-    cwd = os.path.abspath(start_dir)  # noqa: PTH100
+    cwd = os.path.abspath(project_root_path or start_dir)  # noqa: PTH100
     if "/" in start_dir:  #  is a subdir
         parent_dir = os.path.dirname(start_dir)  # noqa: PTH120
         sys.path.insert(0, parent_dir)
@@ -133,7 +141,19 @@ if __name__ == "__main__":
             print(error_msg, file=sys.stderr)
             raise VSCodeUnittestError(error_msg)  # noqa: B904
     else:
+        # Check for PROJECT_ROOT_PATH environment variable (project-based testing).
+        # When set, this overrides top_level_dir to root the test tree at the project directory.
+        project_root_path = os.environ.get("PROJECT_ROOT_PATH")
+        if project_root_path:
+            top_level_dir = project_root_path
+            print(
+                f"PROJECT_ROOT_PATH is set, using {project_root_path} as top_level_dir for discovery"
+            )
+
         # Perform regular unittest test discovery.
-        payload = discover_tests(start_dir, pattern, top_level_dir)
+        # Pass project_root_path so the payload's cwd matches the project root.
+        payload = discover_tests(
+            start_dir, pattern, top_level_dir, project_root_path=project_root_path
+        )
         # Post this discovery payload.
         send_post_request(payload, test_run_pipe)

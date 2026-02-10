@@ -15,6 +15,7 @@ import { IPythonExecutionFactory } from '../../common/process/types';
 import { ITestDebugLauncher } from '../common/types';
 import { buildErrorNodeOptions } from './common/utils';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { ProjectAdapter } from './common/projectAdapter';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -47,6 +48,7 @@ export class WorkspaceTestAdapter {
         profileKind?: boolean | TestRunProfileKind,
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
+        project?: ProjectAdapter,
     ): Promise<void> {
         if (this.executing) {
             traceError('Test execution already in progress, not starting a new one.');
@@ -84,6 +86,7 @@ export class WorkspaceTestAdapter {
                 executionFactory,
                 debugLauncher,
                 interpreter,
+                project,
             );
             deferred.resolve();
         } catch (ex) {

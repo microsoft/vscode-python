@@ -82,4 +82,30 @@ suite('buildErrorNodeOptions - missing module detection', () => {
         expect(result.label).to.equal('Unittest Discovery Error [workspace]');
         expect(result.error).to.equal('Some other error occurred');
     });
+
+    test('Should use project name in label when projectName is provided', () => {
+        const errorMessage = 'Some error occurred';
+
+        const result = buildErrorNodeOptions(workspaceUri, errorMessage, 'unittest', 'my-project');
+
+        expect(result.label).to.equal('Unittest Discovery Error [my-project]');
+        expect(result.error).to.equal('Some error occurred');
+    });
+
+    test('Should use project name in label for pytest when projectName is provided', () => {
+        const errorMessage = 'Some error occurred';
+
+        const result = buildErrorNodeOptions(workspaceUri, errorMessage, 'pytest', 'ada');
+
+        expect(result.label).to.equal('pytest Discovery Error [ada]');
+        expect(result.error).to.equal('Some error occurred');
+    });
+
+    test('Should use folder name when projectName is undefined', () => {
+        const errorMessage = 'Some error occurred';
+
+        const result = buildErrorNodeOptions(workspaceUri, errorMessage, 'unittest', undefined);
+
+        expect(result.label).to.equal('Unittest Discovery Error [workspace]');
+    });
 });
