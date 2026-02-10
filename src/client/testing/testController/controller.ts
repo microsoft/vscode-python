@@ -562,7 +562,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             await Promise.all(projects.map((project) => this.discoverTestsForProject(project, projectsCompleted)));
 
             traceInfo(
-                `[test-by-project] Discovery complete: ${projectsCompleted.size}/${projects.length} projects succeeded`,
+                `[test-by-project] Discovery complete: ${projectsCompleted.size}/${projects.length} projects completed`,
             );
         } catch (error) {
             traceError(`[test-by-project] Discovery failed for workspace ${workspaceUri.fsPath}:`, error);

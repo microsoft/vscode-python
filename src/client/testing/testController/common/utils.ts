@@ -267,11 +267,11 @@ export function populateTestTree(
                 testItemMappings.runIdToVSid.set(child.runID, vsId);
                 testItemMappings.vsIdToRunId.set(vsId, child.runID);
             } else {
-                let node = testController.items.get(child.path);
+                // Use project-scoped ID for non-test nodes and look up within the current root
+                const nodeId = projectId ? `${projectId}${PROJECT_ID_SEPARATOR}${child.id_}` : child.id_;
+                let node = testRoot!.children.get(nodeId);
 
                 if (!node) {
-                    // Create project-scoped ID for non-test nodes
-                    const nodeId = projectId ? `${projectId}${PROJECT_ID_SEPARATOR}${child.id_}` : child.id_;
                     node = testController.createTestItem(nodeId, child.name, Uri.file(child.path));
 
                     node.canResolveChildren = true;
