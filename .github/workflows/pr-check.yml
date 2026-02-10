@@ -492,6 +492,14 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Setup D-Bus and shell environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dbus-x11
+          # Start dbus session and export address
+          eval $(dbus-launch --sh-syntax)
+          echo "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS" >> $GITHUB_ENV
+
       - name: Checkout Python Environment Tools
         uses: actions/checkout@v6
         with:
@@ -639,6 +647,7 @@ jobs:
           TEST_FILES_SUFFIX: testvirtualenvs
           CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
           CI_DISABLE_AUTO_SELECTION: 1
+          DONT_PROMPT_WSL_INSTALL: 1
         uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: npm run testSingleWorkspace:cover
@@ -647,6 +656,7 @@ jobs:
         env:
           CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
           CI_DISABLE_AUTO_SELECTION: 1
+          DONT_PROMPT_WSL_INSTALL: 1
         uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: npm run testSingleWorkspace:cover
