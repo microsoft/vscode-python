@@ -293,7 +293,7 @@ export class TestProjectRegistry {
                 const parentPath = parent.projectUri.fsPath;
                 const childPath = child.projectUri.fsPath;
 
-                if (isParentPath(parentPath, childPath)) {
+                if (isParentPath(childPath, parentPath)) {
                     nestedPaths.push(childPath);
                     traceVerbose(`[test-by-project] Nested: ${child.projectName} under ${parent.projectName}`);
                 }
