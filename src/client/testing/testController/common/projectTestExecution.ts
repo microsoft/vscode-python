@@ -12,6 +12,7 @@ import { TestProjectRegistry } from './testProjectRegistry';
 import { getProjectId } from './projectUtils';
 import { getEnvExtApi, useEnvExtension } from '../../../envExt/api.internal';
 import { isParentPath } from '../../../pythonEnvironments/common/externalDependencies';
+import { expandExcludeSet, getTestCaseNodes } from './testItemUtilities';
 
 /** Dependencies for project-based test execution. */
 export interface ProjectExecutionDependencies {
@@ -46,6 +47,10 @@ export async function executeTestsForProjects(
     const isDebugMode = request.profile?.kind === TestRunProfileKind.Debug;
     traceInfo(`[test-by-project] Executing tests across ${testsByProject.size} project(s), debug=${isDebugMode}`);
 
+    // Expand exclude set once for all projects
+    const rawExcludeSet = request.exclude?.length ? new Set(request.exclude) : undefined;
+    const excludeSet = expandExcludeSet(rawExcludeSet);
+
     // Setup coverage once for all projects (single callback that routes by file path)
     if (request.profile?.kind === TestRunProfileKind.Coverage) {
         setupCoverageForProjects(request, projects);
@@ -71,7 +76,7 @@ export async function executeTestsForProjects(
         });
 
         try {
-            await executeTestsForProject(project, items, runInstance, request, deps);
+            await executeTestsForProject(project, items, runInstance, request, deps, excludeSet);
         } catch (error) {
             // Don't log cancellation as an error
             if (!token.isCancellationRequested) {
@@ -216,27 +221,26 @@ export async function executeTestsForProject(
     runInstance: TestRun,
     request: TestRunRequest,
     deps: ProjectExecutionDependencies,
+    excludeSet?: Set<TestItem>,
 ): Promise<void> {
-    const processedTestItemIds = new Set<string>();
-    const uniqueTestCaseIds = new Set<string>();
+    const testCaseNodes: TestItem[] = [];
+    const visitedNodes = new Set<TestItem>();
 
-    // Mark items as started and collect test IDs (deduplicated to handle overlapping selections)
+    // Expand included items to leaf test nodes, respecting exclusions.
+    // getTestCaseNodes handles visited tracking and exclusion filtering.
     for (const item of testItems) {
-        const testCaseNodes = getTestCaseNodesRecursive(item);
-        for (const node of testCaseNodes) {
-            if (processedTestItemIds.has(node.id)) {
-                continue;
-            }
-            processedTestItemIds.add(node.id);
-            runInstance.started(node);
-            const runId = project.resultResolver.vsIdToRunId.get(node.id);
-            if (runId) {
-                uniqueTestCaseIds.add(runId);
-            }
-        }
+        getTestCaseNodes(item, testCaseNodes, visitedNodes, excludeSet);
     }
 
-    const testCaseIds = Array.from(uniqueTestCaseIds);
+    // Mark items as started and collect test IDs
+    const testCaseIds: string[] = [];
+    for (const node of testCaseNodes) {
+        runInstance.started(node);
+        const runId = project.resultResolver.vsIdToRunId.get(node.id);
+        if (runId) {
+            testCaseIds.push(runId);
+        }
+    }
 
     if (testCaseIds.length === 0) {
         traceVerbose(`[test-by-project] No test IDs found for project ${project.projectName}`);
