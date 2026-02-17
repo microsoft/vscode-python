@@ -162,11 +162,11 @@ def traverse_file(whole_file_content, start_line, end_line, was_highlighted):  #
 
     try:
         parsed_file_content = ast.parse(whole_file_content)
-    except Exception:
-        # Handle case where user is attempting to run code where file contains deprecated Python code.
+    except Exception as e:
+        # Handle case where user is attempting to run code where file contains invalid Python code.
         # Let typescript side know and show warning message.
         return {
-            "normalized_smart_result": "deprecated",
+            "normalized_smart_result": repr("vscode-python error: " + repr(e)),
             "which_line_next": 0,
         }
 
@@ -289,7 +289,7 @@ if __name__ == "__main__":
         )
         normalized = result["normalized_smart_result"]
         which_line_next = result["which_line_next"]
-        if normalized == "deprecated":
+        if "vscode-python error: " in normalized:
             data = json.dumps(
                 {"normalized": normalized, "attach_bracket_paste": attach_bracket_paste}
             )
