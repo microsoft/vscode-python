@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { LanguageServerOutputChannel } from '../activation/common/outputChannel';
 import { JediLanguageServerAnalysisOptions } from '../activation/jedi/analysisOptions';
 import { JediLanguageClientFactory } from '../activation/jedi/languageClientFactory';
 import { JediLanguageServerProxy } from '../activation/jedi/languageServerProxy';
 import { JediLanguageServerManager } from '../activation/jedi/manager';
-import { ILanguageServerOutputChannel } from '../activation/types';
-import { IWorkspaceService, ICommandManager } from '../common/application/types';
+import { IWorkspaceService, ICommandManager, IApplicationShell } from '../common/application/types';
 import {
     IExperimentService,
     IInterpreterPathService,
@@ -23,6 +23,7 @@ import { ILanguageServerExtensionManager } from './types';
 
 export class JediLSExtensionManager implements IDisposable, ILanguageServerExtensionManager {
     private serverProxy: JediLanguageServerProxy;
+    private outputChannel: LanguageServerOutputChannel;
 
     serverManager: JediLanguageServerManager;
 
@@ -32,7 +33,6 @@ export class JediLSExtensionManager implements IDisposable, ILanguageServerExten
 
     constructor(
         serviceContainer: IServiceContainer,
-        outputChannel: ILanguageServerOutputChannel,
         _experimentService: IExperimentService,
         workspaceService: IWorkspaceService,
         configurationService: IConfigurationService,
@@ -41,9 +41,11 @@ export class JediLSExtensionManager implements IDisposable, ILanguageServerExten
         environmentService: IEnvironmentVariablesProvider,
         commandManager: ICommandManager,
     ) {
+        const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+        this.outputChannel = new LanguageServerOutputChannel(appShell, commandManager);
         this.analysisOptions = new JediLanguageServerAnalysisOptions(
             environmentService,
-            outputChannel,
+            this.outputChannel,
             configurationService,
             workspaceService,
         );
@@ -62,6 +64,7 @@ export class JediLSExtensionManager implements IDisposable, ILanguageServerExten
         this.serverManager.dispose();
         this.serverProxy.dispose();
         this.analysisOptions.dispose();
+        this.outputChannel.dispose();
     }
 
     async startLanguageServer(resource: Resource, interpreter?: PythonEnvironment): Promise<void> {

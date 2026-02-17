@@ -5,12 +5,8 @@
 'use strict';
 
 import { Uri, Event } from 'vscode';
-import { BaseLanguageClient, LanguageClientOptions } from 'vscode-languageclient';
-import { LanguageClient } from 'vscode-languageclient/node';
-import { PYLANCE_NAME } from './activation/node/languageClientFactory';
-import { ILanguageServerOutputChannel } from './activation/types';
 import { PythonExtension } from './api/types';
-import { isTestExecution, PYTHON_LANGUAGE } from './common/constants';
+import { isTestExecution } from './common/constants';
 import { IConfigurationService, Resource } from './common/types';
 import { getDebugpyLauncherArgs } from './debugger/extension/adapter/remoteLaunchers';
 import { IInterpreterService } from './interpreter/contracts';
@@ -52,7 +48,6 @@ export function buildApi(
     const tensorboardIntegration = serviceContainer.get<TensorboardExtensionIntegration>(
         TensorboardExtensionIntegration,
     );
-    const outputChannel = serviceContainer.get<ILanguageServerOutputChannel>(ILanguageServerOutputChannel);
 
     const api: PythonExtension & {
         /**
@@ -145,16 +140,6 @@ export function buildApi(
             },
         },
         pylance: {
-            createClient: (...args: any[]): BaseLanguageClient => {
-                // Make sure we share output channel so that we can share one with
-                // Jedi as well.
-                const clientOptions = args[1] as LanguageClientOptions;
-                clientOptions.outputChannel = clientOptions.outputChannel ?? outputChannel.channel;
-
-                return new LanguageClient(PYTHON_LANGUAGE, PYLANCE_NAME, args[0], clientOptions);
-            },
-            start: (client: BaseLanguageClient): Promise<void> => client.start(),
-            stop: (client: BaseLanguageClient): Promise<void> => client.stop(),
             getTelemetryReporter: () => getTelemetryReporter(),
         },
         environments,

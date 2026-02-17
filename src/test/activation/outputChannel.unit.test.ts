@@ -20,12 +20,12 @@ suite('Language Server Output Channel', () => {
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         output = TypeMoq.Mock.ofType<ILogOutputChannel>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
-        languageServerOutputChannel = new LanguageServerOutputChannel(appShell.object, commandManager.object, []);
+        languageServerOutputChannel = new LanguageServerOutputChannel(appShell.object, commandManager.object);
     });
 
     test('Create output channel if one does not exist before and return it', async () => {
         appShell
-            .setup((a) => a.createOutputChannel(OutputChannelNames.languageServer))
+            .setup((a) => a.createOutputChannel(OutputChannelNames.JediLanguageServer))
             .returns(() => output.object)
             .verifiable(TypeMoq.Times.once());
         const { channel } = languageServerOutputChannel;

@@ -4,13 +4,7 @@
 import { IServiceManager } from '../ioc/types';
 import { ExtensionActivationManager } from './activationManager';
 import { ExtensionSurveyPrompt } from './extensionSurvey';
-import { LanguageServerOutputChannel } from './common/outputChannel';
-import {
-    IExtensionActivationManager,
-    IExtensionActivationService,
-    IExtensionSingleActivationService,
-    ILanguageServerOutputChannel,
-} from './types';
+import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
 import { LoadLanguageServerExtension } from './common/loadLanguageServerExtension';
 import { PartialModeStatusItem } from './partialModeStatus';
 import { ILanguageServerWatcher } from '../languageServer/types';
@@ -20,10 +14,6 @@ import { RequirementsTxtLinkActivator } from './requirementsTxtLinkActivator';
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, PartialModeStatusItem);
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
-    serviceManager.addSingleton<ILanguageServerOutputChannel>(
-        ILanguageServerOutputChannel,
-        LanguageServerOutputChannel,
-    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         ExtensionSurveyPrompt,
