@@ -208,6 +208,39 @@ def test_pytest_collect(file, expected_const):
         )
 
 
+def test_pytest_marks_as_tags():
+    """Test that pytest marks are extracted as tags during discovery.
+
+    Verifies that:
+    - Single marks produce a single tag
+    - Multiple marks produce multiple tags
+    - Duplicate marks are deduplicated
+    - @pytest.mark.parametrize is excluded from tags
+    - Tests with no marks have an empty tags list
+    """
+    actual = helpers.runner(
+        [
+            os.fspath(helpers.TEST_DATA_PATH / "test_marks.py"),
+            "--collect-only",
+        ]
+    )
+
+    assert actual
+    actual_list: List[Dict[str, Any]] = actual
+    actual_item = actual_list.pop(0)
+    assert actual_item.get("status") == "success", (
+        f"Status is not 'success', error is: {actual_item.get('error')}"
+    )
+    assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH)
+    assert is_same_tree(
+        actual_item.get("tests"),
+        expected_discovery_test_output.marks_test_expected_output,
+        ["id_", "lineno", "name", "runID", "tags"],
+    ), (
+        f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_discovery_test_output.marks_test_expected_output, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
+    )
+
+
 @pytest.mark.skipif(
     sys.platform == "win32",
     reason="See https://stackoverflow.com/questions/32877260/privlege-error-trying-to-create-symlink-using-python-on-windows-10",
