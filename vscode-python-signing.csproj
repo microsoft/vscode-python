@@ -13,7 +13,6 @@
     <Exec Command="$(VscePath) package --out $(VsixOutPath)" />
   </Target>
   <ItemGroup>
-    <PackageReference Include="Microsoft.NETCore.App" Version="2.0.3" />
     <FilesToSign Include="$(VsixOutPath)">
       <Authenticode>VsixSHA2</Authenticode>
     </FilesToSign>
