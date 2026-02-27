@@ -14,6 +14,8 @@ import {
 } from './types';
 import { executeCommand } from '../common/vscodeApis/commandApis';
 import { getConfiguration } from '../common/vscodeApis/workspaceApis';
+import { traceError, traceLog } from '../logging';
+import { Interpreters } from '../common/utils/localize';
 
 export const ENVS_EXTENSION_ID = 'ms-python.vscode-python-envs';
 
@@ -46,11 +48,19 @@ export async function getEnvExtApi(): Promise<PythonEnvironmentApi> {
     }
     const extension = getExtension(ENVS_EXTENSION_ID);
     if (!extension) {
+        traceError(Interpreters.envExtActivationFailed);
         throw new Error('Python Environments extension not found.');
     }
     if (!extension?.isActive) {
-        await extension.activate();
+        try {
+            await extension.activate();
+        } catch (ex) {
+            traceError(Interpreters.envExtActivationFailed, ex);
+            throw ex;
+        }
     }
+
+    traceLog(Interpreters.envExtDiscoveryAttribution);
 
     _extApi = extension.exports as PythonEnvironmentApi;
     _extApi.onDidChangeEnvironment((e) => {
@@ -70,7 +80,11 @@ export async function runInBackground(
 
 export async function getEnvironment(scope: GetEnvironmentScope): Promise<PythonEnvironment | undefined> {
     const envExtApi = await getEnvExtApi();
-    return envExtApi.getEnvironment(scope);
+    const env = await envExtApi.getEnvironment(scope);
+    if (!env) {
+        traceLog(Interpreters.envExtNoActiveEnvironment);
+    }
+    return env;
 }
 
 export async function resolveEnvironment(pythonPath: string): Promise<PythonEnvironment | undefined> {
