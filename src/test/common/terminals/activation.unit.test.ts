@@ -3,6 +3,7 @@
 
 'use strict';
 import { expect } from 'chai';
+import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Terminal, Uri } from 'vscode';
@@ -15,6 +16,7 @@ import { IDisposable } from '../../../client/common/types';
 import { TerminalAutoActivation } from '../../../client/terminals/activation';
 import { ITerminalAutoActivation } from '../../../client/terminals/types';
 import { noop } from '../../core';
+import * as extapi from '../../../client/envExt/api.internal';
 
 suite('Terminal Auto Activation', () => {
     let activator: ITerminalActivator;
@@ -25,6 +27,7 @@ suite('Terminal Auto Activation', () => {
     let terminal: Terminal;
 
     setup(() => {
+        sinon.stub(extapi, 'shouldEnvExtHandleActivation').returns(false);
         terminal = ({
             dispose: noop,
             hide: noop,
@@ -45,6 +48,9 @@ suite('Terminal Auto Activation', () => {
             instance(activator),
             instance(activeResourceService),
         );
+    });
+    teardown(() => {
+        sinon.restore();
     });
 
     test('New Terminals should be activated', async () => {
