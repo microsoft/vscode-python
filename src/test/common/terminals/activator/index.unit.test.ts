@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
-import { Terminal } from 'vscode';
+import { Terminal, Uri } from 'vscode';
 import { TerminalActivator } from '../../../../client/common/terminal/activator';
 import {
     ITerminalActivationHandler,
@@ -140,10 +140,13 @@ suite('Terminal Activator', () => {
 suite('shouldEnvExtHandleActivation', () => {
     let getExtensionStub: sinon.SinonStub;
     let getConfigurationStub: sinon.SinonStub;
+    let getWorkspaceFoldersStub: sinon.SinonStub;
 
     setup(() => {
         getExtensionStub = sinon.stub(extensionsApi, 'getExtension');
         getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
+        getWorkspaceFoldersStub = sinon.stub(workspaceApis, 'getWorkspaceFolders');
+        getWorkspaceFoldersStub.returns(undefined);
     });
 
     teardown(() => {
@@ -185,5 +188,22 @@ suite('shouldEnvExtHandleActivation', () => {
             inspect: () => ({ globalValue: true, workspaceValue: undefined }),
         });
         assert.strictEqual(extapi.shouldEnvExtHandleActivation(), true);
+    });
+
+    test('Returns false when a workspace folder has workspaceFolderValue set to false', () => {
+        getExtensionStub.returns({ id: extapi.ENVS_EXTENSION_ID });
+        const folderUri = Uri.parse('file:///workspace/folder1');
+        getWorkspaceFoldersStub.returns([{ uri: folderUri, name: 'folder1', index: 0 }]);
+        getConfigurationStub.callsFake((_section: string, scope?: Uri) => {
+            if (scope) {
+                return {
+                    inspect: () => ({ workspaceFolderValue: false }),
+                };
+            }
+            return {
+                inspect: () => ({ globalValue: undefined, workspaceValue: undefined }),
+            };
+        });
+        assert.strictEqual(extapi.shouldEnvExtHandleActivation(), false);
     });
 });
