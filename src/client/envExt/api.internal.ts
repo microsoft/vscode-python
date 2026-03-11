@@ -19,6 +19,27 @@ import { Interpreters } from '../common/utils/localize';
 
 export const ENVS_EXTENSION_ID = 'ms-python.vscode-python-envs';
 
+export function isEnvExtensionInstalled(): boolean {
+    return !!getExtension(ENVS_EXTENSION_ID);
+}
+
+/**
+ * Returns true if the Python Environments extension is installed and not explicitly
+ * disabled by the user. Mirrors the envs extension's own activation logic: it
+ * deactivates only when `python.useEnvironmentsExtension` is explicitly set to false.
+ */
+export function shouldEnvExtHandleActivation(): boolean {
+    if (!isEnvExtensionInstalled()) {
+        return false;
+    }
+    const config = getConfiguration('python');
+    const inspection = config.inspect<boolean>('useEnvironmentsExtension');
+    if (inspection?.globalValue === false || inspection?.workspaceValue === false) {
+        return false;
+    }
+    return true;
+}
+
 let _useExt: boolean | undefined;
 export function useEnvExtension(): boolean {
     if (_useExt !== undefined) {

@@ -20,6 +20,8 @@ import {
     ITerminalSettings,
 } from '../../../../client/common/types';
 import * as extapi from '../../../../client/envExt/api.internal';
+import * as workspaceApis from '../../../../client/common/vscodeApis/workspaceApis';
+import * as extensionsApi from '../../../../client/common/vscodeApis/extensionsApi';
 
 suite('Terminal Activator', () => {
     let activator: TerminalActivator;
@@ -29,9 +31,12 @@ suite('Terminal Activator', () => {
     let terminalSettings: TypeMoq.IMock<ITerminalSettings>;
     let experimentService: TypeMoq.IMock<IExperimentService>;
     let useEnvExtensionStub: sinon.SinonStub;
+    let shouldEnvExtHandleActivationStub: sinon.SinonStub;
     setup(() => {
         useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
         useEnvExtensionStub.returns(false);
+        shouldEnvExtHandleActivationStub = sinon.stub(extapi, 'shouldEnvExtHandleActivation');
+        shouldEnvExtHandleActivationStub.returns(false);
 
         baseActivator = TypeMoq.Mock.ofType<ITerminalActivator>();
         terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
@@ -113,4 +118,72 @@ suite('Terminal Activator', () => {
     test('Terminal is not activated if auto-activate setting is set to true but terminal is hidden', () =>
         testActivationAndHandlers(false, true, true));
     test('Terminal is not activated and handlers are invoked', () => testActivationAndHandlers(false, false));
+
+    test('Terminal is not activated from Python extension when Env extension should handle activation', async () => {
+        shouldEnvExtHandleActivationStub.returns(true);
+        terminalSettings.setup((b) => b.activateEnvironment).returns(() => true);
+        baseActivator
+            .setup((b) => b.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.never());
+
+        const terminal = TypeMoq.Mock.ofType<Terminal>();
+        const activated = await activator.activateEnvironmentInTerminal(terminal.object, {
+            preserveFocus: true,
+        });
+
+        assert.strictEqual(activated, false);
+        baseActivator.verifyAll();
+    });
+});
+
+suite('shouldEnvExtHandleActivation', () => {
+    let getExtensionStub: sinon.SinonStub;
+    let getConfigurationStub: sinon.SinonStub;
+
+    setup(() => {
+        getExtensionStub = sinon.stub(extensionsApi, 'getExtension');
+        getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
+    });
+
+    teardown(() => {
+        sinon.restore();
+    });
+
+    test('Returns false when envs extension is not installed', () => {
+        getExtensionStub.returns(undefined);
+        assert.strictEqual(extapi.shouldEnvExtHandleActivation(), false);
+    });
+
+    test('Returns true when envs extension is installed and setting is not explicitly set', () => {
+        getExtensionStub.returns({ id: extapi.ENVS_EXTENSION_ID });
+        getConfigurationStub.returns({
+            inspect: () => ({ globalValue: undefined, workspaceValue: undefined }),
+        });
+        assert.strictEqual(extapi.shouldEnvExtHandleActivation(), true);
+    });
+
+    test('Returns false when envs extension is installed but globalValue is false', () => {
+        getExtensionStub.returns({ id: extapi.ENVS_EXTENSION_ID });
+        getConfigurationStub.returns({
+            inspect: () => ({ globalValue: false, workspaceValue: undefined }),
+        });
+        assert.strictEqual(extapi.shouldEnvExtHandleActivation(), false);
+    });
+
+    test('Returns false when envs extension is installed but workspaceValue is false', () => {
+        getExtensionStub.returns({ id: extapi.ENVS_EXTENSION_ID });
+        getConfigurationStub.returns({
+            inspect: () => ({ globalValue: undefined, workspaceValue: false }),
+        });
+        assert.strictEqual(extapi.shouldEnvExtHandleActivation(), false);
+    });
+
+    test('Returns true when envs extension is installed and setting is explicitly true', () => {
+        getExtensionStub.returns({ id: extapi.ENVS_EXTENSION_ID });
+        getConfigurationStub.returns({
+            inspect: () => ({ globalValue: true, workspaceValue: undefined }),
+        });
+        assert.strictEqual(extapi.shouldEnvExtHandleActivation(), true);
+    });
 });
