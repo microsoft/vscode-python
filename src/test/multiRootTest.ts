@@ -1,7 +1,7 @@
 import * as path from 'path';
-import { runTests } from '@vscode/test-electron';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 import { initializeLogger } from './testLogger';
+import { runTests } from './testRunnerUtils';
 import { getChannel } from './utils/vscode';
 
 const workspacePath = path.join(__dirname, '..', '..', 'src', 'testMultiRootWkspc', 'multi.code-workspace');
