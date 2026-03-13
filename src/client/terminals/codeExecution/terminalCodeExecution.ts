@@ -65,7 +65,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
     public async initializeRepl(resource: Resource) {
         const terminalService = this.getTerminalService(resource);
-        if (this.replActive && (await this.replActive)) {
+        if (terminalService.hasActiveTerminal()) {
             await terminalService.show();
             return;
         }
