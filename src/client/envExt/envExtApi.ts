@@ -17,7 +17,7 @@ import { PythonEnvCollectionChangedEvent } from '../pythonEnvironments/base/watc
 import { getEnvExtApi } from './api.internal';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { StopWatch } from '../common/utils/stopWatch';
-import { traceLog } from '../logging';
+import { traceError, traceLog, traceWarn } from '../logging';
 import {
     DidChangeEnvironmentsEventArgs,
     EnvironmentChangeKind,
@@ -27,6 +27,7 @@ import {
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { Architecture, isWindows } from '../common/utils/platform';
 import { parseVersion } from '../pythonEnvironments/base/info/pythonVersion';
+import { Interpreters } from '../common/utils/localize';
 
 function getKind(pythonEnv: PythonEnvironment): PythonEnvKind {
     if (pythonEnv.envId.managerId.toLowerCase().endsWith('system')) {
@@ -242,13 +243,23 @@ class EnvExtApis implements IDiscoveryAPI, Disposable {
         this._onProgress.fire({ stage: this.refreshState });
         this._refreshPromise = createDeferred();
 
+        const SLOW_DISCOVERY_THRESHOLD_MS = 25_000;
+        const slowDiscoveryTimer = setTimeout(() => {
+            traceWarn(Interpreters.envExtDiscoverySlow);
+        }, SLOW_DISCOVERY_THRESHOLD_MS);
+
         setImmediate(async () => {
             try {
                 await this.envExtApi.refreshEnvironments(undefined);
+                if (this._envs.length === 0) {
+                    traceWarn(Interpreters.envExtDiscoveryNoEnvironments);
+                }
                 this._refreshPromise?.resolve();
             } catch (error) {
+                traceError(Interpreters.envExtDiscoveryFailed, error);
                 this._refreshPromise?.reject(error);
             } finally {
+                clearTimeout(slowDiscoveryTimer);
                 traceLog(`Native locator: Refresh finished in ${stopwatch.elapsedTime} ms`);
                 this.refreshState = ProgressReportStage.discoveryFinished;
                 this._refreshPromise = undefined;
@@ -297,9 +308,16 @@ class EnvExtApis implements IDiscoveryAPI, Disposable {
         if (envPath === undefined) {
             return undefined;
         }
-        const pythonEnv = await this.envExtApi.resolveEnvironment(Uri.file(envPath));
-        if (pythonEnv) {
-            return this.addEnv(pythonEnv);
+        try {
+            const pythonEnv = await this.envExtApi.resolveEnvironment(Uri.file(envPath));
+            if (pythonEnv) {
+                return this.addEnv(pythonEnv);
+            }
+        } catch (error) {
+            traceError(
+                `Failed to resolve environment "${envPath}" via the Python Environments extension (ms-python.vscode-python-envs). Check the "Python Environments" output channel for details.`,
+                error,
+            );
         }
         return undefined;
     }

@@ -191,6 +191,24 @@ export namespace Interpreters {
     export const installingPython = l10n.t('Installing Python into Environment...');
     export const discovering = l10n.t('Discovering Python Interpreters');
     export const refreshing = l10n.t('Refreshing Python Interpreters');
+    export const envExtDiscoveryAttribution = l10n.t(
+        'Environment discovery is managed by the Python Environments extension (ms-python.vscode-python-envs). Check the "Python Environments" output channel for environment-specific logs.',
+    );
+    export const envExtDiscoveryFailed = l10n.t(
+        'Environment discovery failed. Check the "Python Environments" output channel for details. The Python Environments extension (ms-python.vscode-python-envs) manages environment discovery.',
+    );
+    export const envExtDiscoverySlow = l10n.t(
+        'Environment discovery is taking longer than expected. Check the "Python Environments" output channel for progress. The Python Environments extension (ms-python.vscode-python-envs) manages environment discovery.',
+    );
+    export const envExtActivationFailed = l10n.t(
+        'Failed to activate the Python Environments extension (ms-python.vscode-python-envs), which is required for environment discovery. Please ensure it is installed and enabled.',
+    );
+    export const envExtDiscoveryNoEnvironments = l10n.t(
+        'Environment discovery completed but no Python environments were found. Check the "Python Environments" output channel for details.',
+    );
+    export const envExtNoActiveEnvironment = l10n.t(
+        'No Python environment is set for this resource. Check the "Python Environments" output channel for details, or select an interpreter.',
+    );
     export const condaInheritEnvMessage = l10n.t(
         'We noticed you\'re using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we recommend that you let the Python extension change "terminal.integrated.inheritEnv" to false in your user settings. [Learn more](https://aka.ms/AA66i8f).',
     );

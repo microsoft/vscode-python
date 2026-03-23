@@ -29,10 +29,13 @@ suite('Terminal Provider', () => {
     let experimentService: TypeMoq.IMock<IExperimentService>;
     let terminalProvider: TerminalProvider;
     let useEnvExtensionStub: sinon.SinonStub;
+    let shouldEnvExtHandleActivationStub: sinon.SinonStub;
     const resource = Uri.parse('a');
     setup(() => {
         useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
         useEnvExtensionStub.returns(false);
+        shouldEnvExtHandleActivationStub = sinon.stub(extapi, 'shouldEnvExtHandleActivation');
+        shouldEnvExtHandleActivationStub.returns(false);
 
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();

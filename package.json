@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
-    "version": "2026.2.0",
+    "version": "2026.5.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -1714,7 +1714,7 @@
         "inversify": "^6.0.2",
         "jsonc-parser": "^3.0.0",
         "lodash": "^4.17.23",
-        "minimatch": "^5.0.1",
+        "minimatch": "^5.1.8",
         "named-js-regexp": "^1.3.3",
         "node-stream-zip": "^1.6.0",
         "reflect-metadata": "^0.2.2",
@@ -1800,7 +1800,7 @@
         "typemoq": "^2.1.0",
         "typescript": "~5.2",
         "uuid": "^8.3.2",
-        "webpack": "^5.76.0",
+        "webpack": "^5.105.0",
         "webpack-bundle-analyzer": "^4.5.0",
         "webpack-cli": "^4.9.2",
         "webpack-fix-default-import-plugin": "^1.0.3",

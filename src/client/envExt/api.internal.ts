@@ -13,16 +13,54 @@ import {
     DidChangeEnvironmentEventArgs,
 } from './types';
 import { executeCommand } from '../common/vscodeApis/commandApis';
-import { getConfiguration } from '../common/vscodeApis/workspaceApis';
+import { getConfiguration, getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
+import { traceError, traceLog } from '../logging';
+import { Interpreters } from '../common/utils/localize';
 
 export const ENVS_EXTENSION_ID = 'ms-python.vscode-python-envs';
+
+export function isEnvExtensionInstalled(): boolean {
+    return !!getExtension(ENVS_EXTENSION_ID);
+}
+
+/**
+ * Returns true if the Python Environments extension is installed and not explicitly
+ * disabled by the user. Mirrors the envs extension's own activation logic: it
+ * deactivates only when `python.useEnvironmentsExtension` is explicitly set to false
+ * at the global, workspace, or workspace-folder level.
+ */
+export function shouldEnvExtHandleActivation(): boolean {
+    if (!isEnvExtensionInstalled()) {
+        return false;
+    }
+    const config = getConfiguration('python');
+    const inspection = config.inspect<boolean>('useEnvironmentsExtension');
+    if (inspection?.globalValue === false || inspection?.workspaceValue === false) {
+        return false;
+    }
+    // The envs extension also checks folder-scoped settings in multi-root workspaces.
+    // Any single folder with the setting set to false causes the envs extension to
+    // deactivate entirely (window-wide), so we must mirror that here.
+    const workspaceFolders = getWorkspaceFolders();
+    if (workspaceFolders) {
+        for (const folder of workspaceFolders) {
+            const folderConfig = getConfiguration('python', folder.uri);
+            const folderInspection = folderConfig.inspect<boolean>('useEnvironmentsExtension');
+            if (folderInspection?.workspaceFolderValue === false) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
 let _useExt: boolean | undefined;
 export function useEnvExtension(): boolean {
     if (_useExt !== undefined) {
         return _useExt;
     }
-    const inExpSetting = getConfiguration('python').get<boolean>('useEnvironmentsExtension', false);
+    const config = getConfiguration('python');
+    const inExpSetting = config?.get<boolean>('useEnvironmentsExtension', false) ?? false;
     // If extension is installed and in experiment, then use it.
     _useExt = !!getExtension(ENVS_EXTENSION_ID) && inExpSetting;
     return _useExt;
@@ -46,11 +84,19 @@ export async function getEnvExtApi(): Promise<PythonEnvironmentApi> {
     }
     const extension = getExtension(ENVS_EXTENSION_ID);
     if (!extension) {
+        traceError(Interpreters.envExtActivationFailed);
         throw new Error('Python Environments extension not found.');
     }
     if (!extension?.isActive) {
-        await extension.activate();
+        try {
+            await extension.activate();
+        } catch (ex) {
+            traceError(Interpreters.envExtActivationFailed, ex);
+            throw ex;
+        }
     }
+
+    traceLog(Interpreters.envExtDiscoveryAttribution);
 
     _extApi = extension.exports as PythonEnvironmentApi;
     _extApi.onDidChangeEnvironment((e) => {
@@ -70,7 +116,11 @@ export async function runInBackground(
 
 export async function getEnvironment(scope: GetEnvironmentScope): Promise<PythonEnvironment | undefined> {
     const envExtApi = await getEnvExtApi();
-    return envExtApi.getEnvironment(scope);
+    const env = await envExtApi.getEnvironment(scope);
+    if (!env) {
+        traceLog(Interpreters.envExtNoActiveEnvironment);
+    }
+    return env;
 }
 
 export async function resolveEnvironment(pythonPath: string): Promise<PythonEnvironment | undefined> {

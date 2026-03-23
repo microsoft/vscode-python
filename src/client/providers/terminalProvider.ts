@@ -11,7 +11,7 @@ import { swallowExceptions } from '../common/utils/decorators';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { useEnvExtension } from '../envExt/api.internal';
+import { useEnvExtension, shouldEnvExtHandleActivation } from '../envExt/api.internal';
 
 export class TerminalProvider implements Disposable {
     private disposables: Disposable[] = [];
@@ -33,7 +33,7 @@ export class TerminalProvider implements Disposable {
             currentTerminal &&
             pythonSettings.terminal.activateEnvInCurrentTerminal &&
             !inTerminalEnvVarExperiment(experimentService) &&
-            !useEnvExtension()
+            !shouldEnvExtHandleActivation()
         ) {
             const hideFromUser =
                 'hideFromUser' in currentTerminal.creationOptions && currentTerminal.creationOptions.hideFromUser;
