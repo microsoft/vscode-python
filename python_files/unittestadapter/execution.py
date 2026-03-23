@@ -373,9 +373,6 @@ if __name__ == "__main__":
             # Update the module-level variable for send_run_data to use
             # pylint: disable=global-statement
             globals()["PROJECT_ROOT_PATH"] = project_root_path
-            print(
-                f"PROJECT_ROOT_PATH is set, using {project_root_path} as cwd for execution payload"
-            )
 
         # Perform regular unittest execution.
         # Pass project_root_path so the payload's cwd matches the project root.
