@@ -34,7 +34,7 @@ runs:
     - name: Use Python 3.10 for JediLSP
       uses: actions/setup-python@v6
       with:
-        python-version: "3.10"
+        python-version: '3.10'
         cache: 'pip'
         cache-dependency-path: |
           requirements.txt
