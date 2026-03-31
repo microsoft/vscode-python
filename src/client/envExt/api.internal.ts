@@ -13,11 +13,46 @@ import {
     DidChangeEnvironmentEventArgs,
 } from './types';
 import { executeCommand } from '../common/vscodeApis/commandApis';
-import { getConfiguration } from '../common/vscodeApis/workspaceApis';
+import { getConfiguration, getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
 import { traceError, traceLog } from '../logging';
 import { Interpreters } from '../common/utils/localize';
 
 export const ENVS_EXTENSION_ID = 'ms-python.vscode-python-envs';
+
+export function isEnvExtensionInstalled(): boolean {
+    return !!getExtension(ENVS_EXTENSION_ID);
+}
+
+/**
+ * Returns true if the Python Environments extension is installed and not explicitly
+ * disabled by the user. Mirrors the envs extension's own activation logic: it
+ * deactivates only when `python.useEnvironmentsExtension` is explicitly set to false
+ * at the global, workspace, or workspace-folder level.
+ */
+export function shouldEnvExtHandleActivation(): boolean {
+    if (!isEnvExtensionInstalled()) {
+        return false;
+    }
+    const config = getConfiguration('python');
+    const inspection = config.inspect<boolean>('useEnvironmentsExtension');
+    if (inspection?.globalValue === false || inspection?.workspaceValue === false) {
+        return false;
+    }
+    // The envs extension also checks folder-scoped settings in multi-root workspaces.
+    // Any single folder with the setting set to false causes the envs extension to
+    // deactivate entirely (window-wide), so we must mirror that here.
+    const workspaceFolders = getWorkspaceFolders();
+    if (workspaceFolders) {
+        for (const folder of workspaceFolders) {
+            const folderConfig = getConfiguration('python', folder.uri);
+            const folderInspection = folderConfig.inspect<boolean>('useEnvironmentsExtension');
+            if (folderInspection?.workspaceFolderValue === false) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
 let _useExt: boolean | undefined;
 export function useEnvExtension(): boolean {

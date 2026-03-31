@@ -146,9 +146,6 @@ if __name__ == "__main__":
         project_root_path = os.environ.get("PROJECT_ROOT_PATH")
         if project_root_path:
             top_level_dir = project_root_path
-            print(
-                f"PROJECT_ROOT_PATH is set, using {project_root_path} as top_level_dir for discovery"
-            )
 
         # Perform regular unittest test discovery.
         # Pass project_root_path so the payload's cwd matches the project root.
