@@ -1776,6 +1776,149 @@ ruff_test_expected_output = {
 black_formatter_folder_path = TEST_DATA_PATH / "2496-black-formatter"
 black_app_path = black_formatter_folder_path / "app.py"
 black_test_app_path = black_formatter_folder_path / "test_app.py"
+# This is the expected output for the test_marks.py file.
+# └── test_marks.py
+#    └── test_with_single_mark (tags: ["slow"])
+#    └── test_with_multiple_marks (tags: ["slow", "integration"])
+#    └── test_with_no_marks (tags: [])
+#    └── test_with_duplicate_marks (tags: ["slow"])
+#    └── test_parametrize_with_mark (function)
+#       └── [1] (tags: ["slow"])
+#       └── [2] (tags: ["slow"])
+marks_test_file_path = TEST_DATA_PATH / "test_marks.py"
+marks_test_expected_output = {
+    "name": ".data",
+    "path": TEST_DATA_PATH_STR,
+    "type_": "folder",
+    "children": [
+        {
+            "name": "test_marks.py",
+            "path": os.fspath(marks_test_file_path),
+            "type_": "file",
+            "id_": os.fspath(marks_test_file_path),
+            "children": [
+                {
+                    "name": "test_with_single_mark",
+                    "path": os.fspath(marks_test_file_path),
+                    "lineno": find_test_line_number(
+                        "test_with_single_mark",
+                        marks_test_file_path,
+                    ),
+                    "type_": "test",
+                    "id_": get_absolute_test_id(
+                        "test_marks.py::test_with_single_mark",
+                        marks_test_file_path,
+                    ),
+                    "runID": get_absolute_test_id(
+                        "test_marks.py::test_with_single_mark",
+                        marks_test_file_path,
+                    ),
+                    "tags": ["slow"],
+                },
+                {
+                    "name": "test_with_multiple_marks",
+                    "path": os.fspath(marks_test_file_path),
+                    "lineno": find_test_line_number(
+                        "test_with_multiple_marks",
+                        marks_test_file_path,
+                    ),
+                    "type_": "test",
+                    "id_": get_absolute_test_id(
+                        "test_marks.py::test_with_multiple_marks",
+                        marks_test_file_path,
+                    ),
+                    "runID": get_absolute_test_id(
+                        "test_marks.py::test_with_multiple_marks",
+                        marks_test_file_path,
+                    ),
+                    "tags": ["integration", "slow"],
+                },
+                {
+                    "name": "test_with_no_marks",
+                    "path": os.fspath(marks_test_file_path),
+                    "lineno": find_test_line_number(
+                        "test_with_no_marks",
+                        marks_test_file_path,
+                    ),
+                    "type_": "test",
+                    "id_": get_absolute_test_id(
+                        "test_marks.py::test_with_no_marks",
+                        marks_test_file_path,
+                    ),
+                    "runID": get_absolute_test_id(
+                        "test_marks.py::test_with_no_marks",
+                        marks_test_file_path,
+                    ),
+                    "tags": [],
+                },
+                {
+                    "name": "test_with_duplicate_marks",
+                    "path": os.fspath(marks_test_file_path),
+                    "lineno": find_test_line_number(
+                        "test_with_duplicate_marks",
+                        marks_test_file_path,
+                    ),
+                    "type_": "test",
+                    "id_": get_absolute_test_id(
+                        "test_marks.py::test_with_duplicate_marks",
+                        marks_test_file_path,
+                    ),
+                    "runID": get_absolute_test_id(
+                        "test_marks.py::test_with_duplicate_marks",
+                        marks_test_file_path,
+                    ),
+                    "tags": ["slow"],
+                },
+                {
+                    "name": "test_parametrize_with_mark",
+                    "path": os.fspath(marks_test_file_path),
+                    "type_": "function",
+                    "id_": os.fspath(marks_test_file_path) + "::test_parametrize_with_mark",
+                    "children": [
+                        {
+                            "name": "[1]",
+                            "path": os.fspath(marks_test_file_path),
+                            "lineno": find_test_line_number(
+                                "test_parametrize_with_mark",
+                                marks_test_file_path,
+                            ),
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "test_marks.py::test_parametrize_with_mark[1]",
+                                marks_test_file_path,
+                            ),
+                            "runID": get_absolute_test_id(
+                                "test_marks.py::test_parametrize_with_mark[1]",
+                                marks_test_file_path,
+                            ),
+                            "tags": ["slow"],
+                        },
+                        {
+                            "name": "[2]",
+                            "path": os.fspath(marks_test_file_path),
+                            "lineno": find_test_line_number(
+                                "test_parametrize_with_mark",
+                                marks_test_file_path,
+                            ),
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "test_marks.py::test_parametrize_with_mark[2]",
+                                marks_test_file_path,
+                            ),
+                            "runID": get_absolute_test_id(
+                                "test_marks.py::test_parametrize_with_mark[2]",
+                                marks_test_file_path,
+                            ),
+                            "tags": ["slow"],
+                        },
+                    ],
+                },
+            ],
+        }
+    ],
+    "id_": TEST_DATA_PATH_STR,
+}
+
 black_formatter_expected_output = {
     "name": ".data",
     "path": TEST_DATA_PATH_STR,
