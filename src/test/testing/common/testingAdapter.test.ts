@@ -69,7 +69,7 @@ suite('End to End Tests: test adapters', () => {
         'testTestingRootWkspc',
         'symlinkWorkspace',
     );
-    const nestedTarget = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testTestingRootWkspc', 'target workspace');
+    const nestedTarget = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testTestingRootWkspc', 'target_workspace');
     const nestedSymlink = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',
