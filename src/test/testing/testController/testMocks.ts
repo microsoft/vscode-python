@@ -14,6 +14,7 @@ import { ITestDebugLauncher } from '../../../client/testing/common/types';
 import { ProjectAdapter } from '../../../client/testing/testController/common/projectAdapter';
 import { ProjectExecutionDependencies } from '../../../client/testing/testController/common/projectTestExecution';
 import { TestProjectRegistry } from '../../../client/testing/testController/common/testProjectRegistry';
+import { RunTestTag, DebugTestTag } from '../../../client/testing/testController/common/testItemUtilities';
 import { ITestExecutionAdapter, ITestResultResolver } from '../../../client/testing/testController/common/types';
 
 /**
@@ -42,14 +43,16 @@ export function createMockTestItem(id: string, uriPath: string, children?: TestI
         },
     } as TestItemCollection;
 
+    // Parent nodes (with children) have canResolveChildren=true, leaf nodes have canResolveChildren=false
+    const hasChildren = children && children.length > 0;
     return ({
         id,
         uri: Uri.file(uriPath),
         children: mockChildren,
         label: id,
-        canResolveChildren: false,
+        canResolveChildren: hasChildren,
         busy: false,
-        tags: [],
+        tags: [RunTestTag, DebugTestTag],
         range: undefined,
         error: undefined,
         parent: undefined,
