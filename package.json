@@ -1256,7 +1256,7 @@
                     "category": "Python",
                     "command": "python.analysis.restartLanguageServer",
                     "title": "%python.command.python.analysis.restartLanguageServer.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported && (editorLangId == python || notebookType == jupyter-notebook)"
+                    "when": "!virtualWorkspace && shellExecutionSupported"
                 },
                 {
                     "category": "Python",
