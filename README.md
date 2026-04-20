@@ -99,7 +99,32 @@ Learn more about the rich features of the Python extension:
 -   [Environments](https://code.visualstudio.com/docs/python/environments): Automatically activate and switch between virtualenv, venv, pipenv, conda and pyenv environments.
 -   [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring): Restructure your Python code with variable extraction and method extraction. Additionally, there is componentized support to enable additional refactoring, such as import sorting, through extensions including [isort](https://marketplace.visualstudio.com/items?itemName=ms-python.isort) and [Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff).
 
+## Code editor themes for Python
 
+Optimize your Python development experience with VS Code themes that enhance code readability and productivity:
+
+### Recommended themes for Python
+
+- **[One Dark Pro](https://marketplace.visualstudio.com/items?itemName=zhuangtongfa.Material-theme)** - Popular dark theme with excellent Python syntax highlighting
+- **[GitHub Theme](https://marketplace.visualstudio.com/items?itemName=GitHub.github-vscode-theme)** - Clean, GitHub-inspired theme with good contrast for Python code
+- **[Dracula](https://marketplace.visualstudio.com/items?itemName=dracula-theme.theme-dracula)** - High contrast dark theme that works well with Python syntax
+- **[Solarized](https://marketplace.visualstudio.com/items?itemName=ryanolsonx.solarized)** - Carefully chosen colors for reduced eye strain during long coding sessions
+
+### Tips for Python development
+
+- **Syntax highlighting**: Choose themes with distinct colors for Python keywords, strings, comments, and decorators
+- **Contrast**: Ensure good contrast between code and background for readability
+- **Visualization tools**: Some themes work better with Python visualization libraries like matplotlib and seaborn
+- **Consistency**: Use themes that maintain consistent styling across different file types in your project
+
+### Installing themes
+
+1. Open the Extensions view (Ctrl+Shift+X)
+2. Search for the theme name
+3. Click Install
+4. Select the theme from the Command Palette (Ctrl+Shift+P) → "Color Theme"
+
+For more information on customizing your VS Code experience, see the [VS Code Themes documentation](https://code.visualstudio.com/docs/getstarted/themes).
 
 ## Supported locales
 
