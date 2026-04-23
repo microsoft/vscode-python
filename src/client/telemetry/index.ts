@@ -1992,7 +1992,12 @@ export interface IEventNamePropertyMapping {
            "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
            "toolName" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
             "failed": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether there was a failure. Common to most of the events.", "owner": "donjayamanne" },
-            "failureCategory": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error. Common to most of the events.", "owner": "donjayamanne" }
+            "failureCategory": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error. Common to most of the events.", "owner": "donjayamanne" },
+            "resolveOutcome": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Which code path resolved the environment in configure_python_environment.", "owner": "donjayamanne" },
+            "envType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"The type of Python environment (e.g. venv, conda, system).", "owner": "donjayamanne" },
+            "packageCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Number of packages requested for installation (install_python_packages only).", "owner": "donjayamanne" },
+            "installerType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Which installer was used: pip or conda (install_python_packages only).", "owner": "donjayamanne" },
+            "responsePackageCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Number of packages in the environment response (get_python_environment_details only).", "owner": "donjayamanne" }
        }
      */
     [EventName.INVOKE_TOOL]: {
@@ -2009,6 +2014,26 @@ export interface IEventNamePropertyMapping {
          * A reason the error was thrown.
          */
         failureCategory?: string;
+        /**
+         * Which code path resolved the environment (configure_python_environment only).
+         */
+        resolveOutcome?: string;
+        /**
+         * The type of Python environment (e.g. venv, conda, system).
+         */
+        envType?: string;
+        /**
+         * Number of packages requested for installation (install_python_packages only).
+         */
+        packageCount?: string;
+        /**
+         * Which installer was used: pip or conda (install_python_packages only).
+         */
+        installerType?: string;
+        /**
+         * Number of packages in the environment response (get_python_environment_details only).
+         */
+        responsePackageCount?: string;
     };
     /**
      * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
