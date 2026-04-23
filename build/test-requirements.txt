@@ -13,6 +13,7 @@ fastapi
 uvicorn
 django
 testscenarios
+testtools
 
 # Integrated TensorBoard tests
 tensorboard
