@@ -1988,7 +1988,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when invoking a Tool
      */
     /* __GDPR__
-       "invokeTool" : {
+       "INVOKE_TOOL" : {
            "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
            "toolName" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
             "failed": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether there was a failure. Common to most of the events.", "owner": "donjayamanne" },
