@@ -12,7 +12,6 @@ flask
 fastapi
 uvicorn
 django
-testresources
 testscenarios
 testtools
 
