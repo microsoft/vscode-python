@@ -104,33 +104,15 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageArgs>
                     'installerNotSupported',
                 );
             }
-            const succeeded: string[] = [];
-            const failed: { pkg: string; error: string }[] = [];
             for (const packageName of options.input.packageList) {
-                try {
-                    await installer.installModule(packageName, resourcePath, token, undefined, {
-                        installAsProcess: true,
-                        hideProgress: true,
-                    });
-                    succeeded.push(packageName);
-                } catch (error) {
-                    if (isCancellationError(error)) {
-                        throw error;
-                    }
-                    failed.push({ pkg: packageName, error: `${error}` });
-                }
+                await installer.installModule(packageName, resourcePath, token, undefined, {
+                    installAsProcess: true,
+                    hideProgress: true,
+                });
             }
-            const parts: string[] = [];
-            if (succeeded.length > 0) {
-                parts.push(`Successfully installed: ${succeeded.join(', ')}`);
-            }
-            if (failed.length > 0) {
-                parts.push(`Failed to install: ${failed.map((f) => `${f.pkg} (${f.error})`).join(', ')}`);
-            }
-            if (succeeded.length === 0 && failed.length > 0) {
-                throw new ErrorWithTelemetrySafeReason(parts.join('. '), 'installFailed');
-            }
-            return new LanguageModelToolResult([new LanguageModelTextPart(parts.join('. '))]);
+            // format and return
+            const resultMessage = `Successfully installed ${packagePlurality}: ${options.input.packageList.join(', ')}`;
+            return new LanguageModelToolResult([new LanguageModelTextPart(resultMessage)]);
         } catch (error) {
             if (isCancellationError(error)) {
                 throw error;
