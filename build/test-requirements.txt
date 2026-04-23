@@ -14,6 +14,7 @@ uvicorn
 django
 testresources
 testscenarios
+testtools
 
 # Integrated TensorBoard tests
 tensorboard
