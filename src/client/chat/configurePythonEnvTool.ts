@@ -18,6 +18,7 @@ import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
 import {
     getEnvDetailsForResponse,
+    getEnvTypeForTelemetry,
     getToolResponseIfNotebook,
     IResourceReference,
     isCancellationError,
@@ -58,6 +59,7 @@ export class ConfigurePythonEnvTool extends BaseTool<IResourceReference>
     ): Promise<LanguageModelToolResult> {
         const notebookResponse = getToolResponseIfNotebook(resource);
         if (notebookResponse) {
+            this.extraTelemetryProperties.resolveOutcome = 'notebook';
             return notebookResponse;
         }
 
@@ -67,6 +69,8 @@ export class ConfigurePythonEnvTool extends BaseTool<IResourceReference>
         );
 
         if (workspaceSpecificEnv) {
+            this.extraTelemetryProperties.resolveOutcome = 'existingWorkspaceEnv';
+            this.extraTelemetryProperties.envType = getEnvTypeForTelemetry(workspaceSpecificEnv);
             return getEnvDetailsForResponse(
                 workspaceSpecificEnv,
                 this.api,
@@ -79,7 +83,9 @@ export class ConfigurePythonEnvTool extends BaseTool<IResourceReference>
 
         if (await this.createEnvTool.shouldCreateNewVirtualEnv(resource, token)) {
             try {
-                return await lm.invokeTool(CreateVirtualEnvTool.toolName, options, token);
+                const result = await lm.invokeTool(CreateVirtualEnvTool.toolName, options, token);
+                this.extraTelemetryProperties.resolveOutcome = 'createdVirtualEnv';
+                return result;
             } catch (ex) {
                 if (isCancellationError(ex)) {
                     const input: ISelectPythonEnvToolArguments = {
@@ -87,6 +93,7 @@ export class ConfigurePythonEnvTool extends BaseTool<IResourceReference>
                         reason: 'cancelled',
                     };
                     // If the user cancelled the tool, then we should invoke the select env tool.
+                    this.extraTelemetryProperties.resolveOutcome = 'selectedEnvAfterCancelledCreate';
                     return lm.invokeTool(SelectPythonEnvTool.toolName, { ...options, input }, token);
                 }
                 throw ex;
@@ -95,6 +102,7 @@ export class ConfigurePythonEnvTool extends BaseTool<IResourceReference>
             const input: ISelectPythonEnvToolArguments = {
                 ...options.input,
             };
+            this.extraTelemetryProperties.resolveOutcome = 'selectedEnv';
             return lm.invokeTool(SelectPythonEnvTool.toolName, { ...options, input }, token);
         }
     }

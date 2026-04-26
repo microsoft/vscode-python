@@ -16,8 +16,10 @@ import { IResourceReference, isCancellationError, resolveFilePath } from './util
 import { ErrorWithTelemetrySafeReason } from '../common/errors/errorUtils';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
+import { StopWatch } from '../common/utils/stopWatch';
 
 export abstract class BaseTool<T extends IResourceReference> implements LanguageModelTool<T> {
+    protected extraTelemetryProperties: Record<string, string> = {};
     constructor(private readonly toolName: string) {}
 
     async invoke(
@@ -29,8 +31,10 @@ export abstract class BaseTool<T extends IResourceReference> implements Language
                 new LanguageModelTextPart('Cannot use this tool in an untrusted workspace.'),
             ]);
         }
+        this.extraTelemetryProperties = {};
         let error: Error | undefined;
         const resource = resolveFilePath(options.input.resourcePath);
+        const stopWatch = new StopWatch();
         try {
             return await this.invokeImpl(options, resource, token);
         } catch (ex) {
@@ -46,10 +50,11 @@ export abstract class BaseTool<T extends IResourceReference> implements Language
                     ? error.telemetrySafeReason
                     : 'error'
                 : undefined;
-            sendTelemetryEvent(EventName.INVOKE_TOOL, undefined, {
+            sendTelemetryEvent(EventName.INVOKE_TOOL, stopWatch.elapsedTime, {
                 toolName: this.toolName,
                 failed,
                 failureCategory,
+                ...this.extraTelemetryProperties,
             });
         }
     }
