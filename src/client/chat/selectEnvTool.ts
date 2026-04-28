@@ -25,6 +25,7 @@ import {
     getEnvDetailsForResponse,
     getToolResponseIfNotebook,
     IResourceReference,
+    raceCancellationError,
 } from './utils';
 import { ITerminalHelper } from '../common/terminal/types';
 import { raceTimeout } from '../common/utils/async';
@@ -40,6 +41,13 @@ import { BaseTool } from './baseTool';
 
 export interface ISelectPythonEnvToolArguments extends IResourceReference {
     reason?: 'cancelled';
+    /**
+     * Optional path to a Python interpreter. When provided, the tool sets this
+     * interpreter directly without showing any Quick Pick UI to the user.
+     * This prevents the agent from getting stuck waiting for user input in
+     * autopilot / bypass-approvals mode.
+     */
+    pythonPath?: string;
 }
 
 export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
@@ -64,15 +72,48 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
         resource: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
+        // Fast path: if the caller provided a pythonPath, set it directly without any UI.
+        if (options.input.pythonPath) {
+            traceVerbose(
+                `${SelectPythonEnvTool.toolName}: setting environment directly from pythonPath: ${options.input.pythonPath}`,
+            );
+            await raceCancellationError(
+                this.api.updateActiveEnvironmentPath(options.input.pythonPath, resource),
+                token,
+            );
+            const env = await raceCancellationError(
+                this.api.resolveEnvironment(this.api.getActiveEnvironmentPath(resource)),
+                token,
+            );
+            if (env) {
+                return getEnvDetailsForResponse(
+                    env,
+                    this.api,
+                    this.terminalExecutionService,
+                    this.terminalHelper,
+                    resource,
+                    token,
+                );
+            }
+            return new LanguageModelToolResult([
+                new LanguageModelTextPart(
+                    `The provided pythonPath '${options.input.pythonPath}' could not be resolved to a valid Python environment.`,
+                ),
+            ]);
+        }
+
         let selected: boolean | undefined = false;
         const hasVenvOrCondaEnvInWorkspaceFolder = doesWorkspaceHaveVenvOrCondaEnv(resource, this.api);
         if (options.input.reason === 'cancelled' || hasVenvOrCondaEnvInWorkspaceFolder) {
-            const result = (await Promise.resolve(
-                commands.executeCommand(Commands.Set_Interpreter, {
-                    hideCreateVenv: false,
-                    showBackButton: false,
-                }),
-            )) as SelectEnvironmentResult | undefined;
+            const result = await raceCancellationError(
+                Promise.resolve(
+                    commands.executeCommand(Commands.Set_Interpreter, {
+                        hideCreateVenv: false,
+                        showBackButton: false,
+                    }),
+                ) as Promise<SelectEnvironmentResult | undefined>,
+                token,
+            );
             if (result?.path) {
                 traceVerbose(`User selected a Python environment ${result.path} in Select Python Tool.`);
                 selected = true;
@@ -80,7 +121,10 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
                 traceWarn(`User did not select a Python environment in Select Python Tool.`);
             }
         } else {
-            selected = await showCreateAndSelectEnvironmentQuickPick(resource, this.serviceContainer);
+            selected = await raceCancellationError(
+                showCreateAndSelectEnvironmentQuickPick(resource, this.serviceContainer),
+                token,
+            );
             if (selected) {
                 traceVerbose(`User selected a Python environment ${selected} in Select Python Tool(2).`);
             } else {
