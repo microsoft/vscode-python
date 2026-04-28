@@ -45,7 +45,7 @@ import { hideEnvCreation } from '../pythonEnvironments/creation/provider/hideEnv
 import { BaseTool } from './baseTool';
 
 interface ICreateVirtualEnvToolParams extends IResourceReference {
-    packageList?: string[]; // Added only becausewe have ability to create a virtual env with list of packages same tool within the in Python Env extension.
+    packageList?: string[]; // Added only because we have ability to create a virtual env with list of packages same tool within the in Python Env extension.
 }
 
 export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
@@ -92,18 +92,24 @@ export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
 
             let createdEnvPath: string | undefined = undefined;
             if (useEnvExtension()) {
-                const result: PythonEnvironment | undefined = await commands.executeCommand('python-envs.createAny', {
-                    quickCreate: true,
-                    additionalPackages: options.input.packageList || [],
-                    uri: workspaceFolder.uri,
-                    selectEnvironment: true,
-                });
+                const result: PythonEnvironment | undefined = await raceCancellationError(
+                    Promise.resolve(
+                        commands.executeCommand<PythonEnvironment | undefined>('python-envs.createAny', {
+                            quickCreate: true,
+                            additionalPackages: options.input.packageList || [],
+                            uri: workspaceFolder.uri,
+                            selectEnvironment: true,
+                        }),
+                    ),
+                    token,
+                );
                 createdEnvPath = result?.environmentPath.fsPath;
             } else {
                 const created = await raceCancellationError(
                     createVirtualEnvironment({
                         interpreter: preferredGlobalPythonEnv.id,
                         workspaceFolder,
+                        installPackages: false,
                     }),
                     token,
                 );
@@ -120,7 +126,7 @@ export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
 
             const stopWatch = new StopWatch();
             let env: ResolvedEnvironment | undefined;
-            while (stopWatch.elapsedTime < 5_000 || !env) {
+            while (stopWatch.elapsedTime < 5_000 && !env) {
                 env = await this.api.resolveEnvironment(createdEnvPath);
                 if (env) {
                     break;
