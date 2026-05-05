@@ -52,7 +52,9 @@ export class RecommendedEnvironmentService implements IRecommendedEnvironmentSer
         }
     }
 
-    async getRecommededEnvironment(resource: Resource): Promise<
+    async getRecommededEnvironment(
+        resource: Resource,
+    ): Promise<
         | {
               environment: ResolvedEnvironment;
               reason: 'globalUserSelected' | 'workspaceUserSelected' | 'defaultRecommended';
