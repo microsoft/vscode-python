@@ -45,7 +45,7 @@ import { hideEnvCreation } from '../pythonEnvironments/creation/provider/hideEnv
 import { BaseTool } from './baseTool';
 
 interface ICreateVirtualEnvToolParams extends IResourceReference {
-    packageList?: string[]; // Added only because we have ability to create a virtual env with list of packages same tool within the in Python Env extension.
+    packageList?: string[]; // Added only because we have the ability to create a virtual env with a list of packages using the same tool within the Python Env extension.
 }
 
 export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>

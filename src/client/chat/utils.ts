@@ -58,6 +58,41 @@ export function raceCancellationError<T>(promise: Promise<T>, token: Cancellatio
     });
 }
 
+/**
+ * Returns a promise that resolves once the active environment path changes to match the
+ * provided `pythonPath` (matched against either the event's `path` or `id`). Resolves early
+ * on cancellation or after `timeoutMs` to avoid hanging callers if the event is missed.
+ * Callers must subscribe via this helper BEFORE invoking `updateActiveEnvironmentPath` to
+ * avoid a race where the event fires before the listener is attached.
+ */
+export function waitForActiveEnvironmentChange(
+    api: PythonExtension['environments'],
+    pythonPath: string,
+    token: CancellationToken,
+    timeoutMs = 5000,
+): Promise<void> {
+    return new Promise<void>((resolve) => {
+        let settled = false;
+        const settle = () => {
+            if (settled) {
+                return;
+            }
+            settled = true;
+            listener.dispose();
+            cancelRef.dispose();
+            clearTimeout(timer);
+            resolve();
+        };
+        const listener = api.onDidChangeActiveEnvironmentPath((e) => {
+            if (e.path === pythonPath || e.id === pythonPath) {
+                settle();
+            }
+        });
+        const cancelRef = token.onCancellationRequested(() => settle());
+        const timer = setTimeout(() => settle(), timeoutMs);
+    });
+}
+
 export async function getEnvDisplayName(
     discovery: IDiscoveryAPI,
     resource: Uri | undefined,
