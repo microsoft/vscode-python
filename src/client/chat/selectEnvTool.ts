@@ -163,6 +163,12 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
         if (getToolResponseIfNotebook(resource)) {
             return {};
         }
+        // Fast path: skip the confirmation prompt when the model has already supplied
+        // a specific interpreter to use. Showing a confirmation here would defeat the
+        // purpose of the autopilot/bypass-approvals fast path.
+        if (options.input.pythonPath) {
+            return {};
+        }
         const hasVenvOrCondaEnvInWorkspaceFolder = doesWorkspaceHaveVenvOrCondaEnv(resource, this.api);
 
         if (

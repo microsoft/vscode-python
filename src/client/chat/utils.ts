@@ -73,7 +73,14 @@ export function waitForActiveEnvironmentChange(
 ): Promise<void> {
     return new Promise<void>((resolve) => {
         let settled = false;
-        const settle = () => {
+        const listener = api.onDidChangeActiveEnvironmentPath((e) => {
+            if (e.path === pythonPath || e.id === pythonPath) {
+                settle();
+            }
+        });
+        const cancelRef = token.onCancellationRequested(() => settle());
+        const timer = setTimeout(() => settle(), timeoutMs);
+        function settle() {
             if (settled) {
                 return;
             }
@@ -82,14 +89,7 @@ export function waitForActiveEnvironmentChange(
             cancelRef.dispose();
             clearTimeout(timer);
             resolve();
-        };
-        const listener = api.onDidChangeActiveEnvironmentPath((e) => {
-            if (e.path === pythonPath || e.id === pythonPath) {
-                settle();
-            }
-        });
-        const cancelRef = token.onCancellationRequested(() => settle());
-        const timer = setTimeout(() => settle(), timeoutMs);
+        }
     });
 }
 
@@ -109,6 +109,14 @@ export async function setEnvironmentDirectlyByPath(
     resource: Uri | undefined,
     token: CancellationToken,
 ): Promise<LanguageModelToolResult | undefined> {
+    // Validate the path resolves to a real environment BEFORE mutating user settings.
+    // updateActiveEnvironmentPath persists unconditionally, so an invalid path would
+    // permanently overwrite the user's selected interpreter.
+    const candidate = await raceCancellationError(api.resolveEnvironment(pythonPath), token);
+    if (!candidate) {
+        return undefined;
+    }
+
     // Subscribe to the change event BEFORE triggering the update so we don't miss it.
     // updateActiveEnvironmentPath only persists the setting; the active interpreter switch
     // is asynchronous, so we wait for the event before resolving env details to avoid
@@ -116,7 +124,13 @@ export async function setEnvironmentDirectlyByPath(
     const activeChanged = waitForActiveEnvironmentChange(api, pythonPath, token);
     await raceCancellationError(api.updateActiveEnvironmentPath(pythonPath, resource), token);
     await raceCancellationError(activeChanged, token);
+
+    // Verify the active env actually switched. If the change event timed out and the
+    // active path is still the previous one, don't report success for the wrong env.
     const envPath = api.getActiveEnvironmentPath(resource);
+    if (envPath.path !== pythonPath && envPath.id !== pythonPath) {
+        return undefined;
+    }
     const environment = await raceCancellationError(api.resolveEnvironment(envPath), token);
     if (!environment) {
         return undefined;
