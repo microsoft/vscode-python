@@ -26,6 +26,7 @@ import {
     getToolResponseIfNotebook,
     IResourceReference,
     raceCancellationError,
+    waitForActiveEnvironmentChange,
 } from './utils';
 import { ITerminalHelper } from '../common/terminal/types';
 import { raceTimeout } from '../common/utils/async';
@@ -72,15 +73,23 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
         resource: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
+        const notebookResponse = getToolResponseIfNotebook(resource);
+        if (notebookResponse) {
+            return notebookResponse;
+        }
+
         // Fast path: if the caller provided a pythonPath, set it directly without any UI.
         if (options.input.pythonPath) {
             traceVerbose(
                 `${SelectPythonEnvTool.toolName}: setting environment directly from pythonPath: ${options.input.pythonPath}`,
             );
+            // Subscribe to the change event BEFORE triggering the update so we don't miss it.
+            const activeChanged = waitForActiveEnvironmentChange(this.api, options.input.pythonPath, token);
             await raceCancellationError(
                 this.api.updateActiveEnvironmentPath(options.input.pythonPath, resource),
                 token,
             );
+            await raceCancellationError(activeChanged, token);
             const env = await raceCancellationError(
                 this.api.resolveEnvironment(this.api.getActiveEnvironmentPath(resource)),
                 token,
