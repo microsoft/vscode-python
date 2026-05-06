@@ -23,7 +23,7 @@ import {
     IResourceReference,
     isCancellationError,
     raceCancellationError,
-    waitForActiveEnvironmentChange,
+    setEnvironmentDirectlyByPath,
 } from './utils';
 import { ITerminalHelper } from '../common/terminal/types';
 import { IRecommendedEnvironmentService } from '../interpreter/configuration/types';
@@ -134,23 +134,18 @@ export class ConfigurePythonEnvTool extends BaseTool<IConfigurePythonEnvToolArgu
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
         traceVerbose(`${ConfigurePythonEnvTool.toolName}: setting environment directly from pythonPath: ${pythonPath}`);
-        // Subscribe to the change event BEFORE triggering the update so we don't miss it.
-        // updateActiveEnvironmentPath only persists the setting; the active interpreter switch
-        // is asynchronous, so we wait for the event before resolving env details to avoid
-        // returning details for the previously-active interpreter.
-        const activeChanged = waitForActiveEnvironmentChange(this.api, pythonPath, token);
-        await raceCancellationError(this.api.updateActiveEnvironmentPath(pythonPath, resource), token);
-        await raceCancellationError(activeChanged, token);
-        const envPath = this.api.getActiveEnvironmentPath(resource);
-        const environment = await raceCancellationError(this.api.resolveEnvironment(envPath), token);
-        return getEnvDetailsForResponse(
-            environment,
+        const result = await setEnvironmentDirectlyByPath(
+            pythonPath,
             this.api,
             this.terminalExecutionService,
             this.terminalHelper,
             resource,
             token,
         );
+        if (result) {
+            return result;
+        }
+        throw new Error(`No environment found for the provided pythonPath '${pythonPath}'.`);
     }
 
     async prepareInvocationImpl(

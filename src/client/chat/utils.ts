@@ -93,6 +93,37 @@ export function waitForActiveEnvironmentChange(
     });
 }
 
+/**
+ * Sets the active Python interpreter to `pythonPath` without any UI, waits for the
+ * asynchronous environment switch to settle (via `onDidChangeActiveEnvironmentPath`),
+ * resolves the environment, and returns a tool result describing it.
+ *
+ * Returns `undefined` if the path cannot be resolved to a valid environment so callers
+ * can produce a tool-specific error message.
+ */
+export async function setEnvironmentDirectlyByPath(
+    pythonPath: string,
+    api: PythonExtension['environments'],
+    terminalExecutionService: TerminalCodeExecutionProvider,
+    terminalHelper: ITerminalHelper,
+    resource: Uri | undefined,
+    token: CancellationToken,
+): Promise<LanguageModelToolResult | undefined> {
+    // Subscribe to the change event BEFORE triggering the update so we don't miss it.
+    // updateActiveEnvironmentPath only persists the setting; the active interpreter switch
+    // is asynchronous, so we wait for the event before resolving env details to avoid
+    // returning details for the previously-active interpreter.
+    const activeChanged = waitForActiveEnvironmentChange(api, pythonPath, token);
+    await raceCancellationError(api.updateActiveEnvironmentPath(pythonPath, resource), token);
+    await raceCancellationError(activeChanged, token);
+    const envPath = api.getActiveEnvironmentPath(resource);
+    const environment = await raceCancellationError(api.resolveEnvironment(envPath), token);
+    if (!environment) {
+        return undefined;
+    }
+    return getEnvDetailsForResponse(environment, api, terminalExecutionService, terminalHelper, resource, token);
+}
+
 export async function getEnvDisplayName(
     discovery: IDiscoveryAPI,
     resource: Uri | undefined,
