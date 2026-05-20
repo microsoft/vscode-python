@@ -9,7 +9,7 @@ import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestProvider } from '../types';
-import { createErrorTestItem, getTestCaseNodes } from './common/testItemUtilities';
+import { createErrorTestItem, expandExcludeSet, getTestCaseNodes } from './common/testItemUtilities';
 import { ITestDiscoveryAdapter, ITestExecutionAdapter, ITestResultResolver } from './common/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { ITestDebugLauncher } from '../common/types';
@@ -48,6 +48,7 @@ export class WorkspaceTestAdapter {
         profileKind?: boolean | TestRunProfileKind,
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
+        excludes?: readonly TestItem[],
         project?: ProjectAdapter,
     ): Promise<void> {
         if (this.executing) {
@@ -59,22 +60,24 @@ export class WorkspaceTestAdapter {
         this.executing = deferred;
 
         const testCaseNodes: TestItem[] = [];
-        const testCaseIdsSet = new Set<string>();
+        const visitedNodes = new Set<TestItem>();
+        const rawExcludeSet = excludes?.length ? new Set(excludes) : undefined;
+        const excludeSet = expandExcludeSet(rawExcludeSet);
+        const testCaseIds: string[] = [];
         try {
-            // first fetch all the individual test Items that we necessarily want
+            // Expand included items to leaf test nodes.
+            // getTestCaseNodes handles visited tracking and exclusion filtering.
             includes.forEach((t) => {
-                const nodes = getTestCaseNodes(t);
-                testCaseNodes.push(...nodes);
+                getTestCaseNodes(t, testCaseNodes, visitedNodes, excludeSet);
             });
-            // iterate through testItems nodes and fetch their unittest runID to pass in as argument
+            // Collect runIDs for the test nodes to execute.
             testCaseNodes.forEach((node) => {
-                runInstance.started(node); // do the vscode ui test item start here before runtest
+                runInstance.started(node);
                 const runId = this.resultResolver.vsIdToRunId.get(node.id);
                 if (runId) {
-                    testCaseIdsSet.add(runId);
+                    testCaseIds.push(runId);
                 }
             });
-            const testCaseIds = Array.from(testCaseIdsSet);
             if (executionFactory === undefined) {
                 throw new Error('Execution factory is required for test execution');
             }
