@@ -29,6 +29,7 @@ import {
     setupCoverageForProjects,
 } from '../../../../client/testing/testController/common/projectTestExecution';
 import * as telemetry from '../../../../client/telemetry';
+import { EventName } from '../../../../client/telemetry/constants';
 import * as envExtApi from '../../../../client/envExt/api.internal';
 
 suite('Project Test Execution', () => {
@@ -517,8 +518,10 @@ suite('Project Test Execution', () => {
             // Run
             await executeTestsForProjects([proj1, proj2], [item1, item2], runMock.object, request, token, deps);
 
-            // Assert - telemetry sent twice (once per project)
-            expect(telemetryStub.callCount).to.equal(2);
+            // Assert - UNITTEST_RUN telemetry sent twice (once per project).
+            // UNITTEST_RUN_DONE is also emitted per project but filtered out here.
+            const runCalls = telemetryStub.getCalls().filter((c) => c.args[0] === EventName.UNITTEST_RUN);
+            expect(runCalls.length).to.equal(2);
         });
 
         test('should stop processing remaining projects when cancellation requested mid-execution', async () => {
@@ -607,9 +610,11 @@ suite('Project Test Execution', () => {
             // Run
             await executeTestsForProjects([project], [item], runMock.object, request, token, deps);
 
-            // Assert - telemetry contains debugging=true
-            expect(telemetryStub.calledOnce).to.be.true;
-            const telemetryProps = telemetryStub.firstCall.args[2];
+            // Assert - UNITTEST_RUN telemetry contains debugging=true.
+            // UNITTEST_RUN_DONE is also emitted but filtered out here.
+            const runCalls = telemetryStub.getCalls().filter((c) => c.args[0] === EventName.UNITTEST_RUN);
+            expect(runCalls.length).to.equal(1);
+            const telemetryProps = runCalls[0].args[2];
             expect(telemetryProps.debugging).to.be.true;
         });
     });

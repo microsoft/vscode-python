@@ -7,10 +7,29 @@ import { TestProvider } from '../../types';
 import { traceInfo } from '../../../logging';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
+import { StopWatch } from '../../../common/utils/stopWatch';
 import { TestItemIndex } from './testItemIndex';
 import { TestDiscoveryHandler } from './testDiscoveryHandler';
 import { TestExecutionHandler } from './testExecutionHandler';
 import { TestCoverageHandler } from './testCoverageHandler';
+import { DiscoveredTestNode, DiscoveredTestItem } from './types';
+
+/**
+ * Trigger source label for the current discovery cycle (matches
+ * UNITTEST_DISCOVERY_TRIGGER.trigger values).
+ */
+export type DiscoveryTriggerKind = 'auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter';
+
+/**
+ * Per-cycle context the controller passes to the resolver so DISCOVERY_DONE can
+ * include trigger source, mode, and wall-clock duration without having to plumb
+ * these through every adapter call.
+ */
+export interface DiscoveryCycleContext {
+    mode: 'project' | 'legacy';
+    trigger?: DiscoveryTriggerKind;
+    stopWatch: StopWatch;
+}
 
 export class PythonResultResolver implements ITestResultResolver {
     testController: TestController;
@@ -38,6 +57,12 @@ export class PythonResultResolver implements ITestResultResolver {
      * When set, the root node label will be "project: {projectName}" instead of the folder name.
      */
     private projectName?: string;
+
+    /**
+     * Per-cycle telemetry context set by the controller before invoking discovery.
+     * Consumed (and cleared) by resolveDiscovery to emit UNITTEST_DISCOVERY_DONE.
+     */
+    private discoveryCycle?: DiscoveryCycleContext;
 
     constructor(
         testController: TestController,
@@ -75,6 +100,39 @@ export class PythonResultResolver implements ITestResultResolver {
         return this.projectId;
     }
 
+    /**
+     * Set per-discovery-cycle telemetry context. Called by the controller right
+     * before invoking the discovery adapter so resolveDiscovery / failure paths
+     * can include trigger, mode, and duration in UNITTEST_DISCOVERY_DONE.
+     */
+    public beginDiscoveryCycle(ctx: Omit<DiscoveryCycleContext, 'stopWatch'>): void {
+        this.discoveryCycle = { ...ctx, stopWatch: new StopWatch() };
+    }
+
+    /**
+     * Returns and clears the current discovery cycle context, if any.
+     */
+    private takeDiscoveryCycle(): DiscoveryCycleContext | undefined {
+        const cycle = this.discoveryCycle;
+        this.discoveryCycle = undefined;
+        return cycle;
+    }
+
+    /**
+     * Returns the current discovery cycle context without clearing it.
+     * Used by error paths that still want to clear via takeDiscoveryCycle.
+     */
+    public peekDiscoveryCycle(): DiscoveryCycleContext | undefined {
+        return this.discoveryCycle;
+    }
+
+    /**
+     * Clears the current discovery cycle context.
+     */
+    public clearDiscoveryCycle(): void {
+        this.discoveryCycle = undefined;
+    }
+
     public resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void {
         PythonResultResolver.discoveryHandler.processDiscovery(
             payload,
@@ -86,9 +144,15 @@ export class PythonResultResolver implements ITestResultResolver {
             this.projectId,
             this.projectName,
         );
+        const cycle = this.takeDiscoveryCycle();
+        const mode = cycle?.mode ?? (this.projectId ? 'project' : 'legacy');
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
             tool: this.testProvider,
             failed: false,
+            mode,
+            trigger: cycle?.trigger,
+            totalDurationMs: cycle?.stopWatch.elapsedTime,
+            testCount: payload?.tests ? countDiscoveredTests(payload.tests) : 0,
         });
     }
 
@@ -134,4 +198,20 @@ export class PythonResultResolver implements ITestResultResolver {
     public cleanupStaleReferences(): void {
         this.testItemIndex.cleanupStaleReferences(this.testController);
     }
+}
+
+/**
+ * Recursively counts leaf test items in a discovered test tree.
+ * Used to populate UNITTEST_DISCOVERY_DONE.testCount.
+ */
+function countDiscoveredTests(node: DiscoveredTestNode | DiscoveredTestItem): number {
+    if ((node as DiscoveredTestNode).children === undefined) {
+        // No children -> leaf (DiscoveredTestItem).
+        return 1;
+    }
+    let total = 0;
+    for (const child of (node as DiscoveredTestNode).children) {
+        total += countDiscoveredTests(child);
+    }
+    return total;
 }
