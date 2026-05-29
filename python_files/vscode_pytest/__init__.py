@@ -1104,8 +1104,10 @@ def send_discovery_message(cwd: str, session_node: TestNode) -> None:
 
 
 class CustomEncoder(json.JSONEncoder):
-    """A custom JSON encoder that encodes pathlib.Path objects as strings."""
+    """JSON encoder for pytest discovery payloads.
 
+    Encodes `pathlib.Path` as strings and `Children` containers as JSON arrays.
+    """
     def default(self, o):
         if isinstance(o, pathlib.Path):
             return os.fspath(o)
