@@ -1108,6 +1108,7 @@ class CustomEncoder(json.JSONEncoder):
 
     Encodes `pathlib.Path` as strings and `Children` containers as JSON arrays.
     """
+    
     def default(self, o):
         if isinstance(o, pathlib.Path):
             return os.fspath(o)
