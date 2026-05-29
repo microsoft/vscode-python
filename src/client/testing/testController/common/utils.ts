@@ -89,18 +89,8 @@ export async function startRunResultNamedPipe(
     traceVerbose('Starting Test Result named pipe');
     const pipeName: string = generateRandomPipeName('python-test-results');
 
-    // NOTE: `cancellationToken` is intentionally only forwarded to `createReaderPipe`
-    // (which uses it to cancel pipe *creation*). Once the reader is connected we do
-    // not wire a cancellation handler here. Disposing the reader on cancellation
-    // would close the socket while data was still buffered in the kernel pipe, and
-    // any results not yet delivered to the `reader.listen` callback would be lost.
-    // This is exactly the regression seen in the debug path, where cancellation
-    // fires the moment the debug session terminates.
-    //
-    // Instead, disposal is fully event-driven: when the subprocess closes its end
-    // of the pipe (either by exiting normally or by being killed via the caller's
-    // own cancellation handling), the OS delivers all remaining buffered bytes and
-    // then EOF, which fires `reader.onClose` below and triggers dispose.
+    // `cancellationToken` only cancels pipe creation; disposal is driven by
+    // `reader.onClose` so buffered results are not dropped on cancel.
     const reader = await createReaderPipe(pipeName, cancellationToken);
     traceVerbose(`Test Results named pipe ${pipeName} connected`);
     let disposables: Disposable[] = [];
@@ -119,9 +109,6 @@ export async function startRunResultNamedPipe(
             dataReceivedCallback((data as ExecutionResultMessage).params as ExecutionTestPayload);
         }),
         reader.onClose(() => {
-            // Fires once the subprocess has closed its end of the pipe and the OS
-            // has delivered all buffered data. This is the only path that disposes
-            // the reader, so no results can be dropped due to a premature close.
             traceVerbose(`Test Result named pipe ${pipeName} closed. Disposing of listener/s.`);
             disposable.dispose();
         }),

@@ -766,12 +766,7 @@ suite('startRunResultNamedPipe drain-on-cancel tests', () => {
     let sandbox: sinon.SinonSandbox;
     let createReaderPipeStub: sinon.SinonStub;
 
-    /**
-     * Minimal fake `MessageReader` that lets the test drive `listen` callback
-     * and the `onClose` / `onError` events directly. Mirrors only the bits of
-     * the `vscode-jsonrpc` `MessageReader` interface that `startRunResultNamedPipe`
-     * touches.
-     */
+    // Minimal `MessageReader` fake exposing only what `startRunResultNamedPipe` uses.
     class FakeMessageReader implements MessageReader {
         private _onClose = new Emitter<void>();
 
@@ -879,8 +874,7 @@ suite('startRunResultNamedPipe drain-on-cancel tests', () => {
             cancelSource.token,
         );
 
-        // Simulate the debug-path race: subprocess is still flushing results
-        // when the debug session ends and cancellation fires.
+        // Simulate the debug-path race: cancel fires while results are still buffered.
         cancelSource.cancel();
         await new Promise((r) => setImmediate(r));
 
@@ -895,8 +889,7 @@ suite('startRunResultNamedPipe drain-on-cancel tests', () => {
             'all buffered results delivered in order',
         );
 
-        // The subprocess finally closes its end of the pipe; the OS delivers
-        // EOF, which fires `onClose` and triggers disposal.
+        // Subprocess closes its end of the pipe -> onClose fires -> dispose.
         reader.fireClose();
         await deferredTillServerClose.promise;
 
