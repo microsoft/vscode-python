@@ -11,7 +11,8 @@ import { isPromise } from '../common/utils/async';
 import { StopWatch } from '../common/utils/stopWatch';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { TensorBoardPromptSelection } from '../tensorBoard/constants';
-import { EventName, type UnitTestRunFailureCategory } from './constants';
+import { EventName } from './constants';
+import type { UnitTestRunFailureCategory } from './constants';
 import type { TestTool } from './types';
 
 /**

@@ -4,7 +4,8 @@
 import { CancellationToken, FileCoverageDetail, TestItem, TestRun, TestRunProfileKind, TestRunRequest } from 'vscode';
 import { traceError, traceInfo, traceVerbose, traceWarn } from '../../../logging';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName, type UnitTestRunFailureCategory } from '../../../telemetry/constants';
+import { EventName } from '../../../telemetry/constants';
+import type { UnitTestRunFailureCategory } from '../../../telemetry/constants';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { ITestDebugLauncher } from '../../common/types';
