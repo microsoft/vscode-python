@@ -15,8 +15,7 @@ import { TestCoverageHandler } from './testCoverageHandler';
 import { DiscoveredTestNode, DiscoveredTestItem } from './types';
 
 /**
- * Trigger source label for the current discovery cycle (matches
- * UNITTEST_DISCOVERY_TRIGGER.trigger values).
+ * Trigger source label for the current discovery cycle.
  */
 export type DiscoveryTriggerKind = 'auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter';
 

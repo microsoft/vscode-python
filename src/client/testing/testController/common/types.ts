@@ -34,7 +34,10 @@ export interface TestData {
     kind: TestDataKinds;
 }
 
-export type TestRefreshOptions = { forceRefresh: boolean };
+export type TestRefreshOptions = {
+    forceRefresh: boolean;
+    trigger?: 'auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter';
+};
 
 export const ITestController = Symbol('ITestController');
 export interface ITestController {

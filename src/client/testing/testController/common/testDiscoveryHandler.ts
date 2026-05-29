@@ -6,8 +6,6 @@ import * as util from 'util';
 import { DiscoveredTestPayload } from './types';
 import { TestProvider } from '../../types';
 import { traceError, traceWarn } from '../../../logging';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName } from '../../../telemetry/constants';
 import { Testing } from '../../../common/utils/localize';
 import { createErrorTestItem } from './testItemUtilities';
 import { buildErrorNodeOptions, populateTestTree } from './utils';
@@ -56,9 +54,6 @@ export class TestDiscoveryHandler {
             // if any tests exist, they should be populated in the test tree, regardless of whether there were errors or not.
             // parse and insert test data.
 
-            // Snapshot root-item count before update for UNITTEST_TREE_UPDATE telemetry.
-            const beforeCount = testController.items.size;
-
             // Clear existing mappings before rebuilding test tree
             testItemIndex.clear();
 
@@ -78,19 +73,6 @@ export class TestDiscoveryHandler {
                 projectId,
                 projectName,
             );
-
-            // Emit TREE_UPDATE so we can quantify how often the tree is being rebuilt
-            // from scratch versus changing incrementally (see #25822, #25866).
-            // populateTestTree currently always rebuilds the subtree under the workspace/project root,
-            // so rebuiltFromScratch is true today; we keep the field so future incremental updates
-            // can flip it to false without a schema change.
-            sendTelemetryEvent(EventName.UNITTEST_TREE_UPDATE, undefined, {
-                tool: testProvider,
-                mode: projectId ? 'project' : 'legacy',
-                rebuiltFromScratch: true,
-                beforeCount,
-                afterCount: testController.items.size,
-            });
         }
     }
 

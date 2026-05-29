@@ -2123,39 +2123,6 @@ export interface IEventNamePropertyMapping {
         interpreterType?: EnvironmentType;
     };
     /**
-     * Telemetry event sent indicating the trigger source for discovery.
-     */
-    /* __GDPR__
-       "unittest.discovery.trigger" : {
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
-          "filekind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
-          "mssincelasttrigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true }
-       }
-     */
-    [EventName.UNITTEST_DISCOVERY_TRIGGER]: {
-        /**
-         * Carries the source which triggered discovering of tests
-         *
-         * @type {('auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter')}
-         * auto           : Triggered by VS Code editor.
-         * ui             : Triggered by clicking a button.
-         * commandpalette : Triggered by running the command from the command palette.
-         * watching       : Triggered by filesystem or content changes.
-         * interpreter    : Triggered by interpreter change.
-         */
-        trigger: 'auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter';
-        /**
-         * For 'auto' / 'watching' triggers, classifies the file whose change triggered discovery.
-         * Used to detect whether discovery is firing on non-test files (see #25866).
-         */
-        fileKind?: 'test' | 'conftest' | 'non-test' | 'unknown';
-        /**
-         * Milliseconds since the previous discovery trigger fired (any source).
-         * Helps detect chatty re-trigger storms.
-         */
-        msSinceLastTrigger?: number;
-    };
-    /**
      * Telemetry event sent with details about discovering tests
      */
     /* __GDPR__
@@ -2180,10 +2147,9 @@ export interface IEventNamePropertyMapping {
           "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
           "mode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
           "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
-          "failurecategory" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd" },
-          "totaldurationms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true },
-          "testcount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true },
-          "exitcode" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true }
+          "failureCategory" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd" },
+          "totalDurationMs" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true },
+          "testCount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true }
        }
      */
     [EventName.UNITTEST_DISCOVERY_DONE]: {
@@ -2205,7 +2171,7 @@ export interface IEventNamePropertyMapping {
          */
         mode?: 'project' | 'legacy';
         /**
-         * Source that triggered the discovery (mirrors UNITTEST_DISCOVERY_TRIGGER.trigger).
+         * Source that triggered the discovery.
          */
         trigger?: 'auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter';
         /**
@@ -2228,10 +2194,6 @@ export interface IEventNamePropertyMapping {
          * Number of test items discovered (leaf nodes).
          */
         testCount?: number;
-        /**
-         * Subprocess exit code, when known (failed discoveries).
-         */
-        exitCode?: number;
     };
     /**
      * Telemetry event sent when cancelling discovering tests
@@ -2283,13 +2245,9 @@ export interface IEventNamePropertyMapping {
           "debugging" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
           "mode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
           "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
-          "failurecategory" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd" },
-          "pipeclosedearly" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd" },
-          "durationms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true },
-          "requestedcount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true },
-          "reportedcount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true },
-          "missingcount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true },
-          "exitcode" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true }
+                    "failureCategory" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd" },
+                    "durationMs" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true },
+                    "requestedCount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true }
        }
      */
     [EventName.UNITTEST_RUN_DONE]: {
@@ -2312,11 +2270,6 @@ export interface IEventNamePropertyMapping {
             | 'cancelled'
             | 'unknown';
         /**
-         * `true` if the result pipe was disposed before the subprocess fully
-         * reported all requested test results (see #25872).
-         */
-        pipeClosedEarly?: boolean;
-        /**
          * Wall-clock duration of the run in milliseconds.
          */
         durationMs?: number;
@@ -2324,48 +2277,6 @@ export interface IEventNamePropertyMapping {
          * Number of test items the user asked to run.
          */
         requestedCount?: number;
-        /**
-         * Number of distinct test results reported back over the pipe.
-         */
-        reportedCount?: number;
-        /**
-         * requestedCount - reportedCount (signals #25892 "all skipped" pattern).
-         */
-        missingCount?: number;
-        /**
-         * Subprocess exit code when known.
-         */
-        exitCode?: number;
-    };
-    /**
-     * Telemetry event emitted after the test tree is updated with new discovery results.
-     * Used to detect full-rebuild-on-every-save pattern (see #25822, #25866).
-     */
-    /* __GDPR__
-       "unittest.tree.update" : {
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
-          "mode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
-          "rebuiltfromscratch" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd" },
-          "beforecount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true },
-          "aftercount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true }
-       }
-     */
-    [EventName.UNITTEST_TREE_UPDATE]: {
-        tool: TestTool;
-        mode: 'project' | 'legacy';
-        /**
-         * `true` if the discovery handler cleared and rebuilt all test items rather
-         * than performing an incremental update.
-         */
-        rebuiltFromScratch: boolean;
-        /**
-         * Number of root test items in the controller before this update.
-         */
-        beforeCount: number;
-        /**
-         * Number of root test items in the controller after this update.
-         */
-        afterCount: number;
     };
     /**
      * Telemetry event sent when testing is disabled for a workspace.

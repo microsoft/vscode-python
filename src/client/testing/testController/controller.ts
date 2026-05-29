@@ -31,7 +31,7 @@ import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { traceError, traceInfo, traceVerbose } from '../../logging';
-import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { TestProvider } from '../types';
@@ -50,32 +50,7 @@ import { executeTestsForProjects } from './common/projectTestExecution';
 import { useEnvExtension, getEnvExtApi } from '../../envExt/api.internal';
 import { DidChangePythonProjectsEventArgs, PythonProject } from '../../envExt/types';
 
-// Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
-type EventPropertyType = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_TRIGGER];
-type TriggerType = EventPropertyType['trigger'];
-type FileKind = NonNullable<EventPropertyType['fileKind']>;
-
-/**
- * Classifies a Python file for UNITTEST_DISCOVERY_TRIGGER.fileKind so we can
- * detect whether auto-discovery is firing on non-test files (see #25866).
- */
-function classifyFileKind(fsPath: string | undefined): FileKind {
-    if (!fsPath) {
-        return 'unknown';
-    }
-    const lower = fsPath.replace(/\\/g, '/').toLowerCase();
-    const base = lower.substring(lower.lastIndexOf('/') + 1);
-    if (base === 'conftest.py') {
-        return 'conftest';
-    }
-    if (/^test_.*\.py$/.test(base) || /_test\.py$/.test(base)) {
-        return 'test';
-    }
-    if (base.endsWith('.py')) {
-        return 'non-test';
-    }
-    return 'unknown';
-}
+type DiscoveryTriggerKind = NonNullable<TestRefreshOptions['trigger']>;
 
 @injectable()
 export class PythonTestController implements ITestController, IExtensionSingleActivationService {
@@ -87,19 +62,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     // Registry for multi-project testing (one registry instance manages all projects across workspaces)
     private readonly projectRegistry: TestProjectRegistry;
 
-    private readonly triggerTypes: TriggerType[] = [];
-
-    /**
-     * Timestamp (ms since epoch) of the last UNITTEST_DISCOVERY_TRIGGER fired.
-     * Used to populate msSinceLastTrigger for chatty-retrigger detection (#25866).
-     */
-    private lastDiscoveryTriggerMs?: number;
-
     /**
      * Source of the trigger that initiated the in-flight (or most recent) discovery.
      * Forwarded to the resolver so UNITTEST_DISCOVERY_DONE can attribute duration to a trigger.
      */
-    private currentDiscoveryTrigger?: TriggerType;
+    private currentDiscoveryTrigger?: DiscoveryTriggerKind;
 
     private readonly testController: TestController;
 
@@ -196,7 +163,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             );
 
             traceVerbose('Testing: Manually triggered test refresh');
-            this.sendTriggerTelemetry(constants.CommandSource.commandPalette);
+            this.setDiscoveryTrigger(constants.CommandSource.commandPalette);
             return this.refreshTestData(undefined, { forceRefresh: true });
         };
     }
@@ -458,6 +425,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     }
 
     public refreshTestData(uri?: Resource, options?: TestRefreshOptions): Promise<void> {
+        if (options?.trigger) {
+            this.setDiscoveryTrigger(options.trigger);
+        }
         if (options?.forceRefresh) {
             if (uri === undefined) {
                 // This is a special case where we want everything to be re-discovered.
@@ -502,6 +472,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             }
         } finally {
             this.refreshingCompletedEvent.fire();
+            this.currentDiscoveryTrigger = undefined;
         }
     }
 
@@ -635,8 +606,15 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             traceError(`[test-by-project] Discovery failed for project ${project.projectName}:`, error);
             // Individual project failures don't block others
             projectsCompleted.add(project.projectUri.toString()); // Still mark as completed
-            // Clear the cycle so the next discovery starts clean (the failure case
-            // emits its own DONE event from workspaceTestAdapter / adapter).
+            const cycle = (project.resultResolver as Partial<PythonResultResolver>).peekDiscoveryCycle?.();
+            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
+                tool: project.testProvider,
+                failed: true,
+                mode: 'project',
+                trigger: cycle?.trigger,
+                failureCategory: this.refreshCancellation.token.isCancellationRequested ? 'cancelled' : 'unknown',
+                totalDurationMs: cycle?.stopWatch.elapsedTime,
+            });
             (project.resultResolver as Partial<PythonResultResolver>).clearDiscoveryCycle?.();
         } finally {
             project.isDiscovering = false;
@@ -741,7 +719,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             }
         } else {
             traceVerbose('Testing: Refreshing all test data');
-            this.sendTriggerTelemetry('auto');
+            this.setDiscoveryTrigger('auto');
             const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
             await Promise.all(
                 workspaces.map(async (workspace) => {
@@ -1008,7 +986,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     file.includes('pyproject.toml')
                 ) {
                     traceVerbose(`Testing: Trigger refresh after saving ${doc.uri.fsPath}`);
-                    this.sendTriggerTelemetry('watching', doc.uri.fsPath);
+                    this.setDiscoveryTrigger('watching');
                     this.refreshData.trigger(doc.uri, false);
                 }
             }),
@@ -1018,14 +996,14 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.disposables.push(
             watcher.onDidCreate((uri) => {
                 traceVerbose(`Testing: Trigger refresh after creating ${uri.fsPath}`);
-                this.sendTriggerTelemetry('watching', uri.fsPath);
+                this.setDiscoveryTrigger('watching');
                 this.refreshData.trigger(uri, false);
             }),
         );
         this.disposables.push(
             watcher.onDidDelete((uri) => {
                 traceVerbose(`Testing: Trigger refresh after deleting in ${uri.fsPath}`);
-                this.sendTriggerTelemetry('watching', uri.fsPath);
+                this.setDiscoveryTrigger('watching');
                 this.refreshData.trigger(uri, false);
             }),
         );
@@ -1040,35 +1018,15 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     minimatch.default(doc.uri.fsPath, settings.testing.autoTestDiscoverOnSavePattern)
                 ) {
                     traceVerbose(`Testing: Trigger refresh after saving ${doc.uri.fsPath}`);
-                    this.sendTriggerTelemetry('watching', doc.uri.fsPath);
+                    this.setDiscoveryTrigger('watching');
                     this.refreshData.trigger(doc.uri, false);
                 }
             }),
         );
     }
 
-    /**
-     * Send a UNITTEST_DISCOVERY_TRIGGER telemetry event. Emits on every trigger
-     * (no per-type dedupe) so chatty re-trigger patterns (see #25866) are visible
-     * in the data; msSinceLastTrigger lets dashboards collapse burst-y firings.
-     *
-     * @param trigger The trigger source.
-     * @param fsPath Optional file path that caused the trigger (for 'auto' / 'watching').
-     */
-    private sendTriggerTelemetry(trigger: TriggerType, fsPath?: string): void {
-        const now = Date.now();
-        const msSinceLastTrigger =
-            this.lastDiscoveryTriggerMs !== undefined ? now - this.lastDiscoveryTriggerMs : undefined;
-        this.lastDiscoveryTriggerMs = now;
+    private setDiscoveryTrigger(trigger: DiscoveryTriggerKind): void {
         this.currentDiscoveryTrigger = trigger;
-        if (!this.triggerTypes.includes(trigger)) {
-            this.triggerTypes.push(trigger);
-        }
-        sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, {
-            trigger,
-            fileKind: fsPath ? classifyFileKind(fsPath) : undefined,
-            msSinceLastTrigger,
-        });
     }
 
     private surfaceErrorNode(workspaceUri: Uri, message: string, testProvider: TestProvider): void {
