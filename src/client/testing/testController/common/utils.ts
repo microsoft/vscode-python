@@ -89,45 +89,28 @@ export async function startRunResultNamedPipe(
     traceVerbose('Starting Test Result named pipe');
     const pipeName: string = generateRandomPipeName('python-test-results');
 
+    // NOTE: `cancellationToken` is intentionally only forwarded to `createReaderPipe`
+    // (which uses it to cancel pipe *creation*). Once the reader is connected we do
+    // not wire a cancellation handler here. Disposing the reader on cancellation
+    // would close the socket while data was still buffered in the kernel pipe, and
+    // any results not yet delivered to the `reader.listen` callback would be lost.
+    // This is exactly the regression seen in the debug path, where cancellation
+    // fires the moment the debug session terminates.
+    //
+    // Instead, disposal is fully event-driven: when the subprocess closes its end
+    // of the pipe (either by exiting normally or by being killed via the caller's
+    // own cancellation handling), the OS delivers all remaining buffered bytes and
+    // then EOF, which fires `reader.onClose` below and triggers dispose.
     const reader = await createReaderPipe(pipeName, cancellationToken);
     traceVerbose(`Test Results named pipe ${pipeName} connected`);
     let disposables: Disposable[] = [];
-    let disposed = false;
     const disposable = new Disposable(() => {
         traceVerbose(`Test Results named pipe ${pipeName} disposed`);
-        disposed = true;
         disposables.forEach((d) => d.dispose());
         disposables = [];
         deferredTillServerClose.resolve();
     });
 
-    if (cancellationToken) {
-        disposables.push(
-            cancellationToken?.onCancellationRequested(() => {
-                traceLog(
-                    `Test Result named pipe ${pipeName} cancelled; draining buffered data before dispose`,
-                );
-                // Do NOT dispose the reader immediately. In the debug path, cancellation
-                // fires as soon as the debug session terminates, but the result pipe may
-                // still have buffered messages that have not been delivered to the
-                // `reader.listen` callback yet. Disposing now would close the reader and
-                // drop those pending results.
-                //
-                // The reader's `onClose` event (registered below) will fire once the
-                // subprocess closes its end of the pipe and all buffered data has been
-                // drained, and that handler will dispose. Use a safety timeout to force
-                // disposal in case the pipe never closes naturally (e.g. subprocess hang).
-                setTimeout(() => {
-                    if (!disposed) {
-                        traceVerbose(
-                            `Test Result named pipe ${pipeName} drain timeout, forcing dispose`,
-                        );
-                        disposable.dispose();
-                    }
-                }, 5000);
-            }),
-        );
-    }
     disposables.push(
         reader,
         reader.listen((data: Message) => {
@@ -136,9 +119,10 @@ export async function startRunResultNamedPipe(
             dataReceivedCallback((data as ExecutionResultMessage).params as ExecutionTestPayload);
         }),
         reader.onClose(() => {
-            // this is called once the server close, once per run instance
+            // Fires once the subprocess has closed its end of the pipe and the OS
+            // has delivered all buffered data. This is the only path that disposes
+            // the reader, so no results can be dropped due to a premature close.
             traceVerbose(`Test Result named pipe ${pipeName} closed. Disposing of listener/s.`);
-            // dispose of all data listeners and cancelation listeners
             disposable.dispose();
         }),
         reader.onError((error) => {
