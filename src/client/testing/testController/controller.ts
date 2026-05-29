@@ -28,10 +28,12 @@ import { IPythonExecutionFactory } from '../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
 import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { traceError, traceInfo, traceVerbose } from '../../logging';
-import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import type { UnitTestRunFailureCategory } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { TestProvider } from '../types';
 import { createErrorTestItem, DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
@@ -40,6 +42,7 @@ import { ITestController, ITestFrameworkController, TestRefreshOptions } from '.
 import { WorkspaceTestAdapter } from './workspaceTestAdapter';
 import { ITestDebugLauncher } from '../common/types';
 import { PythonResultResolver } from './common/resultResolver';
+import { DiscoveryTriggerKind } from './common/discoveryTelemetry';
 import { onDidSaveTextDocument } from '../../common/vscodeApis/workspaceApis';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { ProjectAdapter } from './common/projectAdapter';
@@ -48,11 +51,6 @@ import { createTestAdapters, getProjectId } from './common/projectUtils';
 import { executeTestsForProjects } from './common/projectTestExecution';
 import { useEnvExtension, getEnvExtApi } from '../../envExt/api.internal';
 import { DidChangePythonProjectsEventArgs, PythonProject } from '../../envExt/types';
-
-// Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
-type EventPropertyType = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_TRIGGER];
-type TriggerKeyType = keyof EventPropertyType;
-type TriggerType = EventPropertyType[TriggerKeyType];
 
 @injectable()
 export class PythonTestController implements ITestController, IExtensionSingleActivationService {
@@ -64,7 +62,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     // Registry for multi-project testing (one registry instance manages all projects across workspaces)
     private readonly projectRegistry: TestProjectRegistry;
 
-    private readonly triggerTypes: TriggerType[] = [];
+    private readonly triggerTypes: DiscoveryTriggerKind[] = [];
+
+    /**
+     * Source of the trigger that initiated the in-flight (or most recent) discovery.
+     * Forwarded to the resolver so UNITTEST_DISCOVERY_DONE can attribute duration to a trigger.
+     */
+    private currentDiscoveryTrigger?: DiscoveryTriggerKind;
 
     private readonly testController: TestController;
 
@@ -161,9 +165,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             );
 
             traceVerbose('Testing: Manually triggered test refresh');
-            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, {
-                trigger: constants.CommandSource.commandPalette,
-            });
+            this.sendTriggerTelemetry(constants.CommandSource.commandPalette);
             return this.refreshTestData(undefined, { forceRefresh: true });
         };
     }
@@ -425,6 +427,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     }
 
     public refreshTestData(uri?: Resource, options?: TestRefreshOptions): Promise<void> {
+        if (options?.trigger) {
+            this.setDiscoveryTrigger(options.trigger);
+        }
         if (options?.forceRefresh) {
             if (uri === undefined) {
                 // This is a special case where we want everything to be re-discovered.
@@ -469,6 +474,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             }
         } finally {
             this.refreshingCompletedEvent.fire();
+            this.currentDiscoveryTrigger = undefined;
         }
     }
 
@@ -578,6 +584,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             traceInfo(`[test-by-project] Discovering tests for project: ${project.projectName}`);
             project.isDiscovering = true;
 
+            // Start the telemetry cycle so UNITTEST_DISCOVERY_DONE can report
+            // mode + trigger + totalDurationMs for this project.
+            (project.resultResolver as Partial<PythonResultResolver>).discoveryTelemetry?.start({
+                mode: 'project',
+                trigger: this.currentDiscoveryTrigger,
+            });
+
             // In project-based mode, the discovery adapter uses the Python Environments API
             // to get the environment directly, so we don't need to pass the interpreter
             await project.discoveryAdapter.discoverTests(
@@ -595,6 +608,15 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             traceError(`[test-by-project] Discovery failed for project ${project.projectName}:`, error);
             // Individual project failures don't block others
             projectsCompleted.add(project.projectUri.toString()); // Still mark as completed
+            const cycle = (project.resultResolver as Partial<PythonResultResolver>).discoveryTelemetry?.complete();
+            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
+                tool: project.testProvider,
+                failed: true,
+                mode: 'project',
+                trigger: cycle?.trigger ?? this.currentDiscoveryTrigger,
+                failureCategory: this.refreshCancellation.token.isCancellationRequested ? 'cancelled' : 'unknown',
+                totalDurationMs: cycle?.stopWatch.elapsedTime,
+            });
         } finally {
             project.isDiscovering = false;
         }
@@ -652,6 +674,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             this.pythonExecFactory,
             this.refreshCancellation.token,
             await this.interpreterService.getActiveInterpreter(workspaceUri),
+            this.currentDiscoveryTrigger,
         );
     }
 
@@ -893,21 +916,41 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         token: CancellationToken,
         provider: TestProvider,
     ): Promise<void> {
+        const debugging = request.profile?.kind === TestRunProfileKind.Debug;
         sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
             tool: provider,
-            debugging: request.profile?.kind === TestRunProfileKind.Debug,
+            debugging,
         });
 
-        await testAdapter.executeTests(
-            this.testController,
-            runInstance,
-            testItems,
-            this.pythonExecFactory,
-            token,
-            request.profile?.kind,
-            this.debugLauncher,
-            await this.interpreterService.getActiveInterpreter(workspace.uri),
-        );
+        const stopWatch = new StopWatch();
+        let failed = false;
+        let failureCategory: UnitTestRunFailureCategory | undefined;
+        try {
+            await testAdapter.executeTests(
+                this.testController,
+                runInstance,
+                testItems,
+                this.pythonExecFactory,
+                token,
+                request.profile?.kind,
+                this.debugLauncher,
+                await this.interpreterService.getActiveInterpreter(workspace.uri),
+            );
+        } catch (ex) {
+            failed = true;
+            failureCategory = token.isCancellationRequested ? 'cancelled' : 'unknown';
+            throw ex;
+        } finally {
+            sendTelemetryEvent(EventName.UNITTEST_RUN_DONE, undefined, {
+                tool: provider,
+                debugging,
+                mode: 'legacy',
+                failed,
+                failureCategory,
+                durationMs: stopWatch.elapsedTime,
+                requestedCount: testItems.length,
+            });
+        }
     }
 
     private invalidateTests(uri: Uri) {
@@ -976,17 +1019,15 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         );
     }
 
-    /**
-     * Send UNITTEST_DISCOVERY_TRIGGER telemetry event only once per trigger type.
-     *
-     * @param triggerType The trigger type to send telemetry for.
-     */
-    private sendTriggerTelemetry(trigger: TriggerType): void {
+    private setDiscoveryTrigger(trigger: DiscoveryTriggerKind): void {
+        this.currentDiscoveryTrigger = trigger;
+    }
+
+    private sendTriggerTelemetry(trigger: DiscoveryTriggerKind): void {
+        this.setDiscoveryTrigger(trigger);
         if (!this.triggerTypes.includes(trigger)) {
-            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, {
-                trigger,
-            });
             this.triggerTypes.push(trigger);
+            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger });
         }
     }
 

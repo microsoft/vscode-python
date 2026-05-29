@@ -215,6 +215,10 @@ export function buildErrorNodeOptions(
     };
 }
 
+/**
+ * Populates the VS Code test tree from discovered test data.
+ * @returns The number of leaf test items added or updated while walking the tree.
+ */
 export function populateTestTree(
     testController: TestController,
     testTreeData: DiscoveredTestNode,
@@ -223,7 +227,10 @@ export function populateTestTree(
     token?: CancellationToken,
     projectId?: string,
     projectName?: string,
-): void {
+): number {
+    // Count leaf tests while walking the tree so telemetry does not need a second traversal.
+    let testCount = 0;
+
     // If testRoot is undefined, use the info of the root item of testTreeData to create a test item, and append it to the test controller.
     if (!testRoot) {
         // Create project-scoped ID if projectId is provided
@@ -267,6 +274,7 @@ export function populateTestTree(
                 testItemMappings.runIdToTestItem.set(child.runID, testItem);
                 testItemMappings.runIdToVSid.set(child.runID, vsId);
                 testItemMappings.vsIdToRunId.set(vsId, child.runID);
+                testCount += 1;
             } else {
                 // Use project-scoped ID for non-test nodes and look up within the current root
                 const nodeId = projectId ? `${projectId}${PROJECT_ID_SEPARATOR}${child.id_}` : child.id_;
@@ -294,10 +302,20 @@ export function populateTestTree(
 
                     testRoot!.children.add(node);
                 }
-                populateTestTree(testController, child, node, testItemMappings, token, projectId, projectName);
+                testCount += populateTestTree(
+                    testController,
+                    child,
+                    node,
+                    testItemMappings,
+                    token,
+                    projectId,
+                    projectName,
+                );
             }
         }
     });
+
+    return testCount;
 }
 
 function isTestItem(test: DiscoveredTestNode | DiscoveredTestItem): test is DiscoveredTestItem {
