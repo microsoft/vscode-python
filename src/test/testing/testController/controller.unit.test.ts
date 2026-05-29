@@ -11,6 +11,7 @@ import * as envExtApiInternal from '../../../client/envExt/api.internal';
 import * as projectUtils from '../../../client/testing/testController/common/projectUtils';
 import { PythonTestController } from '../../../client/testing/testController/controller';
 import { TestProjectRegistry } from '../../../client/testing/testController/common/testProjectRegistry';
+import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 
 function createStubTestController(): TestController {
     const disposable = { dispose: () => undefined };
@@ -339,6 +340,120 @@ suite('PythonTestController', () => {
             // Should fall back to default project since no projects are in the workspace
             assert.strictEqual(projects.length, 1);
             assert.strictEqual(projects[0].projectUri.toString(), workspaceUri.toString());
+        });
+    });
+
+    suite('watchForTestContentChangeOnSave (autoTestDiscoverOnSavePattern)', () => {
+        // Regression test for https://github.com/microsoft/vscode-python/issues/25866 :
+        // saving a non-test .py file must NOT trigger test re-discovery with the default pattern.
+        const defaultPattern = '**/{test_*,*_test}.py';
+
+        function setupController(pattern: string): {
+            controller: any;
+            triggerStub: sinon.SinonStub;
+            invokeSave: (fsPath: string) => Promise<void>;
+        } {
+            let savedCallback: ((doc: vscode.TextDocument) => void | Promise<void>) | undefined;
+            sandbox
+                .stub(workspaceApis, 'onDidSaveTextDocument')
+                .callsFake((cb: (doc: vscode.TextDocument) => void) => {
+                    savedCallback = cb;
+                    return { dispose: () => undefined };
+                });
+
+            const workspaceService = ({ workspaceFolders: [] } as unknown) as any;
+            const configSettings = ({
+                getSettings: sandbox.stub().returns({
+                    testing: {
+                        unittestEnabled: false,
+                        autoTestDiscoverOnSaveEnabled: true,
+                        autoTestDiscoverOnSavePattern: pattern,
+                    },
+                }),
+            } as unknown) as any;
+            const interpreterService = ({
+                getActiveInterpreter: sandbox.stub().resolves({
+                    displayName: 'Python 3.11',
+                    path: '/usr/bin/python3',
+                    version: { raw: '3.11.8' },
+                    sysPrefix: '/usr',
+                }),
+            } as unknown) as any;
+            const commandManager = ({
+                registerCommand: sandbox.stub().returns({ dispose: () => undefined }),
+            } as unknown) as any;
+
+            const controller = new PythonTestController(
+                workspaceService,
+                configSettings,
+                {} as any,
+                {} as any,
+                [],
+                interpreterService,
+                commandManager,
+                {} as any,
+                {} as any,
+                {} as any,
+            );
+
+            const triggerStub = sandbox.stub();
+            (controller as any).refreshData = { trigger: triggerStub };
+
+            // Invoke the private setup so onDidSaveTextDocument is registered (and captured).
+            (controller as any).watchForTestContentChangeOnSave();
+
+            return {
+                controller,
+                triggerStub,
+                invokeSave: async (fsPath: string) => {
+                    assert.ok(savedCallback, 'onDidSaveTextDocument callback was not registered');
+                    const doc = ({
+                        uri: vscode.Uri.file(fsPath),
+                        fileName: fsPath,
+                    } as unknown) as vscode.TextDocument;
+                    await savedCallback!(doc);
+                },
+            };
+        }
+
+        test('default setting in package.json matches the narrowed test-files-only pattern', () => {
+            // eslint-disable-next-line global-require, @typescript-eslint/no-require-imports
+            const pkg = require('../../../../package.json');
+            const setting = pkg.contributes.configuration.properties['python.testing.autoTestDiscoverOnSavePattern'];
+            assert.strictEqual(
+                setting.default,
+                defaultPattern,
+                'Default autoTestDiscoverOnSavePattern must remain narrowed to test files only ' +
+                    'to avoid triggering full re-discovery on every .py save (issue #25866).',
+            );
+        });
+
+        test('saving a non-test .py file does NOT trigger discovery with the default pattern', async () => {
+            const { triggerStub, invokeSave } = setupController(defaultPattern);
+            await invokeSave('/workspace/src/my_module.py');
+            assert.strictEqual(
+                triggerStub.called,
+                false,
+                'Saving a non-test .py file should not trigger test re-discovery with the default pattern.',
+            );
+        });
+
+        test('saving a test_*.py file triggers discovery with the default pattern', async () => {
+            const { triggerStub, invokeSave } = setupController(defaultPattern);
+            await invokeSave('/workspace/tests/test_module.py');
+            assert.strictEqual(triggerStub.calledOnce, true);
+        });
+
+        test('saving a *_test.py file triggers discovery with the default pattern', async () => {
+            const { triggerStub, invokeSave } = setupController(defaultPattern);
+            await invokeSave('/workspace/tests/module_test.py');
+            assert.strictEqual(triggerStub.calledOnce, true);
+        });
+
+        test('user-provided broader pattern still works (no regression for custom configs)', async () => {
+            const { triggerStub, invokeSave } = setupController('**/*.py');
+            await invokeSave('/workspace/src/my_module.py');
+            assert.strictEqual(triggerStub.calledOnce, true);
         });
     });
 });
