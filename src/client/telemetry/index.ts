@@ -11,7 +11,7 @@ import { isPromise } from '../common/utils/async';
 import { StopWatch } from '../common/utils/stopWatch';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { TensorBoardPromptSelection } from '../tensorBoard/constants';
-import { EventName } from './constants';
+import { EventName, type UnitTestRunFailureCategory } from './constants';
 import type { TestTool } from './types';
 
 /**
@@ -2284,13 +2284,7 @@ export interface IEventNamePropertyMapping {
         /**
          * Coarse failure category when `failed` is true.
          */
-        failureCategory?:
-            | 'pipe-cancelled'
-            | 'subprocess-crash'
-            | 'no-results'
-            | 'env-mismatch'
-            | 'cancelled'
-            | 'unknown';
+        failureCategory?: UnitTestRunFailureCategory;
         /**
          * Wall-clock duration of the run in milliseconds.
          */

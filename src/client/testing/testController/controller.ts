@@ -32,7 +32,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { traceError, traceInfo, traceVerbose } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
-import { EventName } from '../../telemetry/constants';
+import { EventName, type UnitTestRunFailureCategory } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { TestProvider } from '../types';
 import { createErrorTestItem, DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
@@ -923,14 +923,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
         const stopWatch = new StopWatch();
         let failed = false;
-        let failureCategory:
-            | 'pipe-cancelled'
-            | 'subprocess-crash'
-            | 'no-results'
-            | 'env-mismatch'
-            | 'cancelled'
-            | 'unknown'
-            | undefined;
+        let failureCategory: UnitTestRunFailureCategory | undefined;
         try {
             await testAdapter.executeTests(
                 this.testController,

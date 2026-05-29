@@ -102,6 +102,17 @@ export enum EventName {
     ENVIRONMENT_TERMINAL_GLOBAL_PIP = 'ENVIRONMENT.TERMINAL.GLOBAL_PIP',
 }
 
+export const UNITTEST_RUN_FAILURE_CATEGORIES = [
+    'pipe-cancelled',
+    'subprocess-crash',
+    'no-results',
+    'env-mismatch',
+    'cancelled',
+    'unknown',
+] as const;
+
+export type UnitTestRunFailureCategory = typeof UNITTEST_RUN_FAILURE_CATEGORIES[number];
+
 export enum PlatformErrors {
     FailedToParseVersion = 'FailedToParseVersion',
     FailedToDetermineOS = 'FailedToDetermineOS',

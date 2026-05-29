@@ -223,6 +223,10 @@ export function buildErrorNodeOptions(
     };
 }
 
+/**
+ * Populates the VS Code test tree from discovered test data.
+ * @returns The number of leaf test items added or updated while walking the tree.
+ */
 export function populateTestTree(
     testController: TestController,
     testTreeData: DiscoveredTestNode,
