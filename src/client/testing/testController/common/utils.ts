@@ -92,8 +92,10 @@ export async function startRunResultNamedPipe(
     const reader = await createReaderPipe(pipeName, cancellationToken);
     traceVerbose(`Test Results named pipe ${pipeName} connected`);
     let disposables: Disposable[] = [];
+    let disposed = false;
     const disposable = new Disposable(() => {
         traceVerbose(`Test Results named pipe ${pipeName} disposed`);
+        disposed = true;
         disposables.forEach((d) => d.dispose());
         disposables = [];
         deferredTillServerClose.resolve();
@@ -116,7 +118,7 @@ export async function startRunResultNamedPipe(
                 // drained, and that handler will dispose. Use a safety timeout to force
                 // disposal in case the pipe never closes naturally (e.g. subprocess hang).
                 setTimeout(() => {
-                    if (disposables.length > 0) {
+                    if (!disposed) {
                         traceVerbose(
                             `Test Result named pipe ${pipeName} drain timeout, forcing dispose`,
                         );
