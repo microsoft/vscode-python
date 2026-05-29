@@ -502,7 +502,7 @@ suite('Project Test Execution', () => {
             expect(proj2.executionAdapterStub.calledOnce).to.be.true;
         });
 
-        test('should emit completion telemetry event for each project execution', async () => {
+        test('should emit start and completion telemetry events for each project execution', async () => {
             // Mock
             const proj1 = createMockProjectAdapter({ projectPath: '/workspace/proj1', projectName: 'proj1' });
             const proj2 = createMockProjectAdapter({ projectPath: '/workspace/proj2', projectName: 'proj2' });
@@ -518,7 +518,10 @@ suite('Project Test Execution', () => {
             // Run
             await executeTestsForProjects([proj1, proj2], [item1, item2], runMock.object, request, token, deps);
 
-            // Assert - UNITTEST_RUN_DONE telemetry sent twice (once per project).
+            // Assert - UNITTEST_RUN and UNITTEST_RUN_DONE telemetry sent twice (once per project).
+            const runCalls = telemetryStub.getCalls().filter((c) => c.args[0] === EventName.UNITTEST_RUN);
+            expect(runCalls.length).to.equal(2);
+
             const runDoneCalls = telemetryStub.getCalls().filter((c) => c.args[0] === EventName.UNITTEST_RUN_DONE);
             expect(runDoneCalls.length).to.equal(2);
             expect(runDoneCalls.every((c) => c.args[2].mode === 'project')).to.be.true;
@@ -597,7 +600,7 @@ suite('Project Test Execution', () => {
             expect(profileMock.loadDetailedCoverage).to.not.be.undefined;
         });
 
-        test('should include debugging=true in completion telemetry when run profile is Debug', async () => {
+        test('should include debugging=true in run telemetry when run profile is Debug', async () => {
             // Mock
             const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
             project.resultResolver.vsIdToRunId.set('test1', 'runId1');
@@ -609,6 +612,10 @@ suite('Project Test Execution', () => {
 
             // Run
             await executeTestsForProjects([project], [item], runMock.object, request, token, deps);
+
+            const runCalls = telemetryStub.getCalls().filter((c) => c.args[0] === EventName.UNITTEST_RUN);
+            expect(runCalls.length).to.equal(1);
+            expect(runCalls[0].args[2].debugging).to.be.true;
 
             // Assert - UNITTEST_RUN_DONE telemetry contains debugging=true.
             const runDoneCalls = telemetryStub.getCalls().filter((c) => c.args[0] === EventName.UNITTEST_RUN_DONE);

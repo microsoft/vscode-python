@@ -92,11 +92,13 @@ export class PythonResultResolver implements ITestResultResolver {
         );
         const cycle = this.discoveryTelemetry.complete();
         const mode = cycle?.mode ?? this.discoveryTelemetry.defaultMode;
+        const failed = payload?.status === 'error';
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
             tool: this.testProvider,
-            failed: false,
+            failed,
             mode,
             trigger: cycle?.trigger,
+            failureCategory: failed ? (token?.isCancellationRequested ? 'cancelled' : 'unknown') : undefined,
             totalDurationMs: cycle?.stopWatch.elapsedTime,
             testCount,
         });

@@ -66,6 +66,11 @@ export async function executeTestsForProjects(
 
         traceInfo(`[test-by-project] Executing ${items.length} test item(s) for project: ${project.projectName}`);
 
+        sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
+            tool: project.testProvider,
+            debugging: isDebugMode,
+        });
+
         const stopWatch = new StopWatch();
         let failed = false;
         let failureCategory:

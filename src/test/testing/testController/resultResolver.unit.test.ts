@@ -14,6 +14,8 @@ import {
 import * as testItemUtilities from '../../../client/testing/testController/common/testItemUtilities';
 import * as ResultResolver from '../../../client/testing/testController/common/resultResolver';
 import * as util from '../../../client/testing/testController/common/utils';
+import * as telemetry from '../../../client/telemetry';
+import { EventName } from '../../../client/telemetry/constants';
 import { traceLog } from '../../../client/logging';
 
 suite('Result Resolver tests', () => {
@@ -136,6 +138,27 @@ suite('Result Resolver tests', () => {
             sinon.assert.calledWithMatch(buildErrorNodeOptionsStub, workspaceUri, expectedErrorMessage, testProvider);
             // header of createErrorTestItem is (options: ErrorTestItemOptions, testController: TestController, uri: Uri)
             sinon.assert.calledWithMatch(createErrorTestItemStub, sinon.match.any, sinon.match.any);
+        });
+        test('resolveDiscovery should emit failed telemetry for error payloads', async () => {
+            testProvider = 'pytest';
+            workspaceUri = Uri.file('/foo/bar');
+            resultResolver = new ResultResolver.PythonResultResolver(testController, testProvider, workspaceUri);
+            const sendTelemetryStub = sinon.stub(telemetry, 'sendTelemetryEvent');
+            sinon.stub(util, 'buildErrorNodeOptions').returns({ id: 'id', label: 'label', error: 'error' });
+            sinon.stub(testItemUtilities, 'createErrorTestItem').returns(blankTestItem);
+
+            const payload: DiscoveredTestPayload = {
+                cwd: workspaceUri.fsPath,
+                status: 'error',
+                error: ['discovery failed'],
+            };
+
+            resultResolver.resolveDiscovery(payload, cancelationToken);
+
+            sinon.assert.calledWithMatch(sendTelemetryStub, EventName.UNITTEST_DISCOVERY_DONE, undefined, {
+                failed: true,
+                failureCategory: 'unknown',
+            });
         });
         test('resolveDiscovery should create error and root node when error and tests exist on payload', async () => {
             // test specific constants used expected values
