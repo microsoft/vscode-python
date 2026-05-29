@@ -2123,6 +2123,27 @@ export interface IEventNamePropertyMapping {
         interpreterType?: EnvironmentType;
     };
     /**
+     * Telemetry event sent indicating the trigger source for discovery.
+     */
+    /* __GDPR__
+       "unittest.discovery.trigger" : {
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
+       }
+     */
+    [EventName.UNITTEST_DISCOVERY_TRIGGER]: {
+        /**
+         * Carries the source which triggered discovering of tests
+         *
+         * @type {('auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter')}
+         * auto           : Triggered by VS Code editor.
+         * ui             : Triggered by clicking a button.
+         * commandpalette : Triggered by running the command from the command palette.
+         * watching       : Triggered by filesystem or content changes.
+         * interpreter    : Triggered by interpreter change.
+         */
+        trigger: 'auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter';
+    };
+    /**
      * Telemetry event sent with details about discovering tests
      */
     /* __GDPR__
@@ -2166,8 +2187,9 @@ export interface IEventNamePropertyMapping {
          */
         failed: boolean;
         /**
-         * Discovery code path: 'project' = Python Environments API / project-based;
-         * 'legacy' = single-workspace adapter fallback.
+         * Testing architecture used for discovery:
+         * 'project' = per-project discovery through the Python Environments API;
+         * 'legacy' = workspace-level discovery through the existing WorkspaceTestAdapter.
          */
         mode?: 'project' | 'legacy';
         /**

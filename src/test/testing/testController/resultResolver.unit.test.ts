@@ -85,7 +85,7 @@ suite('Result Resolver tests', () => {
             };
 
             // stub out functionality of populateTestTreeStub which is called in resolveDiscovery
-            const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns();
+            const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns(0);
 
             // call resolve discovery
             resultResolver.resolveDiscovery(payload, cancelationToken);
@@ -171,7 +171,7 @@ suite('Result Resolver tests', () => {
             const createErrorTestItemStub = sinon.stub(testItemUtilities, 'createErrorTestItem').returns(blankTestItem);
 
             // stub out functionality of populateTestTreeStub which is called in resolveDiscovery
-            const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns();
+            const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns(0);
             // call resolve discovery
             resultResolver.resolveDiscovery(payload, cancelationToken);
 
@@ -232,7 +232,7 @@ suite('Result Resolver tests', () => {
             const createErrorTestItemStub = sinon.stub(testItemUtilities, 'createErrorTestItem').returns(blankTestItem);
 
             // stub out functionality of populateTestTreeStub which is called in resolveDiscovery
-            sinon.stub(util, 'populateTestTree').returns();
+            sinon.stub(util, 'populateTestTree').returns(0);
             // add spies to insure these aren't called
             const deleteSpy = sinon.spy(testController.items, 'delete');
             const replaceSpy = sinon.spy(testController.items, 'replace');

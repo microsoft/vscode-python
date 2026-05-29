@@ -41,6 +41,7 @@ import { ITestController, ITestFrameworkController, TestRefreshOptions } from '.
 import { WorkspaceTestAdapter } from './workspaceTestAdapter';
 import { ITestDebugLauncher } from '../common/types';
 import { PythonResultResolver } from './common/resultResolver';
+import { DiscoveryTriggerKind } from './common/discoveryTelemetry';
 import { onDidSaveTextDocument } from '../../common/vscodeApis/workspaceApis';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { ProjectAdapter } from './common/projectAdapter';
@@ -49,8 +50,6 @@ import { createTestAdapters, getProjectId } from './common/projectUtils';
 import { executeTestsForProjects } from './common/projectTestExecution';
 import { useEnvExtension, getEnvExtApi } from '../../envExt/api.internal';
 import { DidChangePythonProjectsEventArgs, PythonProject } from '../../envExt/types';
-
-type DiscoveryTriggerKind = NonNullable<TestRefreshOptions['trigger']>;
 
 @injectable()
 export class PythonTestController implements ITestController, IExtensionSingleActivationService {
@@ -61,6 +60,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
     // Registry for multi-project testing (one registry instance manages all projects across workspaces)
     private readonly projectRegistry: TestProjectRegistry;
+
+    private readonly triggerTypes: DiscoveryTriggerKind[] = [];
 
     /**
      * Source of the trigger that initiated the in-flight (or most recent) discovery.
@@ -163,7 +164,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             );
 
             traceVerbose('Testing: Manually triggered test refresh');
-            this.setDiscoveryTrigger(constants.CommandSource.commandPalette);
+            this.sendTriggerTelemetry(constants.CommandSource.commandPalette);
             return this.refreshTestData(undefined, { forceRefresh: true });
         };
     }
@@ -582,9 +583,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             traceInfo(`[test-by-project] Discovering tests for project: ${project.projectName}`);
             project.isDiscovering = true;
 
-            // Start the discovery cycle on the resolver so UNITTEST_DISCOVERY_DONE
-            // can report mode + trigger + totalDurationMs for this project.
-            (project.resultResolver as Partial<PythonResultResolver>).beginDiscoveryCycle?.({
+            // Start the telemetry cycle so UNITTEST_DISCOVERY_DONE can report
+            // mode + trigger + totalDurationMs for this project.
+            (project.resultResolver as Partial<PythonResultResolver>).discoveryTelemetry?.start({
                 mode: 'project',
                 trigger: this.currentDiscoveryTrigger,
             });
@@ -606,16 +607,15 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             traceError(`[test-by-project] Discovery failed for project ${project.projectName}:`, error);
             // Individual project failures don't block others
             projectsCompleted.add(project.projectUri.toString()); // Still mark as completed
-            const cycle = (project.resultResolver as Partial<PythonResultResolver>).peekDiscoveryCycle?.();
+            const cycle = (project.resultResolver as Partial<PythonResultResolver>).discoveryTelemetry?.complete();
             sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
                 tool: project.testProvider,
                 failed: true,
                 mode: 'project',
-                trigger: cycle?.trigger,
+                trigger: cycle?.trigger ?? this.currentDiscoveryTrigger,
                 failureCategory: this.refreshCancellation.token.isCancellationRequested ? 'cancelled' : 'unknown',
                 totalDurationMs: cycle?.stopWatch.elapsedTime,
             });
-            (project.resultResolver as Partial<PythonResultResolver>).clearDiscoveryCycle?.();
         } finally {
             project.isDiscovering = false;
         }
@@ -719,7 +719,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             }
         } else {
             traceVerbose('Testing: Refreshing all test data');
-            this.setDiscoveryTrigger('auto');
+            this.sendTriggerTelemetry('auto');
             const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
             await Promise.all(
                 workspaces.map(async (workspace) => {
@@ -986,7 +986,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     file.includes('pyproject.toml')
                 ) {
                     traceVerbose(`Testing: Trigger refresh after saving ${doc.uri.fsPath}`);
-                    this.setDiscoveryTrigger('watching');
+                    this.sendTriggerTelemetry('watching');
                     this.refreshData.trigger(doc.uri, false);
                 }
             }),
@@ -996,14 +996,14 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.disposables.push(
             watcher.onDidCreate((uri) => {
                 traceVerbose(`Testing: Trigger refresh after creating ${uri.fsPath}`);
-                this.setDiscoveryTrigger('watching');
+                this.sendTriggerTelemetry('watching');
                 this.refreshData.trigger(uri, false);
             }),
         );
         this.disposables.push(
             watcher.onDidDelete((uri) => {
                 traceVerbose(`Testing: Trigger refresh after deleting in ${uri.fsPath}`);
-                this.setDiscoveryTrigger('watching');
+                this.sendTriggerTelemetry('watching');
                 this.refreshData.trigger(uri, false);
             }),
         );
@@ -1018,7 +1018,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     minimatch.default(doc.uri.fsPath, settings.testing.autoTestDiscoverOnSavePattern)
                 ) {
                     traceVerbose(`Testing: Trigger refresh after saving ${doc.uri.fsPath}`);
-                    this.setDiscoveryTrigger('watching');
+                    this.sendTriggerTelemetry('watching');
                     this.refreshData.trigger(doc.uri, false);
                 }
             }),
@@ -1027,6 +1027,14 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
     private setDiscoveryTrigger(trigger: DiscoveryTriggerKind): void {
         this.currentDiscoveryTrigger = trigger;
+    }
+
+    private sendTriggerTelemetry(trigger: DiscoveryTriggerKind): void {
+        this.setDiscoveryTrigger(trigger);
+        if (!this.triggerTypes.includes(trigger)) {
+            this.triggerTypes.push(trigger);
+            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger });
+        }
     }
 
     private surfaceErrorNode(workspaceUri: Uri, message: string, testProvider: TestProvider): void {

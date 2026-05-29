@@ -30,10 +30,10 @@ export class TestDiscoveryHandler {
         token?: CancellationToken,
         projectId?: string,
         projectName?: string,
-    ): void {
+    ): number {
         if (!payload) {
             // No test data is available
-            return;
+            return 0;
         }
 
         const workspacePath = workspaceUri.fsPath;
@@ -57,10 +57,14 @@ export class TestDiscoveryHandler {
             // Clear existing mappings before rebuilding test tree
             testItemIndex.clear();
 
+            if (rawTestData.tests === null) {
+                return 0;
+            }
+
             // If the test root for this folder exists: Workspace refresh, update its children.
             // Otherwise, it is a freshly discovered workspace, and we need to create a new test root and populate the test tree.
             // Note: populateTestTree will call testItemIndex.registerTestItem() for each discovered test
-            populateTestTree(
+            return populateTestTree(
                 testController,
                 rawTestData.tests,
                 undefined,
@@ -74,6 +78,8 @@ export class TestDiscoveryHandler {
                 projectName,
             );
         }
+
+        return 0;
     }
 
     /**

@@ -17,6 +17,7 @@ import { ITestDebugLauncher } from '../../common/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { ProjectAdapter } from './projectAdapter';
+import { DiscoveryTriggerKind } from './discoveryTelemetry';
 
 export enum TestDataKinds {
     Workspace,
@@ -36,7 +37,7 @@ export interface TestData {
 
 export type TestRefreshOptions = {
     forceRefresh: boolean;
-    trigger?: 'auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter';
+    trigger?: DiscoveryTriggerKind;
 };
 
 export const ITestController = Symbol('ITestController');

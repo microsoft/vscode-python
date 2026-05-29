@@ -18,6 +18,7 @@ import { buildErrorNodeOptions } from './common/utils';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ProjectAdapter } from './common/projectAdapter';
 import { PythonResultResolver } from './common/resultResolver';
+import { DiscoveryTriggerKind } from './common/discoveryTelemetry';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -122,7 +123,7 @@ export class WorkspaceTestAdapter {
         executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
         interpreter?: PythonEnvironment,
-        trigger?: 'auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter',
+        trigger?: DiscoveryTriggerKind,
     ): Promise<void> {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: this.testProvider });
 
@@ -138,8 +139,8 @@ export class WorkspaceTestAdapter {
 
         // Hand the resolver per-cycle context so resolveDiscovery can report
         // mode + trigger + totalDurationMs in the success-path DISCOVERY_DONE event.
-        // Optional chaining keeps test doubles that don't implement the method working.
-        (this.resultResolver as Partial<PythonResultResolver>).beginDiscoveryCycle?.({
+        // Optional chaining keeps test doubles that don't implement the property working.
+        (this.resultResolver as Partial<PythonResultResolver>).discoveryTelemetry?.start({
             mode: 'legacy',
             trigger,
         });
@@ -151,15 +152,14 @@ export class WorkspaceTestAdapter {
             await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory, token, interpreter);
             deferred.resolve();
         } catch (ex) {
-            // Clear the resolver cycle so the next discovery starts clean.
-            (this.resultResolver as Partial<PythonResultResolver>).clearDiscoveryCycle?.();
+            const cycle = (this.resultResolver as Partial<PythonResultResolver>).discoveryTelemetry?.complete();
             sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
                 tool: this.testProvider,
                 failed: true,
                 mode: 'legacy',
-                trigger,
+                trigger: cycle?.trigger ?? trigger,
                 failureCategory: token?.isCancellationRequested ? 'cancelled' : 'unknown',
-                totalDurationMs: stopWatch.elapsedTime,
+                totalDurationMs: cycle?.stopWatch.elapsedTime ?? stopWatch.elapsedTime,
             });
 
             let cancel = token?.isCancellationRequested
