@@ -102,8 +102,27 @@ export async function startRunResultNamedPipe(
     if (cancellationToken) {
         disposables.push(
             cancellationToken?.onCancellationRequested(() => {
-                traceLog(`Test Result named pipe ${pipeName}  cancelled`);
-                disposable.dispose();
+                traceLog(
+                    `Test Result named pipe ${pipeName} cancelled; draining buffered data before dispose`,
+                );
+                // Do NOT dispose the reader immediately. In the debug path, cancellation
+                // fires as soon as the debug session terminates, but the result pipe may
+                // still have buffered messages that have not been delivered to the
+                // `reader.listen` callback yet. Disposing now would close the reader and
+                // drop those pending results.
+                //
+                // The reader's `onClose` event (registered below) will fire once the
+                // subprocess closes its end of the pipe and all buffered data has been
+                // drained, and that handler will dispose. Use a safety timeout to force
+                // disposal in case the pipe never closes naturally (e.g. subprocess hang).
+                setTimeout(() => {
+                    if (disposables.length > 0) {
+                        traceVerbose(
+                            `Test Result named pipe ${pipeName} drain timeout, forcing dispose`,
+                        );
+                        disposable.dispose();
+                    }
+                }, 5000);
             }),
         );
     }
