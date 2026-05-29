@@ -288,9 +288,6 @@ suite('TestDiscoveryHandler', () => {
 
             const populateTestTreeStub = sinon.stub(utils, 'populateTestTree');
             testItemIndexMock.setup((x) => x.clear()).returns(() => undefined);
-            testItemIndexMock.setup((x) => x.runIdToTestItemMap).returns(() => new Map());
-            testItemIndexMock.setup((x) => x.runIdToVSidMap).returns(() => new Map());
-            testItemIndexMock.setup((x) => x.vsIdToRunIdMap).returns(() => new Map());
 
             discoveryHandler.processDiscovery(
                 payload,
@@ -316,11 +313,8 @@ suite('TestDiscoveryHandler', () => {
 
             const populateTestTreeStub = sinon.stub(utils, 'populateTestTree');
             testItemIndexMock.setup((x) => x.clear()).returns(() => undefined);
-            testItemIndexMock.setup((x) => x.runIdToTestItemMap).returns(() => new Map());
-            testItemIndexMock.setup((x) => x.runIdToVSidMap).returns(() => new Map());
-            testItemIndexMock.setup((x) => x.vsIdToRunIdMap).returns(() => new Map());
 
-            discoveryHandler.processDiscovery(
+            const testCount = discoveryHandler.processDiscovery(
                 payload,
                 testControllerMock.object,
                 testItemIndexMock.object,
@@ -329,8 +323,8 @@ suite('TestDiscoveryHandler', () => {
                 cancelationToken,
             );
 
-            // Should still call populateTestTree with null
-            assert.ok(populateTestTreeStub.calledOnce);
+            assert.strictEqual(testCount, 0);
+            assert.strictEqual(populateTestTreeStub.called, false);
             testItemIndexMock.verify((x) => x.clear(), typemoq.Times.once());
         });
     });
