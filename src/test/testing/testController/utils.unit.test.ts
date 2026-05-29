@@ -2,12 +2,21 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as fs from 'fs';
 import * as path from 'path';
-import { CancellationToken, TestController, TestItem, Uri, Range, Position } from 'vscode';
-import { writeTestIdsFile, populateTestTree } from '../../../client/testing/testController/common/utils';
+import { CancellationToken, CancellationTokenSource, TestController, TestItem, Uri, Range, Position } from 'vscode';
+import { Emitter, Event, MessageReader, PartialMessageInfo, Disposable as RpcDisposable, DataCallback } from 'vscode-jsonrpc';
+import { Message } from 'vscode-jsonrpc';
+import {
+    writeTestIdsFile,
+    populateTestTree,
+    startRunResultNamedPipe,
+} from '../../../client/testing/testController/common/utils';
+import { createDeferred, Deferred } from '../../../client/common/utils/async';
+import * as namedPipes from '../../../client/common/pipes/namedPipes';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import {
     DiscoveredTestNode,
     DiscoveredTestItem,
+    ExecutionTestPayload,
     ITestResultResolver,
 } from '../../../client/testing/testController/common/types';
 import { RunTestTag, DebugTestTag } from '../../../client/testing/testController/common/testItemUtilities';
@@ -750,5 +759,175 @@ suite('populateTestTree tests', () => {
         assert.deepStrictEqual(mockTestItem2.tags, [RunTestTag, DebugTestTag]);
         assert.deepStrictEqual(mockTestItem1.range, new Range(new Position(2, 0), new Position(3, 0)));
         assert.deepStrictEqual(mockTestItem2.range, new Range(new Position(6, 0), new Position(7, 0)));
+    });
+});
+
+suite('startRunResultNamedPipe drain-on-cancel tests', () => {
+    let sandbox: sinon.SinonSandbox;
+    let createReaderPipeStub: sinon.SinonStub;
+
+    /**
+     * Minimal fake `MessageReader` that lets the test drive `listen` callback
+     * and the `onClose` / `onError` events directly. Mirrors only the bits of
+     * the `vscode-jsonrpc` `MessageReader` interface that `startRunResultNamedPipe`
+     * touches.
+     */
+    class FakeMessageReader implements MessageReader {
+        private _onClose = new Emitter<void>();
+
+        private _onError = new Emitter<Error>();
+
+        private _onPartialMessage = new Emitter<PartialMessageInfo>();
+
+        private _callback: DataCallback | undefined;
+
+        public disposed = false;
+
+        public onError: Event<Error> = this._onError.event;
+
+        public onClose: Event<void> = this._onClose.event;
+
+        public onPartialMessage: Event<PartialMessageInfo> = this._onPartialMessage.event;
+
+        public listen(callback: DataCallback): RpcDisposable {
+            this._callback = callback;
+            return { dispose: () => { this._callback = undefined; } };
+        }
+
+        public dispose(): void {
+            this.disposed = true;
+            this._onClose.dispose();
+            this._onError.dispose();
+            this._onPartialMessage.dispose();
+        }
+
+        // Test helpers.
+        public emit(message: Message): void {
+            this._callback?.(message);
+        }
+
+        public hasListener(): boolean {
+            return this._callback !== undefined;
+        }
+
+        public fireClose(): void {
+            this._onClose.fire();
+        }
+    }
+
+    setup(() => {
+        sandbox = sinon.createSandbox();
+    });
+
+    teardown(() => {
+        sandbox.restore();
+    });
+
+    function makeMessage(payload: Partial<ExecutionTestPayload>): Message {
+        return ({ jsonrpc: '2.0', params: payload } as unknown) as Message;
+    }
+
+    test('cancellation alone does NOT resolve deferredTillServerClose and does NOT detach the listener (drain not interrupted)', async () => {
+        const reader = new FakeMessageReader();
+        createReaderPipeStub = sandbox.stub(namedPipes, 'createReaderPipe').resolves(reader);
+
+        const received: ExecutionTestPayload[] = [];
+        const deferredTillServerClose: Deferred<void> = createDeferred<void>();
+        const cancelSource = new CancellationTokenSource();
+
+        await startRunResultNamedPipe(
+            (payload) => received.push(payload),
+            deferredTillServerClose,
+            cancelSource.token,
+        );
+
+        assert.ok(createReaderPipeStub.calledOnce, 'createReaderPipe should be called once');
+        assert.ok(reader.hasListener(), 'reader should have a listener registered before cancel');
+
+        // Trigger cancellation.
+        cancelSource.cancel();
+
+        // Yield to let any synchronous-then-microtask handlers run.
+        await new Promise((r) => setImmediate(r));
+
+        assert.strictEqual(
+            reader.disposed,
+            false,
+            'reader must NOT be disposed by cancellation alone (otherwise buffered data would be lost)',
+        );
+        assert.ok(reader.hasListener(), 'data listener must remain attached after cancel so the drain can continue');
+        assert.strictEqual(
+            (deferredTillServerClose as Deferred<void>).completed,
+            false,
+            'deferredTillServerClose must NOT resolve on cancellation; it should only resolve when the pipe closes',
+        );
+
+        cancelSource.dispose();
+    });
+
+    test('data emitted after cancellation is still delivered to the callback (drain works)', async () => {
+        const reader = new FakeMessageReader();
+        sandbox.stub(namedPipes, 'createReaderPipe').resolves(reader);
+
+        const received: ExecutionTestPayload[] = [];
+        const deferredTillServerClose: Deferred<void> = createDeferred<void>();
+        const cancelSource = new CancellationTokenSource();
+
+        await startRunResultNamedPipe(
+            (payload) => received.push(payload),
+            deferredTillServerClose,
+            cancelSource.token,
+        );
+
+        // Simulate the debug-path race: subprocess is still flushing results
+        // when the debug session ends and cancellation fires.
+        cancelSource.cancel();
+        await new Promise((r) => setImmediate(r));
+
+        // Buffered messages arrive after cancellation.
+        reader.emit(makeMessage({ cwd: 'a' }));
+        reader.emit(makeMessage({ cwd: 'b' }));
+
+        assert.strictEqual(received.length, 2, 'messages emitted after cancel must still reach the callback');
+        assert.deepStrictEqual(
+            received.map((p) => p.cwd),
+            ['a', 'b'],
+            'all buffered results delivered in order',
+        );
+
+        // The subprocess finally closes its end of the pipe; the OS delivers
+        // EOF, which fires `onClose` and triggers disposal.
+        reader.fireClose();
+        await deferredTillServerClose.promise;
+
+        assert.strictEqual(reader.disposed, true, 'reader disposed via onClose path');
+
+        cancelSource.dispose();
+    });
+
+    test('reader.onClose resolves deferredTillServerClose and disposes the reader (natural completion path, no cancellation)', async () => {
+        const reader = new FakeMessageReader();
+        sandbox.stub(namedPipes, 'createReaderPipe').resolves(reader);
+
+        const deferredTillServerClose: Deferred<void> = createDeferred<void>();
+
+        await startRunResultNamedPipe(
+            () => {
+                /* no-op */
+            },
+            deferredTillServerClose,
+            undefined,
+        );
+
+        assert.strictEqual(
+            (deferredTillServerClose as Deferred<void>).completed,
+            false,
+            'deferred unresolved before close',
+        );
+
+        reader.fireClose();
+        await deferredTillServerClose.promise;
+
+        assert.strictEqual(reader.disposed, true, 'reader disposed when onClose fires');
     });
 });
