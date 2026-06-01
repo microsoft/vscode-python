@@ -3,7 +3,14 @@ import * as sinon from 'sinon';
 import * as fs from 'fs';
 import * as path from 'path';
 import { CancellationToken, CancellationTokenSource, TestController, TestItem, Uri, Range, Position } from 'vscode';
-import { Emitter, Event, MessageReader, PartialMessageInfo, Disposable as RpcDisposable, DataCallback } from 'vscode-jsonrpc';
+import {
+    Emitter,
+    Event,
+    MessageReader,
+    PartialMessageInfo,
+    Disposable as RpcDisposable,
+    DataCallback,
+} from 'vscode-jsonrpc';
 import { Message } from 'vscode-jsonrpc';
 import {
     writeTestIdsFile,
@@ -786,7 +793,11 @@ suite('startRunResultNamedPipe drain-on-cancel tests', () => {
 
         public listen(callback: DataCallback): RpcDisposable {
             this._callback = callback;
-            return { dispose: () => { this._callback = undefined; } };
+            return {
+                dispose: () => {
+                    this._callback = undefined;
+                },
+            };
         }
 
         public dispose(): void {
@@ -830,11 +841,7 @@ suite('startRunResultNamedPipe drain-on-cancel tests', () => {
         const deferredTillServerClose: Deferred<void> = createDeferred<void>();
         const cancelSource = new CancellationTokenSource();
 
-        await startRunResultNamedPipe(
-            (payload) => received.push(payload),
-            deferredTillServerClose,
-            cancelSource.token,
-        );
+        await startRunResultNamedPipe((payload) => received.push(payload), deferredTillServerClose, cancelSource.token);
 
         assert.ok(createReaderPipeStub.calledOnce, 'createReaderPipe should be called once');
         assert.ok(reader.hasListener(), 'reader should have a listener registered before cancel');
@@ -868,11 +875,7 @@ suite('startRunResultNamedPipe drain-on-cancel tests', () => {
         const deferredTillServerClose: Deferred<void> = createDeferred<void>();
         const cancelSource = new CancellationTokenSource();
 
-        await startRunResultNamedPipe(
-            (payload) => received.push(payload),
-            deferredTillServerClose,
-            cancelSource.token,
-        );
+        await startRunResultNamedPipe((payload) => received.push(payload), deferredTillServerClose, cancelSource.token);
 
         // Simulate the debug-path race: cancel fires while results are still buffered.
         cancelSource.cancel();
