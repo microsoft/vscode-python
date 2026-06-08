@@ -122,9 +122,7 @@ def test_compact_discovery_payload_expands_after_rpc_parsing(tmp_path):
     }
     body = json.dumps({"jsonrpc": "2.0", "params": payload})
     framed_message = f"content-length: {len(body)}\r\ncontent-type: application/json\r\n\r\n{body}"
-    chunked_message = "".join(
-        [framed_message[:13], framed_message[13:97], framed_message[97:]]
-    )
+    chunked_message = "".join([framed_message[:13], framed_message[13:97], framed_message[97:]])
 
     parsed_payload = helpers.process_data_received(chunked_message)[0]
 
