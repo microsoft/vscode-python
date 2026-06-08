@@ -19,38 +19,41 @@ def test_compact_discovery_payload_keeps_absolute_tree_until_return(tmp_path, mo
     base_path = tmp_path / "workspace"
     test_file = base_path / "tests" / "test_sample.py"
     absolute_test_id = f"{os.fspath(test_file)}::test_case[param]"
-    session_node: vscode_pytest.TestNode = {
-        "name": "workspace",
-        "path": base_path,
-        "type_": "folder",
-        "id_": os.fspath(base_path),
-        "children": [
-            {
-                "name": "test_sample.py",
-                "path": test_file,
-                "type_": "file",
-                "id_": os.fspath(test_file),
-                "children": [
-                    {
-                        "name": "test_case[param]",
-                        "path": test_file,
-                        "type_": "test",
-                        "id_": absolute_test_id,
-                        "runID": absolute_test_id,
-                        "lineno": "7",
-                    }
-                ],
-            }
-        ],
-    }
+    session_node = cast(
+        "vscode_pytest.TestNode",
+        {
+            "name": "workspace",
+            "path": base_path,
+            "type_": "folder",
+            "id_": os.fspath(base_path),
+            "children": [
+                {
+                    "name": "test_sample.py",
+                    "path": test_file,
+                    "type_": "file",
+                    "id_": os.fspath(test_file),
+                    "children": [
+                        {
+                            "name": "test_case[param]",
+                            "path": test_file,
+                            "type_": "test",
+                            "id_": absolute_test_id,
+                            "runID": absolute_test_id,
+                            "lineno": "7",
+                        }
+                    ],
+                }
+            ],
+        },
+    )
 
     payload = vscode_pytest.create_compact_discovery_payload(os.fspath(base_path), session_node)
 
     assert session_node["path"] == base_path
-    file_node = cast("vscode_pytest.TestNode", session_node["children"][0])
+    file_node = cast("vscode_pytest.TestNode", cast("List[Any]", session_node["children"])[0])
     assert file_node is not None
     assert file_node["path"] == test_file
-    test_node = cast("vscode_pytest.TestItem", file_node["children"][0])
+    test_node = cast("vscode_pytest.TestItem", cast("List[Any]", file_node["children"])[0])
     assert test_node is not None
     assert test_node["id_"] == absolute_test_id
 
