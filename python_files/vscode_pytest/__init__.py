@@ -1043,9 +1043,10 @@ def compact_test_node(
         elif key in {"id_", "runID"}:
             compact_node[key] = compact_test_id(cast("str", value), id_base)
         elif key == "children":
+            children_iter = value.values() if isinstance(value, Children) else value
             compact_node[key] = [
                 compact_test_node(child, path_base, id_base)
-                for child in cast("list[TestNode | TestItem | None]", value)
+                for child in cast("list[TestNode | TestItem | None]", children_iter)
             ]
         else:
             compact_node[key] = value
