@@ -28,6 +28,34 @@ export function createTestingDeferred(): Deferred<void> {
     return createDeferred<void>();
 }
 
+// Maximum time (ms) to wait for the result pipe to drain after the subprocess exits.
+// Acts as a backstop in case `reader.onClose` never fires (e.g. abnormal subprocess exit,
+// platform-specific named-pipe quirks) so the adapter's `finally` block can never hang.
+export const RESULT_PIPE_DRAIN_TIMEOUT_MS = 5_000;
+
+/**
+ * Awaits `deferred.promise` but resolves after at most `timeoutMs` so callers
+ * cannot hang indefinitely if the underlying event source never fires.
+ */
+export async function awaitDeferredWithTimeout<T>(deferred: Deferred<T>, timeoutMs: number): Promise<void> {
+    let timeoutHandle: NodeJS.Timeout | undefined;
+    try {
+        await Promise.race([
+            deferred.promise,
+            new Promise<void>((resolve) => {
+                timeoutHandle = setTimeout(() => {
+                    traceVerbose(`awaitDeferredWithTimeout: timed out after ${timeoutMs}ms; resolving anyway.`);
+                    resolve();
+                }, timeoutMs);
+            }),
+        ]);
+    } finally {
+        if (timeoutHandle) {
+            clearTimeout(timeoutHandle);
+        }
+    }
+}
+
 interface ExecutionResultMessage extends Message {
     params: ExecutionTestPayload;
 }

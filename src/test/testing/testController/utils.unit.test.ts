@@ -16,6 +16,7 @@ import {
     writeTestIdsFile,
     populateTestTree,
     startRunResultNamedPipe,
+    awaitDeferredWithTimeout,
 } from '../../../client/testing/testController/common/utils';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import * as namedPipes from '../../../client/common/pipes/namedPipes';
@@ -925,5 +926,27 @@ suite('startRunResultNamedPipe drain-on-cancel tests', () => {
         await deferredTillServerClose.promise;
 
         assert.strictEqual(reader.disposed, true, 'reader disposed when onClose fires');
+    });
+});
+
+suite('awaitDeferredWithTimeout', () => {
+    test('resolves promptly when the deferred resolves before the timeout', async () => {
+        const deferred = createDeferred<void>();
+        const started = Date.now();
+        const waiter = awaitDeferredWithTimeout(deferred, 5000);
+        setTimeout(() => deferred.resolve(), 10);
+        await waiter;
+        const elapsed = Date.now() - started;
+        assert.ok(elapsed < 1000, `should resolve well before timeout, took ${elapsed}ms`);
+    });
+
+    test('resolves after the timeout when the deferred never settles (no hang)', async () => {
+        const deferred = createDeferred<void>();
+        const started = Date.now();
+        await awaitDeferredWithTimeout(deferred, 50);
+        const elapsed = Date.now() - started;
+        assert.ok(elapsed >= 50, `should wait at least the timeout, took ${elapsed}ms`);
+        assert.ok(elapsed < 2000, `should not hang well beyond timeout, took ${elapsed}ms`);
+        assert.strictEqual(deferred.completed, false, 'underlying deferred remains unresolved');
     });
 });

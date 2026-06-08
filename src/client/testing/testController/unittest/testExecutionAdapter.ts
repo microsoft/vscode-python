@@ -90,7 +90,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         } catch (error) {
             traceError(`Error in running unittest tests: ${error}`);
         } finally {
-            await deferredTillServerClose.promise;
+            await utils.awaitDeferredWithTimeout(deferredTillServerClose, utils.RESULT_PIPE_DRAIN_TIMEOUT_MS);
         }
     }
 
