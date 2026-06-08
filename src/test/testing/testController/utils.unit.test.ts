@@ -831,7 +831,15 @@ suite('startRunResultNamedPipe drain-on-cancel tests', () => {
     });
 
     function makeMessage(payload: Partial<ExecutionTestPayload>): Message {
-        return ({ jsonrpc: '2.0', params: payload } as unknown) as Message;
+        // Fill in required ExecutionTestPayload fields so tests exercise a shape close
+        // to what real runners send and don't drift from the schema over time.
+        const full: ExecutionTestPayload = {
+            cwd: '',
+            status: 'success',
+            error: '',
+            ...payload,
+        };
+        return ({ jsonrpc: '2.0', params: full } as unknown) as Message;
     }
 
     test('cancellation alone does NOT resolve deferredTillServerClose and does NOT detach the listener (drain not interrupted)', async () => {

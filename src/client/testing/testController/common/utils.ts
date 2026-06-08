@@ -44,7 +44,9 @@ export async function awaitDeferredWithTimeout<T>(deferred: Deferred<T>, timeout
             deferred.promise,
             new Promise<void>((resolve) => {
                 timeoutHandle = setTimeout(() => {
-                    traceVerbose(`awaitDeferredWithTimeout: timed out after ${timeoutMs}ms; resolving anyway.`);
+                    traceVerbose(
+                        `awaitDeferredWithTimeout: deferred did not settle within ${timeoutMs}ms; giving up and continuing.`,
+                    );
                     resolve();
                 }, timeoutMs);
             }),

@@ -70,7 +70,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             cSource.token, // token to cancel
         );
         runInstance.token.onCancellationRequested(() => {
-            console.log(`Test run cancelled for ${uri.fsPath}; waiting for result pipe to drain.`);
+            traceInfo(`Test run cancelled for ${uri.fsPath}; waiting for result pipe to drain.`);
             // Don't resolve the deferred here: the pipe must drain first.
             // `reader.onClose` in `startRunResultNamedPipe` will resolve it
             // once the subprocess closes its end of the pipe.
