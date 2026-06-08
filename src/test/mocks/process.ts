@@ -12,7 +12,6 @@ import { createTypeMoq } from './helper';
 export class MockProcess implements ICurrentProcess {
     constructor(public env: EnvironmentVariables = { ...process.env }) {}
 
-    // eslint-disable-next-line @typescript-eslint/ban-types
     public on(_event: string | symbol, _listener: Function): this {
         return this;
     }

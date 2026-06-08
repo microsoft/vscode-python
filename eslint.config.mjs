@@ -1,7 +1,7 @@
 /**
  * ESLint Configuration for VS Code Python Extension
  * This file configures linting rules for the TypeScript/JavaScript codebase.
- * It uses the new flat config format introduced in ESLint 8.21.0
+ * It uses the flat config format (eslint.config.mjs).
  */
 
 // Import essential ESLint plugins and configurations
@@ -9,7 +9,7 @@ import tseslint from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import noOnlyTests from 'eslint-plugin-no-only-tests';
 import prettier from 'eslint-config-prettier';
-import importPlugin from 'eslint-plugin-import';
+import importPlugin from 'eslint-plugin-import-x';
 import js from '@eslint/js';
 import noBadGdprCommentPlugin from './.eslintplugin/no-bad-gdpr-comment.js'; // Ensure the path is correct
 
@@ -243,6 +243,10 @@ export default [
         rules: {
             ...js.configs.recommended.rules,
             'no-undef': 'off',
+            // New ESLint 10 rules added to recommended — turn off to avoid flagging pre-existing code
+            'no-unassigned-vars': 'off',
+            'no-useless-assignment': 'off',
+            'preserve-caught-error': 'off',
         },
     },
     // TypeScript-specific configuration
@@ -273,7 +277,6 @@ export default [
             '@typescript-eslint': tseslint,
             'no-only-tests': noOnlyTests,
             import: importPlugin,
-            prettier: prettier,
             'no-bad-gdpr-comment': noBadGdprCommentPlugin, // Register your plugin
         },
         settings: {
@@ -296,13 +299,13 @@ export default [
                     'ts-ignore': 'allow-with-description',
                 },
             ],
-            '@typescript-eslint/ban-types': 'off',
             '@typescript-eslint/explicit-module-boundary-types': 'off',
-            '@typescript-eslint/no-empty-interface': 'off',
+            '@typescript-eslint/no-empty-object-type': 'off',
             '@typescript-eslint/no-explicit-any': 'off',
             '@typescript-eslint/no-namespace': 'off',
             '@typescript-eslint/no-non-null-assertion': 'off',
-            '@typescript-eslint/no-loss-of-precision': 'off',
+            '@typescript-eslint/no-unsafe-function-type': 'off',
+            '@typescript-eslint/no-wrapper-object-types': 'off',
             '@typescript-eslint/no-unused-vars': [
                 'warn',
                 {
@@ -310,7 +313,7 @@ export default [
                     argsIgnorePattern: '^_',
                 },
             ],
-            '@typescript-eslint/no-var-requires': 'off',
+            '@typescript-eslint/no-require-imports': 'off',
             '@typescript-eslint/no-use-before-define': [
                 'error',
                 {
@@ -366,7 +369,8 @@ export default [
             'no-useless-escape': 'off',
             'no-extra-parentheses': 'off',
             'no-extra-paren': 'off',
-            '@typescript-eslint/no-extra-parens': 'off',
+            // @typescript-eslint/no-unused-expressions is new in v8 recommended; off to keep existing chai patterns working
+            '@typescript-eslint/no-unused-expressions': 'off',
             strict: 'off',
 
             // Restricted syntax

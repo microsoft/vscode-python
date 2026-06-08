@@ -150,7 +150,6 @@ export interface ICurrentProcess {
     readonly stdout: NodeJS.WriteStream;
     readonly stdin: NodeJS.ReadStream;
     readonly execPath: string;
-    // eslint-disable-next-line @typescript-eslint/ban-types
     on(event: string | symbol, listener: Function): this;
 }
 

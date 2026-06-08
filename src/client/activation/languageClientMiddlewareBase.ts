@@ -40,7 +40,6 @@ type MiddleWareMethods = {
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable prefer-rest-params */
 /* eslint-disable consistent-return */
-/* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 interface SendTelemetryEventFunc {

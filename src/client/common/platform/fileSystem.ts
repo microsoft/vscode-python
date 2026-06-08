@@ -526,7 +526,6 @@ export class FileSystem implements IFileSystem {
         return this.utils.raw.readData(filePath);
     }
 
-    // eslint-disable-next-line @typescript-eslint/ban-types
     public async writeFile(filename: string, data: string | Buffer): Promise<void> {
         return this.utils.raw.writeText(filename, data);
     }

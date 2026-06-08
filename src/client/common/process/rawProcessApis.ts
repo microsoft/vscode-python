@@ -138,7 +138,6 @@ export function plainExec(
     disposables?.add(disposable);
     const internalDisposables: IDisposable[] = [];
 
-    // eslint-disable-next-line @typescript-eslint/ban-types
     const on = (ee: Readable | null, name: string, fn: Function) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ee?.on(name, fn as any);
@@ -241,7 +240,6 @@ export function execObservable(
     const output = new Observable<Output<string>>((subscriber) => {
         const internalDisposables: IDisposable[] = [];
 
-        // eslint-disable-next-line @typescript-eslint/ban-types
         const on = (ee: Readable | null, name: string, fn: Function) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ee?.on(name, fn as any);

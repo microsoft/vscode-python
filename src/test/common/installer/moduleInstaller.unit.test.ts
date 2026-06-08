@@ -119,7 +119,6 @@ suite('Module Installer', () => {
         test('Show error message if sudo exec fails with error', async () => {
             const error = 'Error message';
             const sudoPromptMock = {
-                // eslint-disable-next-line @typescript-eslint/ban-types
                 exec: (_command: unknown, _options: unknown, callBackFn: Function) =>
                     callBackFn(error, 'stdout', 'stderr'),
             };
@@ -137,7 +136,6 @@ suite('Module Installer', () => {
         test('Show stdout if sudo exec succeeds', async () => {
             const stdout = 'stdout';
             const sudoPromptMock = {
-                // eslint-disable-next-line @typescript-eslint/ban-types
                 exec: (_command: unknown, _options: unknown, callBackFn: Function) =>
                     callBackFn(undefined, stdout, undefined),
             };
@@ -155,7 +153,6 @@ suite('Module Installer', () => {
         test('Show stderr if sudo exec gives a warning with stderr', async () => {
             const stderr = 'stderr';
             const sudoPromptMock = {
-                // eslint-disable-next-line @typescript-eslint/ban-types
                 exec: (_command: unknown, _options: unknown, callBackFn: Function) =>
                     callBackFn(undefined, undefined, stderr),
             };

@@ -118,7 +118,6 @@ suite('Multiroot Environment Variables Provider', () => {
             envFile = path.join('a', 'b', 'env.file');
             const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
 
-            // eslint-disable-next-line @typescript-eslint/ban-types
             let onChangeHandler: undefined | ((resource?: Uri) => Function);
 
             fileSystemWatcher
@@ -146,7 +145,6 @@ suite('Multiroot Environment Variables Provider', () => {
             envFile = path.join('a', 'b', 'env.file');
             const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
 
-            // eslint-disable-next-line @typescript-eslint/ban-types
             let onDeleted: undefined | ((resource?: Uri) => Function);
 
             fileSystemWatcher
@@ -174,7 +172,6 @@ suite('Multiroot Environment Variables Provider', () => {
             envFile = path.join('a', 'b', 'env.file');
             const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
 
-            // eslint-disable-next-line @typescript-eslint/ban-types
             let onCreated: undefined | ((resource?: Uri) => Function);
 
             fileSystemWatcher
@@ -339,7 +336,6 @@ suite('Multiroot Environment Variables Provider', () => {
             };
             const envFileVars = { MY_FILE: '1234', PYTHONPATH: `./foo${path.delimiter}./bar` };
 
-            // eslint-disable-next-line @typescript-eslint/ban-types
             let onChangeHandler: undefined | ((resource?: Uri) => Function);
             const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
 

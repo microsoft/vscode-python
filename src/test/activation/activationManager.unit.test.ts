@@ -244,7 +244,6 @@ suite('Activation Manager', () => {
             const disposable1 = typemoq.Mock.ofType<IDisposable>();
             const disposable2 = typemoq.Mock.ofType<IDisposable>();
             let fileOpenedHandler!: (e: TextDocument) => Promise<void>;
-            // eslint-disable-next-line @typescript-eslint/ban-types
             let workspaceFoldersChangedHandler!: Function;
             const documentUri = Uri.file('a');
             const document = typemoq.Mock.ofType<TextDocument>();
@@ -363,7 +362,6 @@ suite('Activation Manager', () => {
             const disposable1 = typemoq.Mock.ofType<IDisposable>();
             const disposable2 = typemoq.Mock.ofType<IDisposable>();
             let docOpenedHandler!: (e: TextDocument) => Promise<void>;
-            // eslint-disable-next-line @typescript-eslint/ban-types
             let workspaceFoldersChangedHandler!: Function;
             const documentUri = Uri.file('a');
             const document = typemoq.Mock.ofType<TextDocument>();
