@@ -11,6 +11,7 @@ import { TestItemIndex } from './testItemIndex';
 import { TestDiscoveryHandler } from './testDiscoveryHandler';
 import { TestExecutionHandler } from './testExecutionHandler';
 import { TestCoverageHandler } from './testCoverageHandler';
+import { DiscoveryTelemetryState } from './discoveryTelemetry';
 
 export class PythonResultResolver implements ITestResultResolver {
     testController: TestController;
@@ -25,6 +26,8 @@ export class PythonResultResolver implements ITestResultResolver {
     private static coverageHandler: TestCoverageHandler = new TestCoverageHandler();
 
     public detailedCoverageMap = new Map<string, FileCoverageDetail[]>();
+
+    public readonly discoveryTelemetry: DiscoveryTelemetryState;
 
     /**
      * Optional project ID for scoping test IDs.
@@ -52,6 +55,7 @@ export class PythonResultResolver implements ITestResultResolver {
         this.projectName = projectName;
         // Initialize a new TestItemIndex which will be used to track test items in this workspace/project
         this.testItemIndex = new TestItemIndex();
+        this.discoveryTelemetry = new DiscoveryTelemetryState(projectId ? 'project' : 'legacy');
     }
 
     // Expose for backward compatibility (WorkspaceTestAdapter accesses these)
@@ -76,7 +80,7 @@ export class PythonResultResolver implements ITestResultResolver {
     }
 
     public resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void {
-        PythonResultResolver.discoveryHandler.processDiscovery(
+        const testCount = PythonResultResolver.discoveryHandler.processDiscovery(
             payload,
             this.testController,
             this.testItemIndex,
@@ -86,9 +90,17 @@ export class PythonResultResolver implements ITestResultResolver {
             this.projectId,
             this.projectName,
         );
+        const cycle = this.discoveryTelemetry.complete();
+        const mode = cycle?.mode ?? this.discoveryTelemetry.defaultMode;
+        const failed = payload?.status === 'error';
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
             tool: this.testProvider,
-            failed: false,
+            failed,
+            mode,
+            trigger: cycle?.trigger,
+            failureCategory: failed ? (token?.isCancellationRequested ? 'cancelled' : 'unknown') : undefined,
+            totalDurationMs: cycle?.stopWatch.elapsedTime,
+            testCount,
         });
     }
 
