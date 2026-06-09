@@ -1,6 +1,5 @@
 {
     "compilerOptions": {
-        "skipLibCheck": true,
         "baseUrl": ".",
         "module": "commonjs",
         "target": "es6",
