@@ -28,6 +28,36 @@ export function createTestingDeferred(): Deferred<void> {
     return createDeferred<void>();
 }
 
+// Maximum time (ms) to wait for the result pipe to drain after the subprocess exits.
+// Acts as a backstop in case `reader.onClose` never fires (e.g. abnormal subprocess exit,
+// platform-specific named-pipe quirks) so the adapter's `finally` block can never hang.
+export const RESULT_PIPE_DRAIN_TIMEOUT_MS = 5_000;
+
+/**
+ * Awaits `deferred.promise` but resolves after at most `timeoutMs` so callers
+ * cannot hang indefinitely if the underlying event source never fires.
+ */
+export async function awaitDeferredWithTimeout<T>(deferred: Deferred<T>, timeoutMs: number): Promise<void> {
+    let timeoutHandle: NodeJS.Timeout | undefined;
+    try {
+        await Promise.race([
+            deferred.promise,
+            new Promise<void>((resolve) => {
+                timeoutHandle = setTimeout(() => {
+                    traceVerbose(
+                        `awaitDeferredWithTimeout: deferred did not settle within ${timeoutMs}ms; giving up and continuing.`,
+                    );
+                    resolve();
+                }, timeoutMs);
+            }),
+        ]);
+    } finally {
+        if (timeoutHandle) {
+            clearTimeout(timeoutHandle);
+        }
+    }
+}
+
 interface ExecutionResultMessage extends Message {
     params: ExecutionTestPayload;
 }
@@ -89,6 +119,8 @@ export async function startRunResultNamedPipe(
     traceVerbose('Starting Test Result named pipe');
     const pipeName: string = generateRandomPipeName('python-test-results');
 
+    // `cancellationToken` only cancels pipe creation; disposal is driven by
+    // `reader.onClose` so buffered results are not dropped on cancel.
     const reader = await createReaderPipe(pipeName, cancellationToken);
     traceVerbose(`Test Results named pipe ${pipeName} connected`);
     let disposables: Disposable[] = [];
@@ -99,14 +131,6 @@ export async function startRunResultNamedPipe(
         deferredTillServerClose.resolve();
     });
 
-    if (cancellationToken) {
-        disposables.push(
-            cancellationToken?.onCancellationRequested(() => {
-                traceLog(`Test Result named pipe ${pipeName}  cancelled`);
-                disposable.dispose();
-            }),
-        );
-    }
     disposables.push(
         reader,
         reader.listen((data: Message) => {
@@ -115,9 +139,7 @@ export async function startRunResultNamedPipe(
             dataReceivedCallback((data as ExecutionResultMessage).params as ExecutionTestPayload);
         }),
         reader.onClose(() => {
-            // this is called once the server close, once per run instance
             traceVerbose(`Test Result named pipe ${pipeName} closed. Disposing of listener/s.`);
-            // dispose of all data listeners and cancelation listeners
             disposable.dispose();
         }),
         reader.onError((error) => {

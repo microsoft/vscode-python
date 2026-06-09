@@ -70,9 +70,10 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             cSource.token, // token to cancel
         );
         runInstance.token.onCancellationRequested(() => {
-            console.log(`Test run cancelled, resolving 'till TillAllServerClose' deferred for ${uri.fsPath}.`);
-            // if canceled, stop listening for results
-            deferredTillServerClose.resolve();
+            traceInfo(`Test run cancelled for ${uri.fsPath}; waiting for result pipe to drain.`);
+            // Don't resolve the deferred here: the pipe must drain first.
+            // `reader.onClose` in `startRunResultNamedPipe` will resolve it
+            // once the subprocess closes its end of the pipe.
         });
         try {
             await this.runTestsNew(
@@ -89,7 +90,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         } catch (error) {
             traceError(`Error in running unittest tests: ${error}`);
         } finally {
-            await deferredTillServerClose.promise;
+            await utils.awaitDeferredWithTimeout(deferredTillServerClose, utils.RESULT_PIPE_DRAIN_TIMEOUT_MS);
         }
     }
 
