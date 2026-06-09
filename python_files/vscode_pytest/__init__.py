@@ -28,10 +28,12 @@ if TYPE_CHECKING:
     from typing_extensions import NotRequired
 
 USES_PYTEST_DESCRIBE = False
+DescribeBlock: Any = None
 
 with contextlib.suppress(ImportError):
-    from pytest_describe.plugin import DescribeBlock
+    from pytest_describe.plugin import DescribeBlock as ImportedDescribeBlock
 
+    DescribeBlock = ImportedDescribeBlock
     USES_PYTEST_DESCRIBE = True
 
 
@@ -719,10 +721,11 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             test_node = process_parameterized_test(
                 test_case, test_node, function_nodes_dict, file_nodes_dict
             )
-        if isinstance(test_case.parent, pytest.Class) or (
-            USES_PYTEST_DESCRIBE and isinstance(test_case.parent, DescribeBlock)
+        parent = test_case.parent
+        if isinstance(parent, pytest.Class) or (
+            USES_PYTEST_DESCRIBE and isinstance(parent, DescribeBlock)
         ):
-            case_iter = test_case.parent
+            case_iter: Any = parent
             node_child_iter = test_node
             test_class_node: TestNode | None = None
             while isinstance(case_iter, pytest.Class) or (
@@ -870,7 +873,7 @@ def create_session_node(session: pytest.Session) -> TestNode:
     }
 
 
-def create_class_node(class_module: pytest.Class | DescribeBlock) -> TestNode:
+def create_class_node(class_module: Any) -> TestNode:
     """Creates a class node from a pytest class object.
 
     Keyword arguments:
@@ -958,6 +961,14 @@ class DiscoveryPayloadDict(TypedDict):
     error: list[str] | None
 
 
+class CompactDiscoveryPayloadDict(DiscoveryPayloadDict):
+    """A compact discovery payload with paths relative to shared bases."""
+
+    payloadVersion: int
+    pathBase: str
+    idBase: str
+
+
 class ExecutionPayloadDict(Dict):
     """A dictionary that is used to send a execution post request to the server."""
 
@@ -992,6 +1003,71 @@ def cached_fsdecode(path: pathlib.Path) -> str:
     if path not in _path_to_str_cache:
         _path_to_str_cache[path] = os.fspath(path)
     return _path_to_str_cache[path]
+
+
+def compact_path(path: pathlib.Path | str, path_base: pathlib.Path) -> str:
+    """Return path relative to path_base when possible without resolving symlinks."""
+    current_path = pathlib.Path(path)
+    if not current_path.is_absolute():
+        return os.fspath(current_path)
+
+    try:
+        relative_path = current_path.relative_to(path_base)
+    except ValueError:
+        return os.fspath(current_path)
+
+    relative_path_str = os.fspath(relative_path)
+    return relative_path_str or "."
+
+
+def compact_test_id(test_id: str, id_base: pathlib.Path) -> str:
+    """Compact the path prefix in a pytest node id while preserving pytest selectors."""
+    test_path, separator, selector = test_id.partition("::")
+    compact_test_path = compact_path(test_path, id_base)
+    return f"{compact_test_path}{separator}{selector}" if separator else compact_test_path
+
+
+def compact_test_node(
+    test_node: TestNode | TestItem | None,
+    path_base: pathlib.Path,
+    id_base: pathlib.Path,
+) -> dict[str, Any] | None:
+    """Create a compact copy of a discovery node for JSON serialization."""
+    if test_node is None:
+        return None
+
+    compact_node: dict[str, Any] = {}
+    for key, value in test_node.items():
+        if key == "path":
+            compact_node[key] = compact_path(cast("pathlib.Path", value), path_base)
+        elif key in {"id_", "runID"}:
+            compact_node[key] = compact_test_id(cast("str", value), id_base)
+        elif key == "children":
+            children_iter = value.values() if isinstance(value, Children) else value
+            compact_node[key] = [
+                compact_test_node(child, path_base, id_base)
+                for child in cast("list[TestNode | TestItem | None]", children_iter)
+            ]
+        else:
+            compact_node[key] = value
+    return compact_node
+
+
+def create_compact_discovery_payload(
+    cwd: str, session_node: TestNode
+) -> CompactDiscoveryPayloadDict:
+    """Create the compact wire payload after discovery has fully resolved the tree."""
+    path_base = pathlib.Path(session_node["path"])
+    id_base = path_base
+    return CompactDiscoveryPayloadDict(
+        cwd=cwd,
+        status="success" if not ERRORS else "error",
+        tests=cast("TestNode", compact_test_node(session_node, path_base, id_base)),
+        error=ERRORS,
+        payloadVersion=2,
+        pathBase=os.fspath(path_base),
+        idBase=os.fspath(id_base),
+    )
 
 
 def get_node_path(
@@ -1092,41 +1168,18 @@ def send_discovery_message(cwd: str, session_node: TestNode) -> None:
         cwd (str): Current working directory.
         session_node (TestNode): Node information of the test session.
     """
-    payload: DiscoveryPayloadDict = {
-        "cwd": cwd,
-        "status": "success" if not ERRORS else "error",
-        "tests": session_node,
-        "error": [],
-    }
-    if ERRORS is not None:
-        payload["error"] = ERRORS
-    send_message(payload, cls_encoder=CustomEncoder)
-
-
-class CustomEncoder(json.JSONEncoder):
-    """JSON encoder for pytest discovery payloads.
-
-    Encodes `pathlib.Path` as strings and `Children` containers as JSON arrays.
-    """
-
-    def default(self, o):
-        if isinstance(o, pathlib.Path):
-            return os.fspath(o)
-        if isinstance(o, Children):
-            return o.values()
-        return super().default(o)
+    payload = create_compact_discovery_payload(cwd, session_node)
+    send_message(payload)
 
 
 def send_message(
     payload: ExecutionPayloadDict | DiscoveryPayloadDict | CoveragePayloadDict,
-    cls_encoder=None,
 ):
     """
     Sends a post request to the server.
 
     Keyword arguments:
     payload -- the payload data to be sent.
-    cls_encoder -- a custom encoder if needed.
     """
     if not TEST_RUN_PIPE:
         error_msg = (
@@ -1159,7 +1212,7 @@ def send_message(
         "jsonrpc": "2.0",
         "params": payload,
     }
-    data = json.dumps(rpc, cls=cls_encoder)
+    data = json.dumps(rpc)
     try:
         if __writer:
             request = (

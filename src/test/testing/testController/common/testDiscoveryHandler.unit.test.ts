@@ -5,7 +5,10 @@ import { TestController, TestItem, Uri, CancellationToken, TestItemCollection } 
 import * as typemoq from 'typemoq';
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { TestDiscoveryHandler } from '../../../../client/testing/testController/common/testDiscoveryHandler';
+import {
+    expandCompactDiscoveryPayload,
+    TestDiscoveryHandler,
+} from '../../../../client/testing/testController/common/testDiscoveryHandler';
 import { TestItemIndex } from '../../../../client/testing/testController/common/testItemIndex';
 import { DiscoveredTestPayload, DiscoveredTestNode } from '../../../../client/testing/testController/common/types';
 import { TestProvider } from '../../../../client/testing/types';
@@ -104,6 +107,142 @@ suite('TestDiscoveryHandler', () => {
                 sinon.match.any,
                 cancelationToken,
             );
+        });
+
+        test('should expand compact discovery payload before populating', () => {
+            const payload: DiscoveredTestPayload = {
+                cwd: '/foo/bar',
+                status: 'success',
+                payloadVersion: 2,
+                pathBase: '/foo/bar',
+                idBase: '/foo/bar',
+                tests: {
+                    path: '.',
+                    name: 'bar',
+                    type_: 'folder',
+                    id_: '.',
+                    children: [
+                        {
+                            path: 'tests/test_sample.py',
+                            name: 'test_sample.py',
+                            type_: 'file',
+                            id_: 'tests/test_sample.py',
+                            children: [
+                                {
+                                    path: 'tests/test_sample.py',
+                                    name: 'test_case[param]',
+                                    type_: 'test',
+                                    id_: 'tests/test_sample.py::test_case[param]',
+                                    runID: 'tests/test_sample.py::test_case[param]',
+                                    lineno: '7',
+                                },
+                            ],
+                        },
+                    ],
+                },
+            };
+
+            const populateTestTreeStub = sinon.stub(utils, 'populateTestTree');
+            testItemIndexMock.setup((x) => x.clear()).returns(() => undefined);
+            testItemIndexMock.setup((x) => x.runIdToTestItemMap).returns(() => new Map());
+            testItemIndexMock.setup((x) => x.runIdToVSidMap).returns(() => new Map());
+            testItemIndexMock.setup((x) => x.vsIdToRunIdMap).returns(() => new Map());
+
+            discoveryHandler.processDiscovery(
+                payload,
+                testControllerMock.object,
+                testItemIndexMock.object,
+                workspaceUri,
+                testProvider,
+                cancelationToken,
+            );
+
+            const expandedTests = populateTestTreeStub.getCall(0).args[1] as DiscoveredTestNode;
+            assert.strictEqual(expandedTests.path, '/foo/bar');
+            assert.strictEqual(expandedTests.id_, '/foo/bar');
+            assert.strictEqual(expandedTests.children[0].path, '/foo/bar/tests/test_sample.py');
+            assert.strictEqual(expandedTests.children[0].id_, '/foo/bar/tests/test_sample.py');
+
+            const fileNode = expandedTests.children[0] as DiscoveredTestNode;
+            const testNode = fileNode.children[0] as any;
+            assert.strictEqual(testNode.path, '/foo/bar/tests/test_sample.py');
+            assert.strictEqual(testNode.id_, '/foo/bar/tests/test_sample.py::test_case[param]');
+            assert.strictEqual(testNode.runID, '/foo/bar/tests/test_sample.py::test_case[param]');
+        });
+
+        test('should leave absolute paths in compact payloads unchanged', () => {
+            const payload: DiscoveredTestPayload = {
+                cwd: '/foo/bar',
+                status: 'success',
+                payloadVersion: 2,
+                pathBase: '/foo/bar',
+                idBase: '/foo/bar',
+                tests: {
+                    path: '/external/project',
+                    name: 'project',
+                    type_: 'folder',
+                    id_: '/external/project',
+                    children: [
+                        {
+                            path: '/external/project/test_sample.py',
+                            name: 'test_case',
+                            type_: 'test',
+                            id_: '/external/project/test_sample.py::test_case',
+                            runID: '/external/project/test_sample.py::test_case',
+                            lineno: '3',
+                        },
+                    ],
+                },
+            };
+
+            const expandedPayload = expandCompactDiscoveryPayload(payload);
+            assert.strictEqual(expandedPayload.tests?.path, '/external/project');
+            assert.strictEqual(expandedPayload.tests?.id_, '/external/project');
+            const testNode = expandedPayload.tests?.children[0] as any;
+            assert.strictEqual(testNode.path, '/external/project/test_sample.py');
+            assert.strictEqual(testNode.id_, '/external/project/test_sample.py::test_case');
+            assert.strictEqual(testNode.runID, '/external/project/test_sample.py::test_case');
+        });
+
+        test('should not expand or populate null tests in error payloads', () => {
+            const payload: DiscoveredTestPayload = {
+                cwd: '/foo/bar',
+                status: 'error',
+                payloadVersion: 2,
+                pathBase: '/foo/bar',
+                idBase: '/foo/bar',
+                tests: null,
+                error: ['Discovery stopped before tests were available'],
+            };
+
+            const populateTestTreeStub = sinon.stub(utils, 'populateTestTree');
+            const createErrorNodeSpy = sinon.spy(discoveryHandler, 'createErrorNode');
+            const mockErrorItem = ({
+                id: 'error_id',
+                error: null,
+                canResolveChildren: false,
+                tags: [],
+            } as unknown) as TestItem;
+            testControllerMock
+                .setup((t) => t.createTestItem(typemoq.It.isAny(), typemoq.It.isAny()))
+                .returns(() => mockErrorItem);
+            testItemIndexMock.setup((x) => x.clear()).returns(() => undefined);
+            testItemIndexMock.setup((x) => x.runIdToTestItemMap).returns(() => new Map());
+            testItemIndexMock.setup((x) => x.runIdToVSidMap).returns(() => new Map());
+            testItemIndexMock.setup((x) => x.vsIdToRunIdMap).returns(() => new Map());
+
+            discoveryHandler.processDiscovery(
+                payload,
+                testControllerMock.object,
+                testItemIndexMock.object,
+                workspaceUri,
+                testProvider,
+                cancelationToken,
+            );
+
+            assert.ok(createErrorNodeSpy.calledOnce);
+            assert.ok(populateTestTreeStub.notCalled);
+            testItemIndexMock.verify((x) => x.clear(), typemoq.Times.once());
         });
 
         test('should clear index before populating', () => {
