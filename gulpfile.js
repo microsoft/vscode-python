@@ -9,7 +9,6 @@
 'use strict';
 
 const gulp = require('gulp');
-const ts = require('gulp-typescript');
 const spawn = require('cross-spawn');
 const path = require('path');
 const del = require('del');
@@ -20,22 +19,26 @@ const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const { argv } = require('yargs');
 const os = require('os');
-const typescript = require('typescript');
-
-const tsProject = ts.createProject('./tsconfig.json', { typescript });
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
 gulp.task('compileCore', (done) => {
-    let failed = false;
-    tsProject
-        .src()
-        .pipe(tsProject())
-        .on('error', () => {
-            failed = true;
-        })
-        .js.pipe(gulp.dest('out'))
-        .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
+    // Use tsc directly instead of gulp-typescript because gulp-typescript v5 does not correctly
+    // handle module: "NodeNext" — it emits ES import statements instead of CJS require() calls,
+    // which causes Node.js v22+ to reparse the output as ESM and fail on missing .js extensions.
+    const proc = spawn(
+        'node',
+        [path.join('node_modules', 'typescript', 'bin', 'tsc'), '-p', './tsconfig.json'],
+        { cwd: __dirname, env: process.env, stdio: 'inherit' },
+    );
+    proc.on('close', (code) => {
+        if (code === 0) {
+            done();
+        } else {
+            done(new Error(`TypeScript compilation failed with exit code ${code}`));
+        }
+    });
+    proc.on('error', (error) => done(error));
 });
 
 gulp.task('compileApi', (done) => {
