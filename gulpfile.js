@@ -23,11 +23,11 @@ const os = require('os');
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
 gulp.task('compileCore', (done) => {
-    const proc = spawn(
-        'node',
-        [path.join('node_modules', 'typescript', 'bin', 'tsc'), '-p', './tsconfig.json'],
-        { cwd: __dirname, env: process.env, stdio: 'inherit' },
-    );
+    const proc = spawn('node', [path.join('node_modules', 'typescript', 'bin', 'tsc'), '-p', './tsconfig.json'], {
+        cwd: __dirname,
+        env: process.env,
+        stdio: 'inherit',
+    });
     proc.on('close', (code) => {
         if (code === 0) {
             done();
