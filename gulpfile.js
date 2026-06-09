@@ -23,9 +23,6 @@ const os = require('os');
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
 gulp.task('compileCore', (done) => {
-    // Use tsc directly instead of gulp-typescript because gulp-typescript v5 does not correctly
-    // handle module: "NodeNext" — it emits ES import statements instead of CJS require() calls,
-    // which causes Node.js v22+ to reparse the output as ESM and fail on missing .js extensions.
     const proc = spawn(
         'node',
         [path.join('node_modules', 'typescript', 'bin', 'tsc'), '-p', './tsconfig.json'],
