@@ -1758,7 +1758,7 @@
         "@types/xml2js": "^0.4.2",
         "@typescript-eslint/eslint-plugin": "^8.61.0",
         "@typescript-eslint/parser": "^8.61.0",
-        "@vscode/test-electron": "^2.3.8",
+        "@vscode/test-electron": "^3.0.0",
         "@vscode/vsce": "^2.27.0",
         "bent": "^7.3.12",
         "chai": "^4.1.2",
