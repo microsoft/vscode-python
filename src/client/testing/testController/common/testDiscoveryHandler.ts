@@ -11,10 +11,7 @@ import { createErrorTestItem } from './testItemUtilities';
 import { buildErrorNodeOptions, populateTestTree } from './utils';
 import { TestItemIndex } from './testItemIndex';
 import { PROJECT_ID_SEPARATOR } from './projectUtils';
-
-function isAbsolutePath(value: string): boolean {
-    return /^([a-zA-Z]:[\\/]|\\\\)/.test(value) || value.startsWith('/');
-}
+import { isAbsolutePath } from '../../../common/platform/fs-paths';
 
 function joinWithBase(base: string, relativePath: string): string {
     if (!base || isAbsolutePath(relativePath)) {
