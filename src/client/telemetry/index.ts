@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import TelemetryReporter from '@vscode/extension-telemetry';
+import { TelemetryReporter } from '@vscode/extension-telemetry';
 import type * as vscodeTypes from 'vscode';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
@@ -78,7 +78,7 @@ export function getTelemetryReporter(): TelemetryReporter {
         return telemetryReporter;
     }
 
-    const Reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
+    const Reporter = require('@vscode/extension-telemetry').TelemetryReporter as typeof TelemetryReporter;
     telemetryReporter = new Reporter(AppinsightsKey, [
         {
             lookup: /(errorName|errorMessage|errorStack)/g,
