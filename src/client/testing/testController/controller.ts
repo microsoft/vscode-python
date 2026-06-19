@@ -238,6 +238,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         workspaces.forEach((workspace) => {
             this.activateLegacyWorkspace(workspace);
         });
+        this.disposables.push(
+            this.workspaceService.onDidChangeWorkspaceFolders((evt) => {
+                evt.added.forEach((workspace) => {
+                    this.activateLegacyWorkspace(workspace);
+                });
+            }),
+        );
     }
 
     /**
