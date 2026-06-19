@@ -1706,7 +1706,7 @@
     },
     "dependencies": {
         "@iarna/toml": "^3.0.0",
-        "@vscode/extension-telemetry": "^0.8.4",
+        "@vscode/extension-telemetry": "^1.5.2",
         "arch": "^2.1.0",
         "fs-extra": "^11.2.0",
         "glob": "^7.2.0",
