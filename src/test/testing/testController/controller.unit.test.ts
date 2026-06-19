@@ -248,8 +248,7 @@ suite('PythonTestController', () => {
             });
 
             await controller.refreshTestData(addedFolder, { forceRefresh: true });
-
-            assert.strictEqual(fakeDiscoveryAdapter.called, true);
+            assert.strictEqual(fakeDiscoveryAdapter.calledWith(addedFolder), true);
         });
 
         test('filters Python projects to workspace and creates adapters for each', async () => {
