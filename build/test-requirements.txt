@@ -7,7 +7,9 @@ pylint
 pycodestyle
 pydocstyle
 prospector
-pytest
+# pytest-black 0.6.0 uses the deprecated `path` arg in pytest_collect_file,
+# which was removed in pytest 8.1. Pin to <8.1 to maintain compatibility.
+pytest<8.1
 flask
 fastapi
 uvicorn
