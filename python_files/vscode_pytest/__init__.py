@@ -1005,9 +1005,26 @@ def cached_fsdecode(path: pathlib.Path) -> str:
     return _path_to_str_cache[path]
 
 
-def compact_path(path: pathlib.Path | str, path_base: pathlib.Path) -> str:
+def compact_path(path: pathlib.Path | str, path_base: pathlib.Path, path_base_str: str) -> str:
     """Return path relative to path_base when possible without resolving symlinks."""
-    current_path = pathlib.Path(path)
+
+    if isinstance(path, str):
+        path_str = path
+        current_path = pathlib.Path(path)
+    else:
+        path_str = str(path)
+        current_path = path
+
+    # pathlib.Path.relative_to is an expensive operation, 
+    # for common cases where path is nested in path_base and path_base is therefore a prefix
+    # we skip the expensive check and just chop off the prefix to yield relative path
+    if path_str.startswith(path_base_str):
+        # +1 because pathlib.Path never ends by a trailing separator which we also need to chop off:
+        #   path_base_str=  /some/prefix
+        #   path_str=       /some/prefix/tests/mytest.py
+        rel_str = path_str[(len(path_base_str) + 1):]
+        return "." if rel_str == "" else rel_str
+
     if not current_path.is_absolute():
         return os.fspath(current_path)
 
@@ -1020,10 +1037,10 @@ def compact_path(path: pathlib.Path | str, path_base: pathlib.Path) -> str:
     return relative_path_str or "."
 
 
-def compact_test_id(test_id: str, id_base: pathlib.Path) -> str:
+def compact_test_id(test_id: str, id_base: pathlib.Path, id_base_str: str) -> str:
     """Compact the path prefix in a pytest node id while preserving pytest selectors."""
     test_path, separator, selector = test_id.partition("::")
-    compact_test_path = compact_path(test_path, id_base)
+    compact_test_path = compact_path(test_path, id_base, id_base_str)
     return f"{compact_test_path}{separator}{selector}" if separator else compact_test_path
 
 
@@ -1031,6 +1048,8 @@ def compact_test_node(
     test_node: TestNode | TestItem | None,
     path_base: pathlib.Path,
     id_base: pathlib.Path,
+    path_base_str: str,
+    id_base_str: str,
 ) -> dict[str, Any] | None:
     """Create a compact copy of a discovery node for JSON serialization."""
     if test_node is None:
@@ -1039,13 +1058,13 @@ def compact_test_node(
     compact_node: dict[str, Any] = {}
     for key, value in test_node.items():
         if key == "path":
-            compact_node[key] = compact_path(cast("pathlib.Path", value), path_base)
+            compact_node[key] = compact_path(cast("pathlib.Path", value), path_base, path_base_str)
         elif key in {"id_", "runID"}:
-            compact_node[key] = compact_test_id(cast("str", value), id_base)
+            compact_node[key] = compact_test_id(cast("str", value), id_base, id_base_str)
         elif key == "children":
             children_iter = value.values() if isinstance(value, Children) else value
             compact_node[key] = [
-                compact_test_node(child, path_base, id_base)
+                compact_test_node(child, path_base, id_base, path_base_str, id_base_str)
                 for child in cast("list[TestNode | TestItem | None]", children_iter)
             ]
         else:
@@ -1057,12 +1076,14 @@ def create_compact_discovery_payload(
     cwd: str, session_node: TestNode
 ) -> CompactDiscoveryPayloadDict:
     """Create the compact wire payload after discovery has fully resolved the tree."""
-    path_base = pathlib.Path(session_node["path"])
+    path_base_str = str(session_node["path"])
+    path_base = pathlib.Path(path_base_str)
     id_base = path_base
+    id_base_str = path_base_str
     return CompactDiscoveryPayloadDict(
         cwd=cwd,
         status="success" if not ERRORS else "error",
-        tests=cast("TestNode", compact_test_node(session_node, path_base, id_base)),
+        tests=cast("TestNode", compact_test_node(session_node, path_base, id_base, path_base_str, id_base_str)),
         error=ERRORS,
         payloadVersion=2,
         pathBase=os.fspath(path_base),
