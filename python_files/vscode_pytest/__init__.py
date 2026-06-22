@@ -22,6 +22,8 @@ from typing import (
 )
 
 import pytest
+from _pytest.python import PyobjMixin
+from _pytest._code.code import Code
 
 if TYPE_CHECKING:
     from pluggy import Result
@@ -842,8 +844,18 @@ def create_test_node(
     Keyword arguments:
     test_case -- the pytest test case.
     """
+
+    try:
+        # test_case.location returns tuple of path and line number
+        # Obtaining the path is expensive and we do not need it anyway.
+        # Before falling back to that high-level API, we try to use
+        # internal API to get just line number without the path.
+        lineno0 = Code.from_function(cast(PyobjMixin, test_case).obj).firstlineno
+    except:
+        lineno0 = test_case.location[1]
+
     test_case_loc: str = (
-        str(test_case.location[1] + 1) if (test_case.location[1] is not None) else ""
+        str(lineno0 + 1) if (lineno0 is not None) else ""
     )
     absolute_test_id = get_absolute_test_id(test_case.nodeid, get_node_path(test_case))
     return {
@@ -1261,3 +1273,4 @@ def pytest_plugin_registered(plugin: object, manager: pytest.PytestPluginManager
         and not manager.hasplugin(plugin_name)
     ):
         manager.register(DeferPlugin(), name=plugin_name)
+
