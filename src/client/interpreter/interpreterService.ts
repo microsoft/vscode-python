@@ -304,9 +304,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.getPersistedActiveInterpreterState(key).value;
     }
 
-    private getPersistedActiveInterpreterState(
-        key: string,
-    ): IPersistentState<StoredPythonEnvironment | undefined> {
+    private getPersistedActiveInterpreterState(key: string): IPersistentState<StoredPythonEnvironment | undefined> {
         let state = this.persistedActiveInterpreter.get(key);
         if (!state) {
             const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);

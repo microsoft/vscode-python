@@ -364,10 +364,12 @@ suite('Interpreters service', () => {
             const env1 = { path: pythonPath } as any;
             const env2 = { path: path.join('usr', 'bin', 'other') } as any;
             let count = 0;
-            pyenvs.setup((p) => p.getInterpreterDetails(TypeMoq.It.isAny())).returns(() => {
-                count += 1;
-                return count === 1 ? Promise.resolve(env1) : delayed(env2, 1000);
-            });
+            pyenvs
+                .setup((p) => p.getInterpreterDetails(TypeMoq.It.isAny()))
+                .returns(() => {
+                    count += 1;
+                    return count === 1 ? Promise.resolve(env1) : delayed(env2, 1000);
+                });
 
             const service = new InterpreterService(serviceContainer, pyenvs.object);
             // First call resolves quickly and caches the value.

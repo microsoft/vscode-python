@@ -283,9 +283,7 @@ suite('TestProjectRegistry', () => {
                 ],
                 getEnvironment: sandbox
                     .stub()
-                    .callsFake(async (uri: Uri) =>
-                        uri.fsPath === resolvedUri.fsPath ? mockPythonEnv : undefined,
-                    ),
+                    .callsFake(async (uri: Uri) => (uri.fsPath === resolvedUri.fsPath ? mockPythonEnv : undefined)),
             } as any);
 
             const projects = await registry.discoverAndRegisterProjects(workspaceUri);
