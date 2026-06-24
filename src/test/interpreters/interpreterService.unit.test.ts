@@ -29,7 +29,12 @@ import {
     IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
-import { IComponentAdapter, IInterpreterDisplay, IInterpreterHelper } from '../../client/interpreter/contracts';
+import {
+    IActivatedEnvironmentLaunch,
+    IComponentAdapter,
+    IInterpreterDisplay,
+    IInterpreterHelper,
+} from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -64,10 +69,15 @@ suite('Interpreters service', () => {
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let reportActiveInterpreterChangedStub: sinon.SinonStub;
     let useEnvExtensionStub: sinon.SinonStub;
+    let workspacePersistedValues: Map<string, unknown>;
 
     setup(() => {
         useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
         useEnvExtensionStub.returns(false);
+        workspacePersistedValues = new Map<string, unknown>();
+        // Capture the store in a per-setup local so background resolutions leaked from earlier
+        // tests write into their own (now-unreferenced) map rather than the current test's map.
+        const persistedStore = workspacePersistedValues;
 
         const cont = new Container();
         serviceManager = new ServiceManager(cont);
@@ -104,6 +114,20 @@ suite('Interpreters service', () => {
             .returns(() => {
                 const state = {
                     updateValue: () => Promise.resolve(),
+                };
+                return state as any;
+            });
+        persistentStateFactory
+            .setup((p) => p.createWorkspacePersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((stateKey: string, defaultValue: unknown) => {
+                const state = {
+                    get value() {
+                        return persistedStore.has(stateKey) ? persistedStore.get(stateKey) : defaultValue;
+                    },
+                    updateValue: (newValue: unknown) => {
+                        persistedStore.set(stateKey, newValue);
+                        return Promise.resolve();
+                    },
                 };
                 return state as any;
             });
@@ -304,5 +328,161 @@ suite('Interpreters service', () => {
         await service._onConfigChanged(resource);
         interpreterDisplay.verifyAll();
         expect(reportActiveInterpreterChangedStub.notCalled).to.be.equal(true);
+    });
+
+    suite('getActiveInterpreter (non-blocking)', () => {
+        const pythonPath = path.join('usr', 'bin', 'python3');
+        let activatedEnvLaunch: TypeMoq.IMock<IActivatedEnvironmentLaunch>;
+
+        function delayed<T>(value: T, ms: number): Promise<T> {
+            return new Promise((resolve) => setTimeout(() => resolve(value), ms));
+        }
+
+        setup(() => {
+            activatedEnvLaunch = createTypeMoq<IActivatedEnvironmentLaunch>();
+            activatedEnvLaunch
+                .setup((a) => a.selectIfLaunchedViaActivatedEnv(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(pythonPath));
+            serviceManager.addSingletonInstance<IActivatedEnvironmentLaunch>(
+                IActivatedEnvironmentLaunch,
+                activatedEnvLaunch.object,
+            );
+            workspace.setup((w) => w.getWorkspaceFolderIdentifier(TypeMoq.It.isAny())).returns(() => 'key');
+        });
+
+        test('Returns the resolved interpreter when resolution is fast', async () => {
+            const env1 = { path: pythonPath } as any;
+            pyenvs.setup((p) => p.getInterpreterDetails(TypeMoq.It.isAny())).returns(() => Promise.resolve(env1));
+
+            const service = new InterpreterService(serviceContainer, pyenvs.object);
+            const result = await service.getActiveInterpreter(undefined);
+
+            expect(result).to.equal(env1);
+        });
+
+        test('Returns the last-known interpreter when resolution is slow', async () => {
+            const env1 = { path: pythonPath } as any;
+            const env2 = { path: path.join('usr', 'bin', 'other') } as any;
+            let count = 0;
+            pyenvs.setup((p) => p.getInterpreterDetails(TypeMoq.It.isAny())).returns(() => {
+                count += 1;
+                return count === 1 ? Promise.resolve(env1) : delayed(env2, 1000);
+            });
+
+            const service = new InterpreterService(serviceContainer, pyenvs.object);
+            // First call resolves quickly and caches the value.
+            const first = await service.getActiveInterpreter(undefined);
+            expect(first).to.equal(env1);
+
+            // Second call's resolution is slow, so the cached value is served promptly.
+            const start = Date.now();
+            const second = await service.getActiveInterpreter(undefined);
+            expect(Date.now() - start).to.be.lessThan(900);
+            expect(second).to.equal(env1);
+        });
+
+        test('Returns undefined on a cold start when resolution times out', async () => {
+            pyenvs
+                .setup((p) => p.getInterpreterDetails(TypeMoq.It.isAny()))
+                .returns(() => delayed({ path: pythonPath } as any, 1000));
+
+            const service = new InterpreterService(serviceContainer, pyenvs.object);
+            const start = Date.now();
+            const result = await service.getActiveInterpreter(undefined);
+
+            expect(Date.now() - start).to.be.lessThan(900);
+            expect(result).to.equal(undefined);
+        });
+
+        test('Background resolution still populates the cache after a timeout', async () => {
+            const env1 = { path: pythonPath } as any;
+            pyenvs.setup((p) => p.getInterpreterDetails(TypeMoq.It.isAny())).returns(() => delayed(env1, 200));
+
+            const service = new InterpreterService(serviceContainer, pyenvs.object);
+            // First call times out and returns undefined, but its resolution keeps running.
+            const first = await service.getActiveInterpreter(undefined);
+            expect(first).to.equal(undefined);
+
+            // Give the background resolution time to complete and populate the cache.
+            await delayed(undefined, 400);
+
+            // A subsequent slow call now serves the value resolved in the background.
+            const second = await service.getActiveInterpreter(undefined);
+            expect(second).to.equal(env1);
+        });
+
+        test('De-duplicates concurrent resolutions for the same workspace', async () => {
+            const env1 = { path: pythonPath } as any;
+            pyenvs.setup((p) => p.getInterpreterDetails(TypeMoq.It.isAny())).returns(() => delayed(env1, 50));
+
+            const service = new InterpreterService(serviceContainer, pyenvs.object);
+            const [r1, r2] = await Promise.all([
+                service.getActiveInterpreter(undefined),
+                service.getActiveInterpreter(undefined),
+            ]);
+
+            expect(r1).to.equal(env1);
+            expect(r2).to.equal(env1);
+            activatedEnvLaunch.verify(
+                (a) => a.selectIfLaunchedViaActivatedEnv(TypeMoq.It.isAny()),
+                TypeMoq.Times.once(),
+            );
+        });
+
+        test('Persists the resolved interpreter for future sessions', async () => {
+            const env1 = { path: pythonPath } as any;
+            pyenvs.setup((p) => p.getInterpreterDetails(TypeMoq.It.isAny())).returns(() => Promise.resolve(env1));
+
+            const service = new InterpreterService(serviceContainer, pyenvs.object);
+            const result = await service.getActiveInterpreter(undefined);
+            expect(result).to.equal(env1);
+
+            // Allow the fire-and-forget persistence write to settle.
+            await delayed(undefined, 0);
+            expect(workspacePersistedValues.get('lastKnownActiveInterpreter:key')).to.deep.equal(env1);
+        });
+
+        test('Serves the persisted interpreter on a cold start when resolution times out', async () => {
+            const persisted = { path: path.join('usr', 'bin', 'persisted') } as any;
+            workspacePersistedValues.set('lastKnownActiveInterpreter:key', persisted);
+            pyenvs
+                .setup((p) => p.getInterpreterDetails(TypeMoq.It.isAny()))
+                .returns(() => delayed({ path: pythonPath } as any, 1000));
+
+            const service = new InterpreterService(serviceContainer, pyenvs.object);
+            const start = Date.now();
+            const result = await service.getActiveInterpreter(undefined);
+
+            expect(Date.now() - start).to.be.lessThan(900);
+            expect(result).to.equal(persisted);
+        });
+    });
+
+    test('A configuration change re-runs the config change handler to report a background selection', async () => {
+        const service = new InterpreterService(serviceContainer, pyenvs.object);
+        const documentManager = createTypeMoq<IDocumentManager>();
+        documentManager
+            .setup((d) => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => ({ dispose: noop }));
+        serviceManager.addSingletonInstance(IDocumentManager, documentManager.object);
+
+        const configChangeHandlers: Array<(e: unknown) => unknown> = [];
+        configService
+            .setup((c) => c.onDidChange(TypeMoq.It.isAny()))
+            .returns((cb) => {
+                configChangeHandlers.push(cb);
+                return { dispose: noop };
+            });
+
+        const onConfigChangedStub = sinon.stub(service, '_onConfigChanged').resolves();
+
+        service.initialize();
+
+        expect(configChangeHandlers.length).to.be.greaterThan(0);
+        for (const handler of configChangeHandlers) {
+            // eslint-disable-next-line no-await-in-loop
+            await handler(undefined);
+        }
+        sinon.assert.calledOnce(onConfigChangedStub);
     });
 });

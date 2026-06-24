@@ -50,7 +50,12 @@ import { TestProjectRegistry } from './common/testProjectRegistry';
 import { createTestAdapters, getProjectId } from './common/projectUtils';
 import { executeTestsForProjects } from './common/projectTestExecution';
 import { useEnvExtension, getEnvExtApi } from '../../envExt/api.internal';
-import { DidChangePythonProjectsEventArgs, PythonProject } from '../../envExt/types';
+import { DidChangeEnvironmentEventArgs, DidChangePythonProjectsEventArgs, PythonProject } from '../../envExt/types';
+
+// Coalescing window for environment-driven test re-discovery. The environments extension can
+// assign environments to many projects in quick succession during its initial refresh; waiting
+// briefly after the last change avoids re-discovering the workspace once per project.
+const ENV_CHANGE_REDISCOVERY_DELAY_MS = 1000;
 
 @injectable()
 export class PythonTestController implements ITestController, IExtensionSingleActivationService {
@@ -73,6 +78,12 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     private readonly testController: TestController;
 
     private readonly refreshData: IDelayedTrigger;
+
+    // Debounced trigger that re-discovers workspaces once their environments resolve after activation.
+    private readonly envChangeRediscoverTrigger: IDelayedTrigger;
+
+    // Workspaces awaiting an environment-driven re-discovery, coalesced by `envChangeRediscoverTrigger`.
+    private readonly pendingEnvChangeWorkspaces = new Map<string, WorkspaceFolder>();
 
     private refreshCancellation: CancellationTokenSource;
 
@@ -129,6 +140,18 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         );
         this.disposables.push(delayTrigger);
         this.refreshData = delayTrigger;
+
+        const envChangeRediscoverTrigger = new DelayedTrigger(
+            () => {
+                this.rediscoverPendingEnvChangeWorkspaces().catch((ex) =>
+                    traceError('[test-by-project] Failed to re-discover after environment change:', ex),
+                );
+            },
+            ENV_CHANGE_REDISCOVERY_DELAY_MS,
+            'Env Change Re-discovery',
+        );
+        this.disposables.push(envChangeRediscoverTrigger);
+        this.envChangeRediscoverTrigger = envChangeRediscoverTrigger;
 
         this.disposables.push(
             this.testController.createRunProfile(
@@ -233,6 +256,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             });
             // Subscribe to project changes to update test tree when projects are added/removed
             await this.subscribeToProjectChanges();
+            // Subscribe to environment changes so projects that had no resolved environment at
+            // activation get discovered once the environments extension assigns one.
+            await this.subscribeToEnvironmentChanges();
             return;
         }
 
@@ -259,6 +285,87 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             traceInfo('[test-by-project] Subscribed to Python project changes');
         } catch (error) {
             traceError('[test-by-project] Failed to subscribe to project changes:', error);
+        }
+    }
+
+    /**
+     * Subscribes to environment assignment changes from the Python Environments API.
+     *
+     * At activation the environments extension may not have assigned an environment to every
+     * project yet, so per-project discovery can fail with "No Python environment found" and fall
+     * back to a placeholder default project. When an environment is later assigned (or changed),
+     * re-discover the affected workspace so the test tree self-heals without blocking startup.
+     */
+    private async subscribeToEnvironmentChanges(): Promise<void> {
+        try {
+            const envExtApi = await getEnvExtApi();
+            this.disposables.push(
+                envExtApi.onDidChangeEnvironment((event: DidChangeEnvironmentEventArgs) => {
+                    this.handleEnvironmentChange(event);
+                }),
+            );
+            traceInfo('[test-by-project] Subscribed to Python environment changes');
+        } catch (error) {
+            traceError('[test-by-project] Failed to subscribe to environment changes:', error);
+        }
+    }
+
+    /**
+     * Queues a debounced re-discovery for the workspace affected by an environment change.
+     * Only reacts when an environment became available or changed (`event.new` is set); clearing
+     * an environment does not enable any new discovery.
+     */
+    private handleEnvironmentChange(event: DidChangeEnvironmentEventArgs): void {
+        if (!event.new) {
+            return;
+        }
+
+        const affected: WorkspaceFolder[] = [];
+        if (event.uri) {
+            const workspace = this.workspaceService.getWorkspaceFolder(event.uri);
+            if (workspace) {
+                affected.push(workspace);
+            }
+        } else {
+            // A global environment change can affect any workspace.
+            affected.push(...(this.workspaceService.workspaceFolders ?? []));
+        }
+
+        let queued = false;
+        for (const workspace of affected) {
+            // Only workspaces already in project-based mode can be re-discovered this way.
+            if (this.projectRegistry.hasProjects(workspace.uri)) {
+                this.pendingEnvChangeWorkspaces.set(workspace.uri.toString(), workspace);
+                queued = true;
+            }
+        }
+
+        if (queued) {
+            this.envChangeRediscoverTrigger.trigger();
+        }
+    }
+
+    /**
+     * Drains the pending set and re-discovers each affected workspace, re-registering project
+     * adapters (picking up environments resolved since activation) and refreshing the test tree.
+     */
+    private async rediscoverPendingEnvChangeWorkspaces(): Promise<void> {
+        const workspaces = Array.from(this.pendingEnvChangeWorkspaces.values());
+        this.pendingEnvChangeWorkspaces.clear();
+
+        for (const workspace of workspaces) {
+            traceInfo(
+                `[test-by-project] Environment change detected; re-discovering projects for ${workspace.uri.fsPath}`,
+            );
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                await this.discoverAllProjectsInWorkspace(workspace.uri);
+            } catch (error) {
+                traceError(
+                    `[test-by-project] Failed to re-discover after environment change for ${workspace.uri.fsPath}:`,
+                    error,
+                );
+            }
         }
     }
 
