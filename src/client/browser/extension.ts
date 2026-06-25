@@ -18,7 +18,6 @@ interface BrowserConfig {
 }
 
 let languageClient: LanguageClient | undefined;
-let pylanceApi: PylanceApi | undefined;
 
 export function activate(context: vscode.ExtensionContext): Promise<IBrowserExtensionApi> {
     const reporter = getTelemetryReporter();
@@ -43,12 +42,6 @@ export function activate(context: vscode.ExtensionContext): Promise<IBrowserExte
 }
 
 export async function deactivate(): Promise<void> {
-    if (pylanceApi) {
-        const api = pylanceApi;
-        pylanceApi = undefined;
-        await api.client!.stop();
-    }
-
     if (languageClient) {
         const client = languageClient;
         languageClient = undefined;
@@ -67,8 +60,6 @@ async function runPylance(
     pylanceExtension = await getActivatedExtension(pylanceExtension);
     const api = pylanceExtension.exports;
     if (api.client && api.client.isEnabled()) {
-        pylanceApi = api;
-        await api.client.start();
         return;
     }
 

@@ -4,13 +4,8 @@ import { instance, mock, verify } from 'ts-mockito';
 
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
 import { ExtensionSurveyPrompt } from '../../client/activation/extensionSurvey';
-import { LanguageServerOutputChannel } from '../../client/activation/common/outputChannel';
 import { registerTypes } from '../../client/activation/serviceRegistry';
-import {
-    IExtensionActivationManager,
-    IExtensionSingleActivationService,
-    ILanguageServerOutputChannel,
-} from '../../client/activation/types';
+import { IExtensionActivationManager, IExtensionSingleActivationService } from '../../client/activation/types';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceManager } from '../../client/ioc/types';
 import { LoadLanguageServerExtension } from '../../client/activation/common/loadLanguageServerExtension';
@@ -28,12 +23,6 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
 
         verify(
             serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager),
-        ).once();
-        verify(
-            serviceManager.addSingleton<ILanguageServerOutputChannel>(
-                ILanguageServerOutputChannel,
-                LanguageServerOutputChannel,
-            ),
         ).once();
         verify(
             serviceManager.addSingleton<IExtensionSingleActivationService>(
