@@ -12,10 +12,11 @@ import { IFileSystem } from '../platform/types';
 import { TerminalService } from './service';
 import { SynchronousTerminalService } from './syncTerminalService';
 import { ITerminalService, ITerminalServiceFactory, TerminalCreationOptions } from './types';
+import { ExternalTerminalService } from './externalTerminalService';
 
 @injectable()
 export class TerminalServiceFactory implements ITerminalServiceFactory {
-    private terminalServices: Map<string, TerminalService>;
+    private terminalServices: Map<string, TerminalService | ExternalTerminalService>;
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -35,7 +36,8 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
                 terminalTitle = `${terminalTitle}: ${path.basename(resource.fsPath).replace('.py', '')}`;
             }
             options.title = terminalTitle;
-            const terminalService = new TerminalService(this.serviceContainer, options);
+            const terminalService = new ExternalTerminalService(this.serviceContainer, options);
+            // const terminalService = new TerminalService(this.serviceContainer, options);
             this.terminalServices.set(id, terminalService);
         }
 
@@ -49,7 +51,8 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
     }
     public createTerminalService(resource?: Uri, title?: string): ITerminalService {
         title = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
-        return new TerminalService(this.serviceContainer, { resource, title });
+        return new ExternalTerminalService(this.serviceContainer, { resource, title });
+        // return new TerminalService(this.serviceContainer, { resource, title });
     }
     private getTerminalId(
         title: string,

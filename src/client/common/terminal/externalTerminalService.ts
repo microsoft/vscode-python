@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Disposable, Event, EventEmitter, Terminal, TerminalShellExecution } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Terminal, TerminalShellExecution, window } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITerminalAutoActivation } from '../../terminals/types';
-import { IApplicationShell, ITerminalManager } from '../application/types';
+import { ITerminalManager } from '../application/types';
 import { _SCRIPTS_DIR } from '../process/internal/scripts/constants';
 import { IConfigurationService, IDisposableRegistry } from '../types';
 import {
@@ -20,26 +20,26 @@ import {
     TerminalShellType,
 } from './types';
 import { traceVerbose } from '../../logging';
-import { sleep } from '../utils/async';
+import { getConfiguration } from '../vscodeApis/workspaceApis';
 import { useEnvExtension } from '../../envExt/api.internal';
 import { ensureTerminalLegacy } from '../../envExt/api.legacy';
+import { sleep } from '../utils/async';
+import { isWindows } from '../utils/platform';
+import { getPythonMinorVersion } from '../../repl/replUtils';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 
 @injectable()
-export class TerminalService implements ITerminalService, Disposable {
+export class ExternalTerminalService implements ITerminalService, Disposable {
     private terminal?: Terminal;
+    private ownsTerminal: boolean = false;
     private terminalShellType!: TerminalShellType;
     private terminalClosed = new EventEmitter<void>();
     private terminalManager: ITerminalManager;
     private terminalHelper: ITerminalHelper;
     private terminalActivator: ITerminalActivator;
     private terminalAutoActivator: ITerminalAutoActivation;
-    private applicationShell: IApplicationShell;
     private readonly executeCommandListeners: Set<Disposable> = new Set();
     private _terminalFirstLaunched: boolean = true;
-    private pythonReplCommandQueue: string[] = [];
-    private isReplReady: boolean = false;
-    private replPromptListener?: Disposable;
-    private replShellTypeListener?: Disposable;
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event.bind(this.terminalClosed);
     }
@@ -53,13 +53,13 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
         this.terminalManager = this.serviceContainer.get<ITerminalManager>(ITerminalManager);
         this.terminalAutoActivator = this.serviceContainer.get<ITerminalAutoActivation>(ITerminalAutoActivation);
-        this.applicationShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.terminalManager.onDidCloseTerminal(this.terminalCloseHandler, this, disposableRegistry);
         this.terminalActivator = this.serviceContainer.get<ITerminalActivator>(ITerminalActivator);
     }
     public dispose() {
-        this.terminal?.dispose();
-        this.disposeReplListener();
+        if (this.ownsTerminal) {
+            this.terminal?.dispose();
+        }
 
         if (this.executeCommandListeners && this.executeCommandListeners.size > 0) {
             this.executeCommandListeners.forEach((d) => {
@@ -76,6 +76,7 @@ export class TerminalService implements ITerminalService, Disposable {
 
         await this.executeCommand(text, false);
     }
+
     /** @deprecated */
     public async sendText(text: string): Promise<void> {
         await this.ensureTerminal();
@@ -83,91 +84,14 @@ export class TerminalService implements ITerminalService, Disposable {
             this.terminal!.show(true);
         }
         this.terminal!.sendText(text);
+        this.terminal = undefined;
     }
+
     public async executeCommand(
         commandLine: string,
         isPythonShell: boolean,
     ): Promise<TerminalShellExecution | undefined> {
-        if (isPythonShell) {
-            if (this.isReplReady) {
-                this.terminal?.sendText(commandLine);
-                traceVerbose(`Python REPL sendText: ${commandLine}`);
-            } else {
-                // Queue command to run once REPL is ready.
-                this.pythonReplCommandQueue.push(commandLine);
-                traceVerbose(`Python REPL queued command: ${commandLine}`);
-                this.startReplListener();
-            }
-            return undefined;
-        }
-
-        // Non-REPL code execution
-        return this.executeCommandInternal(commandLine);
-    }
-
-    private startReplListener(): void {
-        if (this.replPromptListener || this.replShellTypeListener) {
-            return;
-        }
-
-        this.replShellTypeListener = this.terminalManager.onDidChangeTerminalState((terminal) => {
-            if (this.terminal && terminal === this.terminal) {
-                if (terminal.state.shell == 'python') {
-                    traceVerbose('Python REPL ready from terminal shell api');
-                    this.onReplReady();
-                }
-            }
-        });
-
-        let terminalData = '';
-        this.replPromptListener = this.applicationShell.onDidWriteTerminalData((e) => {
-            if (this.terminal && e.terminal === this.terminal) {
-                terminalData += e.data;
-                if (/>>>\s*$/.test(terminalData)) {
-                    traceVerbose('Python REPL ready, from >>> prompt detection');
-                    this.onReplReady();
-                }
-            }
-        });
-    }
-
-    private onReplReady(): void {
-        if (this.isReplReady) {
-            return;
-        }
-        this.isReplReady = true;
-        this.flushReplQueue();
-        this.disposeReplListener();
-    }
-
-    private disposeReplListener(): void {
-        if (this.replPromptListener) {
-            this.replPromptListener.dispose();
-            this.replPromptListener = undefined;
-        }
-        if (this.replShellTypeListener) {
-            this.replShellTypeListener.dispose();
-            this.replShellTypeListener = undefined;
-        }
-    }
-
-    private flushReplQueue(): void {
-        while (this.pythonReplCommandQueue.length > 0) {
-            const commandLine = this.pythonReplCommandQueue.shift();
-            if (commandLine) {
-                traceVerbose(`Executing queued REPL command: ${commandLine}`);
-                this.terminal?.sendText(commandLine);
-            }
-        }
-    }
-
-    private async executeCommandInternal(commandLine: string): Promise<TerminalShellExecution | undefined> {
-        const terminal = this.terminal;
-        if (!terminal) {
-            traceVerbose('Terminal not available, cannot execute command');
-            return undefined;
-        }
-
+        const terminal = window.activeTerminal!;
         if (!this.options?.hideFromUser) {
             terminal.show(true);
         }
@@ -191,7 +115,21 @@ export class TerminalService implements ITerminalService, Disposable {
             await promise;
         }
 
-        if (terminal.shellIntegration) {
+        const config = getConfiguration('python');
+        const pythonrcSetting = config.get<boolean>('terminal.shellIntegration.enabled');
+
+        const minorVersion = this.options?.resource
+            ? await getPythonMinorVersion(
+                  this.options.resource,
+                  this.serviceContainer.get<IInterpreterService>(IInterpreterService),
+              )
+            : undefined;
+
+        if ((isPythonShell && !pythonrcSetting) || (isPythonShell && isWindows()) || (minorVersion ?? 0) >= 13) {
+            // If user has explicitly disabled SI for Python, use sendText for inside Terminal REPL.
+            terminal.sendText(commandLine);
+            return undefined;
+        } else if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
             traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
             return execution;
@@ -200,6 +138,7 @@ export class TerminalService implements ITerminalService, Disposable {
             traceVerbose(`Shell Integration is disabled, sendText: ${commandLine}`);
         }
 
+        this.terminal = undefined;
         return undefined;
     }
 
@@ -208,10 +147,43 @@ export class TerminalService implements ITerminalService, Disposable {
         if (!this.options?.hideFromUser) {
             this.terminal!.show(preserveFocus);
         }
+        this.terminal = undefined;
     }
+
+    private resolveInterpreterPath(
+        interpreter: PythonEnvironment | undefined,
+        settingsPythonPath: string | undefined,
+    ): string {
+        if (interpreter) {
+            if ('path' in interpreter && interpreter.path) {
+                return interpreter.path;
+            }
+            const uriFsPath = (interpreter as any).uri?.fsPath as string | undefined;
+            if (uriFsPath) {
+                return uriFsPath;
+            }
+        }
+        return settingsPythonPath ?? 'python';
+    }
+
+    private runPythonReplInActiveTerminal() {
+        const settings = this.serviceContainer
+            .get<IConfigurationService>(IConfigurationService)
+            .getSettings(this.options?.resource);
+        const interpreterPath = this.resolveInterpreterPath(this.options?.interpreter, settings.pythonPath);
+        this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
+        const launchCmd = this.terminalHelper.buildCommandForTerminal(this.terminalShellType, interpreterPath, []);
+        this.terminal!.sendText(launchCmd);
+    }
+
     // TODO: Debt switch to Promise<Terminal> ---> breaks 20 tests
     public async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
+        this.terminal = window.activeTerminal;
         if (this.terminal) {
+            this.ownsTerminal = false;
+            if (this.terminal.state.shell !== 'python') {
+                this.runPythonReplInActiveTerminal();
+            }
             return;
         }
 
@@ -220,13 +192,14 @@ export class TerminalService implements ITerminalService, Disposable {
                 name: this.options?.title || 'Python',
                 hideFromUser: this.options?.hideFromUser,
             });
-            return;
+            this.ownsTerminal = true;
         } else {
             this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
             this.terminal = this.terminalManager.createTerminal({
                 name: this.options?.title || 'Python',
                 hideFromUser: this.options?.hideFromUser,
             });
+            this.ownsTerminal = true;
             this.terminalAutoActivator.disableAutoActivation(this.terminal);
 
             await sleep(100);
@@ -246,13 +219,12 @@ export class TerminalService implements ITerminalService, Disposable {
         this.sendTelemetry().ignoreErrors();
         return;
     }
+
     private terminalCloseHandler(terminal: Terminal) {
         if (terminal === this.terminal) {
             this.terminalClosed.fire();
             this.terminal = undefined;
-            this.isReplReady = false;
-            this.disposeReplListener();
-            this.pythonReplCommandQueue = [];
+            this.ownsTerminal = false;
         }
     }
 
@@ -275,6 +247,6 @@ export class TerminalService implements ITerminalService, Disposable {
     }
 
     public hasActiveTerminal(): boolean {
-        return !!this.terminal;
+        return !!window.activeTerminal;
     }
 }

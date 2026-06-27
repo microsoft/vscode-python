@@ -15,6 +15,7 @@ import { createDeferred, Deferred } from '../utils/async';
 import { noop } from '../utils/misc';
 import { TerminalService } from './service';
 import { ITerminalService } from './types';
+import { ExternalTerminalService } from './externalTerminalService';
 
 enum State {
     notStarted = 0,
@@ -101,7 +102,7 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IInterpreterService) private readonly interpreter: IInterpreterService,
-        public readonly terminalService: TerminalService,
+        public readonly terminalService: TerminalService | ExternalTerminalService,
         private readonly pythonInterpreter?: PythonEnvironment,
     ) {}
     public dispose() {
@@ -157,5 +158,9 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
             this.disposables.push(l);
             return l;
         });
+    }
+
+    public hasActiveTerminal(): boolean {
+        return this.terminalService.hasActiveTerminal();
     }
 }

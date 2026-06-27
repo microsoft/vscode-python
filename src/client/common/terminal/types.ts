@@ -56,6 +56,7 @@ export interface ITerminalService extends IDisposable {
     sendText(text: string): Promise<void>;
     executeCommand(commandLine: string, isPythonShell: boolean): Promise<TerminalShellExecution | undefined>;
     show(preserveFocus?: boolean): Promise<void>;
+    hasActiveTerminal(): boolean;
 }
 
 export const ITerminalServiceFactory = Symbol('ITerminalServiceFactory');
