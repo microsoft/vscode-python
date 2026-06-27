@@ -25,6 +25,8 @@ import {
     getEnvDetailsForResponse,
     getToolResponseIfNotebook,
     IResourceReference,
+    raceCancellationError,
+    setEnvironmentDirectlyByPath,
 } from './utils';
 import { ITerminalHelper } from '../common/terminal/types';
 import { raceTimeout } from '../common/utils/async';
@@ -40,6 +42,13 @@ import { BaseTool } from './baseTool';
 
 export interface ISelectPythonEnvToolArguments extends IResourceReference {
     reason?: 'cancelled';
+    /**
+     * Optional path to a Python interpreter. When provided, the tool sets this
+     * interpreter directly without showing any Quick Pick UI to the user.
+     * This prevents the agent from getting stuck waiting for user input in
+     * autopilot / bypass-approvals mode.
+     */
+    pythonPath?: string;
 }
 
 export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
@@ -64,15 +73,46 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
         resource: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
+        const notebookResponse = getToolResponseIfNotebook(resource);
+        if (notebookResponse) {
+            return notebookResponse;
+        }
+
+        // Fast path: if the caller provided a pythonPath, set it directly without any UI.
+        if (options.input.pythonPath) {
+            traceVerbose(
+                `${SelectPythonEnvTool.toolName}: setting environment directly from pythonPath: ${options.input.pythonPath}`,
+            );
+            const result = await setEnvironmentDirectlyByPath(
+                options.input.pythonPath,
+                this.api,
+                this.terminalExecutionService,
+                this.terminalHelper,
+                resource,
+                token,
+            );
+            if (result) {
+                return result;
+            }
+            return new LanguageModelToolResult([
+                new LanguageModelTextPart(
+                    `The provided pythonPath '${options.input.pythonPath}' could not be resolved to a valid Python environment.`,
+                ),
+            ]);
+        }
+
         let selected: boolean | undefined = false;
         const hasVenvOrCondaEnvInWorkspaceFolder = doesWorkspaceHaveVenvOrCondaEnv(resource, this.api);
         if (options.input.reason === 'cancelled' || hasVenvOrCondaEnvInWorkspaceFolder) {
-            const result = (await Promise.resolve(
-                commands.executeCommand(Commands.Set_Interpreter, {
-                    hideCreateVenv: false,
-                    showBackButton: false,
-                }),
-            )) as SelectEnvironmentResult | undefined;
+            const result = await raceCancellationError(
+                Promise.resolve(
+                    commands.executeCommand(Commands.Set_Interpreter, {
+                        hideCreateVenv: false,
+                        showBackButton: false,
+                    }),
+                ) as Promise<SelectEnvironmentResult | undefined>,
+                token,
+            );
             if (result?.path) {
                 traceVerbose(`User selected a Python environment ${result.path} in Select Python Tool.`);
                 selected = true;
@@ -80,7 +120,10 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
                 traceWarn(`User did not select a Python environment in Select Python Tool.`);
             }
         } else {
-            selected = await showCreateAndSelectEnvironmentQuickPick(resource, this.serviceContainer);
+            selected = await raceCancellationError(
+                showCreateAndSelectEnvironmentQuickPick(resource, this.serviceContainer),
+                token,
+            );
             if (selected) {
                 traceVerbose(`User selected a Python environment ${selected} in Select Python Tool(2).`);
             } else {
@@ -118,6 +161,12 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
         _token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
         if (getToolResponseIfNotebook(resource)) {
+            return {};
+        }
+        // Fast path: skip the confirmation prompt when the model has already supplied
+        // a specific interpreter to use. Showing a confirmation here would defeat the
+        // purpose of the autopilot/bypass-approvals fast path.
+        if (options.input.pythonPath) {
             return {};
         }
         const hasVenvOrCondaEnvInWorkspaceFolder = doesWorkspaceHaveVenvOrCondaEnv(resource, this.api);

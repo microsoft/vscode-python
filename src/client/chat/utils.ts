@@ -58,6 +58,86 @@ export function raceCancellationError<T>(promise: Promise<T>, token: Cancellatio
     });
 }
 
+/**
+ * Returns a promise that resolves once the active environment path changes to match the
+ * provided `pythonPath` (matched against either the event's `path` or `id`). Resolves early
+ * on cancellation or after `timeoutMs` to avoid hanging callers if the event is missed.
+ * Callers must subscribe via this helper BEFORE invoking `updateActiveEnvironmentPath` to
+ * avoid a race where the event fires before the listener is attached.
+ */
+export function waitForActiveEnvironmentChange(
+    api: PythonExtension['environments'],
+    pythonPath: string,
+    token: CancellationToken,
+    timeoutMs = 5000,
+): Promise<void> {
+    return new Promise<void>((resolve) => {
+        let settled = false;
+        const listener = api.onDidChangeActiveEnvironmentPath((e) => {
+            if (e.path === pythonPath || e.id === pythonPath) {
+                settle();
+            }
+        });
+        const cancelRef = token.onCancellationRequested(() => settle());
+        const timer = setTimeout(() => settle(), timeoutMs);
+        function settle() {
+            if (settled) {
+                return;
+            }
+            settled = true;
+            listener.dispose();
+            cancelRef.dispose();
+            clearTimeout(timer);
+            resolve();
+        }
+    });
+}
+
+/**
+ * Sets the active Python interpreter to `pythonPath` without any UI, waits for the
+ * asynchronous environment switch to settle (via `onDidChangeActiveEnvironmentPath`),
+ * resolves the environment, and returns a tool result describing it.
+ *
+ * Returns `undefined` if the path cannot be resolved to a valid environment so callers
+ * can produce a tool-specific error message.
+ */
+export async function setEnvironmentDirectlyByPath(
+    pythonPath: string,
+    api: PythonExtension['environments'],
+    terminalExecutionService: TerminalCodeExecutionProvider,
+    terminalHelper: ITerminalHelper,
+    resource: Uri | undefined,
+    token: CancellationToken,
+): Promise<LanguageModelToolResult | undefined> {
+    // Validate the path resolves to a real environment BEFORE mutating user settings.
+    // updateActiveEnvironmentPath persists unconditionally, so an invalid path would
+    // permanently overwrite the user's selected interpreter.
+    const candidate = await raceCancellationError(api.resolveEnvironment(pythonPath), token);
+    if (!candidate) {
+        return undefined;
+    }
+
+    // Subscribe to the change event BEFORE triggering the update so we don't miss it.
+    // updateActiveEnvironmentPath only persists the setting; the active interpreter switch
+    // is asynchronous, so we wait for the event before resolving env details to avoid
+    // returning details for the previously-active interpreter.
+    const activeChanged = waitForActiveEnvironmentChange(api, pythonPath, token);
+    await raceCancellationError(api.updateActiveEnvironmentPath(pythonPath, resource), token);
+    await raceCancellationError(activeChanged, token);
+
+    // Verify the active env actually switched. If the change event timed out and the
+    // active path is still the previous one, don't report success for the wrong env.
+    const envPath = api.getActiveEnvironmentPath(resource);
+    if (envPath.path !== pythonPath && envPath.id !== pythonPath) {
+        return undefined;
+    }
+    const environment = await raceCancellationError(api.resolveEnvironment(envPath), token);
+    if (!environment) {
+        return undefined;
+    }
+    return getEnvDetailsForResponse(environment, api, terminalExecutionService, terminalHelper, resource, token);
+}
+
 export async function getEnvDisplayName(
     discovery: IDiscoveryAPI,
     resource: Uri | undefined,
