@@ -25,6 +25,7 @@ import pytest
 
 if TYPE_CHECKING:
     from pluggy import Result
+    from pytest_describe.plugin import DescribeBlock as DescribeBlockType
     from typing_extensions import NotRequired
 
 USES_PYTEST_DESCRIBE = False
@@ -873,7 +874,7 @@ def create_session_node(session: pytest.Session) -> TestNode:
     }
 
 
-def create_class_node(class_module: Any) -> TestNode:
+def create_class_node(class_module: pytest.Class | DescribeBlockType) -> TestNode:
     """Creates a class node from a pytest class object.
 
     Keyword arguments:
