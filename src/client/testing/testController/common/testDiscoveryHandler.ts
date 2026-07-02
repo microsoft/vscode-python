@@ -3,7 +3,7 @@
 
 import { CancellationToken, TestController, Uri, MarkdownString } from 'vscode';
 import * as util from 'util';
-import { DiscoveredTestPayload } from './types';
+import { DiscoveredTestItem, DiscoveredTestNode, DiscoveredTestPayload } from './types';
 import { TestProvider } from '../../types';
 import { traceError, traceWarn } from '../../../logging';
 import { Testing } from '../../../common/utils/localize';
@@ -11,6 +11,71 @@ import { createErrorTestItem } from './testItemUtilities';
 import { buildErrorNodeOptions, populateTestTree } from './utils';
 import { TestItemIndex } from './testItemIndex';
 import { PROJECT_ID_SEPARATOR } from './projectUtils';
+import { isAbsolutePath } from '../../../common/platform/fs-paths';
+
+function joinWithBase(base: string, relativePath: string): string {
+    if (!base || isAbsolutePath(relativePath)) {
+        return relativePath;
+    }
+    if (relativePath === '.') {
+        return base;
+    }
+
+    const separator = base.includes('\\') ? '\\' : '/';
+    const trimmedBase = base.replace(/[\\/]+$/, '');
+    const trimmedRelativePath = relativePath.replace(/^[\\/]+/, '');
+    return `${trimmedBase}${separator}${trimmedRelativePath}`;
+}
+
+function expandTestId(testId: string, idBase: string): string {
+    const separatorIndex = testId.indexOf('::');
+    if (separatorIndex === -1) {
+        return joinWithBase(idBase, testId);
+    }
+
+    const testPath = testId.slice(0, separatorIndex);
+    const testSelector = testId.slice(separatorIndex);
+    return `${joinWithBase(idBase, testPath)}${testSelector}`;
+}
+
+function expandDiscoveryNode(
+    testNode: DiscoveredTestNode | DiscoveredTestItem,
+    pathBase: string,
+    idBase: string,
+): DiscoveredTestNode | DiscoveredTestItem {
+    const expandedNode = {
+        ...testNode,
+        path: joinWithBase(pathBase, testNode.path),
+        id_: expandTestId(testNode.id_, idBase),
+    };
+
+    if ('runID' in expandedNode) {
+        return {
+            ...expandedNode,
+            runID: expandTestId(expandedNode.runID, idBase),
+        };
+    }
+
+    return {
+        ...expandedNode,
+        children: expandedNode.children.map((child) => expandDiscoveryNode(child, pathBase, idBase)),
+    };
+}
+
+export function expandCompactDiscoveryPayload(payload: DiscoveredTestPayload): DiscoveredTestPayload {
+    if (!payload.pathBase || !payload.tests) {
+        return payload;
+    }
+
+    return {
+        ...payload,
+        tests: expandDiscoveryNode(
+            payload.tests,
+            payload.pathBase,
+            payload.idBase ?? payload.pathBase,
+        ) as DiscoveredTestNode,
+    };
+}
 
 /**
  * Stateless handler for processing discovery payloads and building/updating the TestItem tree.
@@ -37,7 +102,7 @@ export class TestDiscoveryHandler {
         }
 
         const workspacePath = workspaceUri.fsPath;
-        const rawTestData = payload as DiscoveredTestPayload;
+        const rawTestData = expandCompactDiscoveryPayload(payload as DiscoveredTestPayload);
 
         // Check if there were any errors in the discovery process.
         if (rawTestData.status === 'error') {

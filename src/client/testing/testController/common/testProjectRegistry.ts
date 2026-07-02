@@ -152,7 +152,9 @@ export class TestProjectRegistry {
             for (const pythonProject of workspaceProjects) {
                 try {
                     const adapter = await this.createProjectAdapter(pythonProject, workspaceUri);
-                    adapters.push(adapter);
+                    if (adapter) {
+                        adapters.push(adapter);
+                    }
                 } catch (error) {
                     traceError(`[test-by-project] Failed to create adapter for ${pythonProject.uri.fsPath}:`, error);
                 }
@@ -178,8 +180,16 @@ export class TestProjectRegistry {
      * - **DiscoveryAdapter:** Discovers tests scoped to this project's root directory
      * - **ExecutionAdapter:** Runs tests for this project using its Python environment
      *
+     * Returns `undefined` when the Python Environments extension has not yet assigned an
+     * environment to the project. This is expected during startup: extension activation no longer
+     * waits for the environments extension's initial refresh to complete, so discovery can run
+     * before environments are resolved. The project is re-discovered once an environment is
+     * assigned (see the controller's environment-change subscription).
      */
-    private async createProjectAdapter(pythonProject: PythonProject, workspaceUri: Uri): Promise<ProjectAdapter> {
+    private async createProjectAdapter(
+        pythonProject: PythonProject,
+        workspaceUri: Uri,
+    ): Promise<ProjectAdapter | undefined> {
         const projectId = getProjectId(pythonProject.uri);
         traceInfo(`[test-by-project] Creating adapter for: ${pythonProject.name} at ${projectId}`);
 
@@ -187,7 +197,13 @@ export class TestProjectRegistry {
         const envExtApi = await getEnvExtApi();
         const pythonEnvironment = await envExtApi.getEnvironment(pythonProject.uri);
         if (!pythonEnvironment) {
-            throw new Error(`No Python environment found for project ${projectId}`);
+            // Not an error: the environments extension may not have assigned an environment to
+            // this project yet. Defer it; the controller re-discovers the workspace when an
+            // environment is later assigned (onDidChangeEnvironment).
+            traceInfo(
+                `[test-by-project] No Python environment resolved yet for project ${projectId}; deferring until one is assigned`,
+            );
+            return undefined;
         }
 
         // Create test infrastructure

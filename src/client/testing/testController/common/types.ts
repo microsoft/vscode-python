@@ -214,9 +214,12 @@ export type DiscoveredTestNode = DiscoveredTestCommon & {
 
 export type DiscoveredTestPayload = {
     cwd: string;
-    tests?: DiscoveredTestNode;
+    tests?: DiscoveredTestNode | null;
     status: 'success' | 'error';
     error?: string[];
+    payloadVersion?: number;
+    pathBase?: string;
+    idBase?: string;
 };
 
 export type CoveragePayload = {
