@@ -1324,6 +1324,7 @@
                     "category": "Python",
                     "command": "python.execSelectionInTerminal",
                     "title": "%python.command.python.execSelectionInTerminal.title%",
+                    "shortTitle": "%python.command.python.execSelectionInTerminal.shortTitle%",
                     "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
                 },
                 {
