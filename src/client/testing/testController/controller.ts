@@ -716,13 +716,16 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             // Individual project failures don't block others
             projectsCompleted.add(project.projectUri.toString()); // Still mark as completed
             const cycle = (project.resultResolver as Partial<PythonResultResolver>).discoveryTelemetry?.complete();
-            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
+            const measures: Record<string, number> = {};
+            if (cycle?.stopWatch.elapsedTime !== undefined) {
+                measures.totalDurationMs = cycle.stopWatch.elapsedTime;
+            }
+            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, measures, {
                 tool: project.testProvider,
                 failed: true,
                 mode: 'project',
                 trigger: cycle?.trigger ?? this.currentDiscoveryTrigger,
                 failureCategory: this.refreshCancellation.token.isCancellationRequested ? 'cancelled' : 'unknown',
-                totalDurationMs: cycle?.stopWatch.elapsedTime,
             });
         } finally {
             project.isDiscovering = false;
@@ -1048,15 +1051,17 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             failureCategory = token.isCancellationRequested ? 'cancelled' : 'unknown';
             throw ex;
         } finally {
-            sendTelemetryEvent(EventName.UNITTEST_RUN_DONE, undefined, {
-                tool: provider,
-                debugging,
-                mode: 'legacy',
-                failed,
-                failureCategory,
-                durationMs: stopWatch.elapsedTime,
-                requestedCount: testItems.length,
-            });
+            sendTelemetryEvent(
+                EventName.UNITTEST_RUN_DONE,
+                { durationMs: stopWatch.elapsedTime, requestedCount: testItems.length },
+                {
+                    tool: provider,
+                    debugging,
+                    mode: 'legacy',
+                    failed,
+                    failureCategory,
+                },
+            );
         }
     }
 

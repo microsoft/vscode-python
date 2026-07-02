@@ -2209,14 +2209,10 @@ export interface IEventNamePropertyMapping {
             | 'env-resolution'
             | 'cancelled'
             | 'unknown';
-        /**
-         * Wall-clock duration of the discovery cycle in milliseconds.
-         */
-        totalDurationMs?: number;
-        /**
-         * Number of test items discovered (leaf nodes).
-         */
-        testCount?: number;
+        // NOTE: `totalDurationMs` and `testCount` are measurements (see the __GDPR__ block
+        // above) and MUST be passed via the `measures` argument of sendTelemetryEvent, not
+        // as properties. Fields annotated `isMeasurement: true` are dropped by telemetry
+        // ingestion when sent in the properties bag.
     };
     /**
      * Telemetry event sent when cancelling discovering tests
@@ -2286,14 +2282,10 @@ export interface IEventNamePropertyMapping {
          * Coarse failure category when `failed` is true.
          */
         failureCategory?: UnitTestRunFailureCategory;
-        /**
-         * Wall-clock duration of the run in milliseconds.
-         */
-        durationMs?: number;
-        /**
-         * Number of test items the user asked to run.
-         */
-        requestedCount?: number;
+        // NOTE: `durationMs` and `requestedCount` are measurements (see the __GDPR__ block
+        // above) and MUST be passed via the `measures` argument of sendTelemetryEvent, not
+        // as properties. Fields annotated `isMeasurement: true` are dropped by telemetry
+        // ingestion when sent in the properties bag.
     };
     /**
      * Telemetry event sent when testing is disabled for a workspace.
