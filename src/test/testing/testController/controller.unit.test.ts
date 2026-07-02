@@ -46,7 +46,7 @@ suite('PythonTestController', () => {
         sandbox.restore();
     });
 
-    function createController(options?: { unittestEnabled?: boolean; interpreter?: any }): any {
+    function createController(options?: { unittestEnabled?: boolean; interpreter?: any; workspaceService?: any }): any {
         const unittestEnabled = options?.unittestEnabled ?? false;
         const interpreter =
             options?.interpreter ??
@@ -57,7 +57,7 @@ suite('PythonTestController', () => {
                 sysPrefix: '/usr',
             } as any);
 
-        const workspaceService = ({ workspaceFolders: [] } as unknown) as any;
+        const workspaceService = options?.workspaceService ?? (({ workspaceFolders: [] } as unknown) as any);
         const configSettings = ({
             getSettings: sandbox.stub().returns({
                 testing: {
@@ -221,6 +221,34 @@ suite('PythonTestController', () => {
             assert.strictEqual(getEnvExtApiStub.notCalled, true);
             assert.strictEqual(projects.length, 1);
             assert.strictEqual(projects[0].projectUri.toString(), workspaceUri.toString());
+        });
+
+        test('Tests can be discovered in workspace folder added after the extension has been activated', async () => {
+            const addedFolder = vscode.Uri.file('/addedFolder');
+            const addedWf: vscode.WorkspaceFolder = { uri: addedFolder } as any;
+            const onDidChangeWorkspaceFolders = new vscode.EventEmitter<vscode.WorkspaceFoldersChangeEvent>();
+            const fakeDiscoveryAdapter = sandbox.stub().resolves(undefined);
+            sandbox.stub(projectUtils, 'createTestAdapters').returns({
+                discoveryAdapter: { discoverTests: fakeDiscoveryAdapter },
+            } as any);
+
+            const controller: PythonTestController = createController({
+                unittestEnabled: true,
+                workspaceService: {
+                    workspaceFolders: [],
+                    onDidChangeWorkspaceFolders: onDidChangeWorkspaceFolders.event,
+                    getWorkspaceFolder: (uri: vscode.Uri) => (uri === addedFolder ? addedWf : undefined),
+                },
+            });
+            await controller.activate();
+
+            onDidChangeWorkspaceFolders.fire({
+                added: [addedWf],
+                removed: [],
+            });
+
+            await controller.refreshTestData(addedFolder, { forceRefresh: true });
+            assert.strictEqual(fakeDiscoveryAdapter.calledWith(addedFolder), true);
         });
 
         test('filters Python projects to workspace and creates adapters for each', async () => {
