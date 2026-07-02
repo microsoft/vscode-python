@@ -2,14 +2,145 @@
 # Licensed under the MIT License.
 import json
 import os
+import pathlib
 import sys
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import pytest
 
+import vscode_pytest
 from tests.tree_comparison_helper import is_same_tree
 
 from . import expected_discovery_test_output, helpers
+
+
+def test_compact_discovery_payload_keeps_absolute_tree_until_return(tmp_path, monkeypatch):
+    monkeypatch.setattr(vscode_pytest, "ERRORS", [])
+    base_path = tmp_path / "workspace"
+    test_file = base_path / "tests" / "test_sample.py"
+    absolute_test_id = f"{os.fspath(test_file)}::test_case[param]"
+    session_node = cast(
+        "vscode_pytest.TestNode",
+        {
+            "name": "workspace",
+            "path": base_path,
+            "type_": "folder",
+            "id_": os.fspath(base_path),
+            "children": [
+                {
+                    "name": "test_sample.py",
+                    "path": test_file,
+                    "type_": "file",
+                    "id_": os.fspath(test_file),
+                    "children": [
+                        {
+                            "name": "test_case[param]",
+                            "path": test_file,
+                            "type_": "test",
+                            "id_": absolute_test_id,
+                            "runID": absolute_test_id,
+                            "lineno": "7",
+                        }
+                    ],
+                }
+            ],
+        },
+    )
+
+    payload = vscode_pytest.create_compact_discovery_payload(os.fspath(base_path), session_node)
+
+    assert session_node["path"] == base_path
+    file_node = cast("vscode_pytest.TestNode", cast("List[Any]", session_node["children"])[0])
+    assert file_node is not None
+    assert file_node["path"] == test_file
+    test_node = cast("vscode_pytest.TestItem", cast("List[Any]", file_node["children"])[0])
+    assert test_node is not None
+    assert test_node["id_"] == absolute_test_id
+
+    assert payload["pathBase"] == os.fspath(base_path)
+    assert payload["idBase"] == os.fspath(base_path)
+    assert payload["tests"] is not None
+    compact_tests = cast("Dict[str, Any]", payload["tests"])
+    assert compact_tests["path"] == "."
+    assert compact_tests["id_"] == "."
+    compact_file_node = cast("Dict[str, Any]", compact_tests["children"][0])
+    assert compact_file_node["path"] == os.fspath(pathlib.Path("tests", "test_sample.py"))
+    assert compact_file_node["id_"] == os.fspath(pathlib.Path("tests", "test_sample.py"))
+    compact_test_node = cast("Dict[str, Any]", compact_file_node["children"][0])
+    assert compact_test_node["path"] == os.fspath(pathlib.Path("tests", "test_sample.py"))
+    assert (
+        compact_test_node["id_"]
+        == os.fspath(pathlib.Path("tests", "test_sample.py")) + "::test_case[param]"
+    )
+    assert (
+        compact_test_node["runID"]
+        == os.fspath(pathlib.Path("tests", "test_sample.py")) + "::test_case[param]"
+    )
+
+
+def test_compact_discovery_payload_keeps_paths_outside_base_absolute(tmp_path):
+    base_path = tmp_path / "workspace"
+    external_file = tmp_path / "external" / "test_external.py"
+
+    assert vscode_pytest.compact_path(external_file, base_path) == os.fspath(external_file)
+    assert (
+        vscode_pytest.compact_test_id(f"{os.fspath(external_file)}::test_external", base_path)
+        == f"{os.fspath(external_file)}::test_external"
+    )
+
+
+def test_compact_discovery_payload_expands_after_rpc_parsing(tmp_path):
+    base_path = os.fspath(tmp_path / "workspace")
+    payload = {
+        "cwd": base_path,
+        "status": "success",
+        "payloadVersion": 2,
+        "pathBase": base_path,
+        "idBase": base_path,
+        "tests": {
+            "name": "workspace",
+            "path": ".",
+            "type_": "folder",
+            "id_": ".",
+            "children": [
+                {
+                    "name": "test_sample.py",
+                    "path": "tests/test_sample.py",
+                    "type_": "file",
+                    "id_": "tests/test_sample.py",
+                    "children": [
+                        {
+                            "name": "test_case[param]",
+                            "path": "tests/test_sample.py",
+                            "type_": "test",
+                            "id_": "tests/test_sample.py::test_case[param]",
+                            "runID": "tests/test_sample.py::test_case[param]",
+                            "lineno": "7",
+                        }
+                    ],
+                }
+            ],
+        },
+        "error": [],
+    }
+    body = json.dumps({"jsonrpc": "2.0", "params": payload})
+    framed_message = f"content-length: {len(body)}\r\ncontent-type: application/json\r\n\r\n{body}"
+    chunked_message = "".join([framed_message[:13], framed_message[13:97], framed_message[97:]])
+
+    parsed_payload = helpers.process_data_received(chunked_message)[0]
+
+    assert parsed_payload["tests"]["path"] == base_path
+    parsed_file_node = parsed_payload["tests"]["children"][0]
+    assert parsed_file_node["path"] == os.fspath(pathlib.Path(base_path, "tests/test_sample.py"))
+    parsed_test_node = parsed_file_node["children"][0]
+    assert (
+        parsed_test_node["id_"]
+        == os.fspath(pathlib.Path(base_path, "tests/test_sample.py")) + "::test_case[param]"
+    )
+    assert (
+        parsed_test_node["runID"]
+        == os.fspath(pathlib.Path(base_path, "tests/test_sample.py")) + "::test_case[param]"
+    )
 
 
 def test_import_error():
