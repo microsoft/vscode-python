@@ -93,14 +93,20 @@ export class PythonResultResolver implements ITestResultResolver {
         const cycle = this.discoveryTelemetry.complete();
         const mode = cycle?.mode ?? this.discoveryTelemetry.defaultMode;
         const failed = payload?.status === 'error';
-        sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
+        // Numeric fields must be sent as measures (2nd arg), not properties. Fields
+        // annotated `isMeasurement: true` are dropped by telemetry ingestion when they
+        // arrive in the properties bag, so totalDurationMs/testCount would otherwise never
+        // be recorded.
+        const measures: Record<string, number> = { testCount };
+        if (cycle?.stopWatch.elapsedTime !== undefined) {
+            measures.totalDurationMs = cycle.stopWatch.elapsedTime;
+        }
+        sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, measures, {
             tool: this.testProvider,
             failed,
             mode,
             trigger: cycle?.trigger,
             failureCategory: failed ? (token?.isCancellationRequested ? 'cancelled' : 'unknown') : undefined,
-            totalDurationMs: cycle?.stopWatch.elapsedTime,
-            testCount,
         });
     }
 
