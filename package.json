@@ -1759,7 +1759,7 @@
         "@typescript-eslint/eslint-plugin": "^6.21.0",
         "@typescript-eslint/parser": "^6.21.0",
         "@vscode/test-electron": "^2.5.2",
-        "@vscode/vsce": "^2.27.0",
+        "@vscode/vsce": "^3.9.2",
         "bent": "^7.3.12",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
