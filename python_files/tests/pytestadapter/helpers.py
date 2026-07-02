@@ -15,7 +15,7 @@ import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
 if sys.platform == "win32":
-    from namedpipe import NPopen
+    from namedpipe import NPopen  # pylint: disable=import-error # cspell: disable-line
 
 
 script_dir = pathlib.Path(__file__).parent.parent.parent
@@ -54,7 +54,7 @@ def create_symlink(root: pathlib.Path, target_ext: str, destination_ext: str):
             print("destination already exists", destination)
         try:
             destination.symlink_to(target)
-        except Exception as e:
+        except OSError as e:
             print("error occurred when attempting to create a symlink", e)
         yield target, destination
     finally:
@@ -82,12 +82,57 @@ def process_data_received(data: str) -> List[Dict[str, Any]]:
         elif json_data["jsonrpc"] != "2.0":
             raise ValueError("Invalid JSON-RPC version received, not version 2.0")
         else:
-            json_messages.append(json_data["params"])
+            json_messages.append(expand_compact_discovery_payload(json_data["params"]))
 
     return json_messages  # return the list of json messages
 
 
-def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
+def expand_path(path_value: str, path_base: str) -> str:
+    if not path_base or pathlib.Path(path_value).is_absolute():
+        return path_value
+    if path_value == ".":
+        return path_base
+    return os.fspath(pathlib.Path(path_base, path_value))
+
+
+def expand_test_id(test_id: str, id_base: str) -> str:
+    test_path, separator, selector = test_id.partition("::")
+    expanded_test_path = expand_path(test_path, id_base)
+    return f"{expanded_test_path}{separator}{selector}" if separator else expanded_test_path
+
+
+def expand_compact_discovery_node(
+    test_node: Dict[str, Any] | None, path_base: str, id_base: str
+) -> Dict[str, Any] | None:
+    if test_node is None:
+        return None
+    expanded_node = dict(test_node)
+    if "path" in expanded_node:
+        expanded_node["path"] = expand_path(expanded_node["path"], path_base)
+    if "id_" in expanded_node:
+        expanded_node["id_"] = expand_test_id(expanded_node["id_"], id_base)
+    if "runID" in expanded_node:
+        expanded_node["runID"] = expand_test_id(expanded_node["runID"], id_base)
+    if "children" in expanded_node:
+        expanded_node["children"] = [
+            expand_compact_discovery_node(child, path_base, id_base)
+            for child in expanded_node["children"]
+        ]
+    return expanded_node
+
+
+def expand_compact_discovery_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
+    path_base = payload.get("pathBase")
+    if not path_base or "tests" not in payload or payload["tests"] is None:
+        return payload
+
+    expanded_payload = dict(payload)
+    id_base = payload.get("idBase", path_base)
+    expanded_payload["tests"] = expand_compact_discovery_node(payload["tests"], path_base, id_base)
+    return expanded_payload
+
+
+def parse_rpc_message(data: str) -> Tuple[Dict[str, Any], str]:
     """Process the JSON data which comes from the server.
 
     A single rpc payload is in the format:
@@ -122,7 +167,7 @@ def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
         line: str = str_stream.readline(length)
         try:
             # try to parse the json, if successful it is single payload so return with remaining data
-            json_data: dict[str, str] = json.loads(line)
+            json_data: dict[str, Any] = json.loads(line)
             return json_data, str_stream.read()
         except json.JSONDecodeError:
             print("json decode error")
@@ -131,7 +176,7 @@ def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
 def _listen_on_fifo(pipe_name: str, result: List[str], completed: threading.Event):
     # Open the FIFO for reading
     fifo_path = pathlib.Path(pipe_name)
-    with fifo_path.open() as fifo:
+    with fifo_path.open(encoding="utf-8") as fifo:
         print("Waiting for data...")
         while True:
             if completed.is_set():
@@ -198,7 +243,7 @@ def _listen_on_pipe_new(listener, result: List[str], completed: threading.Event)
 
 
 def _run_test_code(proc_args: List[str], proc_env, proc_cwd: str, completed: threading.Event):
-    result = subprocess.run(proc_args, env=proc_env, cwd=proc_cwd)
+    result = subprocess.run(proc_args, env=proc_env, cwd=proc_cwd, check=False)
     completed.set()
     return result
 
@@ -257,7 +302,7 @@ def runner_with_cwd_env(
         )
         env_add.update({"RUN_TEST_IDS_PIPE": test_ids_pipe})
         test_ids_arr = after_ids
-        with open(test_ids_pipe, "w") as f:  # noqa: PTH123
+        with open(test_ids_pipe, "w", encoding="utf-8") as f:  # noqa: PTH123
             f.write("\n".join(test_ids_arr))
     else:
         process_args = [sys.executable, "-m", "pytest", "-p", "vscode_pytest", "-s", *args]
@@ -379,7 +424,7 @@ def find_test_line_number(test_name: str, test_file_path) -> str:
     test_file_path: The path to the test file where the test is located.
     """
     test_file_unique_id: str = "test_marker--" + test_name.split("[")[0]
-    with open(test_file_path) as f:  # noqa: PTH123
+    with open(test_file_path, encoding="utf-8") as f:  # noqa: PTH123
         for i, line in enumerate(f):
             if test_file_unique_id in line:
                 return str(i + 1)
@@ -395,7 +440,7 @@ def find_class_line_number(class_name: str, test_file_path) -> str:
     test_file_path: The path to the test file where the class is located.
     """
     # Look for the class definition line (or function for pytest-describe)
-    with open(test_file_path) as f:  # noqa: PTH123
+    with open(test_file_path, encoding="utf-8") as f:  # noqa: PTH123
         for i, line in enumerate(f):
             # Match "class ClassName" or "class ClassName(" or "class ClassName:"
             # Also match "def ClassName(" for pytest-describe blocks

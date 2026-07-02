@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import TelemetryReporter from '@vscode/extension-telemetry';
+import { TelemetryReporter } from '@vscode/extension-telemetry';
 import type * as vscodeTypes from 'vscode';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
@@ -12,6 +12,7 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { TensorBoardPromptSelection } from '../tensorBoard/constants';
 import { EventName } from './constants';
+import type { UnitTestRunFailureCategory } from './constants';
 import type { TestTool } from './types';
 
 /**
@@ -77,7 +78,7 @@ export function getTelemetryReporter(): TelemetryReporter {
         return telemetryReporter;
     }
 
-    const Reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
+    const Reporter = require('@vscode/extension-telemetry').TelemetryReporter as typeof TelemetryReporter;
     telemetryReporter = new Reporter(AppinsightsKey, [
         {
             lookup: /(errorName|errorMessage|errorStack)/g,
@@ -1988,11 +1989,16 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when invoking a Tool
      */
     /* __GDPR__
-       "invokeTool" : {
+       "INVOKE_TOOL" : {
            "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
            "toolName" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
             "failed": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether there was a failure. Common to most of the events.", "owner": "donjayamanne" },
-            "failureCategory": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error. Common to most of the events.", "owner": "donjayamanne" }
+            "failureCategory": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error. Common to most of the events.", "owner": "donjayamanne" },
+            "resolveOutcome": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Which code path resolved the environment in configure_python_environment.", "owner": "donjayamanne" },
+            "envType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"The type of Python environment (e.g. venv, conda, system).", "owner": "donjayamanne" },
+            "packageCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Number of packages requested for installation (install_python_packages only).", "owner": "donjayamanne" },
+            "installerType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Which installer was used: pip or conda (install_python_packages only).", "owner": "donjayamanne" },
+            "responsePackageCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Number of packages in the environment response (get_python_environment_details only).", "owner": "donjayamanne" }
        }
      */
     [EventName.INVOKE_TOOL]: {
@@ -2009,6 +2015,26 @@ export interface IEventNamePropertyMapping {
          * A reason the error was thrown.
          */
         failureCategory?: string;
+        /**
+         * Which code path resolved the environment (configure_python_environment only).
+         */
+        resolveOutcome?: string;
+        /**
+         * The type of Python environment (e.g. venv, conda, system).
+         */
+        envType?: string;
+        /**
+         * Number of packages requested for installation (install_python_packages only).
+         */
+        packageCount?: string;
+        /**
+         * Which installer was used: pip or conda (install_python_packages only).
+         */
+        installerType?: string;
+        /**
+         * Number of packages in the environment response (get_python_environment_details only).
+         */
+        responsePackageCount?: string;
     };
     /**
      * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
@@ -2140,7 +2166,12 @@ export interface IEventNamePropertyMapping {
     /* __GDPR__
        "unittest.discovery.done" : {
           "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
+          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "mode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "failureCategory" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd" },
+          "totalDurationMs" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true },
+          "testCount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true }
        }
      */
     [EventName.UNITTEST_DISCOVERY_DONE]: {
@@ -2156,6 +2187,36 @@ export interface IEventNamePropertyMapping {
          * @type {boolean}
          */
         failed: boolean;
+        /**
+         * Testing architecture used for discovery:
+         * 'project' = per-project discovery through the Python Environments API;
+         * 'legacy' = workspace-level discovery through the existing WorkspaceTestAdapter.
+         */
+        mode?: 'project' | 'legacy';
+        /**
+         * Source that triggered the discovery.
+         */
+        trigger?: 'auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter';
+        /**
+         * Coarse failure category. Only populated when `failed` is true.
+         */
+        failureCategory?:
+            | 'subprocess-exit-non-zero'
+            | 'pipe-error'
+            | 'pytest-collect-error'
+            | 'plugin-exception'
+            | 'timeout'
+            | 'env-resolution'
+            | 'cancelled'
+            | 'unknown';
+        /**
+         * Wall-clock duration of the discovery cycle in milliseconds.
+         */
+        totalDurationMs?: number;
+        /**
+         * Number of test items discovered (leaf nodes).
+         */
+        testCount?: number;
     };
     /**
      * Telemetry event sent when cancelling discovering tests
@@ -2197,6 +2258,43 @@ export interface IEventNamePropertyMapping {
        "unittest.run.all_failed" : { "owner": "eleanorjboyd" }
      */
     [EventName.UNITTEST_RUN_ALL_FAILED]: never | undefined;
+    /**
+     * Telemetry event sent at the end of a test run, capturing duration and pipe health.
+     * Companion to UNITTEST_RUN (which is emitted at run start).
+     */
+    /* __GDPR__
+       "unittest.run.done" : {
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "debugging" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "mode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+                    "failureCategory" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd" },
+                    "durationMs" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true },
+                    "requestedCount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd", "isMeasurement": true }
+       }
+     */
+    [EventName.UNITTEST_RUN_DONE]: {
+        tool: TestTool;
+        debugging: boolean;
+        mode: 'project' | 'legacy';
+        /**
+         * `true` if the run ended without reporting all requested results,
+         * or if the subprocess crashed / threw.
+         */
+        failed: boolean;
+        /**
+         * Coarse failure category when `failed` is true.
+         */
+        failureCategory?: UnitTestRunFailureCategory;
+        /**
+         * Wall-clock duration of the run in milliseconds.
+         */
+        durationMs?: number;
+        /**
+         * Number of test items the user asked to run.
+         */
+        requestedCount?: number;
+    };
     /**
      * Telemetry event sent when testing is disabled for a workspace.
      */

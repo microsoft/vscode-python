@@ -76,6 +76,10 @@ export function isCondaEnv(env: ResolvedEnvironment) {
     return (env.environment?.type || '').toLowerCase() === 'conda';
 }
 
+export function getEnvTypeForTelemetry(env: ResolvedEnvironment): string {
+    return (env.environment?.type || 'unknown').toLowerCase();
+}
+
 export async function getEnvironmentDetails(
     resourcePath: Uri | undefined,
     api: PythonExtension['environments'],
