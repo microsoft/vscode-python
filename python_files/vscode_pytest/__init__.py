@@ -22,8 +22,12 @@ from typing import (
 )
 
 import pytest
-from _pytest.python import PyobjMixin
-from _pytest._code.code import Code
+
+PYTEST_INTERNAL_AVAILABLE = False
+with contextlib.suppress(ImportError):
+    from _pytest.python import PyobjMixin
+    from _pytest._code.code import Code
+    PYTEST_INTERNAL_AVAILABLE = True
 
 if TYPE_CHECKING:
     from pluggy import Result
@@ -845,13 +849,18 @@ def create_test_node(
     test_case -- the pytest test case.
     """
 
-    try:
-        # test_case.location returns tuple of path and line number
-        # Obtaining the path is expensive and we do not need it anyway.
-        # Before falling back to that high-level API, we try to use
-        # internal API to get just line number without the path.
-        lineno0 = Code.from_function(cast(PyobjMixin, test_case).obj).firstlineno
-    except:
+    lineno0 = None
+    if PYTEST_INTERNAL_AVAILABLE:
+        try:
+            # test_case.location returns tuple of path and line number
+            # Obtaining the path is expensive and we do not need it anyway.
+            # Before falling back to that high-level API, we try to use
+            # internal API to get just line number without the path.
+            lineno0 = Code.from_function(cast(PyobjMixin, test_case).obj).firstlineno # type: ignore
+        except Exception:
+            pass
+    
+    if lineno0 is None:
         lineno0 = test_case.location[1]
 
     test_case_loc: str = (
