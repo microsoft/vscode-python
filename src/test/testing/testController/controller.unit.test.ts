@@ -227,6 +227,7 @@ suite('PythonTestController', () => {
             const addedFolder = vscode.Uri.file('/addedFolder');
             const addedWf: vscode.WorkspaceFolder = { uri: addedFolder } as any;
             const onDidChangeWorkspaceFolders = new vscode.EventEmitter<vscode.WorkspaceFoldersChangeEvent>();
+            sandbox.stub(envExtApiInternal, 'useEnvExtension').returns(false);
             const fakeDiscoveryAdapter = sandbox.stub().resolves(undefined);
             sandbox.stub(projectUtils, 'createTestAdapters').returns({
                 discoveryAdapter: { discoverTests: fakeDiscoveryAdapter },
