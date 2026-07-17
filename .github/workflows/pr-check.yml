@@ -189,6 +189,11 @@ jobs:
         if: matrix.pytest-version != 'pytest@pre-release'
         run: python -m pip install --upgrade "${{ matrix.pytest-version }}"
 
+      - name: Install pytest plugin compatibility packages
+        if: matrix.pytest-version == 'pytest==6.2.0'
+        run: |
+          python -m pip install --upgrade "pytest-cov<6.2.1" "pytest-describe<3.2" "pytest-timeout<2.3.1"
+
       - name: Print pytest version
         run: python -m pytest --version
 
