@@ -183,12 +183,14 @@ jobs:
 
       # Install the specific pytest version AFTER test-requirements.txt so it is not
       # overridden by the `pytest<8.1` pin (needed for pytest-black compatibility).
+      # When pytest-version is 'pytest' (latest stable), keep the pinned version from
+      # test-requirements.txt to maintain pytest-black compatibility.
       - name: Install specific pytest version (pre-release)
         if: matrix.pytest-version == 'pytest@pre-release'
         run: python -m pip install --upgrade --pre pytest
 
       - name: Install specific pytest version
-        if: matrix.pytest-version != 'pytest@pre-release'
+        if: matrix.pytest-version != 'pytest@pre-release' && matrix.pytest-version != 'pytest'
         run: python -m pip install --upgrade "${{ matrix.pytest-version }}"
 
       - name: Print pytest version
