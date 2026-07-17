@@ -55,7 +55,8 @@ if PYTEST_VER >= (8, 1):
 
 elif PYTEST_VER >= (7, 0):
 
-    def pytest_collect_file(file_path, path, parent):  # type: ignore[misc]
+    def pytest_collect_file(file_path, path, parent):  # type: ignore[misc]  # noqa: ARG001
+        # `path` must match the pytest 7.x hookspec; use file_path (pathlib.Path) in body.
         config = parent.config
         if (
             config.option.black
@@ -111,7 +112,7 @@ class BlackItem(pytest.Item):
             str(self.path),
         ]
         try:
-            subprocess.run(cmd, check=True, stdout=subprocess.PIPE, universal_newlines=True)
+            subprocess.run(cmd, check=True, stdout=subprocess.PIPE, text=True)
         except subprocess.CalledProcessError as e:
             raise BlackError(e)
 
