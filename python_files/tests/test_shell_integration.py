@@ -1,11 +1,29 @@
 import importlib
 import platform
 import sys
+from pathlib import Path
 from unittest.mock import Mock
 
 import pythonrc
 
 is_wsl = "microsoft-standard-WSL" in platform.release()
+ 
+PYTHONRC_PATH = Path(pythonrc.__file__)
+ 
+ 
+def test_decoration_success():
+    importlib.reload(pythonrc)
+    ps1 = pythonrc.PS1()
+ 
+    ps1.hooks.failure_flag = False
+    result = str(ps1)
+    if sys.platform != "win32" and (not is_wsl):
+        assert (
+            result
+            == "\x01\x1b]633;C\x07\x1b]633;E;None\x07\x1b]633;D;0\x07\x1b]633;A\x07\x02>>> \x01\x1b]633;B\x07\x02"
+        )
+    else:
+        pass
 
 
 def test_decoration_success():
