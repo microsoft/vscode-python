@@ -138,6 +138,9 @@ export async function setEnvironmentDirectlyByPath(
     resource: Uri | undefined,
     token: CancellationToken,
 ): Promise<ResolvedEnvironment | undefined> {
+    if (token.isCancellationRequested) {
+        throw new CancellationError();
+    }
     // Validate the path resolves to a real environment BEFORE mutating user settings.
     // updateActiveEnvironmentPath persists unconditionally, so an invalid path would
     // permanently overwrite the user's selected interpreter.

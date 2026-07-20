@@ -14,7 +14,6 @@ import {
 } from 'vscode';
 import { instance, mock, when } from 'ts-mockito';
 import { ConfigurePythonEnvTool, IConfigurePythonEnvToolArguments } from '../../client/chat/configurePythonEnvTool';
-import { ISelectPythonEnvToolArguments, SelectPythonEnvTool } from '../../client/chat/selectEnvTool';
 import { setEnvironmentDirectlyByPath, waitForActiveEnvironmentChange } from '../../client/chat/utils';
 import { ActiveEnvironmentPathChangeEvent, PythonExtension, ResolvedEnvironment } from '../../client/api/types';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -314,52 +313,5 @@ suite('Chat fast-path environment setup', () => {
         expect(text).to.include('A Python Environment has been configured');
         sinon.assert.notCalled(getRecommendedEnvironment);
         sinon.assert.notCalled(shouldCreateNewVirtualEnv);
-    });
-
-    suite('SelectPythonEnvTool', () => {
-        function createTool(api: PythonExtension['environments']) {
-            const serviceContainer = mock<IServiceContainer>();
-            when(serviceContainer.get<TerminalCodeExecutionProvider>(ICodeExecutionService, 'standard')).thenReturn(
-                instance(mock<TerminalCodeExecutionProvider>()),
-            );
-            when(serviceContainer.get<ITerminalHelper>(ITerminalHelper)).thenReturn(instance(mock<ITerminalHelper>()));
-            return new SelectPythonEnvTool(api, instance(serviceContainer));
-        }
-
-        test('returns the notebook response without changing the environment', async () => {
-            const update = sinon.stub().resolves();
-            const api = ({
-                onDidChangeActiveEnvironmentPath: new EventEmitter<ActiveEnvironmentPathChangeEvent>().event,
-                updateActiveEnvironmentPath: update,
-            } as unknown) as PythonExtension['environments'];
-            const tool = createTool(api);
-
-            const result = await tool.invokeImpl(
-                ({ input: { pythonPath } } as unknown) as LanguageModelToolInvocationOptions<
-                    ISelectPythonEnvToolArguments
-                >,
-                Uri.file('/workspace/notebook.ipynb'),
-                tokenSource.token,
-            );
-
-            const text = getToolResultText(result.content);
-            expect(text.toLowerCase()).to.include('notebook');
-            sinon.assert.notCalled(update);
-        });
-
-        test('skips confirmation when pythonPath is provided', async () => {
-            const api = ({
-                onDidChangeActiveEnvironmentPath: new EventEmitter<ActiveEnvironmentPathChangeEvent>().event,
-            } as unknown) as PythonExtension['environments'];
-            const tool = createTool(api);
-
-            const preparation = await tool.prepareInvocationImpl(
-                { input: { pythonPath } },
-                Uri.file('/workspace/file.py'),
-                tokenSource.token,
-            );
-
-            expect(preparation.confirmationMessages).to.equal(undefined);
-        });
     });
 });

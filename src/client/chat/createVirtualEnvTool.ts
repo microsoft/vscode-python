@@ -109,7 +109,6 @@ export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
                     createVirtualEnvironment({
                         interpreter: preferredGlobalPythonEnv.id,
                         workspaceFolder,
-                        installPackages: false,
                     }),
                     token,
                 );

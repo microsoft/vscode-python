@@ -1646,7 +1646,7 @@
             {
                 "name": "selectEnvironment",
                 "displayName": "Select a Python Environment",
-                "modelDescription": "This tool will prompt the user to select an existing Python Environment. If pythonPath is provided, it sets that interpreter directly without showing any UI.",
+                "modelDescription": "This tool will prompt the user to select an existing Python Environment",
                 "tags": [],
                 "canBeReferencedInPrompt": false,
                 "inputSchema": {
@@ -1655,10 +1655,6 @@
                         "resourcePath": {
                             "type": "string",
                             "description": "The path to the Python file or workspace for which a Python Environment needs to be configured."
-                        },
-                        "pythonPath": {
-                            "type": "string",
-                            "description": "Optional absolute path to a Python interpreter to use. When provided, the interpreter is set directly without showing any UI picker."
                         }
                     },
                     "required": []
