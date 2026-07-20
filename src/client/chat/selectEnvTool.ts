@@ -83,12 +83,7 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
             traceVerbose(
                 `${SelectPythonEnvTool.toolName}: setting environment directly from pythonPath: ${options.input.pythonPath}`,
             );
-            const result = await setEnvironmentDirectlyByPath(
-                options.input.pythonPath,
-                this.api,
-                resource,
-                token,
-            );
+            const result = await setEnvironmentDirectlyByPath(options.input.pythonPath, this.api, resource, token);
             if (result) {
                 return getEnvDetailsForResponse(
                     result,

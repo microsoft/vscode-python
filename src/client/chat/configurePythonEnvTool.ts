@@ -135,12 +135,7 @@ export class ConfigurePythonEnvTool extends BaseTool<IConfigurePythonEnvToolArgu
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
         traceVerbose(`${ConfigurePythonEnvTool.toolName}: setting environment directly from pythonPath: ${pythonPath}`);
-        const result = await setEnvironmentDirectlyByPath(
-            pythonPath,
-            this.api,
-            resource,
-            token,
-        );
+        const result = await setEnvironmentDirectlyByPath(pythonPath, this.api, resource, token);
         if (result) {
             this.extraTelemetryProperties.resolveOutcome = 'providedEnv';
             this.extraTelemetryProperties.envType = getEnvTypeForTelemetry(result);

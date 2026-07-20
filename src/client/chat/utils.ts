@@ -110,10 +110,7 @@ export function waitForActiveEnvironmentChange(
     });
 }
 
-function isResourceMatch(
-    eventResource: { uri: Uri } | Uri | undefined,
-    requestedResource: Uri | undefined,
-): boolean {
+function isResourceMatch(eventResource: { uri: Uri } | Uri | undefined, requestedResource: Uri | undefined): boolean {
     const eventUri = eventResource && 'uri' in eventResource ? eventResource.uri : eventResource;
     const requestedUri = requestedResource
         ? workspace.getWorkspaceFolder(requestedResource)?.uri ?? requestedResource

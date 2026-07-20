@@ -78,7 +78,12 @@ suite('Chat fast-path environment setup', () => {
 
         test('resolves when an event matches the requested environment id', async () => {
             const emitter = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
-            const promise = waitForActiveEnvironmentChange(makeApi(emitter), 'python-env', undefined, tokenSource.token);
+            const promise = waitForActiveEnvironmentChange(
+                makeApi(emitter),
+                'python-env',
+                undefined,
+                tokenSource.token,
+            );
             let settled = false;
             void promise.then(() => {
                 settled = true;
@@ -236,20 +241,13 @@ suite('Chat fast-path environment setup', () => {
             const api = ({
                 onDidChangeActiveEnvironmentPath: emitter.event,
                 updateActiveEnvironmentPath: async () => {
-                    setImmediate(() =>
-                        emitter.fire({ path: '/new/python', id: 'new-env', resource: undefined }),
-                    );
+                    setImmediate(() => emitter.fire({ path: '/new/python', id: 'new-env', resource: undefined }));
                 },
                 getActiveEnvironmentPath: () => ({ path: '/old/python', id: 'old-env' }),
                 resolveEnvironment,
             } as unknown) as PythonExtension['environments'];
 
-            const result = await setEnvironmentDirectlyByPath(
-                '/new/python',
-                api,
-                undefined,
-                tokenSource.token,
-            );
+            const result = await setEnvironmentDirectlyByPath('/new/python', api, undefined, tokenSource.token);
 
             expect(result).to.equal(undefined);
             sinon.assert.calledOnce(resolveEnvironment);
