@@ -122,19 +122,19 @@ export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
 
             // Wait a few secs to ensure the env is selected as the active environment..
             // If this doesn't work, then something went wrong.
-            await raceTimeout(5_000, interpreterChanged);
+            await raceCancellationError(raceTimeout(5_000, interpreterChanged), token);
 
             const stopWatch = new StopWatch();
             let env: ResolvedEnvironment | undefined;
             while (stopWatch.elapsedTime < 5_000 && !env) {
-                env = await this.api.resolveEnvironment(createdEnvPath);
+                env = await raceCancellationError(this.api.resolveEnvironment(createdEnvPath), token);
                 if (env) {
                     break;
                 } else {
                     traceVerbose(
                         `${CreateVirtualEnvTool.toolName} tool invoked, env created but not yet resolved, waiting...`,
                     );
-                    await sleep(200);
+                    await raceCancellationError(sleep(200), token);
                 }
             }
             if (!env) {

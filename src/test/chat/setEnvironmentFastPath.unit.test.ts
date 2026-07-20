@@ -5,26 +5,41 @@
 
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import { CancellationTokenSource, EventEmitter, Uri } from 'vscode';
+import {
+    CancellationError,
+    CancellationTokenSource,
+    EventEmitter,
+    LanguageModelToolInvocationOptions,
+    Uri,
+} from 'vscode';
 import { instance, mock, when } from 'ts-mockito';
-import { mockedVSCodeNamespaces } from '../vscode-mock';
+import { ConfigurePythonEnvTool, IConfigurePythonEnvToolArguments } from '../../client/chat/configurePythonEnvTool';
+import { ISelectPythonEnvToolArguments, SelectPythonEnvTool } from '../../client/chat/selectEnvTool';
 import { setEnvironmentDirectlyByPath, waitForActiveEnvironmentChange } from '../../client/chat/utils';
-import { ConfigurePythonEnvTool } from '../../client/chat/configurePythonEnvTool';
-import { SelectPythonEnvTool } from '../../client/chat/selectEnvTool';
-import { PythonExtension } from '../../client/api/types';
+import { ActiveEnvironmentPathChangeEvent, PythonExtension, ResolvedEnvironment } from '../../client/api/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ICodeExecutionService } from '../../client/terminals/types';
-import { ITerminalHelper } from '../../client/common/terminal/types';
+import { ITerminalHelper, TerminalShellType } from '../../client/common/terminal/types';
 import { IRecommendedEnvironmentService } from '../../client/interpreter/configuration/types';
 import { TerminalCodeExecutionProvider } from '../../client/terminals/codeExecution/terminalCodeExecution';
 import { CreateVirtualEnvTool } from '../../client/chat/createVirtualEnvTool';
+import { mockedVSCodeNamespaces } from '../vscode-mock';
 
 suite('Chat fast-path environment setup', () => {
+    const pythonPath = '/usr/bin/python3';
+    const environment = ({
+        id: 'python-env',
+        path: pythonPath,
+        executable: { uri: Uri.file(pythonPath), bitness: 64, sysPrefix: '/usr' },
+        version: { major: 3, minor: 13, micro: 0, release: { level: 'final', serial: 0 }, sysVersion: '3.13.0' },
+        environment: { type: 'Venv' },
+    } as unknown) as ResolvedEnvironment;
     let tokenSource: CancellationTokenSource;
 
     setup(() => {
         tokenSource = new CancellationTokenSource();
         when(mockedVSCodeNamespaces.workspace!.notebookDocuments).thenReturn([]);
+        when(mockedVSCodeNamespaces.workspace!.isTrusted).thenReturn(true);
     });
 
     teardown(() => {
@@ -33,267 +48,305 @@ suite('Chat fast-path environment setup', () => {
     });
 
     suite('waitForActiveEnvironmentChange()', () => {
-        function makeApi(emitter: EventEmitter<{ path: string; id: string; resource: undefined }>) {
-            return ({
-                onDidChangeActiveEnvironmentPath: emitter.event,
-            } as unknown) as PythonExtension['environments'];
+        function makeApi(emitter: EventEmitter<ActiveEnvironmentPathChangeEvent>) {
+            return ({ onDidChangeActiveEnvironmentPath: emitter.event } as unknown) as PythonExtension['environments'];
         }
 
         test('resolves when an event matches the requested path', async () => {
-            const emitter = new EventEmitter<{ path: string; id: string; resource: undefined }>();
-            const api = makeApi(emitter);
-            const promise = waitForActiveEnvironmentChange(api, '/usr/bin/python3', tokenSource.token, 5000);
-            emitter.fire({ path: '/usr/bin/python3', id: 'id-1', resource: undefined });
-            await promise;
+            const emitter = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
+            const promise = waitForActiveEnvironmentChange(makeApi(emitter), pythonPath, undefined, tokenSource.token);
+            let settled = false;
+            void promise.then(() => {
+                settled = true;
+            });
+
+            emitter.fire({ path: pythonPath, id: 'python-env', resource: undefined });
+            await Promise.resolve();
+
+            expect(settled).to.equal(true);
         });
 
-        test('resolves when an event matches the requested id', async () => {
-            const emitter = new EventEmitter<{ path: string; id: string; resource: undefined }>();
-            const api = makeApi(emitter);
-            const promise = waitForActiveEnvironmentChange(api, 'env-id-42', tokenSource.token, 5000);
-            emitter.fire({ path: '/some/other/path', id: 'env-id-42', resource: undefined });
-            await promise;
+        test('resolves when an event matches the requested environment id', async () => {
+            const emitter = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
+            const promise = waitForActiveEnvironmentChange(makeApi(emitter), 'python-env', undefined, tokenSource.token);
+            let settled = false;
+            void promise.then(() => {
+                settled = true;
+            });
+
+            emitter.fire({ path: pythonPath, id: 'python-env', resource: undefined });
+            await Promise.resolve();
+
+            expect(settled).to.equal(true);
         });
 
-        test('resolves on cancellation without firing the event', async () => {
-            const emitter = new EventEmitter<{ path: string; id: string; resource: undefined }>();
-            const api = makeApi(emitter);
-            const promise = waitForActiveEnvironmentChange(api, '/never/fires', tokenSource.token, 60_000);
+        test('resolves when an event matches an equivalent normalized path', async () => {
+            const emitter = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
+            const promise = waitForActiveEnvironmentChange(makeApi(emitter), pythonPath, undefined, tokenSource.token);
+            let settled = false;
+            void promise.then(() => {
+                settled = true;
+            });
+
+            emitter.fire({ path: '/usr/bin/../bin/python3', id: 'other-env', resource: undefined });
+            await Promise.resolve();
+
+            expect(settled).to.equal(true);
+        });
+
+        test('resolves on cancellation', async () => {
+            const emitter = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
+            const promise = waitForActiveEnvironmentChange(
+                makeApi(emitter),
+                pythonPath,
+                undefined,
+                tokenSource.token,
+                60_000,
+            );
+            let settled = false;
+            void promise.then(() => {
+                settled = true;
+            });
+
+            tokenSource.cancel();
+            await Promise.resolve();
+
+            expect(settled).to.equal(true);
+        });
+
+        test('ignores non-matching events', async () => {
+            const emitter = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
+            const promise = waitForActiveEnvironmentChange(
+                makeApi(emitter),
+                pythonPath,
+                undefined,
+                tokenSource.token,
+                60_000,
+            );
+            let settled = false;
+            void promise.then(() => {
+                settled = true;
+            });
+
+            emitter.fire({ path: '/other/python', id: 'other-env', resource: undefined });
+            await Promise.resolve();
+
+            expect(settled).to.equal(false);
             tokenSource.cancel();
             await promise;
         });
 
-        test('resolves on timeout when the event never fires', async () => {
-            const emitter = new EventEmitter<{ path: string; id: string; resource: undefined }>();
-            const api = makeApi(emitter);
-            await waitForActiveEnvironmentChange(api, '/never/fires', tokenSource.token, 5);
-        });
+        test('ignores matching environment events for another workspace', async () => {
+            const emitter = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
+            const resource = Uri.file('/workspace-one');
+            const promise = waitForActiveEnvironmentChange(
+                makeApi(emitter),
+                pythonPath,
+                resource,
+                tokenSource.token,
+                60_000,
+            );
+            let settled = false;
+            void promise.then(() => {
+                settled = true;
+            });
 
-        test('ignores events that do not match', async () => {
-            const emitter = new EventEmitter<{ path: string; id: string; resource: undefined }>();
-            const api = makeApi(emitter);
-            const promise = waitForActiveEnvironmentChange(api, '/want/this', tokenSource.token, 50);
-            emitter.fire({ path: '/something/else', id: 'wrong-id', resource: undefined });
-            // Should fall through to the timeout rather than resolve from the non-matching event.
+            emitter.fire({ path: pythonPath, id: 'python-env', resource: Uri.file('/workspace-two') });
+            await Promise.resolve();
+
+            expect(settled).to.equal(false);
+            emitter.fire({ path: pythonPath, id: 'python-env', resource });
             await promise;
         });
     });
 
     suite('setEnvironmentDirectlyByPath()', () => {
-        test('validates path, subscribes BEFORE update, then resolves the active env', async () => {
-            const emitter = new EventEmitter<{ path: string; id: string; resource: undefined }>();
-            let listenerAttached = false;
+        test('validates before updating and returns the newly active environment', async () => {
+            const emitter = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
             const calls: string[] = [];
+            let listenerAttached = false;
+            let activePath = { path: '/old/python', id: 'old-env' };
             const api = ({
-                onDidChangeActiveEnvironmentPath: (handler: (e: any) => void) => {
+                onDidChangeActiveEnvironmentPath: (handler: (event: ActiveEnvironmentPathChangeEvent) => void) => {
                     listenerAttached = true;
                     return emitter.event(handler);
                 },
-                updateActiveEnvironmentPath: async (p: string) => {
-                    calls.push(`update:${p}`);
-                    expect(listenerAttached, 'listener must be attached before update').to.equal(true);
-                    // Fire the event asynchronously, as the real API would.
-                    setImmediate(() => emitter.fire({ path: p, id: p, resource: undefined }));
+                updateActiveEnvironmentPath: async (path: string) => {
+                    expect(listenerAttached).to.equal(true);
+                    calls.push(`update:${path}`);
+                    activePath = { path, id: 'python-env' };
+                    setImmediate(() => emitter.fire({ path, id: 'python-env', resource: undefined }));
                 },
-                getActiveEnvironmentPath: () => ({ path: '/usr/bin/python3', id: 'id-1' }),
-                resolveEnvironment: async (arg: any) => {
-                    const key = typeof arg === 'string' ? arg : arg?.path;
-                    calls.push(`resolve:${key}`);
-                    // Validation call (string arg) must succeed so the rest of the sequence runs.
-                    // Post-switch call (EnvironmentPath object) returns undefined to keep this test
-                    // focused on sequencing without exercising getEnvDetailsForResponse internals.
-                    if (typeof arg === 'string') {
-                        return ({ id: 'x' } as unknown) as undefined;
-                    }
-                    return undefined;
+                getActiveEnvironmentPath: () => activePath,
+                resolveEnvironment: async (value: string | { path: string }) => {
+                    calls.push(`resolve:${typeof value === 'string' ? value : value.path}`);
+                    return environment;
                 },
             } as unknown) as PythonExtension['environments'];
 
-            const result = await setEnvironmentDirectlyByPath(
-                '/usr/bin/python3',
-                api,
-                instance(mock<TerminalCodeExecutionProvider>()),
-                instance(mock<ITerminalHelper>()),
-                undefined,
-                tokenSource.token,
-            );
+            const result = await setEnvironmentDirectlyByPath(pythonPath, api, undefined, tokenSource.token);
 
-            expect(result).to.equal(undefined);
-            expect(listenerAttached, 'listener must have been attached').to.equal(true);
-            // Full sequence: validate (resolve) -> update -> resolve active env.
-            expect(calls).to.deep.equal([
-                'resolve:/usr/bin/python3',
-                'update:/usr/bin/python3',
-                'resolve:/usr/bin/python3',
-            ]);
+            expect(result).to.equal(environment);
+            expect(calls).to.deep.equal([`resolve:${pythonPath}`, `update:${pythonPath}`, `resolve:${pythonPath}`]);
         });
 
-        test('does NOT call updateActiveEnvironmentPath when pythonPath cannot be resolved', async () => {
-            let updateCalled = false;
+        test('does not update settings when the path cannot be resolved', async () => {
+            const update = sinon.stub().resolves();
             const api = ({
-                onDidChangeActiveEnvironmentPath: new EventEmitter<any>().event,
-                updateActiveEnvironmentPath: async () => {
-                    updateCalled = true;
-                },
-                getActiveEnvironmentPath: () => ({ path: '/old', id: 'old' }),
-                resolveEnvironment: async () => undefined,
+                onDidChangeActiveEnvironmentPath: new EventEmitter<ActiveEnvironmentPathChangeEvent>().event,
+                updateActiveEnvironmentPath: update,
+                getActiveEnvironmentPath: () => ({ path: '/old/python', id: 'old-env' }),
+                resolveEnvironment: sinon.stub().resolves(undefined),
             } as unknown) as PythonExtension['environments'];
 
-            const result = await setEnvironmentDirectlyByPath(
-                '/bogus/python',
-                api,
-                instance(mock<TerminalCodeExecutionProvider>()),
-                instance(mock<ITerminalHelper>()),
-                undefined,
-                tokenSource.token,
-            );
+            const result = await setEnvironmentDirectlyByPath('/invalid/python', api, undefined, tokenSource.token);
 
             expect(result).to.equal(undefined);
-            expect(updateCalled, 'must not mutate user settings for an invalid path').to.equal(false);
+            sinon.assert.notCalled(update);
         });
 
-        test('returns undefined when active path does not actually switch after update', async () => {
-            const emitter = new EventEmitter<{ path: string; id: string; resource: undefined }>();
-            let postSwitchResolveCalled = false;
+        test('does not update settings when the requested environment is already active', async () => {
+            const update = sinon.stub().resolves();
+            const api = ({
+                updateActiveEnvironmentPath: update,
+                getActiveEnvironmentPath: () => ({ path: pythonPath, id: 'python-env' }),
+                resolveEnvironment: sinon.stub().resolves(environment),
+            } as unknown) as PythonExtension['environments'];
+
+            const result = await setEnvironmentDirectlyByPath(pythonPath, api, undefined, tokenSource.token);
+
+            expect(result).to.equal(environment);
+            sinon.assert.notCalled(update);
+        });
+
+        test('does not report the previous environment when the active path fails to switch', async () => {
+            const emitter = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
+            const resolveEnvironment = sinon.stub();
+            resolveEnvironment.onFirstCall().resolves(environment);
             const api = ({
                 onDidChangeActiveEnvironmentPath: emitter.event,
-                updateActiveEnvironmentPath: async (p: string) => {
-                    // Fire the change event so waitForActiveEnvironmentChange resolves normally
-                    // (no cancellation, no timeout) -- this drives execution past the wait into
-                    // the post-switch verification block.
-                    setImmediate(() => emitter.fire({ path: p, id: p, resource: undefined }));
+                updateActiveEnvironmentPath: async () => {
+                    setImmediate(() =>
+                        emitter.fire({ path: '/new/python', id: 'new-env', resource: undefined }),
+                    );
                 },
-                // But the getter still reports the OLD interpreter, simulating an inconsistent
-                // switch where the event fired but the active path didn't actually update.
-                getActiveEnvironmentPath: () => ({ path: '/previous', id: 'previous' }),
-                resolveEnvironment: async (arg: any) => {
-                    if (typeof arg === 'string') {
-                        // Validation passes (path is known).
-                        return ({ id: 'x' } as unknown) as undefined;
-                    }
-                    postSwitchResolveCalled = true;
-                    return undefined;
-                },
+                getActiveEnvironmentPath: () => ({ path: '/old/python', id: 'old-env' }),
+                resolveEnvironment,
             } as unknown) as PythonExtension['environments'];
 
             const result = await setEnvironmentDirectlyByPath(
                 '/new/python',
                 api,
-                instance(mock<TerminalCodeExecutionProvider>()),
-                instance(mock<ITerminalHelper>()),
                 undefined,
                 tokenSource.token,
             );
 
             expect(result).to.equal(undefined);
-            expect(postSwitchResolveCalled, 'must not resolve / report details for the previously-active env').to.equal(
-                false,
-            );
+            sinon.assert.calledOnce(resolveEnvironment);
+        });
+
+        test('rejects immediately when already cancelled', async () => {
+            const resolveEnvironment = sinon.stub().resolves(environment);
+            const api = ({ resolveEnvironment } as unknown) as PythonExtension['environments'];
+            tokenSource.cancel();
+
+            let error: unknown;
+            try {
+                await setEnvironmentDirectlyByPath(pythonPath, api, undefined, tokenSource.token);
+            } catch (ex) {
+                error = ex;
+            }
+
+            expect(error).to.be.instanceOf(CancellationError);
+            sinon.assert.notCalled(resolveEnvironment);
         });
     });
 
-    suite('ConfigurePythonEnvTool fast path', () => {
-        test('skips workspace-env / create-venv path when pythonPath is provided', async () => {
-            const getRecommededEnvironment = sinon.stub().resolves(undefined);
-            const shouldCreateNewVirtualEnv = sinon.stub().resolves(false);
-            const serviceContainer = mock<IServiceContainer>();
-            when(serviceContainer.get<TerminalCodeExecutionProvider>(ICodeExecutionService, 'standard')).thenReturn(
-                instance(mock<TerminalCodeExecutionProvider>()),
-            );
-            when(serviceContainer.get<ITerminalHelper>(ITerminalHelper)).thenReturn(instance(mock<ITerminalHelper>()));
-            when(serviceContainer.get<IRecommendedEnvironmentService>(IRecommendedEnvironmentService)).thenReturn(({
-                getRecommededEnvironment,
-            } as unknown) as IRecommendedEnvironmentService);
+    test('configure tool skips interactive environment selection when pythonPath is provided', async () => {
+        const resource = Uri.file('/workspace/file.py');
+        const getRecommendedEnvironment = sinon.stub().resolves(undefined);
+        const shouldCreateNewVirtualEnv = sinon.stub().resolves(false);
+        const terminalExecutionService = mock<TerminalCodeExecutionProvider>();
+        const terminalHelper = mock<ITerminalHelper>();
+        when(terminalExecutionService.getExecutableInfo(resource)).thenResolve({ command: 'python', args: [] });
+        when(terminalHelper.buildCommandForTerminal(TerminalShellType.other, 'python', [])).thenReturn('python');
+        const serviceContainer = mock<IServiceContainer>();
+        when(serviceContainer.get<TerminalCodeExecutionProvider>(ICodeExecutionService, 'standard')).thenReturn(
+            instance(terminalExecutionService),
+        );
+        when(serviceContainer.get<ITerminalHelper>(ITerminalHelper)).thenReturn(instance(terminalHelper));
+        when(serviceContainer.get<IRecommendedEnvironmentService>(IRecommendedEnvironmentService)).thenReturn(({
+            getRecommededEnvironment: getRecommendedEnvironment,
+        } as unknown) as IRecommendedEnvironmentService);
+        const emitter = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
+        let activePath = { path: '/old/python', id: 'old-env' };
+        const api = ({
+            onDidChangeActiveEnvironmentPath: emitter.event,
+            updateActiveEnvironmentPath: async (path: string) => {
+                activePath = { path, id: 'python-env' };
+                setImmediate(() => emitter.fire({ path, id: 'python-env', resource }));
+            },
+            getActiveEnvironmentPath: () => activePath,
+            resolveEnvironment: sinon.stub().resolves(environment),
+        } as unknown) as PythonExtension['environments'];
+        const createVenvTool = ({ shouldCreateNewVirtualEnv } as unknown) as CreateVirtualEnvTool;
+        const tool = new ConfigurePythonEnvTool(api, instance(serviceContainer), createVenvTool);
+        const options = ({
+            input: { pythonPath },
+        } as unknown) as LanguageModelToolInvocationOptions<IConfigurePythonEnvToolArguments>;
 
-            const emitter = new EventEmitter<{ path: string; id: string; resource: undefined }>();
-            let updateCalled = false;
-            const api = ({
-                onDidChangeActiveEnvironmentPath: emitter.event,
-                updateActiveEnvironmentPath: async (p: string) => {
-                    updateCalled = true;
-                    setImmediate(() => emitter.fire({ path: p, id: p, resource: undefined }));
-                },
-                getActiveEnvironmentPath: () => ({ path: '/usr/bin/python3', id: 'id-1' }),
-                // Validation (string arg) succeeds; post-switch resolve returns undefined
-                // so the helper exits without exercising getEnvDetailsForResponse.
-                resolveEnvironment: async (arg: any) =>
-                    typeof arg === 'string' ? (({ id: 'x' } as unknown) as undefined) : undefined,
-            } as unknown) as PythonExtension['environments'];
+        const result = await tool.invokeImpl(options, resource, tokenSource.token);
 
-            const createVenvTool = ({ shouldCreateNewVirtualEnv } as unknown) as CreateVirtualEnvTool;
-            const tool = new ConfigurePythonEnvTool(api, instance(serviceContainer), createVenvTool);
-
-            try {
-                await (tool as any).invokeImpl(
-                    { input: { pythonPath: '/usr/bin/python3' } } as any,
-                    Uri.file('/workspace/file.py'),
-                    tokenSource.token,
-                );
-            } catch {
-                // setEnvironmentDirectly throws when env can't be resolved; that's expected here.
-                // The behavior we care about is that the fast path was taken.
-            }
-
-            expect(updateCalled, 'fast path should invoke updateActiveEnvironmentPath').to.equal(true);
-            // The recommended-env / create-venv branches must not have been consulted.
-            sinon.assert.notCalled(getRecommededEnvironment);
-            sinon.assert.notCalled(shouldCreateNewVirtualEnv);
-        });
+        const text = result.content.map((part) => ('value' in part ? part.value : '')).join(' ');
+        expect(text).to.include('A Python Environment has been configured');
+        sinon.assert.notCalled(getRecommendedEnvironment);
+        sinon.assert.notCalled(shouldCreateNewVirtualEnv);
     });
 
     suite('SelectPythonEnvTool', () => {
-        test('returns notebook response without setting env when resource is a notebook', async () => {
+        function createTool(api: PythonExtension['environments']) {
             const serviceContainer = mock<IServiceContainer>();
             when(serviceContainer.get<TerminalCodeExecutionProvider>(ICodeExecutionService, 'standard')).thenReturn(
                 instance(mock<TerminalCodeExecutionProvider>()),
             );
             when(serviceContainer.get<ITerminalHelper>(ITerminalHelper)).thenReturn(instance(mock<ITerminalHelper>()));
+            return new SelectPythonEnvTool(api, instance(serviceContainer));
+        }
 
-            let updateCalled = false;
+        test('returns the notebook response without changing the environment', async () => {
+            const update = sinon.stub().resolves();
             const api = ({
-                onDidChangeActiveEnvironmentPath: new EventEmitter<any>().event,
-                updateActiveEnvironmentPath: async () => {
-                    updateCalled = true;
-                },
-                getActiveEnvironmentPath: () => ({ path: '/x', id: 'x' }),
-                resolveEnvironment: async () => undefined,
+                onDidChangeActiveEnvironmentPath: new EventEmitter<ActiveEnvironmentPathChangeEvent>().event,
+                updateActiveEnvironmentPath: update,
             } as unknown) as PythonExtension['environments'];
+            const tool = createTool(api);
 
-            const tool = new SelectPythonEnvTool(api, instance(serviceContainer));
-
-            const result = await (tool as any).invokeImpl(
-                { input: { pythonPath: '/usr/bin/python3' } } as any,
+            const result = await tool.invokeImpl(
+                ({ input: { pythonPath } } as unknown) as LanguageModelToolInvocationOptions<
+                    ISelectPythonEnvToolArguments
+                >,
                 Uri.file('/workspace/notebook.ipynb'),
                 tokenSource.token,
             );
 
-            expect(updateCalled, 'must NOT update env for notebook resources').to.equal(false);
-            expect(result, 'notebook resources must produce a tool response').to.not.equal(undefined);
-            const text = (result.content as any[])
-                .map((p) => (p && typeof p.value === 'string' ? p.value : ''))
-                .join(' ');
+            const text = result.content.map((part) => ('value' in part ? part.value : '')).join(' ');
             expect(text.toLowerCase()).to.include('notebook');
+            sinon.assert.notCalled(update);
         });
 
-        test('prepareInvocationImpl skips confirmation when pythonPath is provided', async () => {
-            const serviceContainer = mock<IServiceContainer>();
-            when(serviceContainer.get<TerminalCodeExecutionProvider>(ICodeExecutionService, 'standard')).thenReturn(
-                instance(mock<TerminalCodeExecutionProvider>()),
-            );
-            when(serviceContainer.get<ITerminalHelper>(ITerminalHelper)).thenReturn(instance(mock<ITerminalHelper>()));
-
+        test('skips confirmation when pythonPath is provided', async () => {
             const api = ({
-                onDidChangeActiveEnvironmentPath: new EventEmitter<any>().event,
+                onDidChangeActiveEnvironmentPath: new EventEmitter<ActiveEnvironmentPathChangeEvent>().event,
             } as unknown) as PythonExtension['environments'];
-            const tool = new SelectPythonEnvTool(api, instance(serviceContainer));
+            const tool = createTool(api);
 
-            const prep = await (tool as any).prepareInvocationImpl(
-                { input: { pythonPath: '/usr/bin/python3' } },
+            const preparation = await tool.prepareInvocationImpl(
+                { input: { pythonPath } },
                 Uri.file('/workspace/file.py'),
                 tokenSource.token,
             );
 
-            expect(prep.confirmationMessages, 'fast path must not show a confirmation prompt').to.equal(undefined);
+            expect(preparation.confirmationMessages).to.equal(undefined);
         });
     });
 });

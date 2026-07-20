@@ -20,6 +20,7 @@ import { dirname, join } from 'path';
 import { resolveEnvironment, useEnvExtension } from '../envExt/api.internal';
 import { ErrorWithTelemetrySafeReason } from '../common/errors/errorUtils';
 import { getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
+import { arePathsSame } from '../common/platform/fs-paths';
 
 export interface IResourceReference {
     resourcePath?: string;
@@ -49,12 +50,24 @@ export function resolveFilePath(filepath?: string): Uri | undefined {
  * @see {@link raceCancellation}
  */
 export function raceCancellationError<T>(promise: Promise<T>, token: CancellationToken): Promise<T> {
+    if (token.isCancellationRequested) {
+        return Promise.reject(new CancellationError());
+    }
     return new Promise((resolve, reject) => {
         const ref = token.onCancellationRequested(() => {
             ref.dispose();
             reject(new CancellationError());
         });
-        promise.then(resolve, reject).finally(() => ref.dispose());
+        promise.then(
+            (value) => {
+                ref.dispose();
+                resolve(value);
+            },
+            (error) => {
+                ref.dispose();
+                reject(error);
+            },
+        );
     });
 }
 
@@ -68,13 +81,17 @@ export function raceCancellationError<T>(promise: Promise<T>, token: Cancellatio
 export function waitForActiveEnvironmentChange(
     api: PythonExtension['environments'],
     pythonPath: string,
+    resource: Uri | undefined,
     token: CancellationToken,
     timeoutMs = 5000,
 ): Promise<void> {
+    if (token.isCancellationRequested) {
+        return Promise.resolve();
+    }
     return new Promise<void>((resolve) => {
         let settled = false;
         const listener = api.onDidChangeActiveEnvironmentPath((e) => {
-            if (e.path === pythonPath || e.id === pythonPath) {
+            if (isEnvironmentPathMatch(e, pythonPath) && isResourceMatch(e.resource, resource)) {
                 settle();
             }
         });
@@ -93,10 +110,27 @@ export function waitForActiveEnvironmentChange(
     });
 }
 
+function isResourceMatch(
+    eventResource: { uri: Uri } | Uri | undefined,
+    requestedResource: Uri | undefined,
+): boolean {
+    const eventUri = eventResource && 'uri' in eventResource ? eventResource.uri : eventResource;
+    const requestedUri = requestedResource
+        ? workspace.getWorkspaceFolder(requestedResource)?.uri ?? requestedResource
+        : undefined;
+    return eventUri === undefined
+        ? requestedUri === undefined
+        : requestedUri !== undefined && arePathsSame(eventUri.fsPath, requestedUri.fsPath);
+}
+
+function isEnvironmentPathMatch(environment: { path: string; id: string }, pythonPath: string): boolean {
+    return arePathsSame(environment.path, pythonPath) || environment.id === pythonPath;
+}
+
 /**
  * Sets the active Python interpreter to `pythonPath` without any UI, waits for the
  * asynchronous environment switch to settle (via `onDidChangeActiveEnvironmentPath`),
- * resolves the environment, and returns a tool result describing it.
+ * resolves the environment, and returns it.
  *
  * Returns `undefined` if the path cannot be resolved to a valid environment so callers
  * can produce a tool-specific error message.
@@ -104,11 +138,9 @@ export function waitForActiveEnvironmentChange(
 export async function setEnvironmentDirectlyByPath(
     pythonPath: string,
     api: PythonExtension['environments'],
-    terminalExecutionService: TerminalCodeExecutionProvider,
-    terminalHelper: ITerminalHelper,
     resource: Uri | undefined,
     token: CancellationToken,
-): Promise<LanguageModelToolResult | undefined> {
+): Promise<ResolvedEnvironment | undefined> {
     // Validate the path resolves to a real environment BEFORE mutating user settings.
     // updateActiveEnvironmentPath persists unconditionally, so an invalid path would
     // permanently overwrite the user's selected interpreter.
@@ -116,26 +148,25 @@ export async function setEnvironmentDirectlyByPath(
     if (!candidate) {
         return undefined;
     }
+    if (isEnvironmentPathMatch(api.getActiveEnvironmentPath(resource), pythonPath)) {
+        return candidate;
+    }
 
     // Subscribe to the change event BEFORE triggering the update so we don't miss it.
     // updateActiveEnvironmentPath only persists the setting; the active interpreter switch
     // is asynchronous, so we wait for the event before resolving env details to avoid
     // returning details for the previously-active interpreter.
-    const activeChanged = waitForActiveEnvironmentChange(api, pythonPath, token);
+    const activeChanged = waitForActiveEnvironmentChange(api, pythonPath, resource, token);
     await raceCancellationError(api.updateActiveEnvironmentPath(pythonPath, resource), token);
     await raceCancellationError(activeChanged, token);
 
     // Verify the active env actually switched. If the change event timed out and the
     // active path is still the previous one, don't report success for the wrong env.
     const envPath = api.getActiveEnvironmentPath(resource);
-    if (envPath.path !== pythonPath && envPath.id !== pythonPath) {
+    if (!isEnvironmentPathMatch(envPath, pythonPath)) {
         return undefined;
     }
-    const environment = await raceCancellationError(api.resolveEnvironment(envPath), token);
-    if (!environment) {
-        return undefined;
-    }
-    return getEnvDetailsForResponse(environment, api, terminalExecutionService, terminalHelper, resource, token);
+    return raceCancellationError(api.resolveEnvironment(envPath), token);
 }
 
 export async function getEnvDisplayName(

@@ -31,6 +31,7 @@ import { CreateVirtualEnvTool } from './createVirtualEnvTool';
 import { ISelectPythonEnvToolArguments, SelectPythonEnvTool } from './selectEnvTool';
 import { BaseTool } from './baseTool';
 import { traceVerbose } from '../logging';
+import { ErrorWithTelemetrySafeReason } from '../common/errors/errorUtils';
 
 export interface IConfigurePythonEnvToolArguments extends IResourceReference {
     /**
@@ -137,15 +138,25 @@ export class ConfigurePythonEnvTool extends BaseTool<IConfigurePythonEnvToolArgu
         const result = await setEnvironmentDirectlyByPath(
             pythonPath,
             this.api,
-            this.terminalExecutionService,
-            this.terminalHelper,
             resource,
             token,
         );
         if (result) {
-            return result;
+            this.extraTelemetryProperties.resolveOutcome = 'providedEnv';
+            this.extraTelemetryProperties.envType = getEnvTypeForTelemetry(result);
+            return getEnvDetailsForResponse(
+                result,
+                this.api,
+                this.terminalExecutionService,
+                this.terminalHelper,
+                resource,
+                token,
+            );
         }
-        throw new Error(`No environment found for the provided pythonPath '${pythonPath}'.`);
+        throw new ErrorWithTelemetrySafeReason(
+            `No environment found for the provided pythonPath '${pythonPath}'.`,
+            'noEnvFound',
+        );
     }
 
     async prepareInvocationImpl(

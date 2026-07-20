@@ -86,13 +86,18 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
             const result = await setEnvironmentDirectlyByPath(
                 options.input.pythonPath,
                 this.api,
-                this.terminalExecutionService,
-                this.terminalHelper,
                 resource,
                 token,
             );
             if (result) {
-                return result;
+                return getEnvDetailsForResponse(
+                    result,
+                    this.api,
+                    this.terminalExecutionService,
+                    this.terminalHelper,
+                    resource,
+                    token,
+                );
             }
             return new LanguageModelToolResult([
                 new LanguageModelTextPart(
@@ -121,7 +126,7 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
             }
         } else {
             selected = await raceCancellationError(
-                showCreateAndSelectEnvironmentQuickPick(resource, this.serviceContainer),
+                showCreateAndSelectEnvironmentQuickPick(resource, this.serviceContainer, token),
                 token,
             );
             if (selected) {
@@ -201,6 +206,7 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
 async function showCreateAndSelectEnvironmentQuickPick(
     uri: Uri | undefined,
     serviceContainer: IServiceContainer,
+    token: CancellationToken,
 ): Promise<boolean | undefined> {
     const createLabel = `${Octicons.Add} ${InterpreterQuickPickList.create.label}`;
     const selectLabel = l10n.t('Select an existing Python Environment');
@@ -210,11 +216,15 @@ async function showCreateAndSelectEnvironmentQuickPick(
         { label: selectLabel },
     ];
 
-    const selectedItem = await showQuickPick(items, {
-        placeHolder: l10n.t('Configure a Python Environment'),
-        matchOnDescription: true,
-        ignoreFocusOut: true,
-    });
+    const selectedItem = await showQuickPick(
+        items,
+        {
+            placeHolder: l10n.t('Configure a Python Environment'),
+            matchOnDescription: true,
+            ignoreFocusOut: true,
+        },
+        token,
+    );
 
     if (selectedItem && !Array.isArray(selectedItem) && selectedItem.label === createLabel) {
         const disposables = new DisposableStore();
@@ -236,7 +246,7 @@ async function showCreateAndSelectEnvironmentQuickPick(
             );
 
             if (created?.action === 'Back') {
-                return showCreateAndSelectEnvironmentQuickPick(uri, serviceContainer);
+                return showCreateAndSelectEnvironmentQuickPick(uri, serviceContainer, token);
             }
             if (created?.action === 'Cancel') {
                 return undefined;
@@ -255,7 +265,7 @@ async function showCreateAndSelectEnvironmentQuickPick(
             commands.executeCommand(Commands.Set_Interpreter, { hideCreateVenv: true, showBackButton: true }),
         )) as SelectEnvironmentResult | undefined;
         if (result?.action === 'Back') {
-            return showCreateAndSelectEnvironmentQuickPick(uri, serviceContainer);
+            return showCreateAndSelectEnvironmentQuickPick(uri, serviceContainer, token);
         }
         if (result?.action === 'Cancel') {
             return undefined;
