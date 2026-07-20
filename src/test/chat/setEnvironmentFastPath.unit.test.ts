@@ -36,6 +36,16 @@ suite('Chat fast-path environment setup', () => {
     } as unknown) as ResolvedEnvironment;
     let tokenSource: CancellationTokenSource;
 
+    function getToolResultText(content: readonly unknown[]): string {
+        return content
+            .map((part) =>
+                typeof part === 'object' && part !== null && 'value' in part && typeof part.value === 'string'
+                    ? part.value
+                    : '',
+            )
+            .join(' ');
+    }
+
     setup(() => {
         tokenSource = new CancellationTokenSource();
         when(mockedVSCodeNamespaces.workspace!.notebookDocuments).thenReturn([]);
@@ -268,7 +278,12 @@ suite('Chat fast-path environment setup', () => {
         const shouldCreateNewVirtualEnv = sinon.stub().resolves(false);
         const terminalExecutionService = mock<TerminalCodeExecutionProvider>();
         const terminalHelper = mock<ITerminalHelper>();
-        when(terminalExecutionService.getExecutableInfo(resource)).thenResolve({ command: 'python', args: [] });
+        when(terminalExecutionService.getExecutableInfo(resource)).thenResolve({
+            command: 'python',
+            args: [],
+            python: ['python'],
+            pythonExecutable: 'python',
+        });
         when(terminalHelper.buildCommandForTerminal(TerminalShellType.other, 'python', [])).thenReturn('python');
         const serviceContainer = mock<IServiceContainer>();
         when(serviceContainer.get<TerminalCodeExecutionProvider>(ICodeExecutionService, 'standard')).thenReturn(
@@ -297,7 +312,7 @@ suite('Chat fast-path environment setup', () => {
 
         const result = await tool.invokeImpl(options, resource, tokenSource.token);
 
-        const text = result.content.map((part) => ('value' in part ? part.value : '')).join(' ');
+        const text = getToolResultText(result.content);
         expect(text).to.include('A Python Environment has been configured');
         sinon.assert.notCalled(getRecommendedEnvironment);
         sinon.assert.notCalled(shouldCreateNewVirtualEnv);
@@ -329,7 +344,7 @@ suite('Chat fast-path environment setup', () => {
                 tokenSource.token,
             );
 
-            const text = result.content.map((part) => ('value' in part ? part.value : '')).join(' ');
+            const text = getToolResultText(result.content);
             expect(text.toLowerCase()).to.include('notebook');
             sinon.assert.notCalled(update);
         });
