@@ -343,6 +343,7 @@ def runner_with_cwd_env(
                 sys.executable,
                 "-m",
                 "pytest",
+                "--disable-plugin-autoload",
                 "-p",
                 "pytest_cov.plugin",
                 "-p",
