@@ -197,6 +197,9 @@ jobs:
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
+      - name: Install pytest
+        run: python -m pip install --upgrade pytest
+
       - name: Run Python unit tests
         run: python python_files/tests/run_all.py
 
