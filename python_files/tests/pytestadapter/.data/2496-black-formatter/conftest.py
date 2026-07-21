@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Local replacement for the pytest-black plugin that supports pytest 7+.
+# Local replacement for the pytest-black plugin that supports pytest 8.4+.
 # pytest-black 0.6.0 uses the deprecated `path` argument in pytest_collect_file,
 # which was removed in pytest 8.1. This conftest provides a compatible implementation.
 
@@ -9,15 +9,10 @@ import sys
 
 import pytest
 
-PYTEST_VER = tuple(int(x) for x in pytest.__version__.split(".")[:2])
-
 try:
-    import tomllib
+    import tomli
 except ImportError:
-    try:
-        import tomli as tomllib  # type: ignore[no-redef]
-    except ImportError:
-        tomllib = None  # type: ignore[assignment]
+    tomli = None  # type: ignore[assignment]
 
 HISTKEY = "black/mtimes"
 
@@ -42,28 +37,14 @@ def pytest_unconfigure(config):
         config.cache.set(HISTKEY, config._blackmtimes)
 
 
-if PYTEST_VER >= (8, 1):
-
-    def pytest_collect_file(file_path, parent):
-        config = parent.config
-        if (
-            config.option.black
-            and file_path.suffix in (".py", ".pyi")
-            and file_path.name != "conftest.py"
-        ):
-            return BlackFile.from_parent(parent, path=file_path)
-
-elif PYTEST_VER >= (7, 0):
-
-    def pytest_collect_file(file_path, path, parent):  # type: ignore[misc]  # noqa: ARG001
-        # `path` must match the pytest 7.x hookspec; use file_path (pathlib.Path) in body.
-        config = parent.config
-        if (
-            config.option.black
-            and file_path.suffix in (".py", ".pyi")
-            and file_path.name != "conftest.py"
-        ):
-            return BlackFile.from_parent(parent, path=file_path)
+def pytest_collect_file(file_path, parent):
+    config = parent.config
+    if (
+        config.option.black
+        and file_path.suffix in (".py", ".pyi")
+        and file_path.name != "conftest.py"
+    ):
+        return BlackFile.from_parent(parent, path=file_path)
 
 
 class BlackFile(pytest.File):
@@ -77,9 +58,9 @@ class BlackItem(pytest.Item):
         super().__init__(**kwargs)
         self.add_marker("black")
         try:
-            if tomllib is not None:
+            if tomli is not None:
                 with open("pyproject.toml", "rb") as toml_file:
-                    settings = tomllib.load(toml_file)["tool"]["black"]
+                    settings = tomli.load(toml_file)["tool"]["black"]
                 if "include" in settings:
                     settings["include"] = self._re_fix_verbose(settings["include"])
                 if "exclude" in settings:

@@ -12,7 +12,7 @@ import sys
 import tempfile
 import threading
 import uuid
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 if sys.platform == "win32":
     from namedpipe import NPopen  # pylint: disable=import-error # cspell: disable-line
@@ -245,7 +245,10 @@ def _listen_on_pipe_new(listener, result: List[str], completed: threading.Event)
 
 
 def _run_test_code(
-    proc_args: List[str], proc_env, proc_cwd: str, completed: threading.Event
+    proc_args: List[str],
+    proc_env,
+    proc_cwd: Union[str, os.PathLike[str]],
+    completed: threading.Event,
 ) -> subprocess.CompletedProcess:
     try:
         return subprocess.run(
