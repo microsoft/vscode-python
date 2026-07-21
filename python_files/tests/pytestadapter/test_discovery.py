@@ -476,10 +476,13 @@ def test_config_sub_folder():
             expected_discovery_test_output.ruff_test_expected_output,
             "--ruff",
         ),
-        (
+        pytest.param(
             "2496-black-formatter",
             expected_discovery_test_output.black_formatter_expected_output,
             "--black",
+            marks=pytest.mark.skip(
+                reason="pytest-black does not support pytest 8.1 or newer"
+            ),
         ),
     ],
 )
