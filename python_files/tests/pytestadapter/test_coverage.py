@@ -154,7 +154,11 @@ def test_pytest_cov_manual_plugin_loading():
     (pytest_cov) in this scenario.
     """
     args = ["--collect-only"]
-    env_add = {"COVERAGE_ENABLED": "True", "_PYTEST_MANUAL_PLUGIN_LOAD": "True"}
+    env_add = {
+        "COVERAGE_ENABLED": "True",
+        "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
+        "_PYTEST_MANUAL_PLUGIN_LOAD": "True",
+    }
     cov_folder_path = TEST_DATA_PATH / "coverage_gen"
 
     # Should NOT raise VSCodePytestError about pytest-cov not being installed
