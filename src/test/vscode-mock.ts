@@ -149,6 +149,12 @@ mockedVSCode.TestRunProfileKind = vscodeMocks.TestRunProfileKind;
 (mockedVSCode as any).StatementCoverage = class StatementCoverage {
     constructor(public executed: number | boolean, public location: any, public branches?: any) {}
 };
+(mockedVSCode as any).LanguageModelTextPart = class LanguageModelTextPart {
+    constructor(public value: string) {}
+};
+(mockedVSCode as any).LanguageModelToolResult = class LanguageModelToolResult {
+    constructor(public content: unknown[]) {}
+};
 
 // Mock TestController for vscode.tests namespace
 function createMockTestController(): vscode.TestController {

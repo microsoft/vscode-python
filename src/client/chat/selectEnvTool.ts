@@ -25,6 +25,7 @@ import {
     getEnvDetailsForResponse,
     getToolResponseIfNotebook,
     IResourceReference,
+    raceCancellationError,
 } from './utils';
 import { ITerminalHelper } from '../common/terminal/types';
 import { raceTimeout } from '../common/utils/async';
@@ -67,12 +68,15 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
         let selected: boolean | undefined = false;
         const hasVenvOrCondaEnvInWorkspaceFolder = doesWorkspaceHaveVenvOrCondaEnv(resource, this.api);
         if (options.input.reason === 'cancelled' || hasVenvOrCondaEnvInWorkspaceFolder) {
-            const result = (await Promise.resolve(
-                commands.executeCommand(Commands.Set_Interpreter, {
-                    hideCreateVenv: false,
-                    showBackButton: false,
-                }),
-            )) as SelectEnvironmentResult | undefined;
+            const result = await raceCancellationError(
+                Promise.resolve(
+                    commands.executeCommand(Commands.Set_Interpreter, {
+                        hideCreateVenv: false,
+                        showBackButton: false,
+                    }),
+                ) as Promise<SelectEnvironmentResult | undefined>,
+                token,
+            );
             if (result?.path) {
                 traceVerbose(`User selected a Python environment ${result.path} in Select Python Tool.`);
                 selected = true;
@@ -80,7 +84,10 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
                 traceWarn(`User did not select a Python environment in Select Python Tool.`);
             }
         } else {
-            selected = await showCreateAndSelectEnvironmentQuickPick(resource, this.serviceContainer);
+            selected = await raceCancellationError(
+                showCreateAndSelectEnvironmentQuickPick(resource, this.serviceContainer, token),
+                token,
+            );
             if (selected) {
                 traceVerbose(`User selected a Python environment ${selected} in Select Python Tool(2).`);
             } else {
@@ -152,6 +159,7 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
 async function showCreateAndSelectEnvironmentQuickPick(
     uri: Uri | undefined,
     serviceContainer: IServiceContainer,
+    token: CancellationToken,
 ): Promise<boolean | undefined> {
     const createLabel = `${Octicons.Add} ${InterpreterQuickPickList.create.label}`;
     const selectLabel = l10n.t('Select an existing Python Environment');
@@ -161,11 +169,15 @@ async function showCreateAndSelectEnvironmentQuickPick(
         { label: selectLabel },
     ];
 
-    const selectedItem = await showQuickPick(items, {
-        placeHolder: l10n.t('Configure a Python Environment'),
-        matchOnDescription: true,
-        ignoreFocusOut: true,
-    });
+    const selectedItem = await showQuickPick(
+        items,
+        {
+            placeHolder: l10n.t('Configure a Python Environment'),
+            matchOnDescription: true,
+            ignoreFocusOut: true,
+        },
+        token,
+    );
 
     if (selectedItem && !Array.isArray(selectedItem) && selectedItem.label === createLabel) {
         const disposables = new DisposableStore();
@@ -187,7 +199,7 @@ async function showCreateAndSelectEnvironmentQuickPick(
             );
 
             if (created?.action === 'Back') {
-                return showCreateAndSelectEnvironmentQuickPick(uri, serviceContainer);
+                return showCreateAndSelectEnvironmentQuickPick(uri, serviceContainer, token);
             }
             if (created?.action === 'Cancel') {
                 return undefined;
@@ -206,7 +218,7 @@ async function showCreateAndSelectEnvironmentQuickPick(
             commands.executeCommand(Commands.Set_Interpreter, { hideCreateVenv: true, showBackButton: true }),
         )) as SelectEnvironmentResult | undefined;
         if (result?.action === 'Back') {
-            return showCreateAndSelectEnvironmentQuickPick(uri, serviceContainer);
+            return showCreateAndSelectEnvironmentQuickPick(uri, serviceContainer, token);
         }
         if (result?.action === 'Cancel') {
             return undefined;
