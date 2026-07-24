@@ -849,20 +849,17 @@ def create_test_node(
     test_case -- the pytest test case.
     """
 
-    lineno0 = None
+    lineno0: int | None = None
     if PYTEST_INTERNAL_AVAILABLE:
-        try:
-            # test_case.location returns tuple of path and line number
-            # Obtaining the path is expensive and we do not need it anyway.
-            # Before falling back to that high-level API, we try to use
-            # internal API to get just line number without the path.
-            lineno0 = Code.from_function(cast(PyobjMixin, test_case).obj).firstlineno # type: ignore
-        except Exception:
-            pass
-    
+        obj = getattr(test_case, "obj", None)
+        if obj is not None:
+            try:
+                lineno0 = Code.from_function(obj).firstlineno
+            except (AttributeError, OSError, TypeError):
+                lineno0 = None
+
     if lineno0 is None:
         lineno0 = test_case.location[1]
-
     test_case_loc: str = (
         str(lineno0 + 1) if (lineno0 is not None) else ""
     )
