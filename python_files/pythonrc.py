@@ -7,6 +7,21 @@ if sys.platform != "win32":
 original_ps1 = ">>> "
 is_wsl = "microsoft-standard-WSL" in platform.release()
 
+# NOTE: PYTHONSTARTUP executes this file's code directly inside the user's
+# __main__ namespace, so everything defined below actually lives in
+# __main__.__dict__. That means PS1.__str__.__globals__ IS the user's
+# namespace: if the user later shadows a name we rely on at prompt-render
+# time (e.g. `int = 20`, `sys = 1`, `original_ps1 = ...`), a plain global
+# lookup would resolve to the user's value instead of ours and raise,
+# silently killing the prompt (see #26039). Capture the real objects here,
+# before any user code runs, so later reassignment in __main__ can't affect
+# us.
+_int = int
+_str = str
+_bool = bool
+_sys = sys
+_original_ps1 = original_ps1
+
 
 class REPLHooks:
     def __init__(self):
@@ -33,10 +48,16 @@ class REPLHooks:
 def get_last_command():
     # Get the last history item
     last_command = ""
-    if sys.platform != "win32":
-        last_command = readline.get_history_item(readline.get_current_history_length())
+    if _sys.platform != "win32":
+        last_command = _readline.get_history_item(_readline.get_current_history_length())
 
     return last_command
+
+
+# Capture the function object itself, not just the name: `get_last_command`
+# is also just a name in __main__, so it could be shadowed the same way.
+_get_last_command = get_last_command
+_readline = readline if sys.platform != "win32" else None
 
 
 class PS1:
@@ -46,27 +67,27 @@ class PS1:
 
     # str will get called for every prompt with exit code to show success/failure
     def __str__(self):
-        exit_code = int(bool(self.hooks.failure_flag))
+        exit_code = _int(_bool(self.hooks.failure_flag))
         self.hooks.failure_flag = False
         # Guide following official VS Code doc for shell integration sequence:
         result = ""
         # For non-windows allow recent_command history.
-        if sys.platform != "win32":
+        if _sys.platform != "win32":
             result = "{soh}{command_executed}{command_line}{command_finished}{prompt_started}{stx}{prompt}{soh}{command_start}{stx}".format(
                 soh="\001",
                 stx="\002",
                 command_executed="\x1b]633;C\x07",
-                command_line="\x1b]633;E;" + str(get_last_command()) + "\x07",
-                command_finished="\x1b]633;D;" + str(exit_code) + "\x07",
+                command_line="\x1b]633;E;" + _str(_get_last_command()) + "\x07",
+                command_finished="\x1b]633;D;" + _str(exit_code) + "\x07",
                 prompt_started="\x1b]633;A\x07",
-                prompt=original_ps1,
+                prompt=_original_ps1,
                 command_start="\x1b]633;B\x07",
             )
         else:
             result = "{command_finished}{prompt_started}{prompt}{command_start}{command_executed}".format(
-                command_finished="\x1b]633;D;" + str(exit_code) + "\x07",
+                command_finished="\x1b]633;D;" + _str(exit_code) + "\x07",
                 prompt_started="\x1b]633;A\x07",
-                prompt=original_ps1,
+                prompt=_original_ps1,
                 command_start="\x1b]633;B\x07",
                 command_executed="\x1b]633;C\x07",
             )
