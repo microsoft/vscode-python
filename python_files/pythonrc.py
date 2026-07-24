@@ -107,4 +107,3 @@ if sys.platform == "darwin":
     print("Cmd click to launch VS Code Native REPL")
 else:
     print("Ctrl click to launch VS Code Native REPL")
-    
