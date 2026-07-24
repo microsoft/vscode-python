@@ -119,4 +119,3 @@ def test_prompt_survives_shadowed_builtins_under_pythonstartup():
     }.items():
         main_ns[name] = value
         assert str(ps1), f"prompt failed to render after shadowing {name!r}"
-        
