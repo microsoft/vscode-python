@@ -1593,7 +1593,7 @@
             {
                 "name": "configure_python_environment",
                 "displayName": "Configure Python Environment",
-                "modelDescription": "This tool configures a Python environment in the given workspace. ALWAYS Use this tool to set up the user's chosen environment and ALWAYS call this tool before using any other Python related tools or running any Python command in the terminal. IMPORTANT: This tool is only for Python environments (venv, virtualenv, conda, pipenv, poetry, pyenv, pixi, or any other Python environment manager). Do not use this tool for npm packages, system packages, Ruby gems, or any other non-Python dependencies.",
+                "modelDescription": "This tool configures a Python environment in the given workspace. ALWAYS Use this tool to set up the user's chosen environment and ALWAYS call this tool before using any other Python related tools or running any Python command in the terminal. If you already know which Python interpreter to use (e.g. from a previous tool call or user message), pass it as 'pythonPath' to skip interactive prompts and configure the environment automatically. IMPORTANT: This tool is only for Python environments (venv, virtualenv, conda, pipenv, poetry, pyenv, pixi, or any other Python environment manager). Do not use this tool for npm packages, system packages, Ruby gems, or any other non-Python dependencies.",
                 "userDescription": "%python.languageModelTools.configure_python_environment.userDescription%",
                 "toolReferenceName": "configurePythonEnvironment",
                 "tags": [
@@ -1609,6 +1609,10 @@
                         "resourcePath": {
                             "type": "string",
                             "description": "The path to the Python file or workspace for which a Python Environment needs to be configured."
+                        },
+                        "pythonPath": {
+                            "type": "string",
+                            "description": "Optional absolute path to a Python interpreter to use. When provided, the environment is configured automatically without any interactive prompts. Use this to avoid blocking the session on user input."
                         }
                     },
                     "required": []
