@@ -153,14 +153,17 @@ export class WorkspaceTestAdapter {
             deferred.resolve();
         } catch (ex) {
             const cycle = (this.resultResolver as Partial<PythonResultResolver>).discoveryTelemetry?.complete();
-            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
-                tool: this.testProvider,
-                failed: true,
-                mode: 'legacy',
-                trigger: cycle?.trigger ?? trigger,
-                failureCategory: token?.isCancellationRequested ? 'cancelled' : 'unknown',
-                totalDurationMs: cycle?.stopWatch.elapsedTime ?? stopWatch.elapsedTime,
-            });
+            sendTelemetryEvent(
+                EventName.UNITTEST_DISCOVERY_DONE,
+                { totalDurationMs: cycle?.stopWatch.elapsedTime ?? stopWatch.elapsedTime },
+                {
+                    tool: this.testProvider,
+                    failed: true,
+                    mode: 'legacy',
+                    trigger: cycle?.trigger ?? trigger,
+                    failureCategory: token?.isCancellationRequested ? 'cancelled' : 'unknown',
+                },
+            );
 
             let cancel = token?.isCancellationRequested
                 ? Testing.cancelUnittestDiscovery
