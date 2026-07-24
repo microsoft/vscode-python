@@ -19,6 +19,7 @@ import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/termin
 import {
     getEnvDisplayName,
     getEnvironmentDetails,
+    getEnvTypeForTelemetry,
     getToolResponseIfNotebook,
     IResourceReference,
     raceCancellationError,
@@ -51,6 +52,12 @@ export class GetExecutableTool extends BaseTool<IResourceReference> implements L
         const notebookResponse = getToolResponseIfNotebook(resourcePath);
         if (notebookResponse) {
             return notebookResponse;
+        }
+
+        const envPath = this.api.getActiveEnvironmentPath(resourcePath);
+        const environment = await raceCancellationError(this.api.resolveEnvironment(envPath), token);
+        if (environment) {
+            this.extraTelemetryProperties.envType = getEnvTypeForTelemetry(environment);
         }
 
         const message = await getEnvironmentDetails(

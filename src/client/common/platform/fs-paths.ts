@@ -148,6 +148,19 @@ export function normCasePath(filePath: string): string {
     return normCase(nodepath.normalize(filePath));
 }
 
+/**
+ * Returns true if the given path is absolute on either POSIX or Windows.
+ *
+ * Node's `path.isAbsolute` is platform-dependent, so a POSIX path like `/foo`
+ * is not recognized as absolute on Windows, and a Windows path like `C:\foo`
+ * is not recognized as absolute on POSIX. Use this helper when the path could
+ * have been produced on a different OS than the one currently running (e.g.
+ * paths received in a JSON payload from a Python subprocess).
+ */
+export function isAbsolutePath(value: string): boolean {
+    return nodepath.posix.isAbsolute(value) || nodepath.win32.isAbsolute(value);
+}
+
 export function normCase(s: string): string {
     return getOSType() === OSType.Windows ? s.toUpperCase() : s;
 }

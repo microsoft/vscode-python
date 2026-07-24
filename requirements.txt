@@ -8,9 +8,9 @@ microvenv==2025.0 \
     --hash=sha256:568155ec18af01c89f270d35d123ab803b09672b480c3702d15fd69e9cc5bd1e \
     --hash=sha256:8a2568a8390a4ffb5af2f05e7642454e03b887e582d192b6316326974eab5d0f
     # via -r requirements.in
-packaging==26.1 \
-    --hash=sha256:5d9c0669c6285e491e0ced2eee587eaf67b670d94a19e94e3984a481aba6802f \
-    --hash=sha256:f042152b681c4bfac5cae2742a55e103d27ab2ec0f3d88037136b6bfe7c9c5de
+packaging==26.2 \
+    --hash=sha256:5fc45236b9446107ff2415ce77c807cee2862cb6fac22b8a73826d0693b0980e \
+    --hash=sha256:ff452ff5a3e828ce110190feff1178bb1f2ea2281fa2075aadb987c2fb221661
     # via -r requirements.in
 tomli==2.4.1 \
     --hash=sha256:01f520d4f53ef97964a240a035ec2a869fe1a37dde002b57ebc4417a27ccd853 \

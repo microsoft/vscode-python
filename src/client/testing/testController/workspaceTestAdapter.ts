@@ -5,6 +5,7 @@ import * as util from 'util';
 import { CancellationToken, TestController, TestItem, TestRun, TestRunProfileKind, Uri } from 'vscode';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -16,6 +17,8 @@ import { ITestDebugLauncher } from '../common/types';
 import { buildErrorNodeOptions } from './common/utils';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ProjectAdapter } from './common/projectAdapter';
+import { PythonResultResolver } from './common/resultResolver';
+import { DiscoveryTriggerKind } from './common/discoveryTelemetry';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -120,6 +123,7 @@ export class WorkspaceTestAdapter {
         executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
         interpreter?: PythonEnvironment,
+        trigger?: DiscoveryTriggerKind,
     ): Promise<void> {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: this.testProvider });
 
@@ -131,6 +135,15 @@ export class WorkspaceTestAdapter {
 
         const deferred = createDeferred<void>();
         this.discovering = deferred;
+        const stopWatch = new StopWatch();
+
+        // Hand the resolver per-cycle context so resolveDiscovery can report
+        // mode + trigger + totalDurationMs in the success-path DISCOVERY_DONE event.
+        // Optional chaining keeps test doubles that don't implement the property working.
+        (this.resultResolver as Partial<PythonResultResolver>).discoveryTelemetry?.start({
+            mode: 'legacy',
+            trigger,
+        });
 
         try {
             if (executionFactory === undefined) {
@@ -139,7 +152,15 @@ export class WorkspaceTestAdapter {
             await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory, token, interpreter);
             deferred.resolve();
         } catch (ex) {
-            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: this.testProvider, failed: true });
+            const cycle = (this.resultResolver as Partial<PythonResultResolver>).discoveryTelemetry?.complete();
+            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
+                tool: this.testProvider,
+                failed: true,
+                mode: 'legacy',
+                trigger: cycle?.trigger ?? trigger,
+                failureCategory: token?.isCancellationRequested ? 'cancelled' : 'unknown',
+                totalDurationMs: cycle?.stopWatch.elapsedTime ?? stopWatch.elapsedTime,
+            });
 
             let cancel = token?.isCancellationRequested
                 ? Testing.cancelUnittestDiscovery
@@ -163,7 +184,8 @@ export class WorkspaceTestAdapter {
             this.discovering = undefined;
         }
 
-        sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: this.testProvider, failed: false });
+        // Success path: resolveDiscovery (called by the adapter) already emitted
+        // UNITTEST_DISCOVERY_DONE with the per-cycle context. Nothing extra to do here.
         return Promise.resolve();
     }
 

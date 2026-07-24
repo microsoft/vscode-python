@@ -165,9 +165,14 @@ async function buildWebPack(webpackConfigName, args, env) {
         ['run', 'webpack', '--', ...args, ...['--mode', 'production', '--devtool', 'source-map']],
         env,
     );
+    // Strip ANSI color/style escape codes before parsing webpack output lines.
+    // Webpack colorizes output (e.g. "\u001b[1m\u001b[31mERROR\u001b[39m\u001b[22m in ..."),
+    // which would prevent startsWith('ERROR in') / startsWith('WARNING in') from matching.
+    // eslint-disable-next-line no-control-regex
+    const stripAnsi = (str) => str.replace(/\u001b\[[0-9;]*m/g, '');
     const stdOutLines = stdOut
         .split(os.EOL)
-        .map((item) => item.trim())
+        .map((item) => stripAnsi(item).trim())
         .filter((item) => item.length > 0);
     // Remember to perform a case insensitive search.
     const warnings = stdOutLines
