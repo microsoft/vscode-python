@@ -28,6 +28,36 @@ export function createTestingDeferred(): Deferred<void> {
     return createDeferred<void>();
 }
 
+// Maximum time (ms) to wait for the result pipe to drain after the subprocess exits.
+// Acts as a backstop in case `reader.onClose` never fires (e.g. abnormal subprocess exit,
+// platform-specific named-pipe quirks) so the adapter's `finally` block can never hang.
+export const RESULT_PIPE_DRAIN_TIMEOUT_MS = 5_000;
+
+/**
+ * Awaits `deferred.promise` but resolves after at most `timeoutMs` so callers
+ * cannot hang indefinitely if the underlying event source never fires.
+ */
+export async function awaitDeferredWithTimeout<T>(deferred: Deferred<T>, timeoutMs: number): Promise<void> {
+    let timeoutHandle: NodeJS.Timeout | undefined;
+    try {
+        await Promise.race([
+            deferred.promise,
+            new Promise<void>((resolve) => {
+                timeoutHandle = setTimeout(() => {
+                    traceVerbose(
+                        `awaitDeferredWithTimeout: deferred did not settle within ${timeoutMs}ms; giving up and continuing.`,
+                    );
+                    resolve();
+                }, timeoutMs);
+            }),
+        ]);
+    } finally {
+        if (timeoutHandle) {
+            clearTimeout(timeoutHandle);
+        }
+    }
+}
+
 interface ExecutionResultMessage extends Message {
     params: ExecutionTestPayload;
 }
@@ -89,6 +119,8 @@ export async function startRunResultNamedPipe(
     traceVerbose('Starting Test Result named pipe');
     const pipeName: string = generateRandomPipeName('python-test-results');
 
+    // `cancellationToken` only cancels pipe creation; disposal is driven by
+    // `reader.onClose` so buffered results are not dropped on cancel.
     const reader = await createReaderPipe(pipeName, cancellationToken);
     traceVerbose(`Test Results named pipe ${pipeName} connected`);
     let disposables: Disposable[] = [];
@@ -99,14 +131,6 @@ export async function startRunResultNamedPipe(
         deferredTillServerClose.resolve();
     });
 
-    if (cancellationToken) {
-        disposables.push(
-            cancellationToken?.onCancellationRequested(() => {
-                traceLog(`Test Result named pipe ${pipeName}  cancelled`);
-                disposable.dispose();
-            }),
-        );
-    }
     disposables.push(
         reader,
         reader.listen((data: Message) => {
@@ -115,9 +139,7 @@ export async function startRunResultNamedPipe(
             dataReceivedCallback((data as ExecutionResultMessage).params as ExecutionTestPayload);
         }),
         reader.onClose(() => {
-            // this is called once the server close, once per run instance
             traceVerbose(`Test Result named pipe ${pipeName} closed. Disposing of listener/s.`);
-            // dispose of all data listeners and cancelation listeners
             disposable.dispose();
         }),
         reader.onError((error) => {
@@ -223,6 +245,10 @@ export function buildErrorNodeOptions(
     };
 }
 
+/**
+ * Populates the VS Code test tree from discovered test data.
+ * @returns The number of leaf test items added or updated while walking the tree.
+ */
 export function populateTestTree(
     testController: TestController,
     testTreeData: DiscoveredTestNode,
@@ -231,7 +257,10 @@ export function populateTestTree(
     token?: CancellationToken,
     projectId?: string,
     projectName?: string,
-): void {
+): number {
+    // Count leaf tests while walking the tree so telemetry does not need a second traversal.
+    let testCount = 0;
+
     // If testRoot is undefined, use the info of the root item of testTreeData to create a test item, and append it to the test controller.
     if (!testRoot) {
         // Create project-scoped ID if projectId is provided
@@ -275,6 +304,7 @@ export function populateTestTree(
                 testItemMappings.runIdToTestItem.set(child.runID, testItem);
                 testItemMappings.runIdToVSid.set(child.runID, vsId);
                 testItemMappings.vsIdToRunId.set(vsId, child.runID);
+                testCount += 1;
             } else {
                 // Use project-scoped ID for non-test nodes and look up within the current root
                 const nodeId = projectId ? `${projectId}${PROJECT_ID_SEPARATOR}${child.id_}` : child.id_;
@@ -302,10 +332,20 @@ export function populateTestTree(
 
                     testRoot!.children.add(node);
                 }
-                populateTestTree(testController, child, node, testItemMappings, token, projectId, projectName);
+                testCount += populateTestTree(
+                    testController,
+                    child,
+                    node,
+                    testItemMappings,
+                    token,
+                    projectId,
+                    projectName,
+                );
             }
         }
     });
+
+    return testCount;
 }
 
 function isTestItem(test: DiscoveredTestNode | DiscoveredTestItem): test is DiscoveredTestItem {

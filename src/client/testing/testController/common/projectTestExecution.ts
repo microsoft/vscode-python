@@ -5,6 +5,8 @@ import { CancellationToken, FileCoverageDetail, TestItem, TestRun, TestRunProfil
 import { traceError, traceInfo, traceVerbose, traceWarn } from '../../../logging';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
+import type { UnitTestRunFailureCategory } from '../../../telemetry/constants';
+import { StopWatch } from '../../../common/utils/stopWatch';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { ITestDebugLauncher } from '../../common/types';
 import { ProjectAdapter } from './projectAdapter';
@@ -70,13 +72,30 @@ export async function executeTestsForProjects(
             debugging: isDebugMode,
         });
 
+        const stopWatch = new StopWatch();
+        let failed = false;
+        let failureCategory: UnitTestRunFailureCategory | undefined;
         try {
             await executeTestsForProject(project, items, runInstance, request, deps);
         } catch (error) {
+            failed = true;
+            failureCategory = token.isCancellationRequested ? 'cancelled' : 'unknown';
             // Don't log cancellation as an error
             if (!token.isCancellationRequested) {
                 traceError(`[test-by-project] Execution failed for project ${project.projectName}:`, error);
             }
+        } finally {
+            sendTelemetryEvent(
+                EventName.UNITTEST_RUN_DONE,
+                { durationMs: stopWatch.elapsedTime, requestedCount: items.length },
+                {
+                    tool: project.testProvider,
+                    debugging: isDebugMode,
+                    mode: 'project',
+                    failed,
+                    failureCategory,
+                },
+            );
         }
     });
 

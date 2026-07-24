@@ -201,7 +201,7 @@ suite('Workspace test adapter', () => {
             sinon.assert.calledOnce(discoverTestsStub);
         });
 
-        test('If discovery succeeds, send a telemetry event with the "failed" key set to false', async () => {
+        test('If discovery succeeds, the success-path telemetry event is emitted by the result resolver (not the adapter)', async () => {
             discoverTestsStub.resolves({ status: 'success' });
 
             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings);
@@ -217,11 +217,13 @@ suite('Workspace test adapter', () => {
 
             await workspaceTestAdapter.discoverTests(testController, execFactory.object);
 
-            sinon.assert.calledWith(sendTelemetryStub, EventName.UNITTEST_DISCOVERY_DONE);
-            assert.strictEqual(telemetryEvent.length, 2);
-
-            const lastEvent = telemetryEvent[1];
-            assert.strictEqual(lastEvent.properties.failed, false);
+            // The success-path UNITTEST_DISCOVERY_DONE event is now emitted by
+            // PythonResultResolver.resolveDiscovery so it can include per-cycle context
+            // (mode, trigger, totalDurationMs, testCount). The mocked resolver in this
+            // test does not invoke resolveDiscovery, so the only telemetry the adapter
+            // itself emits in the success path is UNITTEST_DISCOVERING (start).
+            sinon.assert.calledWith(sendTelemetryStub, EventName.UNITTEST_DISCOVERING);
+            assert.strictEqual(telemetryEvent.length, 1);
         });
 
         test('If discovery failed, send a telemetry event with the "failed" key set to true, and add an error node to the test controller', async () => {

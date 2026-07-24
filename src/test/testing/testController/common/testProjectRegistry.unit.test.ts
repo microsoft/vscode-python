@@ -238,6 +238,61 @@ suite('TestProjectRegistry', () => {
             expect(projects).to.have.length(1);
             expect(projects[0].projectUri.fsPath).to.equal(workspaceUri.fsPath);
         });
+
+        test('should defer a project whose environment is not yet resolved and fall back to default', async () => {
+            const workspaceUri = Uri.file('/workspace');
+            const projectUri = Uri.file('/workspace/project1');
+
+            sandbox.stub(envExtApiInternal, 'useEnvExtension').returns(true);
+            sandbox.stub(envExtApiInternal, 'getEnvExtApi').resolves({
+                getPythonProjects: () => [{ name: 'project1', uri: projectUri }],
+                // Environment not assigned yet (e.g. environments extension still refreshing).
+                getEnvironment: sandbox.stub().resolves(undefined),
+            } as any);
+
+            const projects = await registry.discoverAndRegisterProjects(workspaceUri);
+
+            // The unresolved project is deferred (not a hard failure), so with no other projects we
+            // fall back to a single default project rather than throwing.
+            expect(projects).to.have.length(1);
+            expect(projects[0].projectUri.fsPath).to.equal(workspaceUri.fsPath);
+        });
+
+        test('should keep resolved projects and defer only the ones without an environment', async () => {
+            const workspaceUri = Uri.file('/workspace');
+            const resolvedUri = Uri.file('/workspace/resolved');
+            const unresolvedUri = Uri.file('/workspace/unresolved');
+
+            const mockPythonEnv: PythonEnvironment = {
+                name: 'env1',
+                displayName: 'Python 3.11',
+                shortDisplayName: 'Python 3.11',
+                displayPath: '/usr/bin/python3',
+                version: '3.11.8',
+                environmentPath: Uri.file('/usr/bin/python3'),
+                sysPrefix: '/usr',
+                execInfo: { run: { executable: '/usr/bin/python3' } },
+                envId: { id: 'env1', managerId: 'manager1' },
+            };
+
+            sandbox.stub(envExtApiInternal, 'useEnvExtension').returns(true);
+            sandbox.stub(envExtApiInternal, 'getEnvExtApi').resolves({
+                getPythonProjects: () => [
+                    { name: 'resolved', uri: resolvedUri },
+                    { name: 'unresolved', uri: unresolvedUri },
+                ],
+                getEnvironment: sandbox
+                    .stub()
+                    .callsFake(async (uri: Uri) => (uri.fsPath === resolvedUri.fsPath ? mockPythonEnv : undefined)),
+            } as any);
+
+            const projects = await registry.discoverAndRegisterProjects(workspaceUri);
+
+            // Only the project with a resolved environment is registered; the other is deferred and
+            // picked up later via re-discovery, so we do NOT collapse to a default project.
+            expect(projects).to.have.length(1);
+            expect(projects[0].projectUri.fsPath).to.equal(resolvedUri.fsPath);
+        });
     });
 
     suite('configureNestedProjectIgnores', () => {
