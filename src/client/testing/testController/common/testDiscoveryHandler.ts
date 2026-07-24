@@ -3,13 +3,79 @@
 
 import { CancellationToken, TestController, Uri, MarkdownString } from 'vscode';
 import * as util from 'util';
-import { DiscoveredTestPayload } from './types';
+import { DiscoveredTestItem, DiscoveredTestNode, DiscoveredTestPayload } from './types';
 import { TestProvider } from '../../types';
-import { traceError } from '../../../logging';
+import { traceError, traceWarn } from '../../../logging';
 import { Testing } from '../../../common/utils/localize';
 import { createErrorTestItem } from './testItemUtilities';
 import { buildErrorNodeOptions, populateTestTree } from './utils';
 import { TestItemIndex } from './testItemIndex';
+import { PROJECT_ID_SEPARATOR } from './projectUtils';
+import { isAbsolutePath } from '../../../common/platform/fs-paths';
+
+function joinWithBase(base: string, relativePath: string): string {
+    if (!base || isAbsolutePath(relativePath)) {
+        return relativePath;
+    }
+    if (relativePath === '.') {
+        return base;
+    }
+
+    const separator = base.includes('\\') ? '\\' : '/';
+    const trimmedBase = base.replace(/[\\/]+$/, '');
+    const trimmedRelativePath = relativePath.replace(/^[\\/]+/, '');
+    return `${trimmedBase}${separator}${trimmedRelativePath}`;
+}
+
+function expandTestId(testId: string, idBase: string): string {
+    const separatorIndex = testId.indexOf('::');
+    if (separatorIndex === -1) {
+        return joinWithBase(idBase, testId);
+    }
+
+    const testPath = testId.slice(0, separatorIndex);
+    const testSelector = testId.slice(separatorIndex);
+    return `${joinWithBase(idBase, testPath)}${testSelector}`;
+}
+
+function expandDiscoveryNode(
+    testNode: DiscoveredTestNode | DiscoveredTestItem,
+    pathBase: string,
+    idBase: string,
+): DiscoveredTestNode | DiscoveredTestItem {
+    const expandedNode = {
+        ...testNode,
+        path: joinWithBase(pathBase, testNode.path),
+        id_: expandTestId(testNode.id_, idBase),
+    };
+
+    if ('runID' in expandedNode) {
+        return {
+            ...expandedNode,
+            runID: expandTestId(expandedNode.runID, idBase),
+        };
+    }
+
+    return {
+        ...expandedNode,
+        children: expandedNode.children.map((child) => expandDiscoveryNode(child, pathBase, idBase)),
+    };
+}
+
+export function expandCompactDiscoveryPayload(payload: DiscoveredTestPayload): DiscoveredTestPayload {
+    if (!payload.pathBase || !payload.tests) {
+        return payload;
+    }
+
+    return {
+        ...payload,
+        tests: expandDiscoveryNode(
+            payload.tests,
+            payload.pathBase,
+            payload.idBase ?? payload.pathBase,
+        ) as DiscoveredTestNode,
+    };
+}
 
 /**
  * Stateless handler for processing discovery payloads and building/updating the TestItem tree.
@@ -27,21 +93,26 @@ export class TestDiscoveryHandler {
         workspaceUri: Uri,
         testProvider: TestProvider,
         token?: CancellationToken,
-    ): void {
+        projectId?: string,
+        projectName?: string,
+    ): number {
         if (!payload) {
             // No test data is available
-            return;
+            return 0;
         }
 
         const workspacePath = workspaceUri.fsPath;
-        const rawTestData = payload as DiscoveredTestPayload;
+        const rawTestData = expandCompactDiscoveryPayload(payload as DiscoveredTestPayload);
 
         // Check if there were any errors in the discovery process.
         if (rawTestData.status === 'error') {
-            this.createErrorNode(testController, workspaceUri, rawTestData.error, testProvider);
+            this.createErrorNode(testController, workspaceUri, rawTestData.error, testProvider, projectId, projectName);
         } else {
             // remove error node only if no errors exist.
-            testController.items.delete(`DiscoveryError:${workspacePath}`);
+            const errorNodeId = projectId
+                ? `${projectId}${PROJECT_ID_SEPARATOR}DiscoveryError:${workspacePath}`
+                : `DiscoveryError:${workspacePath}`;
+            testController.items.delete(errorNodeId);
         }
 
         if (rawTestData.tests || rawTestData.tests === null) {
@@ -51,10 +122,14 @@ export class TestDiscoveryHandler {
             // Clear existing mappings before rebuilding test tree
             testItemIndex.clear();
 
+            if (rawTestData.tests === null) {
+                return 0;
+            }
+
             // If the test root for this folder exists: Workspace refresh, update its children.
             // Otherwise, it is a freshly discovered workspace, and we need to create a new test root and populate the test tree.
             // Note: populateTestTree will call testItemIndex.registerTestItem() for each discovered test
-            populateTestTree(
+            return populateTestTree(
                 testController,
                 rawTestData.tests,
                 undefined,
@@ -62,10 +137,14 @@ export class TestDiscoveryHandler {
                     runIdToTestItem: testItemIndex.runIdToTestItemMap,
                     runIdToVSid: testItemIndex.runIdToVSidMap,
                     vsIdToRunId: testItemIndex.vsIdToRunIdMap,
-                } as any,
+                },
                 token,
+                projectId,
+                projectName,
             );
         }
+
+        return 0;
     }
 
     /**
@@ -76,6 +155,8 @@ export class TestDiscoveryHandler {
         workspaceUri: Uri,
         error: string[] | undefined,
         testProvider: TestProvider,
+        projectId?: string,
+        projectName?: string,
     ): void {
         const workspacePath = workspaceUri.fsPath;
         const testingErrorConst =
@@ -83,14 +164,41 @@ export class TestDiscoveryHandler {
 
         traceError(testingErrorConst, 'for workspace: ', workspacePath, '\r\n', error?.join('\r\n\r\n') ?? '');
 
-        let errorNode = testController.items.get(`DiscoveryError:${workspacePath}`);
+        // For unittest in project-based mode, check if the error might be caused by nested project imports
+        // This helps users understand that import errors from nested projects can be safely ignored
+        // if those tests are covered by a different project with the correct environment.
+        if (testProvider === 'unittest' && projectId) {
+            const errorText = error?.join(' ') ?? '';
+            const isImportError =
+                errorText.includes('ModuleNotFoundError') ||
+                errorText.includes('ImportError') ||
+                errorText.includes('No module named');
+
+            if (isImportError) {
+                const warningMessage =
+                    '--- ' +
+                    `[test-by-project] Import error during unittest discovery for project at ${workspacePath}. ` +
+                    'This may be caused by test files in nested project directories that require different dependencies. ' +
+                    'If these tests are discovered successfully by their own project (with the correct Python environment), ' +
+                    'this error can be safely ignored. To avoid this, consider excluding nested project paths from parent project discovery. ' +
+                    '---';
+                traceWarn(warningMessage);
+            }
+        }
+
+        const errorNodeId = projectId
+            ? `${projectId}${PROJECT_ID_SEPARATOR}DiscoveryError:${workspacePath}`
+            : `DiscoveryError:${workspacePath}`;
+        let errorNode = testController.items.get(errorNodeId);
         const message = util.format(
             `${testingErrorConst} ${Testing.seePythonOutput}\r\n`,
             error?.join('\r\n\r\n') ?? '',
         );
 
         if (errorNode === undefined) {
-            const options = buildErrorNodeOptions(workspaceUri, message, testProvider);
+            const options = buildErrorNodeOptions(workspaceUri, message, testProvider, projectName);
+            // Update the error node ID to include project scope if applicable
+            options.id = errorNodeId;
             errorNode = createErrorTestItem(testController, options);
             testController.items.add(errorNode);
         }

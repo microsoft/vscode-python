@@ -2,12 +2,29 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as fs from 'fs';
 import * as path from 'path';
-import { CancellationToken, TestController, TestItem, Uri, Range, Position } from 'vscode';
-import { writeTestIdsFile, populateTestTree } from '../../../client/testing/testController/common/utils';
+import { CancellationToken, CancellationTokenSource, TestController, TestItem, Uri, Range, Position } from 'vscode';
+import {
+    Emitter,
+    Event,
+    MessageReader,
+    PartialMessageInfo,
+    Disposable as RpcDisposable,
+    DataCallback,
+} from 'vscode-jsonrpc';
+import { Message } from 'vscode-jsonrpc';
+import {
+    writeTestIdsFile,
+    populateTestTree,
+    startRunResultNamedPipe,
+    awaitDeferredWithTimeout,
+} from '../../../client/testing/testController/common/utils';
+import { createDeferred, Deferred } from '../../../client/common/utils/async';
+import * as namedPipes from '../../../client/common/pipes/namedPipes';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import {
     DiscoveredTestNode,
     DiscoveredTestItem,
+    ExecutionTestPayload,
     ITestResultResolver,
 } from '../../../client/testing/testController/common/types';
 import { RunTestTag, DebugTestTag } from '../../../client/testing/testController/common/testItemUtilities';
@@ -393,16 +410,18 @@ suite('populateTestTree tests', () => {
         };
 
         const rootChildrenAddStub = sandbox.stub();
+        const rootChildrenGetStub = sandbox.stub().returns(undefined);
         const mockRootItem: TestItem = {
-            children: { add: rootChildrenAddStub },
+            children: { add: rootChildrenAddStub, get: rootChildrenGetStub },
         } as any;
 
         const nestedChildrenAddStub = sandbox.stub();
+        const nestedChildrenGetStub = sandbox.stub().returns(undefined);
         const mockNestedNode: TestItem = {
             id: 'nested-id',
             canResolveChildren: true,
             tags: [],
-            children: { add: nestedChildrenAddStub },
+            children: { add: nestedChildrenAddStub, get: nestedChildrenGetStub },
         } as any;
 
         const mockNestedTestItem: TestItem = {
@@ -460,14 +479,15 @@ suite('populateTestTree tests', () => {
         };
 
         const rootChildrenAddStub = sandbox.stub();
-        const mockRootItem: TestItem = {
-            children: { add: rootChildrenAddStub },
-        } as any;
-
         const existingChildrenAddStub = sandbox.stub();
+        const existingChildrenGetStub = sandbox.stub().returns(undefined);
         const existingNode: TestItem = {
             id: 'existing-id',
-            children: { add: existingChildrenAddStub },
+            children: { add: existingChildrenAddStub, get: existingChildrenGetStub },
+        } as any;
+        const rootChildrenGetStub = sandbox.stub().withArgs('existing-id').returns(existingNode);
+        const mockRootItem: TestItem = {
+            children: { add: rootChildrenAddStub, get: rootChildrenGetStub },
         } as any;
 
         const mockTestItem: TestItem = {
@@ -597,14 +617,14 @@ suite('populateTestTree tests', () => {
             id: 'root-id',
             tags: [],
             canResolveChildren: true,
-            children: { add: sandbox.stub() },
+            children: { add: sandbox.stub(), get: sandbox.stub().returns(undefined) },
         } as any;
 
         const mockNestedNode: TestItem = {
             id: 'nested-id',
             tags: [],
             canResolveChildren: true,
-            children: { add: sandbox.stub() },
+            children: { add: sandbox.stub(), get: sandbox.stub().returns(undefined) },
         } as any;
 
         const mockTestItem: TestItem = {
@@ -747,5 +767,194 @@ suite('populateTestTree tests', () => {
         assert.deepStrictEqual(mockTestItem2.tags, [RunTestTag, DebugTestTag]);
         assert.deepStrictEqual(mockTestItem1.range, new Range(new Position(2, 0), new Position(3, 0)));
         assert.deepStrictEqual(mockTestItem2.range, new Range(new Position(6, 0), new Position(7, 0)));
+    });
+});
+
+suite('startRunResultNamedPipe drain-on-cancel tests', () => {
+    let sandbox: sinon.SinonSandbox;
+    let createReaderPipeStub: sinon.SinonStub;
+
+    // Minimal `MessageReader` fake exposing only what `startRunResultNamedPipe` uses.
+    class FakeMessageReader implements MessageReader {
+        private _onClose = new Emitter<void>();
+
+        private _onError = new Emitter<Error>();
+
+        private _onPartialMessage = new Emitter<PartialMessageInfo>();
+
+        private _callback: DataCallback | undefined;
+
+        public disposed = false;
+
+        public onError: Event<Error> = this._onError.event;
+
+        public onClose: Event<void> = this._onClose.event;
+
+        public onPartialMessage: Event<PartialMessageInfo> = this._onPartialMessage.event;
+
+        public listen(callback: DataCallback): RpcDisposable {
+            this._callback = callback;
+            return {
+                dispose: () => {
+                    this._callback = undefined;
+                },
+            };
+        }
+
+        public dispose(): void {
+            this.disposed = true;
+            this._onClose.dispose();
+            this._onError.dispose();
+            this._onPartialMessage.dispose();
+        }
+
+        // Test helpers.
+        public emit(message: Message): void {
+            this._callback?.(message);
+        }
+
+        public hasListener(): boolean {
+            return this._callback !== undefined;
+        }
+
+        public fireClose(): void {
+            this._onClose.fire();
+        }
+    }
+
+    setup(() => {
+        sandbox = sinon.createSandbox();
+    });
+
+    teardown(() => {
+        sandbox.restore();
+    });
+
+    function makeMessage(payload: Partial<ExecutionTestPayload>): Message {
+        // Fill in required ExecutionTestPayload fields so tests exercise a shape close
+        // to what real runners send and don't drift from the schema over time.
+        const full: ExecutionTestPayload = {
+            cwd: '',
+            status: 'success',
+            error: '',
+            ...payload,
+        };
+        return ({ jsonrpc: '2.0', params: full } as unknown) as Message;
+    }
+
+    test('cancellation alone does NOT resolve deferredTillServerClose and does NOT detach the listener (drain not interrupted)', async () => {
+        const reader = new FakeMessageReader();
+        createReaderPipeStub = sandbox.stub(namedPipes, 'createReaderPipe').resolves(reader);
+
+        const received: ExecutionTestPayload[] = [];
+        const deferredTillServerClose: Deferred<void> = createDeferred<void>();
+        const cancelSource = new CancellationTokenSource();
+
+        await startRunResultNamedPipe((payload) => received.push(payload), deferredTillServerClose, cancelSource.token);
+
+        assert.ok(createReaderPipeStub.calledOnce, 'createReaderPipe should be called once');
+        assert.ok(reader.hasListener(), 'reader should have a listener registered before cancel');
+
+        // Trigger cancellation.
+        cancelSource.cancel();
+
+        // Yield to let any synchronous-then-microtask handlers run.
+        await new Promise((r) => setImmediate(r));
+
+        assert.strictEqual(
+            reader.disposed,
+            false,
+            'reader must NOT be disposed by cancellation alone (otherwise buffered data would be lost)',
+        );
+        assert.ok(reader.hasListener(), 'data listener must remain attached after cancel so the drain can continue');
+        assert.strictEqual(
+            (deferredTillServerClose as Deferred<void>).completed,
+            false,
+            'deferredTillServerClose must NOT resolve on cancellation; it should only resolve when the pipe closes',
+        );
+
+        cancelSource.dispose();
+    });
+
+    test('data emitted after cancellation is still delivered to the callback (drain works)', async () => {
+        const reader = new FakeMessageReader();
+        sandbox.stub(namedPipes, 'createReaderPipe').resolves(reader);
+
+        const received: ExecutionTestPayload[] = [];
+        const deferredTillServerClose: Deferred<void> = createDeferred<void>();
+        const cancelSource = new CancellationTokenSource();
+
+        await startRunResultNamedPipe((payload) => received.push(payload), deferredTillServerClose, cancelSource.token);
+
+        // Simulate the debug-path race: cancel fires while results are still buffered.
+        cancelSource.cancel();
+        await new Promise((r) => setImmediate(r));
+
+        // Buffered messages arrive after cancellation.
+        reader.emit(makeMessage({ cwd: 'a' }));
+        reader.emit(makeMessage({ cwd: 'b' }));
+
+        assert.strictEqual(received.length, 2, 'messages emitted after cancel must still reach the callback');
+        assert.deepStrictEqual(
+            received.map((p) => p.cwd),
+            ['a', 'b'],
+            'all buffered results delivered in order',
+        );
+
+        // Subprocess closes its end of the pipe -> onClose fires -> dispose.
+        reader.fireClose();
+        await deferredTillServerClose.promise;
+
+        assert.strictEqual(reader.disposed, true, 'reader disposed via onClose path');
+
+        cancelSource.dispose();
+    });
+
+    test('reader.onClose resolves deferredTillServerClose and disposes the reader (natural completion path, no cancellation)', async () => {
+        const reader = new FakeMessageReader();
+        sandbox.stub(namedPipes, 'createReaderPipe').resolves(reader);
+
+        const deferredTillServerClose: Deferred<void> = createDeferred<void>();
+
+        await startRunResultNamedPipe(
+            () => {
+                /* no-op */
+            },
+            deferredTillServerClose,
+            undefined,
+        );
+
+        assert.strictEqual(
+            (deferredTillServerClose as Deferred<void>).completed,
+            false,
+            'deferred unresolved before close',
+        );
+
+        reader.fireClose();
+        await deferredTillServerClose.promise;
+
+        assert.strictEqual(reader.disposed, true, 'reader disposed when onClose fires');
+    });
+});
+
+suite('awaitDeferredWithTimeout', () => {
+    test('resolves promptly when the deferred resolves before the timeout', async () => {
+        const deferred = createDeferred<void>();
+        const started = Date.now();
+        const waiter = awaitDeferredWithTimeout(deferred, 5000);
+        setTimeout(() => deferred.resolve(), 10);
+        await waiter;
+        const elapsed = Date.now() - started;
+        assert.ok(elapsed < 1000, `should resolve well before timeout, took ${elapsed}ms`);
+    });
+
+    test('resolves after the timeout when the deferred never settles (no hang)', async () => {
+        const deferred = createDeferred<void>();
+        const started = Date.now();
+        await awaitDeferredWithTimeout(deferred, 50);
+        const elapsed = Date.now() - started;
+        assert.ok(elapsed >= 50, `should wait at least the timeout, took ${elapsed}ms`);
+        assert.ok(elapsed < 2000, `should not hang well beyond timeout, took ${elapsed}ms`);
+        assert.strictEqual(deferred.completed, false, 'underlying deferred remains unresolved');
     });
 });

@@ -20,6 +20,7 @@ import { dirname, join } from 'path';
 import { resolveEnvironment, useEnvExtension } from '../envExt/api.internal';
 import { ErrorWithTelemetrySafeReason } from '../common/errors/errorUtils';
 import { getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
+import { arePathsSame } from '../common/platform/fs-paths';
 
 export interface IResourceReference {
     resourcePath?: string;
@@ -49,13 +50,123 @@ export function resolveFilePath(filepath?: string): Uri | undefined {
  * @see {@link raceCancellation}
  */
 export function raceCancellationError<T>(promise: Promise<T>, token: CancellationToken): Promise<T> {
+    if (token.isCancellationRequested) {
+        return Promise.reject(new CancellationError());
+    }
     return new Promise((resolve, reject) => {
         const ref = token.onCancellationRequested(() => {
             ref.dispose();
             reject(new CancellationError());
         });
-        promise.then(resolve, reject).finally(() => ref.dispose());
+        promise.then(
+            (value) => {
+                ref.dispose();
+                resolve(value);
+            },
+            (error) => {
+                ref.dispose();
+                reject(error);
+            },
+        );
     });
+}
+
+/**
+ * Returns a promise that resolves once the active environment path changes to match the
+ * provided `pythonPath` (matched against either the event's `path` or `id`). Resolves early
+ * on cancellation or after `timeoutMs` to avoid hanging callers if the event is missed.
+ * Callers must subscribe via this helper BEFORE invoking `updateActiveEnvironmentPath` to
+ * avoid a race where the event fires before the listener is attached.
+ */
+export function waitForActiveEnvironmentChange(
+    api: PythonExtension['environments'],
+    pythonPath: string,
+    resource: Uri | undefined,
+    token: CancellationToken,
+    timeoutMs = 5000,
+): Promise<void> {
+    if (token.isCancellationRequested) {
+        return Promise.resolve();
+    }
+    return new Promise<void>((resolve) => {
+        let settled = false;
+        const listener = api.onDidChangeActiveEnvironmentPath((e) => {
+            if (isEnvironmentPathMatch(e, pythonPath) && isResourceMatch(e.resource, resource)) {
+                settle();
+            }
+        });
+        const cancelRef = token.onCancellationRequested(() => settle());
+        const timer = setTimeout(() => settle(), timeoutMs);
+        function settle() {
+            if (settled) {
+                return;
+            }
+            settled = true;
+            listener.dispose();
+            cancelRef.dispose();
+            clearTimeout(timer);
+            resolve();
+        }
+    });
+}
+
+function isResourceMatch(eventResource: { uri: Uri } | Uri | undefined, requestedResource: Uri | undefined): boolean {
+    const eventUri = eventResource && 'uri' in eventResource ? eventResource.uri : eventResource;
+    const requestedUri = requestedResource
+        ? workspace.getWorkspaceFolder(requestedResource)?.uri ?? requestedResource
+        : undefined;
+    return eventUri === undefined
+        ? requestedUri === undefined
+        : requestedUri !== undefined && arePathsSame(eventUri.fsPath, requestedUri.fsPath);
+}
+
+function isEnvironmentPathMatch(environment: { path: string; id: string }, pythonPath: string): boolean {
+    return arePathsSame(environment.path, pythonPath) || environment.id === pythonPath;
+}
+
+/**
+ * Sets the active Python interpreter to `pythonPath` without any UI, waits for the
+ * asynchronous environment switch to settle (via `onDidChangeActiveEnvironmentPath`),
+ * resolves the environment, and returns it.
+ *
+ * Returns `undefined` if the path cannot be resolved to a valid environment so callers
+ * can produce a tool-specific error message.
+ */
+export async function setEnvironmentDirectlyByPath(
+    pythonPath: string,
+    api: PythonExtension['environments'],
+    resource: Uri | undefined,
+    token: CancellationToken,
+): Promise<ResolvedEnvironment | undefined> {
+    if (token.isCancellationRequested) {
+        throw new CancellationError();
+    }
+    // Validate the path resolves to a real environment BEFORE mutating user settings.
+    // updateActiveEnvironmentPath persists unconditionally, so an invalid path would
+    // permanently overwrite the user's selected interpreter.
+    const candidate = await raceCancellationError(api.resolveEnvironment(pythonPath), token);
+    if (!candidate) {
+        return undefined;
+    }
+    if (isEnvironmentPathMatch(api.getActiveEnvironmentPath(resource), pythonPath)) {
+        return candidate;
+    }
+
+    // Subscribe to the change event BEFORE triggering the update so we don't miss it.
+    // updateActiveEnvironmentPath only persists the setting; the active interpreter switch
+    // is asynchronous, so we wait for the event before resolving env details to avoid
+    // returning details for the previously-active interpreter.
+    const activeChanged = waitForActiveEnvironmentChange(api, pythonPath, resource, token);
+    await raceCancellationError(api.updateActiveEnvironmentPath(pythonPath, resource), token);
+    await raceCancellationError(activeChanged, token);
+
+    // Verify the active env actually switched. If the change event timed out and the
+    // active path is still the previous one, don't report success for the wrong env.
+    const envPath = api.getActiveEnvironmentPath(resource);
+    if (!isEnvironmentPathMatch(envPath, pythonPath)) {
+        return undefined;
+    }
+    return raceCancellationError(api.resolveEnvironment(envPath), token);
 }
 
 export async function getEnvDisplayName(
@@ -74,6 +185,10 @@ export async function getEnvDisplayName(
 
 export function isCondaEnv(env: ResolvedEnvironment) {
     return (env.environment?.type || '').toLowerCase() === 'conda';
+}
+
+export function getEnvTypeForTelemetry(env: ResolvedEnvironment): string {
+    return (env.environment?.type || 'unknown').toLowerCase();
 }
 
 export async function getEnvironmentDetails(

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+import * as sinon from 'sinon';
 import { EventEmitter, Terminal } from 'vscode';
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { TerminalManager } from '../../client/common/application/terminalManager';
@@ -11,6 +12,7 @@ import { ITerminalActivator } from '../../client/common/terminal/types';
 import { TerminalAutoActivation } from '../../client/terminals/activation';
 import { ITerminalAutoActivation } from '../../client/terminals/types';
 import { noop } from '../core';
+import * as extapi from '../../client/envExt/api.internal';
 
 suite('Terminal', () => {
     suite('Terminal Auto Activation', () => {
@@ -21,8 +23,12 @@ suite('Terminal', () => {
         let onDidOpenTerminalEventEmitter: EventEmitter<Terminal>;
         let terminal: Terminal;
         let nonActivatedTerminal: Terminal;
+        let shouldEnvExtHandleActivationStub: sinon.SinonStub;
 
         setup(() => {
+            shouldEnvExtHandleActivationStub = sinon.stub(extapi, 'shouldEnvExtHandleActivation');
+            shouldEnvExtHandleActivationStub.returns(false);
+
             manager = mock(TerminalManager);
             activator = mock(TerminalActivator);
             resourceService = mock(ActiveResourceService);
@@ -60,6 +66,9 @@ suite('Terminal', () => {
             autoActivation.register();
         });
         // teardown(() => fakeTimer.uninstall());
+        teardown(() => {
+            sinon.restore();
+        });
 
         test('Should activate terminal', async () => {
             // Trigger opening a terminal.
@@ -75,6 +84,13 @@ suite('Terminal', () => {
             await ((onDidOpenTerminalEventEmitter.fire(nonActivatedTerminal) as unknown) as Promise<void>);
 
             // The terminal should get activated.
+            verify(activator.activateEnvironmentInTerminal(anything(), anything())).never();
+        });
+        test('Should not activate terminal when envs extension should handle activation', async () => {
+            shouldEnvExtHandleActivationStub.returns(true);
+
+            await ((onDidOpenTerminalEventEmitter.fire(terminal) as unknown) as Promise<void>);
+
             verify(activator.activateEnvironmentInTerminal(anything(), anything())).never();
         });
     });

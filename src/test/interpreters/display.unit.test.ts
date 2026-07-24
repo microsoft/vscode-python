@@ -59,7 +59,7 @@ suite('Interpreters Display', () => {
     let pathUtils: TypeMoq.IMock<IPathUtils>;
     let languageStatusItem: TypeMoq.IMock<LanguageStatusItem>;
     let traceLogStub: sinon.SinonStub;
-    let useEnvExtensionStub: sinon.SinonStub;
+    let shouldEnvExtHandleActivationStub: sinon.SinonStub;
     async function createInterpreterDisplay(filters: IInterpreterStatusbarVisibilityFilter[] = []) {
         interpreterDisplay = new InterpreterDisplay(serviceContainer.object);
         try {
@@ -69,8 +69,8 @@ suite('Interpreters Display', () => {
     }
 
     async function setupMocks(useLanguageStatus: boolean) {
-        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
-        useEnvExtensionStub.returns(false);
+        shouldEnvExtHandleActivationStub = sinon.stub(extapi, 'shouldEnvExtHandleActivation');
+        shouldEnvExtHandleActivationStub.returns(false);
 
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();

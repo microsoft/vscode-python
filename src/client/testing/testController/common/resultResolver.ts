@@ -11,6 +11,7 @@ import { TestItemIndex } from './testItemIndex';
 import { TestDiscoveryHandler } from './testDiscoveryHandler';
 import { TestExecutionHandler } from './testExecutionHandler';
 import { TestCoverageHandler } from './testCoverageHandler';
+import { DiscoveryTelemetryState } from './discoveryTelemetry';
 
 export class PythonResultResolver implements ITestResultResolver {
     testController: TestController;
@@ -26,11 +27,35 @@ export class PythonResultResolver implements ITestResultResolver {
 
     public detailedCoverageMap = new Map<string, FileCoverageDetail[]>();
 
-    constructor(testController: TestController, testProvider: TestProvider, private workspaceUri: Uri) {
+    public readonly discoveryTelemetry: DiscoveryTelemetryState;
+
+    /**
+     * Optional project ID for scoping test IDs.
+     * When set, all test IDs are prefixed with `{projectId}@@vsc@@` for project-based testing.
+     * When undefined, uses legacy workspace-level IDs for backward compatibility.
+     */
+    private projectId?: string;
+
+    /**
+     * Optional project display name for labeling the test tree root.
+     * When set, the root node label will be "project: {projectName}" instead of the folder name.
+     */
+    private projectName?: string;
+
+    constructor(
+        testController: TestController,
+        testProvider: TestProvider,
+        private workspaceUri: Uri,
+        projectId?: string,
+        projectName?: string,
+    ) {
         this.testController = testController;
         this.testProvider = testProvider;
-        // Initialize a new TestItemIndex which will be used to track test items in this workspace
+        this.projectId = projectId;
+        this.projectName = projectName;
+        // Initialize a new TestItemIndex which will be used to track test items in this workspace/project
         this.testItemIndex = new TestItemIndex();
+        this.discoveryTelemetry = new DiscoveryTelemetryState(projectId ? 'project' : 'legacy');
     }
 
     // Expose for backward compatibility (WorkspaceTestAdapter accesses these)
@@ -46,18 +71,36 @@ export class PythonResultResolver implements ITestResultResolver {
         return this.testItemIndex.vsIdToRunIdMap;
     }
 
+    /**
+     * Gets the project ID for this resolver (if any).
+     * Used for project-scoped test ID generation.
+     */
+    public getProjectId(): string | undefined {
+        return this.projectId;
+    }
+
     public resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void {
-        PythonResultResolver.discoveryHandler.processDiscovery(
+        const testCount = PythonResultResolver.discoveryHandler.processDiscovery(
             payload,
             this.testController,
             this.testItemIndex,
             this.workspaceUri,
             this.testProvider,
             token,
+            this.projectId,
+            this.projectName,
         );
+        const cycle = this.discoveryTelemetry.complete();
+        const mode = cycle?.mode ?? this.discoveryTelemetry.defaultMode;
+        const failed = payload?.status === 'error';
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
             tool: this.testProvider,
-            failed: false,
+            failed,
+            mode,
+            trigger: cycle?.trigger,
+            failureCategory: failed ? (token?.isCancellationRequested ? 'cancelled' : 'unknown') : undefined,
+            totalDurationMs: cycle?.stopWatch.elapsedTime,
+            testCount,
         });
     }
 

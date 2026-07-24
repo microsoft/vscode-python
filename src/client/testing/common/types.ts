@@ -2,6 +2,7 @@ import { CancellationToken, DebugSessionOptions, OutputChannel, Uri } from 'vsco
 import { Product } from '../../common/types';
 import { TestSettingsPropertyNames } from '../configuration/types';
 import { TestProvider } from '../types';
+import { PythonProject } from '../../envExt/types';
 
 export type UnitTestProduct = Product.pytest | Product.unittest;
 
@@ -26,6 +27,8 @@ export type LaunchOptions = {
     pytestPort?: string;
     pytestUUID?: string;
     runTestIdsPort?: string;
+    /** Optional Python project for project-based execution. */
+    project?: PythonProject;
 };
 
 export enum TestFilter {

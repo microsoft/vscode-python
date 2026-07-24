@@ -4,9 +4,10 @@
 // Native Repl class that holds instance of pythonServer and replController
 
 import { NotebookController, NotebookDocument, QuickPickItem, TextEditor, Uri, WorkspaceFolder } from 'vscode';
+import * as path from 'path';
 import { Disposable } from 'vscode-jsonrpc';
 import { PVSC_EXTENSION_ID } from '../common/constants';
-import { showQuickPick } from '../common/vscodeApis/windowApis';
+import { showNotebookDocument, showQuickPick } from '../common/vscodeApis/windowApis';
 import { getWorkspaceFolders, onDidCloseNotebookDocument } from '../common/vscodeApis/workspaceApis';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { createPythonServer, PythonServer } from './pythonServer';
@@ -18,6 +19,8 @@ import { VariablesProvider } from './variables/variablesProvider';
 import { VariableRequester } from './variables/variableRequester';
 import { getTabNameForUri } from './replUtils';
 import { getWorkspaceStateValue, updateWorkspaceStateValue } from '../common/persistentState';
+import { onDidChangeEnvironmentEnvExt, useEnvExtension } from '../envExt/api.internal';
+import { getActiveInterpreterLegacy } from '../envExt/api.legacy';
 
 export const NATIVE_REPL_URI_MEMENTO = 'nativeReplUri';
 let nativeRepl: NativeRepl | undefined;
@@ -37,6 +40,10 @@ export class NativeRepl implements Disposable {
 
     public newReplSession: boolean | undefined = true;
 
+    private envChangeListenerRegistered = false;
+
+    private pendingInterpreterChange?: { resource?: Uri };
+
     // TODO: In the future, could also have attribute of URI for file specific REPL.
     private constructor() {
         this.watchNotebookClosed();
@@ -48,7 +55,9 @@ export class NativeRepl implements Disposable {
         nativeRepl.interpreter = interpreter;
         await nativeRepl.setReplDirectory();
         nativeRepl.pythonServer = createPythonServer([interpreter.path as string], nativeRepl.cwd);
+        nativeRepl.disposables.push(nativeRepl.pythonServer);
         nativeRepl.setReplController();
+        nativeRepl.registerInterpreterChangeHandler();
 
         return nativeRepl;
     }
@@ -116,8 +125,8 @@ export class NativeRepl implements Disposable {
     /**
      * Function that check if NotebookController for REPL exists, and returns it in Singleton manner.
      */
-    public setReplController(): NotebookController {
-        if (!this.replController) {
+    public setReplController(force: boolean = false): NotebookController {
+        if (!this.replController || force) {
             this.replController = createReplController(this.interpreter!.path, this.disposables, this.cwd);
             this.replController.variableProvider = new VariablesProvider(
                 new VariableRequester(this.pythonServer),
@@ -126,6 +135,64 @@ export class NativeRepl implements Disposable {
             );
         }
         return this.replController;
+    }
+
+    private registerInterpreterChangeHandler(): void {
+        if (!useEnvExtension() || this.envChangeListenerRegistered) {
+            return;
+        }
+        this.envChangeListenerRegistered = true;
+        this.disposables.push(
+            onDidChangeEnvironmentEnvExt((event) => {
+                this.updateInterpreterForChange(event.uri).catch(() => undefined);
+            }),
+        );
+        this.disposables.push(
+            this.pythonServer.onCodeExecuted(() => {
+                if (this.pendingInterpreterChange) {
+                    const { resource } = this.pendingInterpreterChange;
+                    this.pendingInterpreterChange = undefined;
+                    this.updateInterpreterForChange(resource).catch(() => undefined);
+                }
+            }),
+        );
+    }
+
+    private async updateInterpreterForChange(resource?: Uri): Promise<void> {
+        if (this.pythonServer?.isExecuting) {
+            this.pendingInterpreterChange = { resource };
+            return;
+        }
+        if (!this.shouldApplyInterpreterChange(resource)) {
+            return;
+        }
+        const scope = resource ?? (this.cwd ? Uri.file(this.cwd) : undefined);
+        const interpreter = await getActiveInterpreterLegacy(scope);
+        if (!interpreter || interpreter.path === this.interpreter?.path) {
+            return;
+        }
+
+        this.interpreter = interpreter;
+        this.pythonServer.dispose();
+        this.pythonServer = createPythonServer([interpreter.path as string], this.cwd);
+        this.disposables.push(this.pythonServer);
+        if (this.replController) {
+            this.replController.dispose();
+        }
+        this.setReplController(true);
+
+        if (this.notebookDocument) {
+            const notebookEditor = await showNotebookDocument(this.notebookDocument, { preserveFocus: true });
+            await selectNotebookKernel(notebookEditor, this.replController.id, PVSC_EXTENSION_ID);
+        }
+    }
+
+    private shouldApplyInterpreterChange(resource?: Uri): boolean {
+        if (!resource || !this.cwd) {
+            return true;
+        }
+        const relative = path.relative(this.cwd, resource.fsPath);
+        return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
     }
 
     /**

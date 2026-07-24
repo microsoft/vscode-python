@@ -1,6 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { DebugConfiguration, l10n, Uri, WorkspaceFolder, DebugSession, DebugSessionOptions } from 'vscode';
+import { DebugConfiguration, l10n, Uri, WorkspaceFolder, DebugSession, DebugSessionOptions, Disposable } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import * as internalScripts from '../../common/process/internal/scripts';
@@ -17,6 +17,14 @@ import { getWorkspaceFolder, getWorkspaceFolders } from '../../common/vscodeApis
 import { showErrorMessage } from '../../common/vscodeApis/windowApis';
 import { createDeferred } from '../../common/utils/async';
 import { addPathToPythonpath } from './helpers';
+import * as envExtApi from '../../envExt/api.internal';
+
+/**
+ * Key used to mark debug configurations with a unique session identifier.
+ * This allows us to track which debug session belongs to which launchDebugger() call
+ * when multiple debug sessions are launched in parallel.
+ */
+const TEST_SESSION_MARKER_KEY = '__vscodeTestSessionMarker';
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
@@ -31,6 +39,10 @@ export class DebugLauncher implements ITestDebugLauncher {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
+    /**
+     * Launches a debug session for test execution.
+     * Handles cancellation, multi-session support via unique markers, and cleanup.
+     */
     public async launchDebugger(
         options: LaunchOptions,
         callback?: () => void,
@@ -38,18 +50,35 @@ export class DebugLauncher implements ITestDebugLauncher {
     ): Promise<void> {
         const deferred = createDeferred<void>();
         let hasCallbackBeenCalled = false;
+
+        // Collect disposables for cleanup when debugging completes
+        const disposables: Disposable[] = [];
+
+        // Ensure callback is only invoked once, even if multiple termination paths fire
+        const callCallbackOnce = () => {
+            if (!hasCallbackBeenCalled) {
+                hasCallbackBeenCalled = true;
+                callback?.();
+            }
+        };
+
+        // Early exit if already cancelled before we start
         if (options.token && options.token.isCancellationRequested) {
-            hasCallbackBeenCalled = true;
-            return undefined;
+            callCallbackOnce();
             deferred.resolve();
-            callback?.();
+            return deferred.promise;
         }
 
-        options.token?.onCancellationRequested(() => {
-            deferred.resolve();
-            callback?.();
-            hasCallbackBeenCalled = true;
-        });
+        // Listen for cancellation from the test run (e.g., user clicks stop in Test Explorer)
+        // This allows the caller to clean up resources even if the debug session is still running
+        if (options.token) {
+            disposables.push(
+                options.token.onCancellationRequested(() => {
+                    deferred.resolve();
+                    callCallbackOnce();
+                }),
+            );
+        }
 
         const workspaceFolder = DebugLauncher.resolveWorkspaceFolder(options.cwd);
         const launchArgs = await this.getLaunchArgs(
@@ -59,23 +88,57 @@ export class DebugLauncher implements ITestDebugLauncher {
         );
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
-        let activatedDebugSession: DebugSession | undefined;
-        debugManager.startDebugging(workspaceFolder, launchArgs, sessionOptions).then(() => {
-            // Save the debug session after it is started so we can check if it is the one that was terminated.
-            activatedDebugSession = debugManager.activeDebugSession;
+        // Unique marker to identify this session among concurrent debug sessions
+        const sessionMarker = `test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        launchArgs[TEST_SESSION_MARKER_KEY] = sessionMarker;
+
+        let ourSession: DebugSession | undefined;
+
+        // Capture our specific debug session when it starts by matching the marker.
+        // This fires for ALL debug sessions, so we filter to only our marker.
+        disposables.push(
+            debugManager.onDidStartDebugSession((session) => {
+                if (session.configuration[TEST_SESSION_MARKER_KEY] === sessionMarker) {
+                    ourSession = session;
+                    traceVerbose(`[test-debug] Debug session started: ${session.name} (${session.id})`);
+                }
+            }),
+        );
+
+        // Handle debug session termination (user stops debugging, or tests complete).
+        // Only react to OUR session terminating - other parallel sessions should
+        // continue running independently.
+        disposables.push(
+            debugManager.onDidTerminateDebugSession((session) => {
+                if (ourSession && session.id === ourSession.id) {
+                    traceVerbose(`[test-debug] Debug session terminated: ${session.name} (${session.id})`);
+                    deferred.resolve();
+                    callCallbackOnce();
+                }
+            }),
+        );
+
+        // Clean up event subscriptions when debugging completes (success, failure, or cancellation)
+        deferred.promise.finally(() => {
+            disposables.forEach((d) => d.dispose());
         });
-        debugManager.onDidTerminateDebugSession((session) => {
-            traceVerbose(`Debug session terminated. sessionId: ${session.id}`);
-            // Only resolve no callback has been made and the session is the one that was started.
-            if (
-                !hasCallbackBeenCalled &&
-                activatedDebugSession !== undefined &&
-                session.id === activatedDebugSession?.id
-            ) {
-                deferred.resolve();
-                callback?.();
-            }
-        });
+
+        // Start the debug session
+        let started = false;
+        try {
+            started = await debugManager.startDebugging(workspaceFolder, launchArgs, sessionOptions);
+        } catch (error) {
+            traceError('Error starting debug session', error);
+            deferred.reject(error);
+            callCallbackOnce();
+            return deferred.promise;
+        }
+        if (!started) {
+            traceError('Failed to start debug session');
+            deferred.resolve();
+            callCallbackOnce();
+        }
+
         return deferred.promise;
     }
 
@@ -108,6 +171,12 @@ export class DebugLauncher implements ITestDebugLauncher {
                 subProcess: true,
             };
         }
+
+        // Use project name in debug session name if provided
+        if (options.project) {
+            debugConfig.name = `Debug Tests: ${options.project.name}`;
+        }
+
         if (!debugConfig.rules) {
             debugConfig.rules = [];
         }
@@ -116,7 +185,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             include: false,
         });
 
-        DebugLauncher.applyDefaults(debugConfig!, workspaceFolder, configSettings);
+        DebugLauncher.applyDefaults(debugConfig!, workspaceFolder, configSettings, options.cwd);
 
         return this.convertConfigToArgs(debugConfig!, workspaceFolder, options);
     }
@@ -163,6 +232,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         cfg: LaunchRequestArguments,
         workspaceFolder: WorkspaceFolder,
         configSettings: IPythonSettings,
+        optionsCwd?: string,
     ) {
         // cfg.pythonPath is handled by LaunchConfigurationResolver.
 
@@ -170,7 +240,9 @@ export class DebugLauncher implements ITestDebugLauncher {
             cfg.console = 'internalConsole';
         }
         if (!cfg.cwd) {
-            cfg.cwd = configSettings.testing.cwd || workspaceFolder.uri.fsPath;
+            // For project-based testing, use the project's cwd (optionsCwd) if provided.
+            // Otherwise fall back to settings.testing.cwd or the workspace folder.
+            cfg.cwd = optionsCwd || configSettings.testing.cwd || workspaceFolder.uri.fsPath;
         }
         if (!cfg.env) {
             cfg.env = {};
@@ -256,6 +328,23 @@ export class DebugLauncher implements ITestDebugLauncher {
         // Clear out purpose so we can detect if the configuration was used to
         // run via F5 style debugging.
         launchArgs.purpose = [];
+
+        // For project-based execution, get the Python path from the project's environment.
+        // Fallback: if env API unavailable or fails, LaunchConfigurationResolver already set
+        // launchArgs.python from the active interpreter, so debugging still works.
+        if (options.project && envExtApi.useEnvExtension()) {
+            try {
+                const pythonEnv = await envExtApi.getEnvironment(options.project.uri);
+                if (pythonEnv?.execInfo?.run?.executable) {
+                    launchArgs.python = pythonEnv.execInfo.run.executable;
+                    traceVerbose(
+                        `[test-by-project] Debug session using Python path from project: ${launchArgs.python}`,
+                    );
+                }
+            } catch (error) {
+                traceVerbose(`[test-by-project] Could not get environment for project, using default: ${error}`);
+            }
+        }
 
         return launchArgs;
     }

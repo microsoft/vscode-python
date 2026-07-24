@@ -2,7 +2,6 @@ import { commands, Uri, window } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
-import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { ICodeExecutionHelper } from '../terminals/types';
 import { getNativeRepl } from './nativeRepl';
@@ -102,14 +101,13 @@ export async function registerReplExecuteOnEnter(
 }
 
 async function onInputEnter(
-    uri: Uri,
+    uri: Uri | undefined,
     commandName: string,
     interpreterService: IInterpreterService,
     disposables: Disposable[],
 ): Promise<void> {
-    const interpreter = await interpreterService.getActiveInterpreter(uri);
+    const interpreter = await getActiveInterpreter(uri, interpreterService);
     if (!interpreter) {
-        commands.executeCommand(Commands.TriggerEnvironmentSelection, uri).then(noop, noop);
         return;
     }
 
