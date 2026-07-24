@@ -11,6 +11,7 @@ import { TestItemIndex } from './testItemIndex';
 import { TestDiscoveryHandler } from './testDiscoveryHandler';
 import { TestExecutionHandler } from './testExecutionHandler';
 import { TestCoverageHandler } from './testCoverageHandler';
+import { DiscoveryTelemetryState } from './discoveryTelemetry';
 
 export class PythonResultResolver implements ITestResultResolver {
     testController: TestController;
@@ -25,6 +26,8 @@ export class PythonResultResolver implements ITestResultResolver {
     private static coverageHandler: TestCoverageHandler = new TestCoverageHandler();
 
     public detailedCoverageMap = new Map<string, FileCoverageDetail[]>();
+
+    public readonly discoveryTelemetry: DiscoveryTelemetryState;
 
     /**
      * Optional project ID for scoping test IDs.
@@ -52,6 +55,7 @@ export class PythonResultResolver implements ITestResultResolver {
         this.projectName = projectName;
         // Initialize a new TestItemIndex which will be used to track test items in this workspace/project
         this.testItemIndex = new TestItemIndex();
+        this.discoveryTelemetry = new DiscoveryTelemetryState(projectId ? 'project' : 'legacy');
     }
 
     // Expose for backward compatibility (WorkspaceTestAdapter accesses these)
@@ -76,7 +80,7 @@ export class PythonResultResolver implements ITestResultResolver {
     }
 
     public resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void {
-        PythonResultResolver.discoveryHandler.processDiscovery(
+        const testCount = PythonResultResolver.discoveryHandler.processDiscovery(
             payload,
             this.testController,
             this.testItemIndex,
@@ -86,9 +90,23 @@ export class PythonResultResolver implements ITestResultResolver {
             this.projectId,
             this.projectName,
         );
-        sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
+        const cycle = this.discoveryTelemetry.complete();
+        const mode = cycle?.mode ?? this.discoveryTelemetry.defaultMode;
+        const failed = payload?.status === 'error';
+        // Numeric fields must be sent as measures (2nd arg), not properties. Fields
+        // annotated `isMeasurement: true` are dropped by telemetry ingestion when they
+        // arrive in the properties bag, so totalDurationMs/testCount would otherwise never
+        // be recorded.
+        const measures: Record<string, number> = { testCount };
+        if (cycle?.stopWatch.elapsedTime !== undefined) {
+            measures.totalDurationMs = cycle.stopWatch.elapsedTime;
+        }
+        sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, measures, {
             tool: this.testProvider,
-            failed: false,
+            failed,
+            mode,
+            trigger: cycle?.trigger,
+            failureCategory: failed ? (token?.isCancellationRequested ? 'cancelled' : 'unknown') : undefined,
         });
     }
 

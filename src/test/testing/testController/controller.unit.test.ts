@@ -370,4 +370,65 @@ suite('PythonTestController', () => {
             assert.strictEqual(projects[0].projectUri.toString(), workspaceUri.toString());
         });
     });
+
+    suite('environment change self-heal', () => {
+        const workspaceUri: Uri = vscode.Uri.file('/workspace/root');
+        const workspaceFolder = ({ uri: workspaceUri, name: 'root', index: 0 } as unknown) as vscode.WorkspaceFolder;
+
+        function setupController(hasProjects: boolean) {
+            const controller = createController();
+            (controller as any).workspaceService.getWorkspaceFolder = sandbox.stub().returns(workspaceFolder);
+            (controller as any).workspaceService.workspaceFolders = [workspaceFolder];
+            sandbox.stub((controller as any).projectRegistry, 'hasProjects').returns(hasProjects);
+            const triggerStub = sandbox.stub((controller as any).envChangeRediscoverTrigger, 'trigger');
+            const rediscoverStub = sandbox
+                .stub(controller as any, 'discoverAllProjectsInWorkspace')
+                .resolves(undefined);
+            return { controller, triggerStub, rediscoverStub };
+        }
+
+        const newEnv = { envId: { id: 'env-1', managerId: 'm' } } as any;
+
+        test('queues the affected workspace and triggers re-discovery when an environment is assigned', () => {
+            const { controller, triggerStub } = setupController(true);
+
+            (controller as any).handleEnvironmentChange({ uri: workspaceUri, old: undefined, new: newEnv });
+
+            const pending = (controller as any).pendingEnvChangeWorkspaces as Map<string, vscode.WorkspaceFolder>;
+            assert.strictEqual(pending.has(workspaceUri.toString()), true);
+            assert.strictEqual(triggerStub.calledOnce, true);
+        });
+
+        test('ignores changes that clear the environment (no new env)', () => {
+            const { controller, triggerStub } = setupController(true);
+
+            (controller as any).handleEnvironmentChange({ uri: workspaceUri, old: newEnv, new: undefined });
+
+            const pending = (controller as any).pendingEnvChangeWorkspaces as Map<string, vscode.WorkspaceFolder>;
+            assert.strictEqual(pending.size, 0);
+            assert.strictEqual(triggerStub.notCalled, true);
+        });
+
+        test('ignores workspaces that are not in project-based mode', () => {
+            const { controller, triggerStub } = setupController(false);
+
+            (controller as any).handleEnvironmentChange({ uri: workspaceUri, old: undefined, new: newEnv });
+
+            const pending = (controller as any).pendingEnvChangeWorkspaces as Map<string, vscode.WorkspaceFolder>;
+            assert.strictEqual(pending.size, 0);
+            assert.strictEqual(triggerStub.notCalled, true);
+        });
+
+        test('re-discovers each pending workspace and clears the queue', async () => {
+            const { controller, rediscoverStub } = setupController(true);
+
+            const pending = (controller as any).pendingEnvChangeWorkspaces as Map<string, vscode.WorkspaceFolder>;
+            pending.set(workspaceUri.toString(), workspaceFolder);
+
+            await (controller as any).rediscoverPendingEnvChangeWorkspaces();
+
+            assert.strictEqual(rediscoverStub.calledOnceWithExactly(workspaceUri), true);
+            assert.strictEqual(pending.size, 0);
+        });
+    });
 });

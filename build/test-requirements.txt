@@ -7,7 +7,6 @@ pylint
 pycodestyle
 pydocstyle
 prospector
-pytest
 flask
 fastapi
 uvicorn
@@ -39,4 +38,3 @@ pytest-describe
 
 # for pytest-ruff related tests
 pytest-ruff
-pytest-black

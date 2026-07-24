@@ -2,7 +2,7 @@
 //  Copyright (c) Microsoft Corporation. All rights reserved.
 //  Licensed under the MIT License.
 import * as assert from 'assert';
-import { TestRun, Uri, TestRunProfileKind, DebugSessionOptions } from 'vscode';
+import { CancellationTokenSource, TestRun, Uri, TestRunProfileKind, DebugSessionOptions } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as sinon from 'sinon';
 import * as path from 'path';
@@ -181,6 +181,28 @@ suite('pytest test execution adapter', () => {
                 ),
             typeMoq.Times.once(),
         );
+    });
+    test('cancelling pytest execution kills the subprocess', async () => {
+        utilsWriteTestIdsFileStub.resolves('testIdPipe-mockName');
+        utilsStartRunResultNamedPipeStub.callsFake((_callback, deferredTillServerClose, token) => {
+            token?.onCancellationRequested(() => deferredTillServerClose.resolve());
+            return Promise.resolve('runResultPipe-mockName');
+        });
+        const cancellationToken = new CancellationTokenSource();
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun.setup((t) => t.token).returns(() => cancellationToken.token);
+        const killStub = sinon.stub(mockProc, 'kill');
+        const uri = Uri.file(myTestPath);
+        adapter = new PytestTestExecutionAdapter(configService);
+
+        const execution = adapter.runTests(uri, [], TestRunProfileKind.Run, testRun.object, execFactory.object);
+        await deferred4.promise;
+        cancellationToken.cancel();
+
+        sinon.assert.calledOnce(killStub);
+        mockProc.emit('close', 0, null);
+        await execution;
+        cancellationToken.dispose();
     });
     test('pytest execution respects settings.testing.cwd when present', async () => {
         const deferred2 = createDeferred();

@@ -28,10 +28,12 @@ import { IPythonExecutionFactory } from '../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
 import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { traceError, traceInfo, traceVerbose } from '../../logging';
-import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import type { UnitTestRunFailureCategory } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { TestProvider } from '../types';
 import { createErrorTestItem, DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
@@ -40,6 +42,7 @@ import { ITestController, ITestFrameworkController, TestRefreshOptions } from '.
 import { WorkspaceTestAdapter } from './workspaceTestAdapter';
 import { ITestDebugLauncher } from '../common/types';
 import { PythonResultResolver } from './common/resultResolver';
+import { DiscoveryTriggerKind } from './common/discoveryTelemetry';
 import { onDidSaveTextDocument } from '../../common/vscodeApis/workspaceApis';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { ProjectAdapter } from './common/projectAdapter';
@@ -47,12 +50,12 @@ import { TestProjectRegistry } from './common/testProjectRegistry';
 import { createTestAdapters, getProjectId } from './common/projectUtils';
 import { executeTestsForProjects } from './common/projectTestExecution';
 import { useEnvExtension, getEnvExtApi } from '../../envExt/api.internal';
-import { DidChangePythonProjectsEventArgs, PythonProject } from '../../envExt/types';
+import { DidChangeEnvironmentEventArgs, DidChangePythonProjectsEventArgs, PythonProject } from '../../envExt/types';
 
-// Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
-type EventPropertyType = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_TRIGGER];
-type TriggerKeyType = keyof EventPropertyType;
-type TriggerType = EventPropertyType[TriggerKeyType];
+// Coalescing window for environment-driven test re-discovery. The environments extension can
+// assign environments to many projects in quick succession during its initial refresh; waiting
+// briefly after the last change avoids re-discovering the workspace once per project.
+const ENV_CHANGE_REDISCOVERY_DELAY_MS = 1000;
 
 @injectable()
 export class PythonTestController implements ITestController, IExtensionSingleActivationService {
@@ -64,11 +67,23 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     // Registry for multi-project testing (one registry instance manages all projects across workspaces)
     private readonly projectRegistry: TestProjectRegistry;
 
-    private readonly triggerTypes: TriggerType[] = [];
+    private readonly triggerTypes: DiscoveryTriggerKind[] = [];
+
+    /**
+     * Source of the trigger that initiated the in-flight (or most recent) discovery.
+     * Forwarded to the resolver so UNITTEST_DISCOVERY_DONE can attribute duration to a trigger.
+     */
+    private currentDiscoveryTrigger?: DiscoveryTriggerKind;
 
     private readonly testController: TestController;
 
     private readonly refreshData: IDelayedTrigger;
+
+    // Debounced trigger that re-discovers workspaces once their environments resolve after activation.
+    private readonly envChangeRediscoverTrigger: IDelayedTrigger;
+
+    // Workspaces awaiting an environment-driven re-discovery, coalesced by `envChangeRediscoverTrigger`.
+    private readonly pendingEnvChangeWorkspaces = new Map<string, WorkspaceFolder>();
 
     private refreshCancellation: CancellationTokenSource;
 
@@ -126,6 +141,18 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.disposables.push(delayTrigger);
         this.refreshData = delayTrigger;
 
+        const envChangeRediscoverTrigger = new DelayedTrigger(
+            () => {
+                this.rediscoverPendingEnvChangeWorkspaces().catch((ex) =>
+                    traceError('[test-by-project] Failed to re-discover after environment change:', ex),
+                );
+            },
+            ENV_CHANGE_REDISCOVERY_DELAY_MS,
+            'Env Change Re-discovery',
+        );
+        this.disposables.push(envChangeRediscoverTrigger);
+        this.envChangeRediscoverTrigger = envChangeRediscoverTrigger;
+
         this.disposables.push(
             this.testController.createRunProfile(
                 'Run Tests',
@@ -161,9 +188,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             );
 
             traceVerbose('Testing: Manually triggered test refresh');
-            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, {
-                trigger: constants.CommandSource.commandPalette,
-            });
+            this.sendTriggerTelemetry(constants.CommandSource.commandPalette);
             return this.refreshTestData(undefined, { forceRefresh: true });
         };
     }
@@ -231,6 +256,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             });
             // Subscribe to project changes to update test tree when projects are added/removed
             await this.subscribeToProjectChanges();
+            // Subscribe to environment changes so projects that had no resolved environment at
+            // activation get discovered once the environments extension assigns one.
+            await this.subscribeToEnvironmentChanges();
             return;
         }
 
@@ -264,6 +292,87 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             traceInfo('[test-by-project] Subscribed to Python project changes');
         } catch (error) {
             traceError('[test-by-project] Failed to subscribe to project changes:', error);
+        }
+    }
+
+    /**
+     * Subscribes to environment assignment changes from the Python Environments API.
+     *
+     * At activation the environments extension may not have assigned an environment to every
+     * project yet, so per-project discovery can fail with "No Python environment found" and fall
+     * back to a placeholder default project. When an environment is later assigned (or changed),
+     * re-discover the affected workspace so the test tree self-heals without blocking startup.
+     */
+    private async subscribeToEnvironmentChanges(): Promise<void> {
+        try {
+            const envExtApi = await getEnvExtApi();
+            this.disposables.push(
+                envExtApi.onDidChangeEnvironment((event: DidChangeEnvironmentEventArgs) => {
+                    this.handleEnvironmentChange(event);
+                }),
+            );
+            traceInfo('[test-by-project] Subscribed to Python environment changes');
+        } catch (error) {
+            traceError('[test-by-project] Failed to subscribe to environment changes:', error);
+        }
+    }
+
+    /**
+     * Queues a debounced re-discovery for the workspace affected by an environment change.
+     * Only reacts when an environment became available or changed (`event.new` is set); clearing
+     * an environment does not enable any new discovery.
+     */
+    private handleEnvironmentChange(event: DidChangeEnvironmentEventArgs): void {
+        if (!event.new) {
+            return;
+        }
+
+        const affected: WorkspaceFolder[] = [];
+        if (event.uri) {
+            const workspace = this.workspaceService.getWorkspaceFolder(event.uri);
+            if (workspace) {
+                affected.push(workspace);
+            }
+        } else {
+            // A global environment change can affect any workspace.
+            affected.push(...(this.workspaceService.workspaceFolders ?? []));
+        }
+
+        let queued = false;
+        for (const workspace of affected) {
+            // Only workspaces already in project-based mode can be re-discovered this way.
+            if (this.projectRegistry.hasProjects(workspace.uri)) {
+                this.pendingEnvChangeWorkspaces.set(workspace.uri.toString(), workspace);
+                queued = true;
+            }
+        }
+
+        if (queued) {
+            this.envChangeRediscoverTrigger.trigger();
+        }
+    }
+
+    /**
+     * Drains the pending set and re-discovers each affected workspace, re-registering project
+     * adapters (picking up environments resolved since activation) and refreshing the test tree.
+     */
+    private async rediscoverPendingEnvChangeWorkspaces(): Promise<void> {
+        const workspaces = Array.from(this.pendingEnvChangeWorkspaces.values());
+        this.pendingEnvChangeWorkspaces.clear();
+
+        for (const workspace of workspaces) {
+            traceInfo(
+                `[test-by-project] Environment change detected; re-discovering projects for ${workspace.uri.fsPath}`,
+            );
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                await this.discoverAllProjectsInWorkspace(workspace.uri);
+            } catch (error) {
+                traceError(
+                    `[test-by-project] Failed to re-discover after environment change for ${workspace.uri.fsPath}:`,
+                    error,
+                );
+            }
         }
     }
 
@@ -432,6 +541,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     }
 
     public refreshTestData(uri?: Resource, options?: TestRefreshOptions): Promise<void> {
+        if (options?.trigger) {
+            this.setDiscoveryTrigger(options.trigger);
+        }
         if (options?.forceRefresh) {
             if (uri === undefined) {
                 // This is a special case where we want everything to be re-discovered.
@@ -476,6 +588,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             }
         } finally {
             this.refreshingCompletedEvent.fire();
+            this.currentDiscoveryTrigger = undefined;
         }
     }
 
@@ -585,6 +698,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             traceInfo(`[test-by-project] Discovering tests for project: ${project.projectName}`);
             project.isDiscovering = true;
 
+            // Start the telemetry cycle so UNITTEST_DISCOVERY_DONE can report
+            // mode + trigger + totalDurationMs for this project.
+            (project.resultResolver as Partial<PythonResultResolver>).discoveryTelemetry?.start({
+                mode: 'project',
+                trigger: this.currentDiscoveryTrigger,
+            });
+
             // In project-based mode, the discovery adapter uses the Python Environments API
             // to get the environment directly, so we don't need to pass the interpreter
             await project.discoveryAdapter.discoverTests(
@@ -602,6 +722,18 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             traceError(`[test-by-project] Discovery failed for project ${project.projectName}:`, error);
             // Individual project failures don't block others
             projectsCompleted.add(project.projectUri.toString()); // Still mark as completed
+            const cycle = (project.resultResolver as Partial<PythonResultResolver>).discoveryTelemetry?.complete();
+            const measures: Record<string, number> = {};
+            if (cycle?.stopWatch.elapsedTime !== undefined) {
+                measures.totalDurationMs = cycle.stopWatch.elapsedTime;
+            }
+            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, measures, {
+                tool: project.testProvider,
+                failed: true,
+                mode: 'project',
+                trigger: cycle?.trigger ?? this.currentDiscoveryTrigger,
+                failureCategory: this.refreshCancellation.token.isCancellationRequested ? 'cancelled' : 'unknown',
+            });
         } finally {
             project.isDiscovering = false;
         }
@@ -659,6 +791,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             this.pythonExecFactory,
             this.refreshCancellation.token,
             await this.interpreterService.getActiveInterpreter(workspaceUri),
+            this.currentDiscoveryTrigger,
         );
     }
 
@@ -900,21 +1033,43 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         token: CancellationToken,
         provider: TestProvider,
     ): Promise<void> {
+        const debugging = request.profile?.kind === TestRunProfileKind.Debug;
         sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
             tool: provider,
-            debugging: request.profile?.kind === TestRunProfileKind.Debug,
+            debugging,
         });
 
-        await testAdapter.executeTests(
-            this.testController,
-            runInstance,
-            testItems,
-            this.pythonExecFactory,
-            token,
-            request.profile?.kind,
-            this.debugLauncher,
-            await this.interpreterService.getActiveInterpreter(workspace.uri),
-        );
+        const stopWatch = new StopWatch();
+        let failed = false;
+        let failureCategory: UnitTestRunFailureCategory | undefined;
+        try {
+            await testAdapter.executeTests(
+                this.testController,
+                runInstance,
+                testItems,
+                this.pythonExecFactory,
+                token,
+                request.profile?.kind,
+                this.debugLauncher,
+                await this.interpreterService.getActiveInterpreter(workspace.uri),
+            );
+        } catch (ex) {
+            failed = true;
+            failureCategory = token.isCancellationRequested ? 'cancelled' : 'unknown';
+            throw ex;
+        } finally {
+            sendTelemetryEvent(
+                EventName.UNITTEST_RUN_DONE,
+                { durationMs: stopWatch.elapsedTime, requestedCount: testItems.length },
+                {
+                    tool: provider,
+                    debugging,
+                    mode: 'legacy',
+                    failed,
+                    failureCategory,
+                },
+            );
+        }
     }
 
     private invalidateTests(uri: Uri) {
@@ -983,17 +1138,15 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         );
     }
 
-    /**
-     * Send UNITTEST_DISCOVERY_TRIGGER telemetry event only once per trigger type.
-     *
-     * @param triggerType The trigger type to send telemetry for.
-     */
-    private sendTriggerTelemetry(trigger: TriggerType): void {
+    private setDiscoveryTrigger(trigger: DiscoveryTriggerKind): void {
+        this.currentDiscoveryTrigger = trigger;
+    }
+
+    private sendTriggerTelemetry(trigger: DiscoveryTriggerKind): void {
+        this.setDiscoveryTrigger(trigger);
         if (!this.triggerTypes.includes(trigger)) {
-            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, {
-                trigger,
-            });
             this.triggerTypes.push(trigger);
+            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger });
         }
     }
 
