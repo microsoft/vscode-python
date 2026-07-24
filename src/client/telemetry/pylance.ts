@@ -490,3 +490,20 @@
    "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
 }
 */
+/**
+ * Telemetry event sent during background Pyrefly detection to measure the audience that could be
+ * offered a switch to Pyrefly. Reported once per workspace folder (per availability) for users who
+ * are not already on a Pyrefly diagnostics source.
+ */
+/* __GDPR__
+   "pyrefly.detection" : {
+      "available" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "haspyreflytoml" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "haspyprojectsection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "hasenvironmentbinary" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "promptdismissed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "notificationenabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" }
+   }
+*/
