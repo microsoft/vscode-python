@@ -205,6 +205,7 @@ export type DiscoveredTestCommon = {
 export type DiscoveredTestItem = DiscoveredTestCommon & {
     lineno: number | string;
     runID: string;
+    tags?: string[];
 };
 
 export type DiscoveredTestNode = DiscoveredTestCommon & {

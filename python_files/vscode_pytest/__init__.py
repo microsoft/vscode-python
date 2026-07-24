@@ -59,6 +59,7 @@ class TestItem(TestData):
 
     lineno: str
     runID: str
+    tags: list[str]
 
 
 class TestNode(TestData):
@@ -847,6 +848,16 @@ def create_test_node(
         str(test_case.location[1] + 1) if (test_case.location[1] is not None) else ""
     )
     absolute_test_id = get_absolute_test_id(test_case.nodeid, get_node_path(test_case))
+
+    # Extract pytest marks as tags (deduplicated, preserving order)
+    tags: list[str] = list(
+        dict.fromkeys(
+            marker.name
+            for marker in (getattr(test_case, "own_markers", None) or [])
+            if marker.name and marker.name != "parametrize"
+        )
+    )
+
     return {
         "name": test_case.name,
         "path": get_node_path(test_case),
@@ -854,6 +865,7 @@ def create_test_node(
         "type_": "test",
         "id_": absolute_test_id,
         "runID": absolute_test_id,
+        "tags": tags,
     }
 
 
