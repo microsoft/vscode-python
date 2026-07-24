@@ -38,8 +38,10 @@ suite('pytest test execution adapter', () => {
     let mockProc: MockChildProcess;
     let utilsWriteTestIdsFileStub: sinon.SinonStub;
     let utilsStartRunResultNamedPipeStub: sinon.SinonStub;
+    let onExecObservable: (() => void) | undefined;
 
     setup(() => {
+        onExecObservable = undefined;
         useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
         useEnvExtensionStub.returns(false);
         configService = ({
@@ -59,6 +61,7 @@ suite('pytest test execution adapter', () => {
         execService
             .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => {
+                onExecObservable?.();
                 deferred4.resolve();
                 return {
                     proc: mockProc as any,
@@ -202,6 +205,25 @@ suite('pytest test execution adapter', () => {
         sinon.assert.calledOnce(killStub);
         mockProc.emit('close', 0, null);
         await execution;
+        cancellationToken.dispose();
+    });
+    test('cancelling before the pytest subprocess is captured kills it once available', async () => {
+        utilsWriteTestIdsFileStub.resolves('testIdPipe-mockName');
+        utilsStartRunResultNamedPipeStub.callsFake((_callback, deferredTillServerClose, token) => {
+            token?.onCancellationRequested(() => deferredTillServerClose.resolve());
+            return Promise.resolve('runResultPipe-mockName');
+        });
+        const cancellationToken = new CancellationTokenSource();
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun.setup((t) => t.token).returns(() => cancellationToken.token);
+        const killStub = sinon.stub(mockProc, 'kill');
+        onExecObservable = () => cancellationToken.cancel();
+        const uri = Uri.file(myTestPath);
+        adapter = new PytestTestExecutionAdapter(configService);
+
+        await adapter.runTests(uri, [], TestRunProfileKind.Run, testRun.object, execFactory.object);
+
+        sinon.assert.calledOnce(killStub);
         cancellationToken.dispose();
     });
     test('pytest execution respects settings.testing.cwd when present', async () => {
