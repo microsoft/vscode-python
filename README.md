@@ -101,30 +101,7 @@ Learn more about the rich features of the Python extension:
 
 ### Testing framework support
 
-The Python extension provides built-in integration with the VS Code Test Explorer
-for the following Python testing frameworks:
-
-- `unittest`
-- `pytest`
-
-These frameworks are directly supported through dedicated test discovery,
-execution, and result reporting implementations.
-
-#### Other testing frameworks (e.g. behave)
-
-Additional testing frameworks such as `behave` (BDD / Gherkin-style testing)
-are not currently supported out of the box.
-
-While these frameworks can still be executed manually via the terminal,
-they do not integrate with the VS Code Test Explorer at this time.
-
-Supporting additional frameworks would require:
-- Implementing test discovery logic
-- Mapping results to the VS Code Testing API
-- Long-term maintenance and ownership
-
-Community feedback helps prioritize which additional testing frameworks
-may be considered for future support.
+`pytest` and `unittest` are supported; `behave` is not.
 
 ## Supported locales
 
