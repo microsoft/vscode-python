@@ -164,17 +164,13 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
         // We only need to instantiate the language server once, even in multiroot workspace scenarios,
         // so we only need one language server extension manager.
         const key = this.getWorkspaceKey(resource, serverType);
-        const languageServer = this.workspaceLanguageServers.get(key);
-        if ((serverType === LanguageServerType.Node || serverType === LanguageServerType.None) && languageServer) {
-            logStartup(serverType, lsResource);
-            return languageServer;
+        let languageServer = this.workspaceLanguageServers.get(key);
+        if (!languageServer || serverType === LanguageServerType.Jedi || serverType === LanguageServerType.JediLSP) {
+            languageServer = this.createLanguageServer(serverType);
+            this.workspaceLanguageServers.set(key, languageServer);
         }
 
-        // Instantiate the language server extension manager.
-        const languageServerExtensionManager = this.createLanguageServer(serverType);
-        this.workspaceLanguageServers.set(key, languageServerExtensionManager);
-
-        if (languageServerExtensionManager.canStartLanguageServer(interpreter)) {
+        if (languageServer.canStartLanguageServer(interpreter)) {
             // Start the language server.
             if (startupStopWatch) {
                 // It means that startup is triggering this code, track time it takes since startup to activate this code.
@@ -182,16 +178,16 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
                     triggerTime: startupStopWatch.elapsedTime,
                 });
             }
-            await languageServerExtensionManager.startLanguageServer(lsResource, interpreter);
+            await languageServer.startLanguageServer(lsResource, interpreter);
 
             logStartup(languageServerType, lsResource);
             this.languageServerType = languageServerType;
             this.workspaceInterpreters.set(lsResource.fsPath, interpreter);
         } else {
-            await languageServerExtensionManager.languageServerNotAvailable();
+            await languageServer.languageServerNotAvailable();
         }
 
-        return languageServerExtensionManager;
+        return languageServer;
     }
 
     public async restartLanguageServers(): Promise<void> {
@@ -297,6 +293,8 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
                 await this.refreshLanguageServer(resource);
             } else if (event.affectsConfiguration(`python.analysis.pylanceLspClientEnabled`, resource)) {
                 await this.refreshLanguageServer(resource, /* forced */ true);
+            } else if (event.affectsConfiguration(`python.pyrefly.disableLanguageServices`, resource)) {
+                await this.refreshLanguageServer(resource);
             }
         });
     }
