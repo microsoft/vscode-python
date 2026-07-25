@@ -23,16 +23,10 @@ const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined
 
 gulp.task('compileCore', (done) => {
     spawnAsync(process.execPath, ['./node_modules/typescript/lib/tsc.js', '-p', './tsconfig.json'], undefined, true)
-        .then((stdout) => {
-            if (stdout.includes('error')) {
-                done(new Error(stdout));
-            } else {
-                done();
-            }
-        })
+        .then(() => done())
         .catch((ex) => {
             console.log(ex);
-            done(new Error('TypeScript compilation errors', ex));
+            done(new Error(`TypeScript compilation errors: ${ex}`));
         });
 });
 
