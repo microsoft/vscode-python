@@ -26,7 +26,7 @@ gulp.task('compileCore', (done) => {
         .then(() => done())
         .catch((ex) => {
             console.log(ex);
-            done(new Error(`TypeScript compilation errors: ${ex}`));
+            done(new Error(`TypeScript compilation errors: ${ex instanceof Error ? ex.message : ex}`));
         });
 });
 
