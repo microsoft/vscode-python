@@ -9,7 +9,6 @@
 'use strict';
 
 const gulp = require('gulp');
-const ts = require('gulp-typescript');
 const spawn = require('cross-spawn');
 const path = require('path');
 const del = require('del');
@@ -20,22 +19,21 @@ const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const { argv } = require('yargs');
 const os = require('os');
-const typescript = require('typescript');
-
-const tsProject = ts.createProject('./tsconfig.json', { typescript });
-
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
 gulp.task('compileCore', (done) => {
-    let failed = false;
-    tsProject
-        .src()
-        .pipe(tsProject())
-        .on('error', () => {
-            failed = true;
+    spawnAsync(process.execPath, ['./node_modules/typescript/lib/tsc.js', '-p', './tsconfig.json'], undefined, true)
+        .then((stdout) => {
+            if (stdout.includes('error')) {
+                done(new Error(stdout));
+            } else {
+                done();
+            }
         })
-        .js.pipe(gulp.dest('out'))
-        .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
+        .catch((ex) => {
+            console.log(ex);
+            done(new Error('TypeScript compilation errors', ex));
+        });
 });
 
 gulp.task('compileApi', (done) => {
