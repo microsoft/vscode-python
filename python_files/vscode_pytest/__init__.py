@@ -25,8 +25,8 @@ import pytest
 
 PYTEST_INTERNAL_AVAILABLE = False
 with contextlib.suppress(ImportError):
-    from _pytest.python import PyobjMixin
     from _pytest._code.code import Code
+
     PYTEST_INTERNAL_AVAILABLE = True
 
 if TYPE_CHECKING:
@@ -848,7 +848,6 @@ def create_test_node(
     Keyword arguments:
     test_case -- the pytest test case.
     """
-
     lineno0: int | None = None
     if PYTEST_INTERNAL_AVAILABLE:
         obj = getattr(test_case, "obj", None)
@@ -860,9 +859,7 @@ def create_test_node(
 
     if lineno0 is None:
         lineno0 = test_case.location[1]
-    test_case_loc: str = (
-        str(lineno0 + 1) if (lineno0 is not None) else ""
-    )
+    test_case_loc: str = str(lineno0 + 1) if (lineno0 is not None) else ""
     absolute_test_id = get_absolute_test_id(test_case.nodeid, get_node_path(test_case))
     return {
         "name": test_case.name,
@@ -1279,4 +1276,3 @@ def pytest_plugin_registered(plugin: object, manager: pytest.PytestPluginManager
         and not manager.hasplugin(plugin_name)
     ):
         manager.register(DeferPlugin(), name=plugin_name)
-
