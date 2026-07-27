@@ -129,6 +129,8 @@ suite('REPL - Native REPL', () => {
             input: sinon.stub(),
             checkValidCommand: sinon.stub().resolves(true),
             dispose: sinon.stub(),
+            isExecuting: false,
+            isDisposed: false,
         };
 
         // Track the number of times createPythonServer was called

@@ -19,6 +19,7 @@ import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { useEnvExtension, getEnvironment, runInBackground } from '../../../envExt/api.internal';
 import { buildPytestEnv as configureSubprocessEnv, handleSymlinkAndRootDir } from './pytestHelpers';
 import { cleanupOnCancellation, createProcessHandlers, setupDiscoveryPipe } from '../common/discoveryHelpers';
+import { ProjectAdapter } from '../common/projectAdapter';
 
 /**
  * Configures the subprocess environment for pytest discovery.
@@ -53,6 +54,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
         interpreter?: PythonEnvironment,
+        project?: ProjectAdapter,
     ): Promise<void> {
         // Setup discovery pipe and cancellation
         const {
@@ -76,6 +78,18 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             let { pytestArgs } = settings.testing;
             const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
             pytestArgs = await handleSymlinkAndRootDir(cwd, pytestArgs);
+
+            // Add --ignore flags for nested projects to prevent duplicate discovery
+            if (project?.nestedProjectPathsToIgnore?.length) {
+                const ignoreArgs = project.nestedProjectPathsToIgnore.map((nestedPath) => `--ignore=${nestedPath}`);
+                pytestArgs = [...pytestArgs, ...ignoreArgs];
+                traceInfo(
+                    `[test-by-project] Project ${project.projectName} ignoring nested project(s): ${ignoreArgs.join(
+                        ' ',
+                    )}`,
+                );
+            }
+
             const commandArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
             traceVerbose(
                 `Running pytest discovery with command: ${commandArgs.join(' ')} for workspace ${uri.fsPath}.`,
@@ -84,13 +98,18 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             // Configure subprocess environment
             const mutableEnv = await configureDiscoveryEnv(this.envVarsService, uri, discoveryPipeName);
 
+            // Set PROJECT_ROOT_PATH for project-based testing (tells Python where to root the test tree)
+            if (project) {
+                mutableEnv.PROJECT_ROOT_PATH = project.projectUri.fsPath;
+            }
+
             // Setup process handlers (shared by both execution paths)
             const handlers = createProcessHandlers('pytest', uri, cwd, this.resultResolver, deferredTillExecClose, [5]);
 
             // Execute using environment extension if available
             if (useEnvExtension()) {
                 traceInfo(`Using environment extension for pytest discovery in workspace ${uri.fsPath}`);
-                const pythonEnv = await getEnvironment(uri);
+                const pythonEnv = project?.pythonEnvironment ?? (await getEnvironment(uri));
                 if (!pythonEnv) {
                     traceError(
                         `Python environment not found for workspace ${uri.fsPath}. Cannot proceed with test discovery.`,

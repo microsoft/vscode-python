@@ -1,6 +1,6 @@
 // Create test suite and test cases for the `replUtils` module
 import * as TypeMoq from 'typemoq';
-import { Disposable } from 'vscode';
+import { commands, Disposable, Uri } from 'vscode';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 import { IInterpreterService } from '../../client/interpreter/contracts';
@@ -9,6 +9,7 @@ import { ICodeExecutionHelper } from '../../client/terminals/types';
 import * as replCommands from '../../client/repl/replCommands';
 import * as replUtils from '../../client/repl/replUtils';
 import * as nativeRepl from '../../client/repl/nativeRepl';
+import * as windowApis from '../../client/common/vscodeApis/windowApis';
 import { Commands } from '../../client/common/constants';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
@@ -201,5 +202,49 @@ suite('REPL - register native repl command', () => {
 
         await commandHandler!('uri');
         sinon.assert.notCalled(getNativeReplStub);
+    });
+});
+
+suite('Native REPL getActiveInterpreter', () => {
+    let interpreterService: TypeMoq.IMock<IInterpreterService>;
+    let executeCommandStub: sinon.SinonStub;
+    let getActiveResourceStub: sinon.SinonStub;
+
+    setup(() => {
+        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        executeCommandStub = sinon.stub(commands, 'executeCommand').resolves(undefined);
+        getActiveResourceStub = sinon.stub(windowApis, 'getActiveResource');
+    });
+
+    teardown(() => {
+        sinon.restore();
+    });
+
+    test('Uses active resource when uri is undefined', async () => {
+        const resource = Uri.file('/workspace/app.py');
+        const expected = ({ path: 'ps' } as unknown) as PythonEnvironment;
+        getActiveResourceStub.returns(resource);
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(resource)))
+            .returns(() => Promise.resolve(expected));
+
+        const result = await replUtils.getActiveInterpreter(undefined, interpreterService.object);
+
+        expect(result).to.equal(expected);
+        interpreterService.verify((i) => i.getActiveInterpreter(TypeMoq.It.isValue(resource)), TypeMoq.Times.once());
+        sinon.assert.notCalled(executeCommandStub);
+    });
+
+    test('Triggers environment selection using active resource when interpreter is missing', async () => {
+        const resource = Uri.file('/workspace/app.py');
+        getActiveResourceStub.returns(resource);
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(resource)))
+            .returns(() => Promise.resolve(undefined));
+
+        const result = await replUtils.getActiveInterpreter(undefined, interpreterService.object);
+
+        expect(result).to.equal(undefined);
+        sinon.assert.calledWith(executeCommandStub, Commands.TriggerEnvironmentSelection, resource);
     });
 });

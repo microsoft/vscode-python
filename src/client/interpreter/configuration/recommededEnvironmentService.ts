@@ -17,6 +17,7 @@ const MEMENTO_KEY = 'userSelectedEnvPath';
 @injectable()
 export class RecommendedEnvironmentService implements IRecommendedEnvironmentService, IExtensionActivationService {
     private api?: PythonExtension['environments'];
+    private hasRegisteredCommand = false;
     constructor(@inject(IExtensionContext) private readonly extensionContext: IExtensionContext) {}
     supportedWorkspaceTypes: { untrustedWorkspace: boolean; virtualWorkspace: boolean } = {
         untrustedWorkspace: true,
@@ -24,6 +25,10 @@ export class RecommendedEnvironmentService implements IRecommendedEnvironmentSer
     };
 
     async activate(_resource: Resource, _startupStopWatch?: StopWatch): Promise<void> {
+        if (this.hasRegisteredCommand) {
+            return;
+        }
+        this.hasRegisteredCommand = true;
         this.extensionContext.subscriptions.push(
             commands.registerCommand('python.getRecommendedEnvironment', async (resource: Resource) => {
                 return this.getRecommededEnvironment(resource);

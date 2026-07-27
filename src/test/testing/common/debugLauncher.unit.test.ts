@@ -30,6 +30,7 @@ import { TestProvider } from '../../../client/testing/types';
 import { isOs, OSType } from '../../common';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { createDeferred } from '../../../client/common/utils/async';
+import * as envExtApi from '../../../client/envExt/api.internal';
 
 use(chaiAsPromised.default);
 
@@ -106,7 +107,7 @@ suite('Unit Tests - Debug Launcher', () => {
         );
     }
     function setupDebugManager(
-        workspaceFolder: WorkspaceFolder,
+        _workspaceFolder: WorkspaceFolder,
         expected: DebugConfiguration,
         testProvider: TestProvider,
     ) {
@@ -123,35 +124,48 @@ suite('Unit Tests - Debug Launcher', () => {
             .returns(() => Promise.resolve(expected.env));
 
         const deferred = createDeferred<void>();
+        let capturedConfig: DebugConfiguration | undefined;
 
+        // Use TypeMoq.It.isAny() because the implementation adds a session marker to the config
         debugService
-            .setup((d) =>
-                d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected), undefined),
-            )
-            .returns((_wspc: WorkspaceFolder, _expectedParam: DebugConfiguration) => {
+            .setup((d) => d.startDebugging(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .callback((_wspc: WorkspaceFolder, config: DebugConfiguration) => {
+                capturedConfig = config;
                 deferred.resolve();
-                return Promise.resolve(undefined as any);
+            })
+            .returns(() => Promise.resolve(true));
+
+        // Setup onDidStartDebugSession - the new implementation uses this to capture the session
+        debugService
+            .setup((d) => d.onDidStartDebugSession(TypeMoq.It.isAny()))
+            .returns((callback) => {
+                deferred.promise.then(() => {
+                    if (capturedConfig) {
+                        callback(({
+                            id: 'test-session-id',
+                            configuration: capturedConfig,
+                        } as unknown) as DebugSession);
+                    }
+                });
+                return { dispose: () => {} };
             });
 
-        // create a fake debug session that the debug service will return on terminate
-        const fakeDebugSession = TypeMoq.Mock.ofType<DebugSession>();
-        fakeDebugSession.setup((ds) => ds.id).returns(() => 'id-val');
-        const debugSessionInstance = fakeDebugSession.object;
-
-        debugService
-            .setup((d) => d.activeDebugSession)
-            .returns(() => debugSessionInstance)
-            .verifiable(TypeMoq.Times.once());
-
+        // Setup onDidTerminateDebugSession - fires after the session starts
         debugService
             .setup((d) => d.onDidTerminateDebugSession(TypeMoq.It.isAny()))
             .returns((callback) => {
                 deferred.promise.then(() => {
-                    callback(debugSessionInstance);
+                    setTimeout(() => {
+                        if (capturedConfig) {
+                            callback(({
+                                id: 'test-session-id',
+                                configuration: capturedConfig,
+                            } as unknown) as DebugSession);
+                        }
+                    }, 10);
                 });
-                return undefined as any;
-            })
-            .verifiable(TypeMoq.Times.once());
+                return { dispose: () => {} };
+            });
     }
     function createWorkspaceFolder(folderPath: string): WorkspaceFolder {
         return {
@@ -691,5 +705,229 @@ suite('Unit Tests - Debug Launcher', () => {
         const configs = await debugLauncher.readAllDebugConfigs(workspaceFolder);
 
         expect(configs).to.be.deep.equal([]);
+    });
+
+    // ===== PROJECT-BASED DEBUG SESSION TESTS =====
+
+    suite('Project-based debug sessions', () => {
+        function setupForProjectTests(options: LaunchOptions) {
+            interpreterService
+                .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(({ path: 'python' } as unknown) as PythonEnvironment));
+            settings.setup((p) => p.envFile).returns(() => __filename);
+
+            debugEnvHelper
+                .setup((x) => x.getEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve({}));
+
+            const workspaceFolders = [{ index: 0, name: 'test', uri: Uri.file(options.cwd) }];
+            getWorkspaceFoldersStub.returns(workspaceFolders);
+            getWorkspaceFolderStub.returns(workspaceFolders[0]);
+            pathExistsStub.resolves(false);
+
+            // Stub useEnvExtension to avoid null reference errors in tests
+            sinon.stub(envExtApi, 'useEnvExtension').returns(false);
+        }
+
+        /**
+         * Helper to setup debug service mocks with proper session lifecycle simulation.
+         * The implementation uses onDidStartDebugSession to capture the session via marker,
+         * then onDidTerminateDebugSession to resolve when that session ends.
+         */
+        function setupDebugServiceWithSessionLifecycle(): {
+            capturedConfigs: DebugConfiguration[];
+        } {
+            const capturedConfigs: DebugConfiguration[] = [];
+            let startCallback: ((session: DebugSession) => void) | undefined;
+            let terminateCallback: ((session: DebugSession) => void) | undefined;
+
+            debugService
+                .setup((d) => d.startDebugging(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .callback((_, config) => {
+                    capturedConfigs.push(config);
+                    // Simulate the full session lifecycle after startDebugging resolves
+                    setTimeout(() => {
+                        const session = ({
+                            id: `session-${capturedConfigs.length}`,
+                            configuration: config,
+                        } as unknown) as DebugSession;
+                        // Fire start first (so ourSession is captured)
+                        startCallback?.(session);
+                        // Then fire terminate (so the promise resolves)
+                        setTimeout(() => terminateCallback?.(session), 5);
+                    }, 5);
+                })
+                .returns(() => Promise.resolve(true));
+
+            debugService
+                .setup((d) => d.onDidStartDebugSession(TypeMoq.It.isAny()))
+                .callback((cb) => {
+                    startCallback = cb;
+                })
+                .returns(() => ({ dispose: () => {} }));
+
+            debugService
+                .setup((d) => d.onDidTerminateDebugSession(TypeMoq.It.isAny()))
+                .callback((cb) => {
+                    terminateCallback = cb;
+                })
+                .returns(() => ({ dispose: () => {} }));
+
+            return { capturedConfigs };
+        }
+
+        test('should use project name in config name when provided', async () => {
+            const options: LaunchOptions = {
+                cwd: 'one/two/three',
+                args: ['/one/two/three/testfile.py'],
+                testProvider: 'pytest',
+                runTestIdsPort: 'runTestIdsPort',
+                pytestPort: 'pytestPort',
+                project: { name: 'myproject (Python 3.11)', uri: Uri.file('one/two/three') },
+            };
+
+            setupForProjectTests(options);
+            const { capturedConfigs } = setupDebugServiceWithSessionLifecycle();
+
+            await debugLauncher.launchDebugger(options);
+
+            expect(capturedConfigs).to.have.length(1);
+            expect(capturedConfigs[0].name).to.equal('Debug Tests: myproject (Python 3.11)');
+        });
+
+        test('should use default python when no project provided', async () => {
+            const options: LaunchOptions = {
+                cwd: 'one/two/three',
+                args: ['/one/two/three/testfile.py'],
+                testProvider: 'pytest',
+                runTestIdsPort: 'runTestIdsPort',
+                pytestPort: 'pytestPort',
+            };
+
+            setupForProjectTests(options);
+            const { capturedConfigs } = setupDebugServiceWithSessionLifecycle();
+
+            await debugLauncher.launchDebugger(options);
+
+            expect(capturedConfigs).to.have.length(1);
+            // Should use the default 'python' from interpreterService mock
+            expect(capturedConfigs[0].python).to.equal('python');
+        });
+
+        test('should add unique session marker to launch config', async () => {
+            const options: LaunchOptions = {
+                cwd: 'one/two/three',
+                args: ['/one/two/three/testfile.py'],
+                testProvider: 'pytest',
+                runTestIdsPort: 'runTestIdsPort',
+                pytestPort: 'pytestPort',
+            };
+
+            setupForProjectTests(options);
+            const { capturedConfigs } = setupDebugServiceWithSessionLifecycle();
+
+            await debugLauncher.launchDebugger(options);
+
+            expect(capturedConfigs).to.have.length(1);
+            // Should have a session marker of format 'test-{timestamp}-{random}'
+            const marker = (capturedConfigs[0] as any).__vscodeTestSessionMarker;
+            expect(marker).to.be.a('string');
+            expect(marker).to.match(/^test-\d+-[a-z0-9]+$/);
+        });
+
+        test('should generate unique markers for each launch', async () => {
+            const options: LaunchOptions = {
+                cwd: 'one/two/three',
+                args: ['/one/two/three/testfile.py'],
+                testProvider: 'pytest',
+                runTestIdsPort: 'runTestIdsPort',
+                pytestPort: 'pytestPort',
+            };
+
+            setupForProjectTests(options);
+            const { capturedConfigs } = setupDebugServiceWithSessionLifecycle();
+
+            // Launch twice
+            await debugLauncher.launchDebugger(options);
+            await debugLauncher.launchDebugger(options);
+
+            expect(capturedConfigs).to.have.length(2);
+            const marker1 = (capturedConfigs[0] as any).__vscodeTestSessionMarker;
+            const marker2 = (capturedConfigs[1] as any).__vscodeTestSessionMarker;
+            expect(marker1).to.not.equal(marker2);
+        });
+
+        test('should only resolve when matching session terminates', async () => {
+            const options: LaunchOptions = {
+                cwd: 'one/two/three',
+                args: ['/one/two/three/testfile.py'],
+                testProvider: 'pytest',
+                runTestIdsPort: 'runTestIdsPort',
+                pytestPort: 'pytestPort',
+            };
+
+            setupForProjectTests(options);
+
+            let capturedConfig: DebugConfiguration | undefined;
+            let terminateCallback: ((session: DebugSession) => void) | undefined;
+            let startCallback: ((session: DebugSession) => void) | undefined;
+
+            debugService
+                .setup((d) => d.startDebugging(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .callback((_, config) => {
+                    capturedConfig = config;
+                })
+                .returns(() => Promise.resolve(true));
+
+            debugService
+                .setup((d) => d.onDidStartDebugSession(TypeMoq.It.isAny()))
+                .callback((cb) => {
+                    startCallback = cb;
+                })
+                .returns(() => ({ dispose: () => {} }));
+
+            debugService
+                .setup((d) => d.onDidTerminateDebugSession(TypeMoq.It.isAny()))
+                .callback((cb) => {
+                    terminateCallback = cb;
+                })
+                .returns(() => ({ dispose: () => {} }));
+
+            const launchPromise = debugLauncher.launchDebugger(options);
+
+            // Wait for config to be captured
+            await new Promise((r) => setTimeout(r, 10));
+
+            // Simulate our session starting
+            const ourSession = ({
+                id: 'our-session-id',
+                configuration: capturedConfig!,
+            } as unknown) as DebugSession;
+            startCallback?.(ourSession);
+
+            // Create a different session (like another project's debug)
+            const otherSession = ({
+                id: 'other-session-id',
+                configuration: { __vscodeTestSessionMarker: 'different-marker' },
+            } as unknown) as DebugSession;
+
+            // Terminate the OTHER session first - should NOT resolve our promise
+            terminateCallback?.(otherSession);
+
+            // Wait a bit to ensure it didn't resolve
+            let resolved = false;
+            const checkPromise = launchPromise.then(() => {
+                resolved = true;
+            });
+
+            await new Promise((r) => setTimeout(r, 20));
+            expect(resolved).to.be.false;
+
+            // Now terminate OUR session - should resolve
+            terminateCallback?.(ourSession);
+
+            await checkPromise;
+            expect(resolved).to.be.true;
+        });
     });
 });

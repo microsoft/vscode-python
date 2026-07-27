@@ -13,14 +13,7 @@ import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './c
 import { Commands, PYTHON_LANGUAGE, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExtensions,
-    IInterpreterPathService,
-    ILogOutputChannel,
-    IPathUtils,
-} from './common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensions, ILogOutputChannel, IPathUtils } from './common/types';
 import { noop } from './common/utils/misc';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
 import { IDebugConfigurationService } from './debugger/extension/types';
@@ -55,7 +48,6 @@ import { registerTriggerForTerminalREPL } from './terminals/codeExecution/termin
 import { registerPythonStartup } from './terminals/pythonStartup';
 import { registerPixiFeatures } from './pythonEnvironments/common/environmentManagers/pixi';
 import { registerCustomTerminalLinkProvider } from './terminals/pythonStartupLinkProvider';
-import { registerEnvExtFeatures } from './envExt/api.internal';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -95,13 +87,9 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     const interpreterQuickPick: IInterpreterQuickPick = ext.legacyIOC.serviceContainer.get<IInterpreterQuickPick>(
         IInterpreterQuickPick,
     );
-    const interpreterPathService: IInterpreterPathService = ext.legacyIOC.serviceContainer.get<IInterpreterPathService>(
-        IInterpreterPathService,
-    );
     const interpreterService: IInterpreterService = ext.legacyIOC.serviceContainer.get<IInterpreterService>(
         IInterpreterService,
     );
-    registerEnvExtFeatures(ext.disposables, interpreterPathService);
     const pathUtils = ext.legacyIOC.serviceContainer.get<IPathUtils>(IPathUtils);
     registerPixiFeatures(ext.disposables);
     registerAllCreateEnvironmentFeatures(

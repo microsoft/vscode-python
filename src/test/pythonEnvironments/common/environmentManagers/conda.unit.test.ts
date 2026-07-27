@@ -209,6 +209,7 @@ suite('Conda and its environments are located correctly', () => {
 
     teardown(() => {
         condaVersionOutput = '';
+        Conda.setSkipDeepProbe(false);
         sinon.restore();
     });
 
@@ -247,6 +248,62 @@ suite('Conda and its environments are located correctly', () => {
             };
 
             await expectConda('/bin/conda');
+        });
+
+        suite('When deep probe is disabled (discovery delegated)', () => {
+            test('Skips registry/known-path probing and does not locate conda', async () => {
+                osType = platform.OSType.Linux;
+                homeDir = '/home/user';
+                // conda only exists in a well-known location, not on PATH and not in the setting.
+                files = {
+                    opt: {
+                        anaconda: {
+                            bin: {
+                                conda: JSON.stringify(condaInfo('4.8.0')),
+                            },
+                        },
+                    },
+                };
+
+                Conda.setSkipDeepProbe(true);
+
+                const conda = await Conda.getConda();
+                expect(conda).to.equal(undefined, 'conda should not be located via deep probe when disabled');
+            });
+
+            test('Still honors the `python.condaPath` setting', async () => {
+                getPythonSetting.withArgs('condaPath').returns('condaPath/conda');
+                files = {
+                    condaPath: {
+                        conda: JSON.stringify(condaInfo('4.8.0')),
+                    },
+                };
+
+                Conda.setSkipDeepProbe(true);
+
+                await expectConda('/condaPath/conda');
+            });
+
+            test('Still finds conda on PATH', async () => {
+                osType = platform.OSType.Linux;
+                execPath = ['/bin'];
+                files = {
+                    bin: {
+                        conda: JSON.stringify(condaInfo('4.8.0')),
+                    },
+                    opt: {
+                        anaconda: {
+                            bin: {
+                                conda: JSON.stringify(condaInfo('4.8.1')),
+                            },
+                        },
+                    },
+                };
+
+                Conda.setSkipDeepProbe(true);
+
+                await expectConda('/bin/conda');
+            });
         });
 
         test('Use conda.bat when possible over conda.exe on windows', async () => {

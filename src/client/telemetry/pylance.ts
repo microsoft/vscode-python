@@ -385,8 +385,10 @@
       "autosearchpaths" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "callArgumentNameInlayHints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "completefunctionparens" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "diagnosticsSource" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "disableTaggedHints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "disableworkspacesymbol" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "enableDjangoSupport" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "enableextractcodeaction" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "enablePytestSupport" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "extracommitchars" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -395,6 +397,7 @@
       "hasconfigfile" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "hasextrapaths" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "importformat" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "includeAliasesFromUserFiles" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "intelliCodeEnabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "includeusersymbolsinautoimport" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "indexing" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -404,7 +407,12 @@
       "movesymbol" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "nodeExecutable" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "openfilesonly" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "persistAllIndices" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "pyrightVersion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "pytestparameterinlaytypehints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "referencesCodeLens" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "regenerateStdLibIndices" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "supportDocstringTemplate" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "typecheckingmode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "unusablecompilerflags": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "useimportheuristic" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -481,4 +489,21 @@
    "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
    "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
 }
+*/
+/**
+ * Telemetry event sent during background Pyrefly detection to measure the audience that could be
+ * offered a switch to Pyrefly. Reported once per workspace folder (per availability) for users who
+ * are not already on a Pyrefly diagnostics source.
+ */
+/* __GDPR__
+   "pyrefly.detection" : {
+      "available" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "haspyreflytoml" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "haspyprojectsection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "hasenvironmentbinary" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "promptdismissed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "notificationenabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" }
+   }
 */

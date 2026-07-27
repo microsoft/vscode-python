@@ -4,7 +4,7 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
+import { FileSystemPathUtils, isAbsolutePath } from '../../../client/common/platform/fs-paths';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { OSType } from '../../../client/common/utils/platform';
 
@@ -110,5 +110,30 @@ suite('FileSystem - Path Utils', () => {
                 // * exercize normalization
             });
         });
+    });
+});
+
+suite('FileSystem - isAbsolutePath', () => {
+    test('Recognizes POSIX absolute paths', () => {
+        expect(isAbsolutePath('/foo/bar')).to.equal(true);
+        expect(isAbsolutePath('/')).to.equal(true);
+    });
+
+    test('Recognizes Windows drive-letter absolute paths', () => {
+        expect(isAbsolutePath('C:\\foo\\bar')).to.equal(true);
+        expect(isAbsolutePath('c:/foo/bar')).to.equal(true);
+        expect(isAbsolutePath('Z:\\')).to.equal(true);
+    });
+
+    test('Recognizes Windows UNC absolute paths', () => {
+        expect(isAbsolutePath('\\\\server\\share\\foo')).to.equal(true);
+    });
+
+    test('Rejects relative paths', () => {
+        expect(isAbsolutePath('foo/bar')).to.equal(false);
+        expect(isAbsolutePath('./foo')).to.equal(false);
+        expect(isAbsolutePath('../foo')).to.equal(false);
+        expect(isAbsolutePath('foo\\bar')).to.equal(false);
+        expect(isAbsolutePath('')).to.equal(false);
     });
 });

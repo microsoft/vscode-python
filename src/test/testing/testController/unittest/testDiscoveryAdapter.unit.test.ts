@@ -22,6 +22,7 @@ import {
     SpawnOptions,
 } from '../../../../client/common/process/types';
 import * as extapi from '../../../../client/envExt/api.internal';
+import { ProjectAdapter } from '../../../../client/testing/testController/common/projectAdapter';
 
 suite('Unittest test discovery adapter', () => {
     let configService: IConfigurationService;
@@ -243,5 +244,99 @@ suite('Unittest test discovery adapter', () => {
         // add in await and trigger
         await discoveryPromise;
         assert.ok(true, 'Test resolves correctly when triggering a cancellation token in exec observable.');
+    });
+
+    test('DiscoverTests should set PROJECT_ROOT_PATH when project is provided', async () => {
+        const projectPath = path.join('/', 'workspace', 'myproject');
+        const mockProject = ({
+            projectId: 'file:///workspace/myproject',
+            projectUri: Uri.file(projectPath),
+            projectName: 'myproject',
+            workspaceUri: Uri.file('/workspace'),
+        } as unknown) as ProjectAdapter;
+
+        const adapter = new UnittestTestDiscoveryAdapter(configService);
+        adapter.discoverTests(uri, execFactory.object, undefined, undefined, mockProject);
+        const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
+        const argsExpected = [script, '--udiscovery', '-v', '-s', '.', '-p', 'test*'];
+
+        // must await until the execObservable is called in order to verify it
+        await deferred.promise;
+
+        execService.verify(
+            (x) =>
+                x.execObservable(
+                    typeMoq.It.is<Array<string>>((argsActual) => {
+                        try {
+                            assert.equal(argsActual.length, argsExpected.length);
+                            assert.deepEqual(argsActual, argsExpected);
+                            return true;
+                        } catch (e) {
+                            console.error(e);
+                            throw e;
+                        }
+                    }),
+                    typeMoq.It.is<SpawnOptions>((options) => {
+                        try {
+                            // Verify PROJECT_ROOT_PATH is set when project is provided
+                            assert.strictEqual(
+                                options.env?.PROJECT_ROOT_PATH,
+                                projectPath,
+                                'PROJECT_ROOT_PATH should be set to project URI path',
+                            );
+                            assert.equal(options.cwd, expectedPath);
+                            assert.equal(options.throwOnStdErr, true);
+                            return true;
+                        } catch (e) {
+                            console.error(e);
+                            throw e;
+                        }
+                    }),
+                ),
+            typeMoq.Times.once(),
+        );
+    });
+
+    test('DiscoverTests should NOT set PROJECT_ROOT_PATH when no project is provided', async () => {
+        const adapter = new UnittestTestDiscoveryAdapter(configService);
+        adapter.discoverTests(uri, execFactory.object);
+        const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
+        const argsExpected = [script, '--udiscovery', '-v', '-s', '.', '-p', 'test*'];
+
+        // must await until the execObservable is called in order to verify it
+        await deferred.promise;
+
+        execService.verify(
+            (x) =>
+                x.execObservable(
+                    typeMoq.It.is<Array<string>>((argsActual) => {
+                        try {
+                            assert.equal(argsActual.length, argsExpected.length);
+                            assert.deepEqual(argsActual, argsExpected);
+                            return true;
+                        } catch (e) {
+                            console.error(e);
+                            throw e;
+                        }
+                    }),
+                    typeMoq.It.is<SpawnOptions>((options) => {
+                        try {
+                            // Verify PROJECT_ROOT_PATH is NOT set when no project is provided
+                            assert.strictEqual(
+                                options.env?.PROJECT_ROOT_PATH,
+                                undefined,
+                                'PROJECT_ROOT_PATH should NOT be set when no project is provided',
+                            );
+                            assert.equal(options.cwd, expectedPath);
+                            assert.equal(options.throwOnStdErr, true);
+                            return true;
+                        } catch (e) {
+                            console.error(e);
+                            throw e;
+                        }
+                    }),
+                ),
+            typeMoq.Times.once(),
+        );
     });
 });

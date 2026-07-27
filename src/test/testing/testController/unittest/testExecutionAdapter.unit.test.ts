@@ -22,6 +22,8 @@ import { MockChildProcess } from '../../../mocks/mockChildProcess';
 import { traceInfo } from '../../../../client/logging';
 import { UnittestTestExecutionAdapter } from '../../../../client/testing/testController/unittest/testExecutionAdapter';
 import * as extapi from '../../../../client/envExt/api.internal';
+import { ProjectAdapter } from '../../../../client/testing/testController/common/projectAdapter';
+import { createMockProjectAdapter } from '../testMocks';
 
 suite('Unittest test execution adapter', () => {
     let configService: IConfigurationService;
@@ -320,5 +322,260 @@ suite('Unittest test execution adapter', () => {
                 ),
             typeMoq.Times.once(),
         );
+    });
+
+    test('RunTests should set PROJECT_ROOT_PATH when project is provided', async () => {
+        const deferred2 = createDeferred();
+        const deferred3 = createDeferred();
+        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+        execFactory
+            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+            .returns(() => {
+                deferred2.resolve();
+                return Promise.resolve(execService.object);
+            });
+        utilsWriteTestIdsFileStub.callsFake(() => {
+            deferred3.resolve();
+            return Promise.resolve('testIdPipe-mockName');
+        });
+
+        const projectPath = path.join('/', 'workspace', 'myproject');
+        const mockProject = ({
+            projectId: 'file:///workspace/myproject',
+            projectUri: Uri.file(projectPath),
+            projectName: 'myproject',
+            workspaceUri: Uri.file('/workspace'),
+        } as unknown) as ProjectAdapter;
+
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
+        const uri = Uri.file(myTestPath);
+        adapter = new UnittestTestExecutionAdapter(configService);
+        adapter.runTests(
+            uri,
+            [],
+            TestRunProfileKind.Run,
+            testRun.object,
+            execFactory.object,
+            undefined, // debugLauncher
+            undefined, // interpreter
+            mockProject,
+        );
+
+        await deferred2.promise;
+        await deferred3.promise;
+        await deferred4.promise;
+        mockProc.trigger('close');
+
+        const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'python_files');
+        const pathToExecutionScript = path.join(pathToPythonFiles, 'unittestadapter', 'execution.py');
+        const expectedArgs = [pathToExecutionScript, '--udiscovery', '.'];
+
+        execService.verify(
+            (x) =>
+                x.execObservable(
+                    expectedArgs,
+                    typeMoq.It.is<SpawnOptions>((options) => {
+                        // Verify PROJECT_ROOT_PATH is set when project is provided
+                        assert.strictEqual(
+                            options.env?.PROJECT_ROOT_PATH,
+                            projectPath,
+                            'PROJECT_ROOT_PATH should be set to project URI path',
+                        );
+                        return true;
+                    }),
+                ),
+            typeMoq.Times.once(),
+        );
+    });
+
+    test('RunTests should NOT set PROJECT_ROOT_PATH when no project is provided', async () => {
+        const deferred2 = createDeferred();
+        const deferred3 = createDeferred();
+        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+        execFactory
+            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+            .returns(() => {
+                deferred2.resolve();
+                return Promise.resolve(execService.object);
+            });
+        utilsWriteTestIdsFileStub.callsFake(() => {
+            deferred3.resolve();
+            return Promise.resolve('testIdPipe-mockName');
+        });
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
+        const uri = Uri.file(myTestPath);
+        adapter = new UnittestTestExecutionAdapter(configService);
+        adapter.runTests(uri, [], TestRunProfileKind.Run, testRun.object, execFactory.object);
+
+        await deferred2.promise;
+        await deferred3.promise;
+        await deferred4.promise;
+        mockProc.trigger('close');
+
+        const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'python_files');
+        const pathToExecutionScript = path.join(pathToPythonFiles, 'unittestadapter', 'execution.py');
+        const expectedArgs = [pathToExecutionScript, '--udiscovery', '.'];
+
+        execService.verify(
+            (x) =>
+                x.execObservable(
+                    expectedArgs,
+                    typeMoq.It.is<SpawnOptions>((options) => {
+                        // Verify PROJECT_ROOT_PATH is NOT set when no project is provided
+                        assert.strictEqual(
+                            options.env?.PROJECT_ROOT_PATH,
+                            undefined,
+                            'PROJECT_ROOT_PATH should NOT be set when no project is provided',
+                        );
+                        return true;
+                    }),
+                ),
+            typeMoq.Times.once(),
+        );
+    });
+
+    test('Debug mode with project should pass project.pythonProject to debug launcher', async () => {
+        const deferred3 = createDeferred();
+        utilsWriteTestIdsFileStub.callsFake(() => Promise.resolve('testIdPipe-mockName'));
+
+        debugLauncher
+            .setup((dl) => dl.launchDebugger(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(async (_opts, callback) => {
+                traceInfo('stubs launch debugger');
+                if (typeof callback === 'function') {
+                    deferred3.resolve();
+                    callback();
+                }
+            });
+
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
+
+        const projectPath = path.join('/', 'workspace', 'myproject');
+        const mockProject = createMockProjectAdapter({
+            projectPath,
+            projectName: 'myproject (Python 3.11)',
+            pythonPath: '/custom/python/path',
+            testProvider: 'unittest',
+        });
+
+        const uri = Uri.file(myTestPath);
+        adapter = new UnittestTestExecutionAdapter(configService);
+        adapter.runTests(
+            uri,
+            [],
+            TestRunProfileKind.Debug,
+            testRun.object,
+            execFactory.object,
+            debugLauncher.object,
+            undefined,
+            mockProject,
+        );
+
+        await deferred3.promise;
+
+        debugLauncher.verify(
+            (x) =>
+                x.launchDebugger(
+                    typeMoq.It.is<LaunchOptions>((launchOptions) => {
+                        // Project should be passed for project-based debugging
+                        assert.ok(launchOptions.project, 'project should be defined');
+                        assert.equal(launchOptions.project?.name, 'myproject (Python 3.11)');
+                        assert.equal(launchOptions.project?.uri.fsPath, projectPath);
+                        return true;
+                    }),
+                    typeMoq.It.isAny(),
+                    typeMoq.It.isAny(),
+                ),
+            typeMoq.Times.once(),
+        );
+    });
+
+    test('useEnvExtension mode with project should use project pythonEnvironment', async () => {
+        // Enable the useEnvExtension path
+        useEnvExtensionStub.returns(true);
+
+        utilsWriteTestIdsFileStub.callsFake(() => Promise.resolve('testIdPipe-mockName'));
+
+        // Store the deferredTillServerClose so we can resolve it
+        let serverCloseDeferred: Deferred<void> | undefined;
+        utilsStartRunResultNamedPipeStub.callsFake((_callback: unknown, deferred: Deferred<void>, _token: unknown) => {
+            serverCloseDeferred = deferred;
+            return Promise.resolve('runResultPipe-mockName');
+        });
+
+        const projectPath = path.join('/', 'workspace', 'myproject');
+        const mockProject = createMockProjectAdapter({
+            projectPath,
+            projectName: 'myproject (Python 3.11)',
+            pythonPath: '/custom/python/path',
+            testProvider: 'unittest',
+        });
+
+        // Stub runInBackground to capture which environment was used
+        const runInBackgroundStub = sinon.stub(extapi, 'runInBackground');
+        const exitCallbacks: ((code: number, signal: string | null) => void)[] = [];
+        // Promise that resolves when the production code registers its onExit handler
+        const onExitRegistered = createDeferred<void>();
+        const mockProc2 = {
+            stdout: { on: sinon.stub() },
+            stderr: { on: sinon.stub() },
+            onExit: (cb: (code: number, signal: string | null) => void) => {
+                exitCallbacks.push(cb);
+                onExitRegistered.resolve();
+            },
+            kill: sinon.stub(),
+        };
+        runInBackgroundStub.callsFake(() => Promise.resolve(mockProc2 as any));
+
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
+
+        const uri = Uri.file(myTestPath);
+        adapter = new UnittestTestExecutionAdapter(configService);
+        const runPromise = adapter.runTests(
+            uri,
+            [],
+            TestRunProfileKind.Run,
+            testRun.object,
+            execFactory.object,
+            debugLauncher.object,
+            undefined,
+            mockProject,
+        );
+
+        // Wait for production code to register its onExit handler
+        await onExitRegistered.promise;
+
+        // Simulate process exit to complete the test
+        exitCallbacks.forEach((cb) => cb(0, null));
+
+        // Resolve the server close deferred to allow the runTests to complete
+        serverCloseDeferred?.resolve();
+
+        await runPromise;
+
+        // Verify runInBackground was called with the project's Python environment
+        sinon.assert.calledOnce(runInBackgroundStub);
+        const envArg = runInBackgroundStub.firstCall.args[0];
+        // The environment should be the project's pythonEnvironment
+        assert.ok(envArg, 'runInBackground should be called with an environment');
+        assert.equal(envArg.execInfo?.run?.executable, '/custom/python/path');
     });
 });

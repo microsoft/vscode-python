@@ -48,6 +48,7 @@ export enum EventName {
     UNITTEST_DISCOVERY_DONE = 'UNITTEST.DISCOVERY.DONE',
     UNITTEST_RUN_STOP = 'UNITTEST.RUN.STOP',
     UNITTEST_RUN = 'UNITTEST.RUN',
+    UNITTEST_RUN_DONE = 'UNITTEST.RUN.DONE',
     UNITTEST_RUN_ALL_FAILED = 'UNITTEST.RUN_ALL_FAILED',
     UNITTEST_DISABLED = 'UNITTEST.DISABLED',
 
@@ -100,6 +101,17 @@ export enum EventName {
     ENVIRONMENT_CHECK_RESULT = 'ENVIRONMENT.CHECK.RESULT',
     ENVIRONMENT_TERMINAL_GLOBAL_PIP = 'ENVIRONMENT.TERMINAL.GLOBAL_PIP',
 }
+
+export const UNITTEST_RUN_FAILURE_CATEGORIES = [
+    'pipe-cancelled',
+    'subprocess-crash',
+    'no-results',
+    'env-mismatch',
+    'cancelled',
+    'unknown',
+] as const;
+
+export type UnitTestRunFailureCategory = typeof UNITTEST_RUN_FAILURE_CATEGORIES[number];
 
 export enum PlatformErrors {
     FailedToParseVersion = 'FailedToParseVersion',

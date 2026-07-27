@@ -223,7 +223,7 @@ export class UnitTestManagementService implements IExtensionActivationService {
             interpreterService.onDidChangeInterpreter(async () => {
                 traceVerbose('Testing: Triggered refresh due to interpreter change.');
                 sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'interpreter' });
-                await this.testController?.refreshTestData(undefined, { forceRefresh: true });
+                await this.testController?.refreshTestData(undefined, { forceRefresh: true, trigger: 'interpreter' });
             }),
         );
     }

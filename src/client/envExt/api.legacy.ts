@@ -99,7 +99,9 @@ function toLegacyType(env: PythonEnvironment): PythonEnvironmentLegacy {
 }
 
 const previousEnvMap = new Map<string, PythonEnvironment | undefined>();
-export async function getActiveInterpreterLegacy(resource?: Uri): Promise<PythonEnvironmentLegacy | undefined> {
+const inFlightActiveInterpreter = new Map<string, Promise<PythonEnvironmentLegacy | undefined>>();
+
+async function resolveActiveInterpreterLegacy(resource?: Uri): Promise<PythonEnvironmentLegacy | undefined> {
     const api = await getEnvExtApi();
     const uri = resource ? api.getPythonProject(resource)?.uri : undefined;
 
@@ -117,7 +119,23 @@ export async function getActiveInterpreterLegacy(resource?: Uri): Promise<Python
         });
         previousEnvMap.set(uri?.fsPath || '', pythonEnv);
     }
-    return pythonEnv ? toLegacyType(pythonEnv) : undefined;
+    return newEnv;
+}
+
+export async function getActiveInterpreterLegacy(resource?: Uri): Promise<PythonEnvironmentLegacy | undefined> {
+    // De-duplicate concurrent resolutions for the same resource. The underlying
+    // `getEnvironment` call can block while the environments extension is performing a
+    // refresh, so multiple startup callers (e.g. the language server watcher and the
+    // configuration middleware) would otherwise each spawn their own blocking request.
+    const key = resource?.fsPath ?? '';
+    let inFlight = inFlightActiveInterpreter.get(key);
+    if (!inFlight) {
+        inFlight = resolveActiveInterpreterLegacy(resource).finally(() => {
+            inFlightActiveInterpreter.delete(key);
+        });
+        inFlightActiveInterpreter.set(key, inFlight);
+    }
+    return inFlight;
 }
 
 export async function setInterpreterLegacy(pythonPath: string, uri: Uri | undefined): Promise<void> {

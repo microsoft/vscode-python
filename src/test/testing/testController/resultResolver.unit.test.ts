@@ -14,6 +14,8 @@ import {
 import * as testItemUtilities from '../../../client/testing/testController/common/testItemUtilities';
 import * as ResultResolver from '../../../client/testing/testController/common/resultResolver';
 import * as util from '../../../client/testing/testController/common/utils';
+import * as telemetry from '../../../client/telemetry';
+import { EventName } from '../../../client/telemetry/constants';
 import { traceLog } from '../../../client/logging';
 
 suite('Result Resolver tests', () => {
@@ -85,7 +87,7 @@ suite('Result Resolver tests', () => {
             };
 
             // stub out functionality of populateTestTreeStub which is called in resolveDiscovery
-            const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns();
+            const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns(0);
 
             // call resolve discovery
             resultResolver.resolveDiscovery(payload, cancelationToken);
@@ -137,6 +139,27 @@ suite('Result Resolver tests', () => {
             // header of createErrorTestItem is (options: ErrorTestItemOptions, testController: TestController, uri: Uri)
             sinon.assert.calledWithMatch(createErrorTestItemStub, sinon.match.any, sinon.match.any);
         });
+        test('resolveDiscovery should emit failed telemetry for error payloads', async () => {
+            testProvider = 'pytest';
+            workspaceUri = Uri.file('/foo/bar');
+            resultResolver = new ResultResolver.PythonResultResolver(testController, testProvider, workspaceUri);
+            const sendTelemetryStub = sinon.stub(telemetry, 'sendTelemetryEvent');
+            sinon.stub(util, 'buildErrorNodeOptions').returns({ id: 'id', label: 'label', error: 'error' });
+            sinon.stub(testItemUtilities, 'createErrorTestItem').returns(blankTestItem);
+
+            const payload: DiscoveredTestPayload = {
+                cwd: workspaceUri.fsPath,
+                status: 'error',
+                error: ['discovery failed'],
+            };
+
+            resultResolver.resolveDiscovery(payload, cancelationToken);
+
+            sinon.assert.calledWithMatch(sendTelemetryStub, EventName.UNITTEST_DISCOVERY_DONE, sinon.match.any, {
+                failed: true,
+                failureCategory: 'unknown',
+            });
+        });
         test('resolveDiscovery should create error and root node when error and tests exist on payload', async () => {
             // test specific constants used expected values
             testProvider = 'pytest';
@@ -171,7 +194,7 @@ suite('Result Resolver tests', () => {
             const createErrorTestItemStub = sinon.stub(testItemUtilities, 'createErrorTestItem').returns(blankTestItem);
 
             // stub out functionality of populateTestTreeStub which is called in resolveDiscovery
-            const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns();
+            const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns(0);
             // call resolve discovery
             resultResolver.resolveDiscovery(payload, cancelationToken);
 
@@ -232,7 +255,7 @@ suite('Result Resolver tests', () => {
             const createErrorTestItemStub = sinon.stub(testItemUtilities, 'createErrorTestItem').returns(blankTestItem);
 
             // stub out functionality of populateTestTreeStub which is called in resolveDiscovery
-            sinon.stub(util, 'populateTestTree').returns();
+            sinon.stub(util, 'populateTestTree').returns(0);
             // add spies to insure these aren't called
             const deleteSpy = sinon.spy(testController.items, 'delete');
             const replaceSpy = sinon.spy(testController.items, 'replace');

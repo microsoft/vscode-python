@@ -18,6 +18,7 @@ import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { createTestingDeferred } from '../common/utils';
 import { buildDiscoveryCommand, buildUnittestEnv as configureSubprocessEnv } from './unittestHelpers';
 import { cleanupOnCancellation, createProcessHandlers, setupDiscoveryPipe } from '../common/discoveryHelpers';
+import { ProjectAdapter } from '../common/projectAdapter';
 
 /**
  * Configures the subprocess environment for unittest discovery.
@@ -51,6 +52,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
         interpreter?: PythonEnvironment,
+        project?: ProjectAdapter,
     ): Promise<void> {
         // Setup discovery pipe and cancellation
         const {
@@ -78,13 +80,21 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             // Configure subprocess environment
             const mutableEnv = await configureDiscoveryEnv(this.envVarsService, uri, discoveryPipeName);
 
+            // Set PROJECT_ROOT_PATH for project-based testing (tells Python where to root the test tree)
+            if (project) {
+                mutableEnv.PROJECT_ROOT_PATH = project.projectUri.fsPath;
+                traceInfo(
+                    `[test-by-project] Setting PROJECT_ROOT_PATH=${project.projectUri.fsPath} for unittest discovery`,
+                );
+            }
+
             // Setup process handlers (shared by both execution paths)
             const handlers = createProcessHandlers('unittest', uri, cwd, this.resultResolver, deferredTillExecClose);
 
             // Execute using environment extension if available
             if (useEnvExtension()) {
                 traceInfo(`Using environment extension for unittest discovery in workspace ${uri.fsPath}`);
-                const pythonEnv = await getEnvironment(uri);
+                const pythonEnv = project?.pythonEnvironment ?? (await getEnvironment(uri));
                 if (!pythonEnv) {
                     traceError(
                         `Python environment not found for workspace ${uri.fsPath}. Cannot proceed with test discovery.`,

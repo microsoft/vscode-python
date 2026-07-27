@@ -17,7 +17,13 @@ import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
-import { getEnvironmentDetails, getToolResponseIfNotebook, IResourceReference, raceCancellationError } from './utils';
+import {
+    getEnvironmentDetails,
+    getEnvTypeForTelemetry,
+    getToolResponseIfNotebook,
+    IResourceReference,
+    raceCancellationError,
+} from './utils';
 import { getPythonPackagesResponse } from './listPackagesTool';
 import { ITerminalHelper } from '../common/terminal/types';
 import { getEnvExtApi, useEnvExtension } from '../envExt/api.internal';
@@ -64,13 +70,16 @@ export class GetEnvironmentInfoTool extends BaseTool<IResourceReference>
                 'noEnvFound',
             );
         }
+        this.extraTelemetryProperties.envType = getEnvTypeForTelemetry(environment);
 
         let packages = '';
+        let responsePackageCount = 0;
         if (useEnvExtension()) {
             const api = await getEnvExtApi();
             const env = await api.getEnvironment(resourcePath);
             const pkgs = env ? await api.getPackages(env) : [];
             if (pkgs && pkgs.length > 0) {
+                responsePackageCount = pkgs.length;
                 // Installed Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown. Returns an empty array if no packages are installed.
                 const response = [
                     'Below is a list of the Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown: ',
@@ -90,7 +99,10 @@ export class GetEnvironmentInfoTool extends BaseTool<IResourceReference>
                 resourcePath,
                 token,
             );
+            // Count lines starting with '- ' to get the number of packages
+            responsePackageCount = (packages.match(/^- /gm) || []).length;
         }
+        this.extraTelemetryProperties.responsePackageCount = String(responsePackageCount);
         const message = await getEnvironmentDetails(
             resourcePath,
             this.api,
