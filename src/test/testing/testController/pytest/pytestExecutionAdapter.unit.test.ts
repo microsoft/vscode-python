@@ -188,7 +188,7 @@ suite('pytest test execution adapter', () => {
         utilsWriteTestIdsFileStub.resolves('testIdPipe-mockName');
         utilsStartRunResultNamedPipeStub.callsFake((_callback, deferredTillServerClose, token) => {
             token?.onCancellationRequested(() => deferredTillServerClose.resolve());
-            return Promise.resolve('runResultPipe-mockName');
+            return Promise.resolve({ name: 'runResultPipe-mockName', dispose: sinon.stub() });
         });
         const cancellationToken = new CancellationTokenSource();
         const testRun = typeMoq.Mock.ofType<TestRun>();
