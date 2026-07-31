@@ -90,6 +90,11 @@ extends:
       - script: python -m pip install -U pip
         displayName: Upgrade pip
 
+      - task: PipAuthenticate@1
+        inputs:
+          artifactFeeds: vscode
+        displayName: Authenticate to vscode feed
+
       - script: python -m pip install wheel==0.47.0 nox==2026.7.11
         displayName: Install wheel and nox
 
