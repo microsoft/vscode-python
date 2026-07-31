@@ -92,7 +92,7 @@ extends:
 
       - task: PipAuthenticate@1
         inputs:
-          artifactFeeds: vscode
+          artifactFeeds: 'Monaco/vscode'
         displayName: Authenticate to vscode feed
 
       - script: python -m pip install wheel==0.47.0 nox==2026.7.11
