@@ -96,7 +96,7 @@ extends:
         displayName: Install NPM dependencies
 
       - script: nox --session install_python_libs
-        displayName: Install Jedi, get-pip, etc
+        displayName: Install Python extension dependencies
 
       - script: python ./build/update_package_file.py
         displayName: Update telemetry in package.json
