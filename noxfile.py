@@ -55,13 +55,6 @@ def install_python_libs(session: nox.Session):
     session.install("packaging")
     session.install("debugpy")
 
-    # Download get-pip script
-    session.run(
-        "python",
-        "./python_files/download_get_pip.py",
-        env={"PYTHONPATH": "./python_files/lib/temp"},
-    )
-
     if pathlib.Path("./python_files/lib/temp").exists():
         shutil.rmtree("./python_files/lib/temp")
 
