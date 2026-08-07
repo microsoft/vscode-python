@@ -23,7 +23,6 @@ import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/termin
 import {
     doesWorkspaceHaveVenvOrCondaEnv,
     getEnvDetailsForResponse,
-    getToolResponseIfNotebook,
     IResourceReference,
     raceCancellationError,
 } from './utils';
@@ -120,39 +119,11 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
     }
 
     async prepareInvocationImpl(
-        options: LanguageModelToolInvocationPrepareOptions<ISelectPythonEnvToolArguments>,
-        resource: Uri | undefined,
+        _options: LanguageModelToolInvocationPrepareOptions<ISelectPythonEnvToolArguments>,
+        _resource: Uri | undefined,
         _token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
-        if (getToolResponseIfNotebook(resource)) {
-            return {};
-        }
-        const hasVenvOrCondaEnvInWorkspaceFolder = doesWorkspaceHaveVenvOrCondaEnv(resource, this.api);
-
-        if (
-            hasVenvOrCondaEnvInWorkspaceFolder ||
-            !workspace.workspaceFolders?.length ||
-            options.input.reason === 'cancelled'
-        ) {
-            return {
-                confirmationMessages: {
-                    title: l10n.t('Select a Python Environment?'),
-                    message: '',
-                },
-            };
-        }
-
-        return {
-            confirmationMessages: {
-                title: l10n.t('Configure a Python Environment?'),
-                message: l10n.t(
-                    [
-                        'The recommended option is to create a new Python Environment, providing the benefit of isolating packages from other environments.  ',
-                        'Optionally you could select an existing Python Environment.',
-                    ].join('\n'),
-                ),
-            },
-        };
+        return {};
     }
 }
 
