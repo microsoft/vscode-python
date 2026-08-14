@@ -44,12 +44,12 @@ suite('Python Environments extension discovery adapter', () => {
         environmentChanges = new EventEmitter<DidChangeEnvironmentsEventArgs>();
         activeEnvironmentChanges = new EventEmitter<DidChangeEnvironmentEventArgs>();
         disposables = [];
-        envExtApi = {
+        envExtApi = ({
             onDidChangeEnvironments: environmentChanges.event,
             onDidChangeEnvironment: activeEnvironmentChanges.event,
             refreshEnvironments: sinon.stub().resolves(),
             resolveEnvironment: sinon.stub().resolves(undefined),
-        } as unknown as PythonEnvironmentApi;
+        } as unknown) as PythonEnvironmentApi;
         sinon.stub(apiInternal, 'getEnvExtApi').resolves(envExtApi);
     });
 
@@ -80,10 +80,7 @@ suite('Python Environments extension discovery adapter', () => {
             first.execInfo.run.executable,
             second.execInfo.run.executable,
         ]);
-        expect(events.map((event) => event.type)).to.deep.equal([
-            FileChangeType.Created,
-            FileChangeType.Created,
-        ]);
+        expect(events.map((event) => event.type)).to.deep.equal([FileChangeType.Created, FileChangeType.Created]);
     });
 
     test('isolates an unexpected invalid version from later environments in the batch', async () => {
@@ -112,17 +109,15 @@ suite('Python Environments extension discovery adapter', () => {
 
         expect(() =>
             environmentChanges.fire([
-                {
+                ({
                     kind: EnvironmentChangeKind.remove,
                     environment: undefined,
-                } as unknown as DidChangeEnvironmentsEventArgs[number],
+                } as unknown) as DidChangeEnvironmentsEventArgs[number],
                 { kind: EnvironmentChangeKind.add, environment: valid },
             ]),
         ).not.to.throw();
 
-        expect(api.getEnvs().map((env) => env.executable.filename)).to.deep.equal([
-            valid.execInfo.run.executable,
-        ]);
+        expect(api.getEnvs().map((env) => env.executable.filename)).to.deep.equal([valid.execInfo.run.executable]);
     });
 
     test('does not publish an active-environment event for a no-Python environment', async () => {
@@ -195,10 +190,7 @@ suite('Python Environments extension discovery adapter', () => {
         environmentChanges.fire([{ kind: EnvironmentChangeKind.remove, environment }]);
 
         expect(api.getEnvs()).to.be.empty;
-        expect(events.map((event) => event.type)).to.deep.equal([
-            FileChangeType.Created,
-            FileChangeType.Deleted,
-        ]);
+        expect(events.map((event) => event.type)).to.deep.equal([FileChangeType.Created, FileChangeType.Deleted]);
         expect(events[1].old?.executable.filename).to.equal(environment.execInfo.run.executable);
     });
 
@@ -238,8 +230,6 @@ suite('Python Environments extension discovery adapter', () => {
 
         await api.triggerRefresh();
 
-        expect(api.getEnvs().map((env) => env.executable.filename)).to.deep.equal([
-            valid.execInfo.run.executable,
-        ]);
+        expect(api.getEnvs().map((env) => env.executable.filename)).to.deep.equal([valid.execInfo.run.executable]);
     });
 });

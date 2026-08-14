@@ -350,7 +350,9 @@ class EnvExtApis implements IDiscoveryAPI, Disposable {
                 }
             } catch (error) {
                 traceError(
-                    `Failed to process environment change for "${item?.environment?.displayName ?? 'unknown environment'}" from the Python Environments extension`,
+                    `Failed to process environment change for "${
+                        item?.environment?.displayName ?? 'unknown environment'
+                    }" from the Python Environments extension`,
                     error,
                 );
             }
