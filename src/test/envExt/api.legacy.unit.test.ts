@@ -72,4 +72,20 @@ suite('Env extension legacy API - getActiveInterpreterLegacy', () => {
 
         expect(getEnvironmentStub.callCount).to.equal(2);
     });
+
+    test('Returns undefined for an environment without Python', async () => {
+        getEnvironmentStub.resolves(buildEnv('/usr/bin/conda', 'no-python'));
+
+        const result = await getActiveInterpreterLegacy(undefined);
+
+        expect(result).to.equal(undefined);
+    });
+
+    test('Returns undefined for an environment with an invalid version', async () => {
+        getEnvironmentStub.resolves(buildEnv('/usr/bin/python', 'not-a-version'));
+
+        const result = await getActiveInterpreterLegacy(undefined);
+
+        expect(result).to.equal(undefined);
+    });
 });
