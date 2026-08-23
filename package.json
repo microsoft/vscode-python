@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
-    "version": "2026.5.0-dev",
+    "version": "2026.7.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -1441,13 +1441,13 @@
                     "command": "python.execInTerminal-icon",
                     "group": "navigation@0",
                     "title": "%python.command.python.execInTerminalIcon.title%",
-                    "when": "resourceLangId == python && !isInDiffEditor && !virtualWorkspace && shellExecutionSupported"
+                    "when": "resourceLangId == python && resourceExtname != .pyi && !isInDiffEditor && !virtualWorkspace && shellExecutionSupported"
                 },
                 {
                     "command": "python.execInDedicatedTerminal",
                     "group": "navigation@0",
                     "title": "%python.command.python.execInDedicatedTerminal.title%",
-                    "when": "resourceLangId == python && !isInDiffEditor && !virtualWorkspace && shellExecutionSupported"
+                    "when": "resourceLangId == python && resourceExtname != .pyi && !isInDiffEditor && !virtualWorkspace && shellExecutionSupported"
                 }
             ],
             "explorer/context": [
@@ -1593,7 +1593,7 @@
             {
                 "name": "configure_python_environment",
                 "displayName": "Configure Python Environment",
-                "modelDescription": "This tool configures a Python environment in the given workspace. ALWAYS Use this tool to set up the user's chosen environment and ALWAYS call this tool before using any other Python related tools or running any Python command in the terminal. IMPORTANT: This tool is only for Python environments (venv, virtualenv, conda, pipenv, poetry, pyenv, pixi, or any other Python environment manager). Do not use this tool for npm packages, system packages, Ruby gems, or any other non-Python dependencies.",
+                "modelDescription": "This tool configures a Python environment in the given workspace. ALWAYS Use this tool to set up the user's chosen environment and ALWAYS call this tool before using any other Python related tools or running any Python command in the terminal. If you already know which Python interpreter to use (e.g. from a previous tool call or user message), pass it as 'pythonPath' to skip interactive prompts and configure the environment automatically. IMPORTANT: This tool is only for Python environments (venv, virtualenv, conda, pipenv, poetry, pyenv, pixi, or any other Python environment manager). Do not use this tool for npm packages, system packages, Ruby gems, or any other non-Python dependencies.",
                 "userDescription": "%python.languageModelTools.configure_python_environment.userDescription%",
                 "toolReferenceName": "configurePythonEnvironment",
                 "tags": [
@@ -1609,6 +1609,10 @@
                         "resourcePath": {
                             "type": "string",
                             "description": "The path to the Python file or workspace for which a Python Environment needs to be configured."
+                        },
+                        "pythonPath": {
+                            "type": "string",
+                            "description": "Optional absolute path to a Python interpreter to use. When provided, the environment is configured automatically without any interactive prompts. Use this to avoid blocking the session on user input."
                         }
                     },
                     "required": []
@@ -1758,8 +1762,8 @@
         "@types/xml2js": "^0.4.2",
         "@typescript-eslint/eslint-plugin": "^6.21.0",
         "@typescript-eslint/parser": "^6.21.0",
-        "@vscode/test-electron": "^2.3.8",
-        "@vscode/vsce": "^2.27.0",
+        "@vscode/test-electron": "^3.1.0",
+        "@vscode/vsce": "^3.9.2",
         "bent": "^7.3.12",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
@@ -1787,7 +1791,7 @@
         "node-has-native-dependencies": "^1.0.2",
         "node-loader": "^1.0.2",
         "node-polyfill-webpack-plugin": "^1.1.4",
-        "nyc": "^15.0.0",
+        "nyc": "^18.0.0",
         "prettier": "^2.0.2",
         "rewiremock": "^3.13.0",
         "shortid": "^2.2.8",
@@ -1798,7 +1802,7 @@
         "ts-node": "^10.7.0",
         "tsconfig-paths-webpack-plugin": "^3.2.0",
         "typemoq": "^2.1.0",
-        "typescript": "~5.2",
+        "typescript": "~5.9",
         "uuid": "^14.0.0",
         "webpack": "^5.105.0",
         "webpack-bundle-analyzer": "^4.5.0",

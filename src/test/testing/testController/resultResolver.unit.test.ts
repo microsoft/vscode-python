@@ -155,7 +155,7 @@ suite('Result Resolver tests', () => {
 
             resultResolver.resolveDiscovery(payload, cancelationToken);
 
-            sinon.assert.calledWithMatch(sendTelemetryStub, EventName.UNITTEST_DISCOVERY_DONE, undefined, {
+            sinon.assert.calledWithMatch(sendTelemetryStub, EventName.UNITTEST_DISCOVERY_DONE, sinon.match.any, {
                 failed: true,
                 failureCategory: 'unknown',
             });

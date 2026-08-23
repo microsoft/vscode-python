@@ -58,9 +58,20 @@ extends:
         vsceTarget: win32-x64
 
     buildSteps:
-      - task: NodeTool@0
+      - bash: |
+          set -euo pipefail
+          nodeVersion="$(tr -d '\r\n' < .nvmrc)"
+          nodeVersion="${nodeVersion#v}"
+          if [[ -z "$nodeVersion" ]]; then
+            echo ".nvmrc does not contain a Node version" >&2
+            exit 1
+          fi
+          echo "##vso[task.setvariable variable=nodeVersion;isReadOnly=true]$nodeVersion"
+        displayName: Read Node version
+
+      - task: UseNode@1
         inputs:
-          versionSpec: '22.17.0'
+          version: $(nodeVersion)
         displayName: Select Node version
 
       - task: UsePythonVersion@0
@@ -70,17 +81,22 @@ extends:
           architecture: 'x64'
         displayName: Select Python version
 
+      - task: PipAuthenticate@1
+        inputs:
+          artifactFeeds: 'Monaco/vscode'
+        displayName: Authenticate to vscode feed
+
       - script: python -m pip install -U pip
         displayName: Upgrade pip
 
-      - script: python -m pip install wheel nox
+      - script: python -m pip install wheel==0.47.0 nox==2026.7.11
         displayName: Install wheel and nox
 
       - script: npm ci
         displayName: Install NPM dependencies
 
       - script: nox --session install_python_libs
-        displayName: Install Jedi, get-pip, etc
+        displayName: Install Python extension dependencies
 
       - script: python ./build/update_package_file.py
         displayName: Update telemetry in package.json

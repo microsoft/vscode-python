@@ -23,15 +23,28 @@ import {
     IResourceReference,
     isCancellationError,
     raceCancellationError,
+    setEnvironmentDirectlyByPath,
 } from './utils';
 import { ITerminalHelper } from '../common/terminal/types';
 import { IRecommendedEnvironmentService } from '../interpreter/configuration/types';
 import { CreateVirtualEnvTool } from './createVirtualEnvTool';
 import { ISelectPythonEnvToolArguments, SelectPythonEnvTool } from './selectEnvTool';
 import { BaseTool } from './baseTool';
+import { traceVerbose } from '../logging';
+import { ErrorWithTelemetrySafeReason } from '../common/errors/errorUtils';
 
-export class ConfigurePythonEnvTool extends BaseTool<IResourceReference>
-    implements LanguageModelTool<IResourceReference> {
+export interface IConfigurePythonEnvToolArguments extends IResourceReference {
+    /**
+     * Optional path to a Python interpreter. When provided, the tool sets this
+     * interpreter directly without any user interaction (no Quick Pick, no
+     * create-venv prompt). This is the recommended way for Copilot to call
+     * the tool in autopilot / bypass-approvals mode.
+     */
+    pythonPath?: string;
+}
+
+export class ConfigurePythonEnvTool extends BaseTool<IConfigurePythonEnvToolArguments>
+    implements LanguageModelTool<IConfigurePythonEnvToolArguments> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
     private readonly terminalHelper: ITerminalHelper;
     private readonly recommendedEnvService: IRecommendedEnvironmentService;
@@ -53,7 +66,7 @@ export class ConfigurePythonEnvTool extends BaseTool<IResourceReference>
     }
 
     async invokeImpl(
-        options: LanguageModelToolInvocationOptions<IResourceReference>,
+        options: LanguageModelToolInvocationOptions<IConfigurePythonEnvToolArguments>,
         resource: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
@@ -61,6 +74,11 @@ export class ConfigurePythonEnvTool extends BaseTool<IResourceReference>
         if (notebookResponse) {
             this.extraTelemetryProperties.resolveOutcome = 'notebook';
             return notebookResponse;
+        }
+
+        // Fast path: if the caller provided a pythonPath, set it directly without any UI.
+        if (options.input.pythonPath) {
+            return this.setEnvironmentDirectly(options.input.pythonPath, resource, token);
         }
 
         const workspaceSpecificEnv = await raceCancellationError(
@@ -107,8 +125,37 @@ export class ConfigurePythonEnvTool extends BaseTool<IResourceReference>
         }
     }
 
+    /**
+     * Sets the given interpreter path directly without user interaction, then
+     * resolves and returns the environment details.
+     */
+    private async setEnvironmentDirectly(
+        pythonPath: string,
+        resource: Uri | undefined,
+        token: CancellationToken,
+    ): Promise<LanguageModelToolResult> {
+        traceVerbose(`${ConfigurePythonEnvTool.toolName}: setting environment directly from pythonPath: ${pythonPath}`);
+        const result = await setEnvironmentDirectlyByPath(pythonPath, this.api, resource, token);
+        if (result) {
+            this.extraTelemetryProperties.resolveOutcome = 'providedEnv';
+            this.extraTelemetryProperties.envType = getEnvTypeForTelemetry(result);
+            return getEnvDetailsForResponse(
+                result,
+                this.api,
+                this.terminalExecutionService,
+                this.terminalHelper,
+                resource,
+                token,
+            );
+        }
+        throw new ErrorWithTelemetrySafeReason(
+            `No environment found for the provided pythonPath '${pythonPath}'.`,
+            'noEnvFound',
+        );
+    }
+
     async prepareInvocationImpl(
-        _options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
+        _options: LanguageModelToolInvocationPrepareOptions<IConfigurePythonEnvToolArguments>,
         _resource: Uri | undefined,
         _token: CancellationToken,
     ): Promise<PreparedToolInvocation> {

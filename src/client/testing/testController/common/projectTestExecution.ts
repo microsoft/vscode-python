@@ -85,15 +85,17 @@ export async function executeTestsForProjects(
                 traceError(`[test-by-project] Execution failed for project ${project.projectName}:`, error);
             }
         } finally {
-            sendTelemetryEvent(EventName.UNITTEST_RUN_DONE, undefined, {
-                tool: project.testProvider,
-                debugging: isDebugMode,
-                mode: 'project',
-                failed,
-                failureCategory,
-                durationMs: stopWatch.elapsedTime,
-                requestedCount: items.length,
-            });
+            sendTelemetryEvent(
+                EventName.UNITTEST_RUN_DONE,
+                { durationMs: stopWatch.elapsedTime, requestedCount: items.length },
+                {
+                    tool: project.testProvider,
+                    debugging: isDebugMode,
+                    mode: 'project',
+                    failed,
+                    failureCategory,
+                },
+            );
         }
     });
 

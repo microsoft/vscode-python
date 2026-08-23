@@ -12,7 +12,7 @@ import sys
 import tempfile
 import threading
 import uuid
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 if sys.platform == "win32":
     from namedpipe import NPopen  # pylint: disable=import-error # cspell: disable-line
@@ -28,6 +28,8 @@ print("sys add path", script_dir)
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 CONTENT_LENGTH: str = "Content-Length:"
 CONTENT_TYPE: str = "Content-Type:"
+PIPE_RESULT_TIMEOUT_SECONDS = 10
+TEST_SUBPROCESS_TIMEOUT_SECONDS = 300
 
 
 @contextlib.contextmanager
@@ -242,10 +244,36 @@ def _listen_on_pipe_new(listener, result: List[str], completed: threading.Event)
         result.append("".join(all_data))
 
 
-def _run_test_code(proc_args: List[str], proc_env, proc_cwd: str, completed: threading.Event):
-    result = subprocess.run(proc_args, env=proc_env, cwd=proc_cwd, check=False)
-    completed.set()
-    return result
+def _run_test_code(
+    proc_args: List[str],
+    proc_env,
+    proc_cwd: Union[str, os.PathLike[str]],
+    completed: threading.Event,
+) -> subprocess.CompletedProcess:
+    try:
+        return subprocess.run(
+            proc_args,
+            env=proc_env,
+            cwd=proc_cwd,
+            check=False,
+            timeout=TEST_SUBPROCESS_TIMEOUT_SECONDS,
+        )
+    finally:
+        completed.set()
+
+
+def _wait_for_pipe_result(
+    listener_thread: threading.Thread,
+    process_result: subprocess.CompletedProcess,
+    result: List[str],
+) -> None:
+    listener_thread.join(timeout=PIPE_RESULT_TIMEOUT_SECONDS)
+    if listener_thread.is_alive():
+        if process_result.returncode:
+            raise subprocess.CalledProcessError(process_result.returncode, process_result.args)
+        raise TimeoutError("Timed out waiting for the test subprocess pipe result")
+    if process_result.returncode and not result:
+        raise subprocess.CalledProcessError(process_result.returncode, process_result.args)
 
 
 def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
@@ -359,18 +387,12 @@ def runner_with_cwd_env(
 
             result = []  # result is a string array to store the data during threading
             t1: threading.Thread = threading.Thread(
-                target=_listen_on_pipe_new, args=(pipe, result, completed)
+                target=_listen_on_pipe_new, args=(pipe, result, completed), daemon=True
             )
             t1.start()
 
-            t2 = threading.Thread(
-                target=_run_test_code,
-                args=(process_args, env, path, completed),
-            )
-            t2.start()
-
-            t1.join()
-            t2.join()
+            process_result = _run_test_code(process_args, env, path, completed)
+            _wait_for_pipe_result(t1, process_result, result)
 
             return process_data_received(result[0]) if result else None
     else:  # Unix design
@@ -397,19 +419,12 @@ def runner_with_cwd_env(
 
         result = []  # result is a string array to store the data during threading
         t1: threading.Thread = threading.Thread(
-            target=_listen_on_fifo, args=(pipe_name, result, completed)
+            target=_listen_on_fifo, args=(pipe_name, result, completed), daemon=True
         )
         t1.start()
 
-        t2: threading.Thread = threading.Thread(
-            target=_run_test_code,
-            args=(process_args, env, path, completed),
-        )
-
-        t2.start()
-
-        t1.join()
-        t2.join()
+        process_result = _run_test_code(process_args, env, path, completed)
+        _wait_for_pipe_result(t1, process_result, result)
 
         return process_data_received(result[0]) if result else None
 
