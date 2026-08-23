@@ -6,11 +6,11 @@ import { getEnvExtApi, getEnvironment } from './api.internal';
 import { EnvironmentType, PythonEnvironment as PythonEnvironmentLegacy } from '../pythonEnvironments/info';
 import { PythonEnvironment, PythonTerminalCreateOptions } from './types';
 import { Architecture } from '../common/utils/platform';
-import { parseVersion } from '../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvType } from '../pythonEnvironments/base/info';
 import { traceError } from '../logging';
 import { reportActiveInterpreterChanged } from '../environmentApi';
 import { getWorkspaceFolder, getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
+import { parsePythonEnvironmentVersion } from './utils';
 
 function toEnvironmentType(pythonEnv: PythonEnvironment): EnvironmentType {
     if (pythonEnv.envId.managerId.toLowerCase().endsWith('system')) {
@@ -73,8 +73,11 @@ function getEnvType(kind: EnvironmentType): PythonEnvType | undefined {
     }
 }
 
-function toLegacyType(env: PythonEnvironment): PythonEnvironmentLegacy {
-    const ver = parseVersion(env.version);
+function toLegacyType(env: PythonEnvironment): PythonEnvironmentLegacy | undefined {
+    const ver = parsePythonEnvironmentVersion(env);
+    if (!ver) {
+        return undefined;
+    }
     const envType = toEnvironmentType(env);
     return {
         id: env.execInfo.run.executable,
