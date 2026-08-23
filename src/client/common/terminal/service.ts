@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// bug fix - Bash-VS Code path errors
+import * as vscode from 'vscode';
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Event, EventEmitter, Terminal, TerminalShellExecution } from 'vscode';
 import '../../common/extensions';
@@ -67,15 +69,56 @@ export class TerminalService implements ITerminalService, Disposable {
             });
         }
     }
-    public async sendCommand(command: string, args: string[], _?: CancellationToken): Promise<void> {
-        await this.ensureTerminal();
-        const text = this.terminalHelper.buildCommandForTerminal(this.terminalShellType, command, args);
+
+    // fixed Path interpretation bug between Bash and VS Code
+    // fixed Path interpretation bug between Bash and VS Code
+    public async sendCommand(command: string, args: string[] = []): Promise<void> {
+        await this.ensureTerminal(); // <-- ADD THIS: Ensures terminal is booted up
+        
         if (!this.options?.hideFromUser) {
             this.terminal!.show(true);
         }
 
-        await this.executeCommand(text, false);
+        // Fetch the terminal settings from VS Code
+        const terminalSettings = vscode.workspace.getConfiguration('terminal.integrated');
+        const defaultProfile = terminalSettings.get<string>('defaultProfile.windows') || '';
+
+        // Check if the destination target is a Bash terminal
+        const isBashShell = defaultProfile.toLowerCase().includes('bash') || 
+                            command.toLowerCase().includes('bash.exe');
+
+        let processedCommand = command;
+        let processedArgs = [...args];
+
+        // If running on Windows but targeting Git Bash, swap backslashes to forward slashes!
+        if (process.platform === 'win32' && isBashShell) {
+            // Fix the executable binary path
+            processedCommand = processedCommand.replace(/\\/g, '/');
+            processedCommand = processedCommand.replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`);
+
+            // Fix the script file paths being sent as arguments
+            processedArgs = processedArgs.map(arg => {
+                let safeArg = arg.replace(/\\/g, '/');
+                safeArg = safeArg.replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`);
+                return safeArg;
+            });
+        }
+
+        // Standard VS Code logic to stitch the command and arguments together
+        const text = processedArgs.reduce((p, c) => `${p} "${c}"`, processedCommand);
+        
+        // Ship the cleanly escaped string to the terminal stream!
+        this.terminal!.sendText(text, true);
     }
+
+
+    // Standard VS Code logic to stitch the command and arguments together
+    const text = processedArgs.reduce((p, c) => `${p} "${c}"`, processedCommand);
+    
+    // Ship the cleanly escaped string to the terminal stream!
+    this.terminal!.sendText(text, true);
+}
+
     /** @deprecated */
     public async sendText(text: string): Promise<void> {
         await this.ensureTerminal();
