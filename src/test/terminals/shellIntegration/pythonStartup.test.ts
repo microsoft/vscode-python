@@ -135,11 +135,24 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         globalEnvironmentVariableCollection.verify((c) => c.delete('PYTHONSTARTUP'), TypeMoq.Times.once());
     });
 
-    test('PYTHON_BASIC_REPL is set when shell integration is enabled', async () => {
+    test('PYTHON_BASIC_REPL is not set when shell integration is enabled', async () => {
         pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => true);
+
         await registerPythonStartup(context.object);
+
         globalEnvironmentVariableCollection.verify(
-            (c) => c.replace('PYTHON_BASIC_REPL', '1', TypeMoq.It.isAny()),
+            (c) => c.replace('PYTHON_BASIC_REPL', TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.never(),
+        );
+    });
+
+    test('PYTHON_BASIC_REPL is deleted when shell integration is disabled', async () => {
+        pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => false);
+
+        await registerPythonStartup(context.object);
+
+        globalEnvironmentVariableCollection.verify(
+            (c) => c.delete('PYTHON_BASIC_REPL'),
             TypeMoq.Times.once(),
         );
     });
