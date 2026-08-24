@@ -151,10 +151,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
 
         await registerPythonStartup(context.object);
 
-        globalEnvironmentVariableCollection.verify(
-            (c) => c.delete('PYTHON_BASIC_REPL'),
-            TypeMoq.Times.once(),
-        );
+        globalEnvironmentVariableCollection.verify((c) => c.delete('PYTHON_BASIC_REPL'), TypeMoq.Times.once());
     });
 
     test('Ensure registering terminal link calls registerTerminalLinkProvider', async () => {
