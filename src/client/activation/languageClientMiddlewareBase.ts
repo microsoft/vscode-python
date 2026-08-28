@@ -87,7 +87,14 @@ export class LanguageClientMiddlewareBase implements Middleware {
                     const settingDict: LSPObject & { pythonPath: string; _envPYTHONPATH: string } = settings[
                         i
                     ] as LSPObject & { pythonPath: string; _envPYTHONPATH: string };
-                    settingDict.pythonPath = (await interpreterService.getActiveInterpreter(uri))?.path ?? 'python';
+                    const exactResource = uri && path.extname(uri.fsPath).toLowerCase() === '.py';
+                    settingDict.pythonPath =
+                        (
+                            await interpreterService.getActiveInterpreter(
+                                uri,
+                                exactResource ? { exactResource: true } : undefined,
+                            )
+                        )?.path ?? 'python';
 
                     const env = await envService.getEnvironmentVariables(uri);
                     const envPYTHONPATH = env.PYTHONPATH;

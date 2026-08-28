@@ -30,12 +30,13 @@ function buildEnv(executable: string, version: string): PythonEnvironment {
 suite('Env extension legacy API - getActiveInterpreterLegacy', () => {
     let getEnvExtApiStub: sinon.SinonStub;
     let getEnvironmentStub: sinon.SinonStub;
+    let reportActiveInterpreterChangedStub: sinon.SinonStub;
 
     setup(() => {
         getEnvExtApiStub = sinon.stub(apiInternal, 'getEnvExtApi');
         getEnvExtApiStub.resolves({ getPythonProject: () => undefined } as any);
         getEnvironmentStub = sinon.stub(apiInternal, 'getEnvironment');
-        sinon.stub(environmentApi, 'reportActiveInterpreterChanged');
+        reportActiveInterpreterChangedStub = sinon.stub(environmentApi, 'reportActiveInterpreterChanged');
         sinon.stub(workspaceApis, 'getWorkspaceFolders').returns([] as any);
         sinon.stub(workspaceApis, 'getWorkspaceFolder').returns(undefined);
     });
@@ -87,5 +88,19 @@ suite('Env extension legacy API - getActiveInterpreterLegacy', () => {
         const result = await getActiveInterpreterLegacy(undefined);
 
         expect(result).to.equal(undefined);
+    });
+
+    test('resolves an exact resource without reporting a workspace interpreter change', async () => {
+        const resource = Uri.file('/workspace/script.py');
+        getEnvironmentStub.resolves(buildEnv('/usr/bin/script-python', '3.10.0'));
+
+        const result = await getActiveInterpreterLegacy(resource, {
+            reportActiveInterpreterChanged: false,
+        });
+
+        expect(result?.path).to.equal('/usr/bin/script-python');
+        sinon.assert.calledOnceWithExactly(getEnvironmentStub, resource);
+        sinon.assert.notCalled(getEnvExtApiStub);
+        sinon.assert.notCalled(reportActiveInterpreterChangedStub);
     });
 });

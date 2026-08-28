@@ -6,6 +6,7 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
+import { arePathsSame } from '../../../../common/platform/fs-paths';
 import { IConfigurationService } from '../../../../common/types';
 import { getOSType, OSType } from '../../../../common/utils/platform';
 import {
@@ -108,9 +109,20 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         if (!debugConfiguration) {
             return;
         }
+        delete debugConfiguration.__pythonIsProgramInterpreter;
+        let selectedInterpreterPromise: ReturnType<IInterpreterService['getActiveInterpreter']> | undefined;
+        const getSelectedInterpreter = () => {
+            if (!selectedInterpreterPromise) {
+                selectedInterpreterPromise = this.getInterpreterForDebugConfiguration(
+                    workspaceFolder,
+                    debugConfiguration,
+                );
+            }
+            return selectedInterpreterPromise;
+        };
         if (debugConfiguration.pythonPath === '${command:python.interpreterPath}' || !debugConfiguration.pythonPath) {
             const interpreterPath =
-                (await this.interpreterService.getActiveInterpreter(workspaceFolder))?.path ??
+                (await getSelectedInterpreter())?.path ??
                 this.configurationService.getSettings(workspaceFolder).pythonPath;
             debugConfiguration.pythonPath = interpreterPath;
         } else {
@@ -124,7 +136,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         if (debugConfiguration.python === '${command:python.interpreterPath}') {
             this.pythonPathSource = PythonPathSource.settingsJson;
             const interpreterPath =
-                (await this.interpreterService.getActiveInterpreter(workspaceFolder))?.path ??
+                (await getSelectedInterpreter())?.path ??
                 this.configurationService.getSettings(workspaceFolder).pythonPath;
             debugConfiguration.python = interpreterPath;
         } else if (debugConfiguration.python === undefined) {
@@ -153,6 +165,55 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         }
 
         delete debugConfiguration.pythonPath;
+    }
+
+    private async getInterpreterForDebugConfiguration(
+        workspaceFolder: Uri | undefined,
+        debugConfiguration: LaunchRequestArguments,
+    ) {
+        let configuredProgram = debugConfiguration.program === '${file}' ? getProgram() : debugConfiguration.program;
+        let programWorkspaceFolder = workspaceFolder;
+        if (configuredProgram) {
+            configuredProgram = configuredProgram.replace(/\$\{workspaceFolder:([^}]+)\}/g, (match, name) => {
+                const folder = getWorkspaceFolders()?.find((candidate) => candidate.name === name);
+                if (!folder) {
+                    return match;
+                }
+                programWorkspaceFolder = folder.uri;
+                return folder.uri.fsPath;
+            });
+        }
+        if (configuredProgram && workspaceFolder) {
+            configuredProgram = configuredProgram.replace(/\$\{workspaceFolder\}/g, workspaceFolder.fsPath);
+        }
+        const programUri =
+            typeof configuredProgram === 'string' &&
+            !configuredProgram.includes('${') &&
+            path.isAbsolute(configuredProgram)
+                ? this.getProgramUri(configuredProgram, programWorkspaceFolder)
+                : undefined;
+        if (programUri) {
+            const programInterpreter = await this.interpreterService.getActiveInterpreter(programUri, {
+                exactResource: true,
+            });
+            if (programInterpreter) {
+                const workspaceInterpreter = await this.interpreterService.getActiveInterpreter(workspaceFolder, {
+                    exactResource: true,
+                });
+                if (!workspaceInterpreter || !arePathsSame(programInterpreter.path, workspaceInterpreter.path)) {
+                    debugConfiguration.__pythonIsProgramInterpreter = true;
+                }
+                return programInterpreter;
+            }
+        }
+        return this.interpreterService.getActiveInterpreter(workspaceFolder);
+    }
+
+    private getProgramUri(program: string, workspaceFolder: Uri | undefined): Uri {
+        const fileUri = Uri.file(program);
+        return workspaceFolder && workspaceFolder.scheme !== 'file'
+            ? workspaceFolder.with({ path: fileUri.path })
+            : fileUri;
     }
 
     protected static debugOption(debugOptions: DebugOptions[], debugOption: DebugOptions): void {

@@ -111,6 +111,9 @@ interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
     // and "debugLauncherPython" all at once.
     pythonPath?: string;
 
+    // Whether the selected interpreter came from the program resource rather than the workspace.
+    __pythonIsProgramInterpreter?: boolean;
+
     // Configures automatic code reloading.
     autoReload?: IAutomaticCodeReload;
 
