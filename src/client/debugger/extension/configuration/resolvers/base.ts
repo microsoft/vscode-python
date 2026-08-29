@@ -13,6 +13,7 @@ import {
     getWorkspaceFolder as getVSCodeWorkspaceFolder,
     getWorkspaceFolders,
 } from '../../../../common/vscodeApis/workspaceApis';
+import { useEnvExtension } from '../../../../envExt/api.internal';
 import { IInterpreterService } from '../../../../interpreter/contracts';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments, PathMapping } from '../../../types';
 import { PythonPathSource } from '../../types';
@@ -171,6 +172,14 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         workspaceFolder: Uri | undefined,
         debugConfiguration: LaunchRequestArguments,
     ) {
+        // Program-scoped (per-file) interpreter resolution only applies when the environments
+        // extension owns interpreter resolution. Without it, preserve the historical behavior of
+        // resolving the interpreter from the launch workspace folder, so users who are not using
+        // the environments extension (e.g. multi-root debugging of another folder's file) see no
+        // change.
+        if (!useEnvExtension()) {
+            return this.interpreterService.getActiveInterpreter(workspaceFolder);
+        }
         let configuredProgram = debugConfiguration.program === '${file}' ? getProgram() : debugConfiguration.program;
         let programWorkspaceFolder = workspaceFolder;
         if (configuredProgram) {
