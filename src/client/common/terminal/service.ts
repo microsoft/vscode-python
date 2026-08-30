@@ -69,15 +69,14 @@ export class TerminalService implements ITerminalService, Disposable {
             });
         }
     }
-
+    
     // fixed Path interpretation bug between Bash and VS Code
-    // fixed Path interpretation bug between Bash and VS Code
+    
     public async sendCommand(command: string, args: string[] = []): Promise<void> {
-        await this.ensureTerminal(); // <-- ADD THIS: Ensures terminal is booted up
+        await this.ensureTerminal();
         
-        if (!this.options?.hideFromUser) {
-            this.terminal!.show(true);
-        }
+        let processedCommand = command;
+        let processedArgs = [...args];
 
         // Fetch the terminal settings from VS Code
         const terminalSettings = vscode.workspace.getConfiguration('terminal.integrated');
@@ -87,30 +86,27 @@ export class TerminalService implements ITerminalService, Disposable {
         const isBashShell = defaultProfile.toLowerCase().includes('bash') || 
                             command.toLowerCase().includes('bash.exe');
 
-        let processedCommand = command;
-        let processedArgs = [...args];
-
-        // If running on Windows but targeting Git Bash, swap backslashes to forward slashes!
+        // If running on Windows but targeting Git Bash, swap backslashes to forward slashes for paths
         if (process.platform === 'win32' && isBashShell) {
-            // Fix the executable binary path
             processedCommand = processedCommand.replace(/\\/g, '/');
             processedCommand = processedCommand.replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`);
 
-            // Fix the script file paths being sent as arguments
             processedArgs = processedArgs.map(arg => {
-                let safeArg = arg.replace(/\\/g, '/');
-                safeArg = safeArg.replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`);
-                return safeArg;
+                if (/^[A-Za-z]:\\|\\/.test(arg)) {
+                    let safeArg = arg.replace(/\\/g, '/');
+                    return safeArg.replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`);
+                }
+                return arg;
             });
         }
 
-        // Standard VS Code logic to stitch the command and arguments together
-        const text = processedArgs.reduce((p, c) => `${p} "${c}"`, processedCommand);
+        // --- RESTORED LOGIC ---
+        // 1. Let VS Code safely escape the arguments based on the active shell
+        const commandLine = this.terminalHelper.buildCommandForTerminal(this.terminalShellType, processedCommand, processedArgs);
         
-        // Ship the cleanly escaped string to the terminal stream!
-        this.terminal!.sendText(text, true);
+        // 2. Execute via the proper shell-aware pipeline, not a raw sendText
+        await this.executeCommand(commandLine, false);
     }
-
 
 
     /** @deprecated */
