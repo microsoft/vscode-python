@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// bug fix - Bash-VS Code path errors
 import * as vscode from 'vscode';
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Event, EventEmitter, Terminal, TerminalShellExecution } from 'vscode';
@@ -59,6 +58,7 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminalManager.onDidCloseTerminal(this.terminalCloseHandler, this, disposableRegistry);
         this.terminalActivator = this.serviceContainer.get<ITerminalActivator>(ITerminalActivator);
     }
+
     public dispose() {
         this.terminal?.dispose();
         this.disposeReplListener();
@@ -69,45 +69,53 @@ export class TerminalService implements ITerminalService, Disposable {
             });
         }
     }
-    
-    // fixed Path interpretation bug between Bash and VS Code
-    
+
     public async sendCommand(command: string, args: string[] = []): Promise<void> {
         await this.ensureTerminal();
-        
+
         let processedCommand = command;
         let processedArgs = [...args];
 
-        // Fetch the terminal settings from VS Code
         const terminalSettings = vscode.workspace.getConfiguration('terminal.integrated');
         const defaultProfile = terminalSettings.get<string>('defaultProfile.windows') || '';
 
-        // Check if the destination target is a Bash terminal
         const isBashShell = defaultProfile.toLowerCase().includes('bash') || 
                             command.toLowerCase().includes('bash.exe');
 
-        // If running on Windows but targeting Git Bash, swap backslashes to forward slashes for paths
         if (process.platform === 'win32' && isBashShell) {
-            processedCommand = processedCommand.replace(/\\/g, '/');
-            processedCommand = processedCommand.replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`);
+            // Normalize the binary command path if it contains Windows-style path delimiters
+            if (processedCommand.includes('\\') || /^[A-Za-z]:/.test(processedCommand)) {
+                processedCommand = processedCommand.replace(/\\/g, '/');
+                processedCommand = processedCommand.replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`);
+            }
 
-            processedArgs = processedArgs.map(arg => {
-                if (/^[A-Za-z]:\\|\\/.test(arg)) {
+            // Strictly normalize argument operands that represent path targets
+            processedArgs = processedArgs.map((arg) => {
+                // Skip options/flags, multi-line blocks, or inline code snippets
+                if (arg.startsWith('-') || arg.includes('\n') || arg.includes('import ')) {
+                    return arg;
+                }
+
+                // Target explicit absolute or relative Windows paths
+                if (/^[A-Za-z]:\\[^\n]*$/.test(arg) || /^\.\\[^\n]*$/.test(arg)) {
                     let safeArg = arg.replace(/\\/g, '/');
                     return safeArg.replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`);
                 }
+
                 return arg;
             });
         }
 
-        // --- RESTORED LOGIC ---
-        // 1. Let VS Code safely escape the arguments based on the active shell
-        const commandLine = this.terminalHelper.buildCommandForTerminal(this.terminalShellType, processedCommand, processedArgs);
-        
-        // 2. Execute via the proper shell-aware pipeline, not a raw sendText
+        // Delegate command construction to the shell-aware terminal helper
+        const commandLine = this.terminalHelper.buildCommandForTerminal(
+            this.terminalShellType,
+            processedCommand,
+            processedArgs,
+        );
+
+        // Execute via the standard execution pipeline
         await this.executeCommand(commandLine, false);
     }
-
 
     /** @deprecated */
     public async sendText(text: string): Promise<void> {
@@ -117,6 +125,7 @@ export class TerminalService implements ITerminalService, Disposable {
         }
         this.terminal!.sendText(text);
     }
+
     public async executeCommand(
         commandLine: string,
         isPythonShell: boolean,
@@ -242,6 +251,7 @@ export class TerminalService implements ITerminalService, Disposable {
             this.terminal!.show(preserveFocus);
         }
     }
+
     // TODO: Debt switch to Promise<Terminal> ---> breaks 20 tests
     public async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
         if (this.terminal) {
@@ -279,6 +289,7 @@ export class TerminalService implements ITerminalService, Disposable {
         this.sendTelemetry().ignoreErrors();
         return;
     }
+
     private terminalCloseHandler(terminal: Terminal) {
         if (terminal === this.terminal) {
             this.terminalClosed.fire();
