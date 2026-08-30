@@ -112,12 +112,6 @@ export class TerminalService implements ITerminalService, Disposable {
     }
 
 
-    // Standard VS Code logic to stitch the command and arguments together
-    const text = processedArgs.reduce((p, c) => `${p} "${c}"`, processedCommand);
-    
-    // Ship the cleanly escaped string to the terminal stream!
-    this.terminal!.sendText(text, true);
-}
 
     /** @deprecated */
     public async sendText(text: string): Promise<void> {
