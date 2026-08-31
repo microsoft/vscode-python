@@ -99,6 +99,6 @@ if sys.platform != "win32" and (not is_wsl):
     sys.ps1 = PS1()
 
 if sys.platform == "darwin":
-    print("Cmd click to launch VS Code Native REPL")
+    print("Cmd click to launch VS Code Native REPL (https://aka.ms/python-native-repl)")
 else:
-    print("Ctrl click to launch VS Code Native REPL")
+    print("Ctrl click to launch VS Code Native REPL (https://aka.ms/python-native-repl)")
