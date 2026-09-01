@@ -19,6 +19,9 @@ class ShellIntegrationSequence(str, Enum):
     COMMAND_START = "\x1b]633;B\x07"
     TERMINATOR = "\x07"
 
+    def __str__(self):
+        return self.value
+
 
 class REPLHooks:
     def __init__(self):
