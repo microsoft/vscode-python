@@ -1,11 +1,15 @@
 import importlib
 import platform
 import sys
+from pathlib import Path
+from typing import Any
 from unittest.mock import Mock
 
 import pythonrc
 
 is_wsl = "microsoft-standard-WSL" in platform.release()
+
+PYTHONRC_PATH = Path(pythonrc.__file__)
 
 
 def test_decoration_success():
@@ -81,3 +85,37 @@ if sys.platform == "win32":
             m.setattr("builtins.print", Mock())
             importlib.reload(sys.modules["pythonrc"])
             print.assert_any_call("Ctrl click to launch VS Code Native REPL")
+
+
+def test_prompt_survives_shadowed_builtins_under_pythonstartup():
+    """Regression test for #26039.
+
+    PYTHONSTARTUP executes pythonrc.py's code directly inside __main__, not
+    as a normal module import, so PS1.__str__.__globals__ ends up being the
+    user's own namespace. `import pythonrc` (used by every other test in
+    this file) does not reproduce that, since it gives PS1 its own module
+    namespace instead. Simulate the real PYTHONSTARTUP path here: exec the
+    source into a stand-in __main__ dict, then shadow the names the prompt
+    depends on exactly as a user would (`int = 20`, `sys = 1`, etc.) and
+    confirm str(sys.ps1) still renders instead of raising.
+    """
+    if sys.platform == "win32" or is_wsl:
+        return
+
+    main_ns: dict[str, Any] = {"__name__": "__main__"}
+    source = PYTHONRC_PATH.read_text()
+    exec(compile(source, str(PYTHONRC_PATH), "exec"), main_ns)
+
+    ps1 = main_ns["sys"].ps1
+    assert str(ps1)  # sanity: works before any shadowing
+
+    for name, value in {
+        "int": 20,
+        "sys": 1,
+        "str": "nope",
+        "bool": "nope",
+        "original_ps1": "hijacked",
+        "get_last_command": "hijacked",
+    }.items():
+        main_ns[name] = value
+        assert str(ps1), f"prompt failed to render after shadowing {name!r}"
