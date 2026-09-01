@@ -74,6 +74,5 @@
     "python.testing.pytestEnabled": true,
     "rust-analyzer.linkedProjects": [
         ".\\python-env-tools\\Cargo.toml"
-    ],
-    "python-envs.defaultEnvManager": "ms-python.python:system"
+    ]
 }
