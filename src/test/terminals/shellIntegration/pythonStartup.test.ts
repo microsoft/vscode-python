@@ -248,12 +248,14 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
                 );
                 assert.equal(
                     links[0].startIndex,
-                    context.line.indexOf('Ctrl click to launch VS Code Native REPL'),
+                    context.line.indexOf(
+                        'Ctrl click to launch VS Code Native REPL (https://aka.ms/python-native-repl)',
+                    ),
                     'start index should match',
                 );
                 assert.equal(
                     links[0].length,
-                    'Ctrl click to launch VS Code Native REPL'.length,
+                    'Ctrl click to launch VS Code Native REPL (https://aka.ms/python-native-repl)'.length,
                     'Match expected Length',
                 );
                 assert.equal(
