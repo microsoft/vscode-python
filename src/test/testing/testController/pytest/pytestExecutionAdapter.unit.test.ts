@@ -89,7 +89,9 @@ suite('pytest test execution adapter', () => {
         myTestPath = path.join('/', 'my', 'test', 'path', '/');
 
         utilsStartRunResultNamedPipeStub = sinon.stub(util, 'startRunResultNamedPipe');
-        utilsStartRunResultNamedPipeStub.callsFake(() => Promise.resolve('runResultPipe-mockName'));
+        utilsStartRunResultNamedPipeStub.callsFake(() =>
+            Promise.resolve({ name: 'runResultPipe-mockName', dispose: sinon.stub() }),
+        );
 
         execService.setup((x) => x.getExecutablePath()).returns(() => Promise.resolve('/mock/path/to/python'));
     });
@@ -186,7 +188,7 @@ suite('pytest test execution adapter', () => {
         utilsWriteTestIdsFileStub.resolves('testIdPipe-mockName');
         utilsStartRunResultNamedPipeStub.callsFake((_callback, deferredTillServerClose, token) => {
             token?.onCancellationRequested(() => deferredTillServerClose.resolve());
-            return Promise.resolve('runResultPipe-mockName');
+            return Promise.resolve({ name: 'runResultPipe-mockName', dispose: sinon.stub() });
         });
         const cancellationToken = new CancellationTokenSource();
         const testRun = typeMoq.Mock.ofType<TestRun>();
