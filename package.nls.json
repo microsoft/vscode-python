@@ -56,6 +56,7 @@
     "python.languageServer.jediDescription": "Use Jedi behind the Language Server Protocol (LSP) as a language server.",
     "python.languageServer.pylanceDescription": "Use Pylance as a language server.",
     "python.languageServer.noneDescription": "Disable language server capabilities.",
+    "python.jedi.useJediInEnvPath.description": "Use Jedi in system environment (if pyenv is disabled) or virtual environments folder (if pyenv is enabled) instead of the builtin Jedi.",
     "python.interpreter.infoVisibility.description": "Controls when to display information of selected interpreter in the status bar.",
     "python.interpreter.infoVisibility.never.description": "Never display information.",
     "python.interpreter.infoVisibility.onPythonRelated.description": "Only display information if Python-related files are opened.",
