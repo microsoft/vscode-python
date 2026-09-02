@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as vscode from 'vscode';
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Event, EventEmitter, Terminal, TerminalShellExecution } from 'vscode';
 import '../../common/extensions';
@@ -57,6 +58,7 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminalManager.onDidCloseTerminal(this.terminalCloseHandler, this, disposableRegistry);
         this.terminalActivator = this.serviceContainer.get<ITerminalActivator>(ITerminalActivator);
     }
+
     public dispose() {
         this.terminal?.dispose();
         this.disposeReplListener();
@@ -67,15 +69,54 @@ export class TerminalService implements ITerminalService, Disposable {
             });
         }
     }
-    public async sendCommand(command: string, args: string[], _?: CancellationToken): Promise<void> {
+
+    public async sendCommand(command: string, args: string[] = []): Promise<void> {
         await this.ensureTerminal();
-        const text = this.terminalHelper.buildCommandForTerminal(this.terminalShellType, command, args);
-        if (!this.options?.hideFromUser) {
-            this.terminal!.show(true);
+
+        let processedCommand = command;
+        let processedArgs = [...args];
+
+        const terminalSettings = vscode.workspace.getConfiguration('terminal.integrated');
+        const defaultProfile = terminalSettings.get<string>('defaultProfile.windows') || '';
+
+        const isBashShell = defaultProfile.toLowerCase().includes('bash') || 
+                            command.toLowerCase().includes('bash.exe');
+
+        if (process.platform === 'win32' && isBashShell) {
+            // Normalize the binary command path if it contains Windows-style path delimiters
+            if (processedCommand.includes('\\') || /^[A-Za-z]:/.test(processedCommand)) {
+                processedCommand = processedCommand.replace(/\\/g, '/');
+                processedCommand = processedCommand.replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`);
+            }
+
+            // Strictly normalize argument operands that represent path targets
+            processedArgs = processedArgs.map((arg) => {
+                // Skip options/flags, multi-line blocks, or inline code snippets
+                if (arg.startsWith('-') || arg.includes('\n') || arg.includes('import ')) {
+                    return arg;
+                }
+
+                // Target explicit absolute or relative Windows paths
+                if (/^[A-Za-z]:\\[^\n]*$/.test(arg) || /^\.\\[^\n]*$/.test(arg)) {
+                    let safeArg = arg.replace(/\\/g, '/');
+                    return safeArg.replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`);
+                }
+
+                return arg;
+            });
         }
 
-        await this.executeCommand(text, false);
+        // Delegate command construction to the shell-aware terminal helper
+        const commandLine = this.terminalHelper.buildCommandForTerminal(
+            this.terminalShellType,
+            processedCommand,
+            processedArgs,
+        );
+
+        // Execute via the standard execution pipeline
+        await this.executeCommand(commandLine, false);
     }
+
     /** @deprecated */
     public async sendText(text: string): Promise<void> {
         await this.ensureTerminal();
@@ -84,6 +125,7 @@ export class TerminalService implements ITerminalService, Disposable {
         }
         this.terminal!.sendText(text);
     }
+
     public async executeCommand(
         commandLine: string,
         isPythonShell: boolean,
@@ -209,6 +251,7 @@ export class TerminalService implements ITerminalService, Disposable {
             this.terminal!.show(preserveFocus);
         }
     }
+
     // TODO: Debt switch to Promise<Terminal> ---> breaks 20 tests
     public async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
         if (this.terminal) {
@@ -246,6 +289,7 @@ export class TerminalService implements ITerminalService, Disposable {
         this.sendTelemetry().ignoreErrors();
         return;
     }
+
     private terminalCloseHandler(terminal: Terminal) {
         if (terminal === this.terminal) {
             this.terminalClosed.fire();
