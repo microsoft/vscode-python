@@ -674,7 +674,7 @@
                     "type": "boolean"
                 },
                 "python.testing.autoTestDiscoverOnSavePattern": {
-                    "default": "**/*.py",
+                    "default": "**/{test*.py,*_test.py,conftest.py}",
                     "description": "%python.testing.autoTestDiscoverOnSavePattern.description%",
                     "scope": "resource",
                     "type": "string"
