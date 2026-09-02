@@ -70,7 +70,9 @@ if sys.platform == "darwin":
         with monkeypatch.context() as m:
             m.setattr("builtins.print", Mock())
             importlib.reload(sys.modules["pythonrc"])
-            print.assert_any_call("Cmd click to launch VS Code Native REPL")
+            print.assert_any_call(
+                "Cmd click to launch VS Code Native REPL (https://aka.ms/python-native-repl)"
+            )
 
 
 if sys.platform == "win32":
@@ -80,4 +82,6 @@ if sys.platform == "win32":
         with monkeypatch.context() as m:
             m.setattr("builtins.print", Mock())
             importlib.reload(sys.modules["pythonrc"])
-            print.assert_any_call("Ctrl click to launch VS Code Native REPL")
+            print.assert_any_call(
+                "Ctrl click to launch VS Code Native REPL (https://aka.ms/python-native-repl)"
+            )
