@@ -44,7 +44,7 @@ suite('Unittest test discovery adapter', () => {
         expectedPath = path.join('/', 'new', 'cwd');
         configService = ({
             getSettings: () => ({
-                testing: { unittestArgs: ['-v', '-s', '.', '-p', 'test*'] },
+                testing: { unittestArgs: [] },
             }),
         } as unknown) as IConfigurationService;
 
@@ -96,7 +96,7 @@ suite('Unittest test discovery adapter', () => {
         const adapter = new UnittestTestDiscoveryAdapter(configService);
         adapter.discoverTests(uri, execFactory.object);
         const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
-        const argsExpected = [script, '--udiscovery', '-v', '-s', '.', '-p', 'test*'];
+        const argsExpected = [script, '--udiscovery'];
 
         // must await until the execObservable is called in order to verify it
         await deferred.promise;
@@ -133,13 +133,13 @@ suite('Unittest test discovery adapter', () => {
         const expectedNewPath = path.join('/', 'new', 'cwd');
         configService = ({
             getSettings: () => ({
-                testing: { unittestArgs: ['-v', '-s', '.', '-p', 'test*'], cwd: expectedNewPath.toString() },
+                testing: { unittestArgs: [], cwd: expectedNewPath.toString() },
             }),
         } as unknown) as IConfigurationService;
         const adapter = new UnittestTestDiscoveryAdapter(configService);
         adapter.discoverTests(uri, execFactory.object);
         const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
-        const argsExpected = [script, '--udiscovery', '-v', '-s', '.', '-p', 'test*'];
+        const argsExpected = [script, '--udiscovery'];
 
         // must await until the execObservable is called in order to verify it
         await deferred.promise;
@@ -258,7 +258,7 @@ suite('Unittest test discovery adapter', () => {
         const adapter = new UnittestTestDiscoveryAdapter(configService);
         adapter.discoverTests(uri, execFactory.object, undefined, undefined, mockProject);
         const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
-        const argsExpected = [script, '--udiscovery', '-v', '-s', '.', '-p', 'test*'];
+        const argsExpected = [script, '--udiscovery'];
 
         // must await until the execObservable is called in order to verify it
         await deferred.promise;
@@ -301,7 +301,7 @@ suite('Unittest test discovery adapter', () => {
         const adapter = new UnittestTestDiscoveryAdapter(configService);
         adapter.discoverTests(uri, execFactory.object);
         const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
-        const argsExpected = [script, '--udiscovery', '-v', '-s', '.', '-p', 'test*'];
+        const argsExpected = [script, '--udiscovery'];
 
         // must await until the execObservable is called in order to verify it
         await deferred.promise;
