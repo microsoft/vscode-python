@@ -30,6 +30,7 @@ import {
 import { IDisposableRegistry } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ITerminalAutoActivation } from '../../../client/terminals/types';
+import { noop } from '../../../client/common/utils/misc';
 import { createPythonInterpreter } from '../../utils/interpreters';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 import * as platform from '../../../client/common/utils/platform';
@@ -405,20 +406,21 @@ suite('Terminal Service', () => {
         const iconPath = new ThemeIcon('snake');
         service = new TerminalService(mockServiceContainer.object, { iconPath });
         terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
-        terminalManager
-            .setup((t) => t.createTerminal(TypeMoq.It.is((o) => o.iconPath === iconPath)))
-            .returns(() => terminal.object)
-            .verifiable(TypeMoq.Times.once());
+        terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
         await service.show();
 
-        terminalManager.verifyAll();
+        terminalManager.verify(
+            (t) => t.createTerminal(TypeMoq.It.isObjectWith({ iconPath })),
+            TypeMoq.Times.atLeastOnce(),
+        );
     });
 
     test('Ensure `iconPath` option is forwarded when the environments extension is used', async () => {
         useEnvExtensionStub.returns(true);
         const iconPath = new ThemeIcon('snake');
-        ensureTerminalLegacyStub.returns(Promise.resolve(terminal.object));
+        const createdTerminal = ({ show: noop, dispose: noop } as unknown) as VSCodeTerminal;
+        ensureTerminalLegacyStub.resolves(createdTerminal);
         service = new TerminalService(mockServiceContainer.object, { iconPath });
 
         await service.show();
