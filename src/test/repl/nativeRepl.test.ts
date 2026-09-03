@@ -5,6 +5,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as TypeMoq from 'typemoq';
 import * as sinon from 'sinon';
+import { reset, when } from 'ts-mockito';
+import * as vscode from 'vscode';
 import { Disposable, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { expect } from 'chai';
 
@@ -16,6 +18,7 @@ import * as PythonServer from '../../client/repl/pythonServer';
 import * as vscodeWorkspaceApis from '../../client/common/vscodeApis/workspaceApis';
 import * as replController from '../../client/repl/replController';
 import { executeCommand } from '../../client/common/vscodeApis/commandApis';
+import { mockedVSCodeNamespaces } from '../vscode-mock';
 
 suite('REPL - Native REPL', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
@@ -112,6 +115,66 @@ suite('REPL - Native REPL', () => {
         expect(setReplDirectoryStub.calledOnce).to.be.true;
         expect(setReplControllerSpy.calledOnce).to.be.true;
         expect(createReplControllerStub.calledOnce).to.be.true;
+    });
+
+    test('createReplController should publish stdout notebook output for REPL execution', async () => {
+        const mockServer = {
+            interrupt: sinon.stub(),
+            execute: sinon.stub().resolves({ status: true, output: 'hello\nworld' }),
+            dispose: sinon.stub(),
+        } as any;
+        const createPythonServerStub = sinon.stub(PythonServer, 'createPythonServer').returns(mockServer as any);
+
+        const replaceOutputStub = sinon.stub();
+        const execStub = {
+            start: sinon.stub(),
+            replaceOutput: replaceOutputStub,
+            end: sinon.stub(),
+        } as any;
+
+        const createNotebookCellExecutionStub = sinon.stub().returns(execStub);
+        const mockNotebookController = {
+            id: 'mockController',
+            dispose: sinon.stub(),
+            updateNotebookAffinity: sinon.stub(),
+            createNotebookCellExecution: createNotebookCellExecutionStub,
+            supportedLanguages: [] as string[],
+            description: '',
+            interruptHandler: undefined,
+            executeHandler: undefined,
+        } as any as vscode.NotebookController;
+
+        when(mockedVSCodeNamespaces.notebooks!.createNotebookController('pythonREPL', 'jupyter-notebook', 'Python REPL')).thenReturn(
+            mockNotebookController,
+        );
+        createReplControllerStub.restore();
+
+        const disposables: Disposable[] = [];
+        try {
+            const controller = replController.createReplController('python', disposables, '/cwd');
+
+            const mockTextDocument = { getText: sinon.stub().returns('print("hi")') } as any;
+            const mockCell = { document: mockTextDocument } as any;
+            await (controller.executeHandler as any)([mockCell]);
+
+            expect(createPythonServerStub.calledOnce).to.be.true;
+            expect(mockServer.execute.calledOnceWithExactly('print("hi")')).to.be.true;
+            expect(createNotebookCellExecutionStub.calledOnce).to.be.true;
+            expect(replaceOutputStub.calledOnce).to.be.true;
+
+            const outputs = replaceOutputStub.firstCall.args[0] as vscode.NotebookCellOutput[];
+            expect(outputs).to.have.lengthOf(1);
+            const output = outputs[0];
+            expect(output.items).to.have.lengthOf(1);
+            expect(output.items[0].mime).to.equal('application/vnd.code.notebook.stdout');
+            expect((output.items[0] as any).metadata).to.deep.equal({ scrollable: false });
+            expect(output.metadata).to.deep.equal({ scrollable: false });
+            const outputText = Buffer.from((output.items[0] as any).data).toString();
+            expect(outputText).to.equal('hello\nworld');
+        } finally {
+            disposables.forEach((disposable) => disposable.dispose());
+            reset(mockedVSCodeNamespaces.notebooks!);
+        }
     });
 
     test('watchNotebookClosed should clean up resources when notebook is closed', async () => {
