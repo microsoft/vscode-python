@@ -218,7 +218,7 @@ export namespace Interpreters {
         '{0} environment was successfully activated, even though {1} indicator may not be present in the terminal prompt. [Learn more](https://aka.ms/vscodePythonTerminalActivation).',
     );
     export const shellIntegrationEnvVarCollectionDescription = l10n.t(
-        'Enables `python.terminal.shellIntegration.enabled` by modifying `PYTHONSTARTUP` and `PYTHON_BASIC_REPL`',
+        'Enables `python.terminal.shellIntegration.enabled` by modifying `PYTHONSTARTUP`',
     );
     export const shellIntegrationDisabledEnvVarCollectionDescription = l10n.t(
         'Disables `python.terminal.shellIntegration.enabled` by unsetting `PYTHONSTARTUP` and `PYTHON_BASIC_REPL`',

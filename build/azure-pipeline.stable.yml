@@ -81,6 +81,11 @@ extends:
           architecture: 'x64'
         displayName: Select Python version
 
+      - task: PipAuthenticate@1
+        inputs:
+          artifactFeeds: 'Monaco/vscode'
+        displayName: Authenticate to vscode feed
+
       - script: python -m pip install -U pip
         displayName: Upgrade pip
 
@@ -91,7 +96,7 @@ extends:
         displayName: Install NPM dependencies
 
       - script: nox --session install_python_libs
-        displayName: Install Jedi, get-pip, etc
+        displayName: Install Python extension dependencies
 
       - script: python ./build/update_package_file.py
         displayName: Update telemetry in package.json
