@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Disposable, Uri } from 'vscode';
+import { Disposable, TerminalOptions, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
@@ -24,6 +24,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     private hasRanOutsideCurrentDrive = false;
     protected terminalTitle!: string;
+    protected terminalIcon?: TerminalOptions['iconPath'];
     private replActive?: Promise<boolean>;
 
     constructor(
@@ -128,6 +129,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         return this.terminalServiceFactory.getTerminalService({
             resource,
             title: this.terminalTitle,
+            iconPath: this.terminalIcon,
             newTerminalPerFile: options?.newTerminalPerFile,
         });
     }
