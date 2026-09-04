@@ -219,6 +219,7 @@ export class TerminalService implements ITerminalService, Disposable {
             this.terminal = await ensureTerminalLegacy(this.options?.resource, {
                 name: this.options?.title || 'Python',
                 hideFromUser: this.options?.hideFromUser,
+                iconPath: this.options?.iconPath,
             });
             return;
         } else {
@@ -226,6 +227,7 @@ export class TerminalService implements ITerminalService, Disposable {
             this.terminal = this.terminalManager.createTerminal({
                 name: this.options?.title || 'Python',
                 hideFromUser: this.options?.hideFromUser,
+                iconPath: this.options?.iconPath,
             });
             this.terminalAutoActivator.disableAutoActivation(this.terminal);
 
