@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Disposable, TerminalOptions, Uri } from 'vscode';
+import { Disposable, TerminalOptions, ThemeIcon, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
@@ -24,7 +24,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     private hasRanOutsideCurrentDrive = false;
     protected terminalTitle!: string;
-    protected terminalIcon?: TerminalOptions['iconPath'];
+    protected terminalIcon?: TerminalOptions['iconPath'] = new ThemeIcon('snake');
     private replActive?: Promise<boolean>;
 
     constructor(

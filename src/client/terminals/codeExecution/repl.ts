@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Disposable, ThemeIcon } from 'vscode';
+import { Disposable } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
@@ -35,6 +35,5 @@ export class ReplProvider extends TerminalCodeExecutionProvider {
             applicationShell,
         );
         this.terminalTitle = 'REPL';
-        this.terminalIcon = new ThemeIcon('snake');
     }
 }
