@@ -82,8 +82,6 @@ suite('Terminal - Code Execution', () => {
             settings = TypeMoq.Mock.ofType<IPythonSettings>();
             settings.setup((s) => s.terminal).returns(() => terminalSettings.object);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
-            expectedTerminalIconId = 'snake';
-
             switch (testSuiteName) {
                 case 'Terminal Execution': {
                     executor = new TerminalCodeExecutionProvider(
@@ -110,6 +108,7 @@ suite('Terminal - Code Execution', () => {
                         applicationShell.object,
                     );
                     expectedTerminalTitle = 'REPL';
+                    expectedTerminalIconId = 'snake';
                     break;
                 }
                 case 'Django Execution': {
