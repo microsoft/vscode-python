@@ -170,7 +170,7 @@ suite('End to End Tests: test adapters', () => {
 
         // set workspace to test workspace folder and set up settings
 
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+        configService.getSettings(workspaceUri).testing.unittestArgs = [];
 
         // run unittest discovery
         const discoveryAdapter = new UnittestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
@@ -210,7 +210,7 @@ suite('End to End Tests: test adapters', () => {
 
         // set settings to work for the given workspace
         workspaceUri = Uri.parse(rootPathLargeWorkspace);
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+        configService.getSettings(workspaceUri).testing.unittestArgs = [];
         // run discovery
         const discoveryAdapter = new UnittestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
 
@@ -486,7 +486,7 @@ suite('End to End Tests: test adapters', () => {
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathSmallWorkspace);
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+        configService.getSettings(workspaceUri).testing.unittestArgs = [];
         // run execution
         const executionAdapter = new UnittestTestExecutionAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
@@ -563,7 +563,7 @@ suite('End to End Tests: test adapters', () => {
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathLargeWorkspace);
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+        configService.getSettings(workspaceUri).testing.unittestArgs = [];
 
         // run unittest execution
         const executionAdapter = new UnittestTestExecutionAdapter(configService, resultResolver, envVarsService);
@@ -711,7 +711,7 @@ suite('End to End Tests: test adapters', () => {
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathCoverageWorkspace);
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+        configService.getSettings(workspaceUri).testing.unittestArgs = [];
         // run execution
         const executionAdapter = new UnittestTestExecutionAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
@@ -895,7 +895,7 @@ suite('End to End Tests: test adapters', () => {
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathDiscoveryErrorWorkspace);
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+        configService.getSettings(workspaceUri).testing.unittestArgs = [];
 
         const discoveryAdapter = new UnittestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
