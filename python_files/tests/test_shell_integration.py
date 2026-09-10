@@ -62,6 +62,11 @@ def test_excepthook_call():
     hooks.vscode_excepthook("mock_type", "mock_value", "mock_traceback")
     mock_excepthook.assert_called_once_with("mock_type", "mock_value", "mock_traceback")
 
+def test_does_not_pollute_namespace():
+    importlib.reload(pythonrc)
+
+    assert not [name for name in vars(pythonrc) if not name.startswith("__")]
+
 
 if sys.platform == "darwin":
 
