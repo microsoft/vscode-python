@@ -20,7 +20,7 @@ class _PS1(Protocol):
 def test_decoration_success():
     importlib.reload(pythonrc)
     if sys.platform != "win32" and (not is_wsl):
-        ps1 = cast(_PS1, sys.ps1)
+        ps1 = cast("_PS1", sys.ps1)
         ps1.hooks.failure_flag = False
         result = str(ps1)
         assert (
@@ -32,7 +32,7 @@ def test_decoration_success():
 def test_decoration_failure():
     importlib.reload(pythonrc)
     if sys.platform != "win32" and (not is_wsl):
-        ps1 = cast(_PS1, sys.ps1)
+        ps1 = cast("_PS1", sys.ps1)
         ps1.hooks.failure_flag = True
         result = str(ps1)
         assert (
