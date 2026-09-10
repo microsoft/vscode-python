@@ -27,6 +27,7 @@ import { ILanguageServerExtensionManager } from '../../client/languageServer/typ
 import { LanguageServerWatcher } from '../../client/languageServer/watcher';
 import * as Logging from '../../client/logging';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { Commands } from '../../client/activation/commands';
 
 suite('Language server watcher', () => {
     let watcher: LanguageServerWatcher;
@@ -119,7 +120,11 @@ suite('Language server watcher', () => {
                     /* do nothing */
                 },
             } as unknown) as IWorkspaceService,
-            {} as ICommandManager,
+            ({
+                registerCommand: () => {
+                    /* do nothing */
+                },
+            } as unknown) as ICommandManager,
             {} as IFileSystem,
             ({
                 getExtension: () => undefined,
@@ -131,7 +136,7 @@ suite('Language server watcher', () => {
             disposables,
         );
         watcher.register();
-        assert.strictEqual(disposables.length, 11);
+        assert.strictEqual(disposables.length, 13);
     });
 
     test('The constructor should not add a listener to onDidChange to the list of disposables if it is not a trusted workspace', () => {
@@ -164,7 +169,11 @@ suite('Language server watcher', () => {
                     /* do nothing */
                 },
             } as unknown) as IWorkspaceService,
-            {} as ICommandManager,
+            ({
+                registerCommand: () => {
+                    /* do nothing */
+                },
+            } as unknown) as ICommandManager,
             {} as IFileSystem,
             ({
                 getExtension: () => undefined,
@@ -176,7 +185,7 @@ suite('Language server watcher', () => {
             disposables,
         );
         watcher.register();
-        assert.strictEqual(disposables.length, 10);
+        assert.strictEqual(disposables.length, 12);
     });
 
     test(`When starting the language server, the language server extension manager should not be undefined`, async () => {
@@ -486,6 +495,77 @@ suite('Language server watcher', () => {
 
         // Check that startLanguageServer was called twice: When we called it above, and implicitly because of the event.
         assert.ok(startLanguageServerFake.calledTwice);
+    });
+
+    test('When the "Restart Language Server" command is executed, all running language servers should be stopped and restarted', async () => {
+        let restartCommandHandler: (() => Promise<void>) | undefined;
+
+        watcher = new LanguageServerWatcher(
+            ({
+                get: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IServiceContainer,
+            {} as ILanguageServerOutputChannel,
+            {
+                getSettings: () => ({ languageServer: LanguageServerType.None }),
+            } as IConfigurationService,
+            {} as IExperimentService,
+            ({
+                getActiveWorkspaceUri: () => undefined,
+            } as unknown) as IInterpreterHelper,
+            ({
+                onDidChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IInterpreterPathService,
+            ({
+                getActiveInterpreter: () => 'python',
+                onDidChangeInterpreterInformation: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IInterpreterService,
+            {} as IEnvironmentVariablesProvider,
+            ({
+                getWorkspaceFolder: (uri: Uri) => ({ uri }),
+                onDidChangeConfiguration: () => {
+                    /* do nothing */
+                },
+                onDidChangeWorkspaceFolders: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IWorkspaceService,
+            ({
+                registerCommand: (command: string, handler: () => Promise<void>) => {
+                    if (command === Commands.RestartLS) {
+                        restartCommandHandler = handler;
+                    }
+                },
+            } as unknown) as ICommandManager,
+            {} as IFileSystem,
+            ({
+                getExtension: () => undefined,
+                onDidChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IExtensions,
+            {} as IApplicationShell,
+            disposables,
+        );
+        watcher.register();
+
+        await watcher.startLanguageServer(LanguageServerType.None);
+
+        const stopLanguageServerStub = sandbox.stub(NoneLSExtensionManager.prototype, 'stopLanguageServer');
+        stopLanguageServerStub.returns(Promise.resolve());
+        const startLanguageServerStub = sandbox.stub(NoneLSExtensionManager.prototype, 'startLanguageServer');
+        startLanguageServerStub.returns(Promise.resolve());
+
+        assert.ok(restartCommandHandler, 'Restart command handler should be registered');
+        await restartCommandHandler!();
+
+        assert.ok(stopLanguageServerStub.calledOnce, 'stopLanguageServer should be called once');
+        assert.ok(startLanguageServerStub.calledOnce, 'startLanguageServer should be called once');
     });
 
     test('When starting a language server with a Python 2.7 interpreter and the python.languageServer setting is Jedi, do not instantiate a language server', async () => {
