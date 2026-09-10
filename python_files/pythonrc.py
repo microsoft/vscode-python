@@ -53,6 +53,7 @@ def get_last_command():
 
 class PS1:
     hooks = REPLHooks()
+
     # str will get called for every prompt with exit code to show success/failure
     def __str__(self):
         exit_code = int(bool(self.hooks.failure_flag))
