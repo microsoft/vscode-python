@@ -46,6 +46,8 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
             applicationShell,
         );
         this.terminalTitle = 'Django Shell';
+        // The snake icon is reserved for the Python REPL terminal.
+        this.terminalIcon = undefined;
         disposableRegistry.push(new DjangoContextInitializer(documentManager, workspace, fileSystem, commandManager));
     }
 

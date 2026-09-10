@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Uri, WorkspaceFolder } from 'vscode';
+import { Disposable, ThemeIcon, Uri, WorkspaceFolder } from 'vscode';
 import {
     IApplicationShell,
     ICommandManager,
@@ -45,6 +45,7 @@ suite('Terminal - Code Execution', () => {
         let disposables: Disposable[] = [];
         let executor: ICodeExecutionService;
         let expectedTerminalTitle: string | undefined;
+        let expectedTerminalIconId: string | undefined;
         let terminalFactory: TypeMoq.IMock<ITerminalServiceFactory>;
         let documentManager: TypeMoq.IMock<IDocumentManager>;
         let commandManager: TypeMoq.IMock<ICommandManager>;
@@ -81,7 +82,6 @@ suite('Terminal - Code Execution', () => {
             settings = TypeMoq.Mock.ofType<IPythonSettings>();
             settings.setup((s) => s.terminal).returns(() => terminalSettings.object);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
-
             switch (testSuiteName) {
                 case 'Terminal Execution': {
                     executor = new TerminalCodeExecutionProvider(
@@ -108,6 +108,7 @@ suite('Terminal - Code Execution', () => {
                         applicationShell.object,
                     );
                     expectedTerminalTitle = 'REPL';
+                    expectedTerminalIconId = 'snake';
                     break;
                 }
                 case 'Django Execution': {
@@ -132,6 +133,7 @@ suite('Terminal - Code Execution', () => {
                         applicationShell.object,
                     );
                     expectedTerminalTitle = 'Django Shell';
+                    expectedTerminalIconId = undefined;
                     break;
                 }
                 default: {
@@ -145,7 +147,12 @@ suite('Terminal - Code Execution', () => {
                 terminalFactory
                     .setup((f) =>
                         f.getTerminalService(
-                            TypeMoq.It.is<TerminalCreationOptions>((a) => a.title === expectedTerminalTitle),
+                            TypeMoq.It.is<TerminalCreationOptions>(
+                                (a) =>
+                                    a.title === expectedTerminalTitle &&
+                                    (a.iconPath instanceof ThemeIcon ? a.iconPath.id : undefined) ===
+                                        expectedTerminalIconId,
+                            ),
                         ),
                     )
                     .returns(() => terminalService.object);
