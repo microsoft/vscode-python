@@ -46,7 +46,7 @@ def test_displayhook_call():
     hooks = pythonrc.REPLHooks()
     hooks.original_displayhook = mock_displayhook
 
-    hooks.my_displayhook("mock_value")
+    hooks.vscode_displayhook("mock_value")
 
     mock_displayhook.assert_called_once_with("mock_value")
 
@@ -59,7 +59,7 @@ def test_excepthook_call():
     hooks = pythonrc.REPLHooks()
     hooks.original_excepthook = mock_excepthook
 
-    hooks.my_excepthook("mock_type", "mock_value", "mock_traceback")
+    hooks.vscode_excepthook("mock_type", "mock_value", "mock_traceback")
     mock_excepthook.assert_called_once_with("mock_type", "mock_value", "mock_traceback")
 
 
