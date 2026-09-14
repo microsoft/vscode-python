@@ -2,7 +2,7 @@ import importlib
 import platform
 import sys
 from pathlib import Path
-from typing import Protocol, cast
+from typing import Any, Protocol, cast
 from unittest.mock import Mock
 
 import pythonrc
@@ -101,7 +101,10 @@ def test_prompt_survives_shadowed_builtins_under_pythonstartup():
 
     ps1 = cast("_PS1", sys.ps1)
     result = str(ps1)
-    assert result.startswith("\x01")
+    assert (
+        result
+        == "\x01\x1b]633;C\x07\x1b]633;E;None\x07\x1b]633;D;0\x07\x1b]633;A\x07\x02>>> \x01\x1b]633;B\x07\x02"
+    )
 
 
 if sys.platform == "darwin":
