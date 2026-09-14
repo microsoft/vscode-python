@@ -85,7 +85,7 @@ def test_prompt_survives_shadowed_builtins_under_pythonstartup():
         return
 
     source = PYTHONRC_PATH.read_text(encoding="utf-8")
-    namespace = {"__name__": "__main__"}
+    namespace: dict[str, Any] = {"__name__": "__main__"}
     exec(compile(source, str(PYTHONRC_PATH), "exec"), namespace)
 
     namespace.update(
