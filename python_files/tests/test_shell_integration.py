@@ -1,6 +1,7 @@
 import importlib
 import platform
 import sys
+from pathlib import Path
 from typing import Protocol, cast
 from unittest.mock import Mock
 
@@ -70,6 +71,37 @@ def test_does_not_pollute_namespace():
     importlib.reload(pythonrc)
 
     assert not [name for name in vars(pythonrc) if not name.startswith("__")]
+
+
+def test_prompt_survives_shadowed_builtins_under_pythonstartup():
+    # PYTHONSTARTUP executes pythonrc's source directly inside the real
+    # REPL's __main__ namespace, not as an imported module. The tests
+    # above import pythonrc normally, which gives PS1 its own module
+    # namespace instead of __main__ and would never catch this. Simulate
+    # the real PYTHONSTARTUP path by exec-ing the source into a synthetic
+    # __main__-like namespace, then shadow the names PS1 relies on at
+    # prompt-render time and confirm rendering the prompt still works.
+    if sys.platform == "win32" or is_wsl:
+        return
+
+    source = PYTHONRC_PATH.read_text(encoding="utf-8")
+    namespace = {"__name__": "__main__"}
+    exec(compile(source, str(PYTHONRC_PATH), "exec"), namespace)
+
+    namespace.update(
+        {
+            "int": 20,
+            "bool": 20,
+            "str": 20,
+            "sys": 1,
+            "original_ps1": "shadowed",
+            "get_last_command": "shadowed",
+        }
+    )
+
+    ps1 = cast("_PS1", sys.ps1)
+    result = str(ps1)
+    assert result.startswith("\x01")
 
 
 if sys.platform == "darwin":
