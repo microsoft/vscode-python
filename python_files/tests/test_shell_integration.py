@@ -8,6 +8,8 @@ import pythonrc
 
 is_wsl = "microsoft-standard-WSL" in platform.release()
 
+PYTHONRC_PATH = Path(pythonrc.__file__)
+
 
 class _Hooks(Protocol):
     failure_flag: bool
