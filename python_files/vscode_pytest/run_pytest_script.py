@@ -45,7 +45,7 @@ def configure_coverage(args):
 
     import coverage
 
-    cov = coverage.Coverage()
+    cov = coverage.Coverage(branch=True)
     cov.start()
     return args, CoverageSavePlugin(cov)
 

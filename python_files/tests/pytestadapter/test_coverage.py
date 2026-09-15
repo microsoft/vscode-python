@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+import importlib.util
 import json
 import os
 import pathlib
@@ -38,14 +39,21 @@ def test_coverage_fallback_without_pytest_cov(monkeypatch):
             self.saved = True
 
     fake_coverage = FakeCoverage()
+    coverage_kwargs = {}
+
+    def create_coverage(**kwargs):
+        coverage_kwargs.update(kwargs)
+        return fake_coverage
+
     monkeypatch.setenv("COVERAGE_ENABLED", "True")
     monkeypatch.setattr(run_pytest_script.importlib.util, "find_spec", lambda _name: None)
-    monkeypatch.setattr(coverage, "Coverage", lambda: fake_coverage)
+    monkeypatch.setattr(coverage, "Coverage", create_coverage)
 
     args, coverage_plugin = run_pytest_script.configure_coverage([])
 
     assert args == []
     assert coverage_plugin is not None
+    assert coverage_kwargs == {"branch": True}
     assert fake_coverage.started
 
     captured = {}
@@ -65,6 +73,38 @@ def test_coverage_fallback_without_pytest_cov(monkeypatch):
 
     assert fake_coverage.stopped
     assert fake_coverage.saved
+
+
+def test_coverage_fallback_collects_branch_arcs(tmp_path, monkeypatch):
+    """Collect branch data when coverage.py runs without pytest-cov."""
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("COVERAGE_ENABLED", "True")
+    monkeypatch.setattr(run_pytest_script.importlib.util, "find_spec", lambda _name: None)
+    module_path = tmp_path / "branch_module.py"
+    module_path.write_text(
+        "def classify(number):\n"
+        "    if number > 0:\n"
+        "        return 'positive'\n"
+        "    return 'non-positive'\n",
+        encoding="utf-8",
+    )
+
+    args, coverage_plugin = run_pytest_script.configure_coverage([])
+
+    assert args == []
+    assert coverage_plugin is not None
+    spec = importlib.util.spec_from_file_location("fallback_branch_module", module_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.classify(1) == "positive"
+
+    coverage_plugin.pytest_sessionfinish(None, 0)
+
+    loaded_coverage = coverage.Coverage(data_file=os.fspath(tmp_path / ".coverage"))
+    loaded_coverage.load()
+    assert has_branch_coverage(loaded_coverage.get_data())
 
 
 def test_coverage_uses_pytest_cov_when_available(monkeypatch):
