@@ -9,7 +9,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { Commands } from '../commands';
 import { NodeLanguageClientMiddleware } from './languageClientMiddleware';
 import { ILanguageServerAnalysisOptions, ILanguageServerManager } from '../types';
 import { traceDecoratorError, traceDecoratorVerbose } from '../../logging';
@@ -31,23 +30,13 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
 
     private started = false;
 
-    private static commandDispose: IDisposable;
-
     constructor(
         private readonly serviceContainer: IServiceContainer,
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
         private readonly languageServerProxy: NodeLanguageServerProxy,
-        commandManager: ICommandManager,
+        _commandManager: ICommandManager,
         private readonly extensions: IExtensions,
-    ) {
-        if (NodeLanguageServerManager.commandDispose) {
-            NodeLanguageServerManager.commandDispose.dispose();
-        }
-        NodeLanguageServerManager.commandDispose = commandManager.registerCommand(Commands.RestartLS, () => {
-            sendTelemetryEvent(EventName.LANGUAGE_SERVER_RESTART, undefined, { reason: 'command' });
-            this.restartLanguageServer().ignoreErrors();
-        });
-    }
+    ) {}
 
     private static versionTelemetryProps(instance: NodeLanguageServerManager) {
         return {
@@ -57,7 +46,6 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
 
     public dispose(): void {
         this.stopLanguageServer().ignoreErrors();
-        NodeLanguageServerManager.commandDispose.dispose();
         this.disposables.forEach((d) => d.dispose());
     }
 
