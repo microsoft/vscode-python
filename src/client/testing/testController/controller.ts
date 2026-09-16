@@ -265,6 +265,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         // LEGACY MODE: Single WorkspaceTestAdapter per workspace (backward compatibility)
         workspaces.forEach((workspace) => {
             this.activateLegacyWorkspace(workspace);
+            void this.refreshTestData(workspace.uri);
         });
         this.disposables.push(
             this.workspaceService.onDidChangeWorkspaceFolders((evt) => {
