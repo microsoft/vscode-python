@@ -18,6 +18,7 @@ import { IInterpreterAutoSelectionProxyService } from '../interpreter/autoSelect
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { sendSettingTelemetry } from '../telemetry/envFileTelemetry';
+import { DEFAULT_TEST_DISCOVERY_ON_SAVE_PATTERN } from '../testing/common/constants';
 import { ITestingSettings } from '../testing/configuration/types';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
@@ -331,7 +332,7 @@ export class PythonSettings implements IPythonSettings {
                     unittestEnabled: false,
                     pytestPath: 'pytest',
                     autoTestDiscoverOnSaveEnabled: true,
-                    autoTestDiscoverOnSavePattern: '**/*.py',
+                    autoTestDiscoverOnSavePattern: DEFAULT_TEST_DISCOVERY_ON_SAVE_PATTERN,
                 } as ITestingSettings;
             }
         }
@@ -348,7 +349,7 @@ export class PythonSettings implements IPythonSettings {
                   unittestArgs: [],
                   unittestEnabled: false,
                   autoTestDiscoverOnSaveEnabled: true,
-                  autoTestDiscoverOnSavePattern: '**/*.py',
+                  autoTestDiscoverOnSavePattern: DEFAULT_TEST_DISCOVERY_ON_SAVE_PATTERN,
               };
         this.testing.pytestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.pytestPath), workspaceRoot);
         if (this.testing.cwd) {
