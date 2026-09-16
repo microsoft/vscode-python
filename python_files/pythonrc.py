@@ -9,6 +9,20 @@ def _initialize():
     original_ps1 = ">>> "
     is_wsl = "microsoft-standard-WSL" in platform.release()
 
+    # PYTHONSTARTUP executes this file's code inside the user's __main__
+    # namespace, so PS1.__str__'s globals are the user's globals. If the
+    # user later shadows a name we rely on at prompt-render time (e.g.
+    # `int = 20`, `sys = 1`), a plain lookup would resolve to the user's
+    # value instead of ours and raise, silently killing the prompt.
+    #
+    # Capturing these as locals of _initialize (rather than as names left
+    # sitting in __main__) means PS1's methods reach them through closure
+    # cells, not global lookup - so there's no alias name in __main__ for
+    # user code to reassign and break in the first place.
+    _int = int
+    _bool = bool
+    _str = str
+
     class ShellIntegrationSequence(str, Enum):
         SOH = "\001"
         STX = "\002"
@@ -53,7 +67,7 @@ def _initialize():
 
         # str will get called for every prompt with exit code to show success/failure
         def __str__(self):
-            exit_code = int(bool(self.hooks.failure_flag))
+            exit_code = _int(_bool(self.hooks.failure_flag))
             self.hooks.failure_flag = False
             # Guide following official VS Code doc for shell integration sequence:
             result = ""
@@ -64,10 +78,10 @@ def _initialize():
                     stx=ShellIntegrationSequence.STX,
                     command_executed=ShellIntegrationSequence.COMMAND_EXECUTED,
                     command_line=ShellIntegrationSequence.COMMAND_LINE
-                    + str(get_last_command())
+                    + _str(get_last_command())
                     + ShellIntegrationSequence.TERMINATOR,
                     command_finished=ShellIntegrationSequence.COMMAND_FINISHED
-                    + str(exit_code)
+                    + _str(exit_code)
                     + ShellIntegrationSequence.TERMINATOR,
                     prompt_started=ShellIntegrationSequence.PROMPT_STARTED,
                     prompt=original_ps1,
@@ -76,7 +90,7 @@ def _initialize():
             else:
                 result = "{command_finished}{prompt_started}{prompt}{command_start}{command_executed}".format(
                     command_finished=ShellIntegrationSequence.COMMAND_FINISHED
-                    + str(exit_code)
+                    + _str(exit_code)
                     + ShellIntegrationSequence.TERMINATOR,
                     prompt_started=ShellIntegrationSequence.PROMPT_STARTED,
                     prompt=original_ps1,
