@@ -182,7 +182,8 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         test('Mac - Verify provideTerminalLinks returns links when context.line contains expectedNativeLink', () => {
             const provider = new CustomTerminalLinkProvider();
             const context: TerminalLinkContext = {
-                line: 'Some random string with Cmd click to launch VS Code Native REPL',
+                line:
+                    'Some random string with Cmd click to launch VS Code Native REPL (https://aka.ms/python-native-repl)',
                 terminal: {} as Terminal,
             };
             const token: CancellationToken = {
@@ -224,7 +225,8 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         test('Windows/Linux - Verify provideTerminalLinks returns links when context.line contains expectedNativeLink', () => {
             const provider = new CustomTerminalLinkProvider();
             const context: TerminalLinkContext = {
-                line: 'Some random string with Ctrl click to launch VS Code Native REPL',
+                line:
+                    'Some random string with Ctrl click to launch VS Code Native REPL (https://aka.ms/python-native-repl)',
                 terminal: {} as Terminal,
             };
             const token: CancellationToken = {

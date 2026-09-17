@@ -486,6 +486,7 @@
       "primaryoutcome" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "shadowoutcome" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "pyreflyversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "primarydurationms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
       "shadowdurationms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
       "shadowinflight" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true }
@@ -496,6 +497,7 @@
       "kind" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "reason" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "pyreflyversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "exitcode" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "exitsignal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "uptimems" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
@@ -508,6 +510,7 @@
       "expected" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "exitsignal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "pyreflyversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "exitcode" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
       "uptimems" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true }
    }
@@ -516,6 +519,7 @@
    "language_server.shadow.sampling" : {
       "reason" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "pyreflyversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "windowms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
       "observed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
       "emitted" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
@@ -530,6 +534,7 @@
       "expected" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "exitsignal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "pyreflyversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
       "exitcode" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
       "uptimems" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true }
    }
