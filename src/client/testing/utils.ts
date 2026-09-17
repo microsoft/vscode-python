@@ -1,11 +1,14 @@
 import { TestItem, env } from 'vscode';
 import { traceLog } from '../logging';
+import { parseVsId } from './testController/common/projectUtils';
 
 export async function writeTestIdToClipboard(testItem: TestItem): Promise<void> {
     if (testItem && typeof testItem.id === 'string') {
-        if (testItem.id.includes('\\') && testItem.id.indexOf('::') === -1) {
+        // Strip the project scope prefix (if any) so only the test id is copied.
+        const [, testId] = parseVsId(testItem.id);
+        if (testId.includes('\\') && testId.indexOf('::') === -1) {
             // Convert the id to a module.class.method format as this is a unittest
-            const moduleClassMethod = idToModuleClassMethod(testItem.id);
+            const moduleClassMethod = idToModuleClassMethod(testId);
             if (moduleClassMethod) {
                 await env.clipboard.writeText(moduleClassMethod);
                 traceLog('Testing: Copied test id to clipboard, id: ' + moduleClassMethod);
@@ -13,8 +16,8 @@ export async function writeTestIdToClipboard(testItem: TestItem): Promise<void> 
             }
         }
         // Otherwise use the id as is for pytest
-        await clipboardWriteText(testItem.id);
-        traceLog('Testing: Copied test id to clipboard, id: ' + testItem.id);
+        await clipboardWriteText(testId);
+        traceLog('Testing: Copied test id to clipboard, id: ' + testId);
     }
 }
 
