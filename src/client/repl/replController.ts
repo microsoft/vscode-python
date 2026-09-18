@@ -28,8 +28,7 @@ export function createReplController(
 
             if (result?.output) {
                 const stdoutItem = vscode.NotebookCellOutputItem.stdout(result.output);
-                (stdoutItem as any).metadata = { scrollable: false };
-                const output = new vscode.NotebookCellOutput([stdoutItem], { scrollable: false });
+                const output = new vscode.NotebookCellOutput([stdoutItem], {});
                 exec.replaceOutput([output]);
                 // TODO: Properly update via NotebookCellOutputItem.error later.
             }

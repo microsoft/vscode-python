@@ -133,7 +133,7 @@ suite('REPL - Native REPL', () => {
         } as any;
 
         const createNotebookCellExecutionStub = sinon.stub().returns(execStub);
-        const mockNotebookController = {
+        const mockNotebookController = ({
             id: 'mockController',
             dispose: sinon.stub(),
             updateNotebookAffinity: sinon.stub(),
@@ -142,11 +142,11 @@ suite('REPL - Native REPL', () => {
             description: '',
             interruptHandler: undefined,
             executeHandler: undefined,
-        } as any as vscode.NotebookController;
+        } as any) as vscode.NotebookController;
 
-        when(mockedVSCodeNamespaces.notebooks!.createNotebookController('pythonREPL', 'jupyter-notebook', 'Python REPL')).thenReturn(
-            mockNotebookController,
-        );
+        when(
+            mockedVSCodeNamespaces.notebooks!.createNotebookController('pythonREPL', 'jupyter-notebook', 'Python REPL'),
+        ).thenReturn(mockNotebookController);
         createReplControllerStub.restore();
 
         const disposables: Disposable[] = [];
@@ -167,8 +167,8 @@ suite('REPL - Native REPL', () => {
             const output = outputs[0];
             expect(output.items).to.have.lengthOf(1);
             expect(output.items[0].mime).to.equal('application/vnd.code.notebook.stdout');
-            expect((output.items[0] as any).metadata).to.deep.equal({ scrollable: false });
-            expect(output.metadata).to.deep.equal({ scrollable: false });
+            expect((output.items[0] as any).metadata).to.be.undefined;
+            expect(output.metadata).to.deep.equal({});
             const outputText = Buffer.from((output.items[0] as any).data).toString();
             expect(outputText).to.equal('hello\nworld');
         } finally {
