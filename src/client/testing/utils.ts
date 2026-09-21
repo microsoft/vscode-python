@@ -5,7 +5,7 @@ import { parseVsId } from './testController/common/projectUtils';
 export async function writeTestIdToClipboard(testItem: TestItem): Promise<void> {
     if (testItem && typeof testItem.id === 'string') {
         // Strip the project scope prefix (if any) so only the test id is copied.
-        const [, testId] = parseVsId(testItem.id);
+        const testId = stripProjectId(testItem.id);
         if (testId.includes('\\') && testId.indexOf('::') === -1) {
             // Convert the id to a module.class.method format as this is a unittest
             const moduleClassMethod = idToModuleClassMethod(testId);
@@ -19,6 +19,19 @@ export async function writeTestIdToClipboard(testItem: TestItem): Promise<void> 
         await clipboardWriteText(testId);
         traceLog('Testing: Copied test id to clipboard, id: ' + testId);
     }
+}
+
+// Project ids are always URIs (see getProjectId), so only strip a prefix that looks
+// like one. Otherwise a pytest parameter containing the separator text, such as
+// "test_foo.py::test_value[value@@vsc@@suffix]", would be truncated.
+const PROJECT_ID_PATTERN = /^[a-zA-Z][a-zA-Z\d+.-]*:\/\//;
+
+function stripProjectId(vsId: string): string {
+    const [projectId, testId] = parseVsId(vsId);
+    if (projectId === undefined || !PROJECT_ID_PATTERN.test(projectId)) {
+        return vsId;
+    }
+    return testId;
 }
 
 export function idToModuleClassMethod(id: string): string | undefined {

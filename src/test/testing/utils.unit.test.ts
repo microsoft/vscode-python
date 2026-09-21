@@ -56,6 +56,18 @@ suite('Testing - utils', () => {
             expect(await copiedText(id)).to.equal('tests/unit/test_foo.py::test_pipe_single[False]');
         });
 
+        test('legacy parameterized pytest id containing the separator text is copied as is', async () => {
+            const id = `tests/test_foo.py::test_value[value${PROJECT_ID_SEPARATOR}suffix]`;
+
+            expect(await copiedText(id)).to.equal(id);
+        });
+
+        test('project scoped parameterized pytest id containing the separator text keeps the parameters', async () => {
+            const id = `file:///path/to/workspace${PROJECT_ID_SEPARATOR}tests/test_foo.py::test_value[value${PROJECT_ID_SEPARATOR}suffix]`;
+
+            expect(await copiedText(id)).to.equal(`tests/test_foo.py::test_value[value${PROJECT_ID_SEPARATOR}suffix]`);
+        });
+
         test('project scoped windows pytest id drops the project prefix', async () => {
             const id = `file:///c%3A/workspace${PROJECT_ID_SEPARATOR}c:\\workspace\\tests\\test_foo.py::test_bar`;
 
