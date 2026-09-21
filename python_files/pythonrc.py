@@ -4,7 +4,7 @@ def _initialize():
     if sys.platform != "win32":
         import readline
 
-    original_ps1 = sys.ps1
+    original_ps1 = getattr(sys, "ps1", ">>> ")
     # PYTHONSTARTUP executes this file's code inside the user's __main__
     # namespace, so PS1.__str__'s globals are the user's globals. If the
     # user later shadows a name we rely on at prompt-render time (e.g.
@@ -91,10 +91,10 @@ def _initialize():
             # For non-windows allow recent_command history.
             # fmt: off
             if sys.platform != "win32":
-                result = "{soh}{pre_execution}{command_line}{execution_finished}{prompt_start}{stx}{prompt}{soh}{prompt_end}{stx}".format(  # noqa: UP032
+                result = "{soh}{command_line}{pre_execution}{execution_finished}{prompt_start}{stx}{prompt}{soh}{prompt_end}{stx}".format(  # noqa: UP032
                     soh=ShellIntegrationSequence.soh,
-                    pre_execution=ShellIntegrationSequence.pre_execution(),
                     command_line=ShellIntegrationSequence.command_line(get_last_command()),
+                    pre_execution=ShellIntegrationSequence.pre_execution(),
                     execution_finished=ShellIntegrationSequence.execution_finished(last_exit_code),
                     prompt_start=ShellIntegrationSequence.prompt_start(),
                     stx=ShellIntegrationSequence.stx,

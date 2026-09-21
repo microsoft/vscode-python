@@ -28,7 +28,7 @@ def test_decoration_success():
         result = str(ps1)
         assert (
             result
-            == "\x01\x1b]633;C\x07\x1b]633;E;None\x07\x1b]633;D;0\x07\x1b]633;A\x07\x02>>> \x01\x1b]633;B\x07\x02"
+            == "\x01\x1b]633;E;None\x07\x1b]633;C\x07\x1b]633;D;0\x07\x1b]633;A\x07\x02>>> \x01\x1b]633;B\x07\x02"
         )
 
 
@@ -40,7 +40,7 @@ def test_decoration_failure():
         result = str(ps1)
         assert (
             result
-            == "\x01\x1b]633;C\x07\x1b]633;E;None\x07\x1b]633;D;1\x07\x1b]633;A\x07\x02>>> \x01\x1b]633;B\x07\x02"
+            == "\x01\x1b]633;E;None\x07\x1b]633;C\x07\x1b]633;D;1\x07\x1b]633;A\x07\x02>>> \x01\x1b]633;B\x07\x02"
         )
 
 
@@ -103,7 +103,7 @@ def test_prompt_survives_shadowed_builtins_under_pythonstartup():
     result = str(ps1)
     assert (
         result
-        == "\x01\x1b]633;C\x07\x1b]633;E;None\x07\x1b]633;D;0\x07\x1b]633;A\x07\x02>>> \x01\x1b]633;B\x07\x02"
+        == "\x01\x1b]633;E;None\x07\x1b]633;C\x07\x1b]633;D;0\x07\x1b]633;A\x07\x02>>> \x01\x1b]633;B\x07\x02"
     )
 
 
