@@ -22,36 +22,32 @@ def _initialize():
     class ShellIntegrationSequence:
         soh = "\001"
         stx = "\002"
-
-        @staticmethod
-        def _create(code: str, *arguments: object) -> str:
-            parameters = "".join(f";{argument}" for argument in arguments)
-            return f"\x1b]633;{code}{parameters}\x07"
+        template = "\x1b]633;{}\x07"
 
         # Before the prompt (>>>) is displayed
         @classmethod
         def prompt_start(cls) -> str:
-            return cls._create("A")
+            return cls.template.format("A")
 
         # After the prompt (>>>) is displayed
         @classmethod
         def prompt_end(cls) -> str:
-            return cls._create("B")
+            return cls.template.format("B")
 
         # After the user has typed a command but before it is executed
         @classmethod
         def pre_execution(cls) -> str:
-            return cls._create("C")
+            return cls.template.format("C")
 
         @classmethod
         def execution_finished(cls, exit_code: int) -> str:
             """Mark execution as finished with its exit code."""
-            return cls._create("D", exit_code)
+            return cls.template.format(f"D;{exit_code}")
 
         @classmethod
         def command_line(cls, command: object) -> str:
             """Explicitly set the command line interpreted by the shell."""
-            return cls._create("E", command)
+            return cls.template.format(f"E;{command}")
 
     class REPLHooks:
         def __init__(self):
