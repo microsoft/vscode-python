@@ -45,10 +45,11 @@ import {
     IPythonPathUpdaterServiceManager,
     ISpecialQuickPickItem,
 } from '../../types';
-import { BaseInterpreterSelectorCommand } from './base';
 import { untildify } from '../../../../common/helpers';
-import { useEnvExtension } from '../../../../envExt/api.internal';
+import { shouldEnvExtHandleActivation, useEnvExtension } from '../../../../envExt/api.internal';
+import { traceError } from '../../../../logging';
 import { setInterpreterLegacy } from '../../../../envExt/api.legacy';
+import { BaseInterpreterSelectorCommand } from './base';
 import { CreateEnvironmentResult } from '../../../../pythonEnvironments/creation/proposed.createEnvApis';
 
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
@@ -606,8 +607,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
             // an empty string, in which case we should update.
             // Having the value `undefined` means user cancelled the quickpick, so we update nothing in that case.
             await this.pythonPathUpdaterService.updatePythonPath(interpreterState.path, configTarget, 'ui', wkspace);
-            if (useEnvExtension()) {
-                await setInterpreterLegacy(interpreterState.path, wkspace);
+            if (useEnvExtension() || shouldEnvExtHandleActivation()) {
+                await setInterpreterLegacy(interpreterState.path, wkspace).catch((ex) =>
+                    traceError('Failed to report newly-selected interpreter to the Python Environments extension', ex),
+                );
             }
             return { path: interpreterState.path };
         }
