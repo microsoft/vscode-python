@@ -578,20 +578,6 @@
                     "scope": "resource",
                     "type": "string"
                 },
-                "python.locator": {
-                    "default": "js",
-                    "description": "%python.locator.description%",
-                    "enum": [
-                        "js",
-                        "native"
-                    ],
-                    "tags": [
-                        "onExP",
-                        "preview"
-                    ],
-                    "scope": "machine",
-                    "type": "string"
-                },
                 "python.pipenvPath": {
                     "default": "pipenv",
                     "description": "%python.pipenvPath.description%",
