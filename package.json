@@ -333,7 +333,8 @@
             {
                 "category": "Python",
                 "command": "python.execSelectionInDjangoShell",
-                "title": "%python.command.python.execSelectionInDjangoShell.title%"
+                "title": "%python.command.python.execSelectionInDjangoShell.title%",
+                "shortTitle": "%python.command.python.execSelectionInDjangoShell.shortTitle%"
             },
             {
                 "category": "Python",
@@ -344,7 +345,8 @@
             {
                 "category": "Python",
                 "command": "python.execInREPL",
-                "title": "%python.command.python.execInREPL.title%"
+                "title": "%python.command.python.execInREPL.title%",
+                "shortTitle": "%python.command.python.execInREPL.shortTitle%"
             },
             {
                 "category": "Python",
