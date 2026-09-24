@@ -6,11 +6,11 @@ import { getEnvExtApi, getEnvironment } from './api.internal';
 import { EnvironmentType, PythonEnvironment as PythonEnvironmentLegacy } from '../pythonEnvironments/info';
 import { PythonEnvironment, PythonTerminalCreateOptions } from './types';
 import { Architecture } from '../common/utils/platform';
-import { parseVersion } from '../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvType } from '../pythonEnvironments/base/info';
 import { traceError } from '../logging';
 import { reportActiveInterpreterChanged } from '../environmentApi';
 import { getWorkspaceFolder, getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
+import { parsePythonEnvironmentVersion } from './utils';
 
 function toEnvironmentType(pythonEnv: PythonEnvironment): EnvironmentType {
     if (pythonEnv.envId.managerId.toLowerCase().endsWith('system')) {
@@ -73,8 +73,11 @@ function getEnvType(kind: EnvironmentType): PythonEnvType | undefined {
     }
 }
 
-function toLegacyType(env: PythonEnvironment): PythonEnvironmentLegacy {
-    const ver = parseVersion(env.version);
+function toLegacyType(env: PythonEnvironment): PythonEnvironmentLegacy | undefined {
+    const ver = parsePythonEnvironmentVersion(env);
+    if (!ver) {
+        return undefined;
+    }
     const envType = toEnvironmentType(env);
     return {
         id: env.execInfo.run.executable,
@@ -122,7 +125,15 @@ async function resolveActiveInterpreterLegacy(resource?: Uri): Promise<PythonEnv
     return newEnv;
 }
 
-export async function getActiveInterpreterLegacy(resource?: Uri): Promise<PythonEnvironmentLegacy | undefined> {
+export async function getActiveInterpreterLegacy(
+    resource?: Uri,
+    options?: { reportActiveInterpreterChanged?: boolean },
+): Promise<PythonEnvironmentLegacy | undefined> {
+    if (options?.reportActiveInterpreterChanged === false) {
+        const pythonEnv = await getEnvironment(resource);
+        return pythonEnv ? toLegacyType(pythonEnv) : undefined;
+    }
+
     // De-duplicate concurrent resolutions for the same resource. The underlying
     // `getEnvironment` call can block while the environments extension is performing a
     // refresh, so multiple startup callers (e.g. the language server watcher and the

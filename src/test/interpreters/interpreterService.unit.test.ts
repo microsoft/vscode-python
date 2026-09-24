@@ -43,6 +43,7 @@ import { MockAutoSelectionService } from '../mocks/autoSelector';
 import * as proposedApi from '../../client/environmentApi';
 import { createTypeMoq } from '../mocks/helper';
 import * as extapi from '../../client/envExt/api.internal';
+import * as legacyApi from '../../client/envExt/api.legacy';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -457,6 +458,27 @@ suite('Interpreters service', () => {
 
             expect(Date.now() - start).to.be.lessThan(900);
             expect(result).to.equal(persisted);
+        });
+
+        test('Exact-resource lookup bypasses workspace timeout and cached state', async () => {
+            const resource = Uri.file(path.resolve('script.py'));
+            const exact = { path: path.join('usr', 'bin', 'exact') } as any;
+            useEnvExtensionStub.returns(true);
+            const legacyLookup = sinon
+                .stub(legacyApi, 'getActiveInterpreterLegacy')
+                .callsFake(async () => delayed(exact, 200));
+
+            const service = new InterpreterService(serviceContainer, pyenvs.object);
+            const lookup = service.getActiveInterpreter(resource, { exactResource: true });
+            const timedOut = Symbol('timedOut');
+
+            expect(await Promise.race([lookup, delayed(timedOut, 150)])).to.equal(timedOut);
+            expect(await lookup).to.equal(exact);
+            sinon.assert.calledOnceWithExactly(legacyLookup, resource, {
+                reportActiveInterpreterChanged: false,
+            });
+            workspace.verify((w) => w.getWorkspaceFolderIdentifier(TypeMoq.It.isAny()), TypeMoq.Times.never());
+            expect(workspacePersistedValues.size).to.equal(0);
         });
     });
 

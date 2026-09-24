@@ -9,7 +9,8 @@ on:
       - 'labeled'
       - 'unlabeled'
 
-permissions: {}
+permissions:
+  pull-requests: read
 
 jobs:
   changed-files-in-pr:
@@ -19,6 +20,7 @@ jobs:
       - name: 'package-lock.json matches package.json'
         uses: brettcannon/check-for-changed-files@d85c64d17b3c1d0ac57c9cc46ea39399b0d6fa71 # v1.2.2
         with:
+          token: ${{ github.token }}
           prereq-pattern: 'package.json'
           file-pattern: 'package-lock.json'
           skip-label: 'skip package*.json'
@@ -27,6 +29,7 @@ jobs:
       - name: 'package.json matches package-lock.json'
         uses: brettcannon/check-for-changed-files@d85c64d17b3c1d0ac57c9cc46ea39399b0d6fa71 # v1.2.2
         with:
+          token: ${{ github.token }}
           prereq-pattern: 'package-lock.json'
           file-pattern: 'package.json'
           skip-label: 'skip package*.json'
@@ -35,6 +38,7 @@ jobs:
       - name: 'Tests'
         uses: brettcannon/check-for-changed-files@d85c64d17b3c1d0ac57c9cc46ea39399b0d6fa71 # v1.2.2
         with:
+          token: ${{ github.token }}
           prereq-pattern: src/**/*.ts
           file-pattern: |
             src/**/*.test.ts

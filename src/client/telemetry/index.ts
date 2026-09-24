@@ -358,7 +358,8 @@ export interface IEventNamePropertyMapping {
           "totalnonblockingactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "usinguserdefinedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "usingglobalinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
-          "isfirstsession" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
+          "isfirstsession" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "usingenvironmentsextension" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eduardovil" }
        }
      */
     [EventName.EDITOR_LOAD]: {

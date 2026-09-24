@@ -26,6 +26,7 @@ line-length = 100
 target-version = "py38"
 exclude = [
     "**/.data",
+    "get-pip.py",
     "lib",
 ]
 
