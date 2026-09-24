@@ -283,12 +283,8 @@ jobs:
         shell: pwsh
         if: matrix.test-suite == 'venv'
         run: |
-          Write-Output '.venv before pipenv:'
-          Get-Item -Force .venv -ErrorAction SilentlyContinue | Format-List FullName,Mode,LinkType,Target,Length
           python -m pip install pipenv
           python -m pipenv run python ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} pipenvPath
-          Write-Output '.venv after pipenv:'
-          Get-Item -Force .venv -ErrorAction SilentlyContinue | Format-List FullName,Mode,LinkType,Target,Length
 
       - name: Prepare poetry for venv tests
         env:
@@ -299,8 +295,6 @@ jobs:
           python -m pip install poetry
           Move-Item -Path ".\build\ci\pyproject.toml" -Destination .
           poetry env use python
-          Write-Output '.venv after poetry:'
-          Get-Item -Force .venv -ErrorAction SilentlyContinue | Format-List FullName,Mode,LinkType,Target,Length
 
       - name: Prepare virtualenv for venv tests
         env:
@@ -324,8 +318,6 @@ jobs:
         shell: pwsh
         if: matrix.test-suite == 'venv' && startsWith(matrix.python, 3.)
         run: |
-          Write-Output '.venv before venv creation:'
-          Get-Item -Force .venv -ErrorAction SilentlyContinue | Format-List FullName,Mode,LinkType,Target,Length
           python -m venv .venv
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if ('${{ matrix.os }}' -match 'windows-latest') {
@@ -574,12 +566,8 @@ jobs:
           PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
         shell: pwsh
         run: |
-          Write-Output '.venv before pipenv:'
-          Get-Item -Force .venv -ErrorAction SilentlyContinue | Format-List FullName,Mode,LinkType,Target,Length
           python -m pip install pipenv
           python -m pipenv run python ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} pipenvPath
-          Write-Output '.venv after pipenv:'
-          Get-Item -Force .venv -ErrorAction SilentlyContinue | Format-List FullName,Mode,LinkType,Target,Length
 
       - name: Prepare poetry for venv tests
         env:
@@ -589,8 +577,6 @@ jobs:
           python -m pip install poetry
           Move-Item -Path ".\build\ci\pyproject.toml" -Destination .
           poetry env use python
-          Write-Output '.venv after poetry:'
-          Get-Item -Force .venv -ErrorAction SilentlyContinue | Format-List FullName,Mode,LinkType,Target,Length
 
       - name: Prepare virtualenv for venv tests
         env:
@@ -612,8 +598,6 @@ jobs:
           PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
         shell: pwsh
         run: |
-          Write-Output '.venv before venv creation:'
-          Get-Item -Force .venv -ErrorAction SilentlyContinue | Format-List FullName,Mode,LinkType,Target,Length
           python -m venv .venv
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if ('${{ matrix.os }}' -match 'windows-latest') {
