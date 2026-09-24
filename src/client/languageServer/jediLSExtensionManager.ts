@@ -47,7 +47,10 @@ export class JediLSExtensionManager implements IDisposable, ILanguageServerExten
             configurationService,
             workspaceService,
         );
-        this.clientFactory = new JediLanguageClientFactory(interpreterService);
+        this.clientFactory = new JediLanguageClientFactory(
+            interpreterService,
+            workspaceService.getConfiguration('python'),
+        );
         this.serverProxy = new JediLanguageServerProxy(this.clientFactory);
         this.serverManager = new JediLanguageServerManager(
             serviceContainer,
