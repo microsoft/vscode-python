@@ -42,6 +42,19 @@ export function initialize() {
     generateMock('scm');
     generateMock('notebooks');
 
+    // Notebook output helpers used by REPL tests.
+    (mockedVSCode as any).NotebookCellOutputItem = {
+        stdout: (value: string) => ({ mime: 'application/vnd.code.notebook.stdout', data: Buffer.from(value) }),
+    };
+    (mockedVSCode as any).NotebookCellOutput = class {
+        public items: any[];
+        public metadata?: any;
+        constructor(items: any[], metadata?: any) {
+            this.items = items;
+            this.metadata = metadata;
+        }
+    };
+
     // Use mock clipboard fo testing purposes.
     const clipboard = new MockClipboard();
     when(mockedVSCodeNamespaces.env!.clipboard).thenReturn(clipboard);
