@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+import importlib.util
 import os
 import pathlib
 import sys
@@ -18,9 +19,43 @@ sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
 
-def run_pytest(args):
+class CoverageSavePlugin:
+    """Stop and save coverage before the VS Code plugin reports it."""
+
+    def __init__(self, cov):
+        self._coverage = cov
+
+    @pytest.hookimpl(tryfirst=True)
+    def pytest_sessionfinish(self, session, exitstatus):  # noqa: ARG002
+        self._coverage.stop()
+        self._coverage.save()
+
+
+def has_coverage_arg(args):
+    return any(arg == "--cov" or "--cov=" in arg for arg in args)
+
+
+def configure_coverage(args):
+    """Configure coverage for a VS Code coverage run."""
+    if os.environ.get("COVERAGE_ENABLED") != "True" or has_coverage_arg(args):
+        return args, None
+
+    if importlib.util.find_spec("pytest_cov") is not None:
+        return [*args, "--cov=.", "--cov-branch"], None
+
+    import coverage
+
+    cov = coverage.Coverage(branch=True)
+    cov.start()
+    return args, CoverageSavePlugin(cov)
+
+
+def run_pytest(args, test_ids=None, coverage_plugin=None):
     arg_array = ["-p", "vscode_pytest", *args]
-    pytest.main(arg_array)
+    if test_ids:
+        arg_array.extend(test_ids)
+    plugins = [coverage_plugin] if coverage_plugin else None
+    pytest.main(arg_array, plugins=plugins)
 
 
 # This script handles running pytest via pytest.main(). It is called via run in the
@@ -35,19 +70,7 @@ if __name__ == "__main__":
     # Get the rest of the args to run with pytest.
     args = sys.argv[1:]
 
-    # Check if coverage is enabled and adjust the args accordingly.
-    is_coverage_run = os.environ.get("COVERAGE_ENABLED")
-    coverage_enabled = False
-    if is_coverage_run == "True":
-        # If coverage is enabled, check if the coverage plugin is already in the args, if so keep user args.
-        for arg in args:
-            # if '--cov' is an arg or if '--cov=' is in an arg (check to see if this arg is set to not override user intent)
-            if arg == "--cov" or "--cov=" in arg:
-                print("coverage already enabled with specific args")
-                coverage_enabled = True
-                break
-        if not coverage_enabled:
-            args = [*args, "--cov=.", "--cov-branch"]
+    args, coverage_plugin = configure_coverage(args)
 
     run_test_ids_pipe = os.environ.get("RUN_TEST_IDS_PIPE")
     if run_test_ids_pipe:
@@ -57,11 +80,10 @@ if __name__ == "__main__":
             ids = ids_path.read_text(encoding="utf-8").splitlines()
         except Exception as e:
             print("Error[vscode-pytest]: unable to read testIds from temp file" + str(e))
-            run_pytest(args)
+            run_pytest(args, coverage_plugin=coverage_plugin)
         else:
-            arg_array = ["-p", "vscode_pytest", *args, *ids]
-            print("Running pytest with args: " + str(arg_array))
-            pytest.main(arg_array)
+            print("Running pytest with args: " + str(["-p", "vscode_pytest", *args, *ids]))
+            run_pytest(args, ids, coverage_plugin)
         finally:
             # Delete the test ids temp file.
             try:
@@ -70,4 +92,4 @@ if __name__ == "__main__":
                 print("Error[vscode-pytest]: unable to delete temp file" + str(e))
     else:
         print("Error[vscode-pytest]: RUN_TEST_IDS_PIPE env var is not set.")
-        run_pytest(args)
+        run_pytest(args, coverage_plugin=coverage_plugin)
