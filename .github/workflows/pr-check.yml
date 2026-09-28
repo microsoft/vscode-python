@@ -304,7 +304,7 @@ jobs:
         if: matrix.test-suite == 'venv'
         run: |
           python -m pip install virtualenv
-          python -m virtualenv .virtualenv/
+          python -m virtualenv --no-venv-redirect .virtualenv/
           if ('${{ matrix.os }}' -match 'windows-latest') {
             & ".virtualenv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} virtualEnvPath
           } else {
@@ -319,10 +319,11 @@ jobs:
         if: matrix.test-suite == 'venv' && startsWith(matrix.python, 3.)
         run: |
           python -m venv .venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if ('${{ matrix.os }}' -match 'windows-latest') {
-            & ".venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
+            & "./.venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           } else {
-            & ".venv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
+            & "./.venv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           }
 
       - name: Prepare conda for venv tests
@@ -584,7 +585,7 @@ jobs:
         shell: pwsh
         run: |
           python -m pip install virtualenv
-          python -m virtualenv .virtualenv/
+          python -m virtualenv --no-venv-redirect .virtualenv/
           if ('${{ matrix.os }}' -match 'windows-latest') {
             & ".virtualenv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} virtualEnvPath
           } else {
@@ -598,10 +599,11 @@ jobs:
         shell: pwsh
         run: |
           python -m venv .venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if ('${{ matrix.os }}' -match 'windows-latest') {
-            & ".venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
+            & "./.venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           } else {
-            & ".venv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
+            & "./.venv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           }
 
       - name: Prepare conda for venv tests
