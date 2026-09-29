@@ -13,7 +13,7 @@ import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { TensorBoardPromptSelection } from '../tensorBoard/constants';
 import { EventName } from './constants';
 import type { UnitTestRunFailureCategory } from './constants';
-import type { TestTool } from './types';
+import type { EnvsExplicitFalseScope, TestTool } from './types';
 
 /**
  * Checks whether telemetry is supported.
@@ -359,7 +359,8 @@ export interface IEventNamePropertyMapping {
           "usinguserdefinedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "usingglobalinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "isfirstsession" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
-          "usingenvironmentsextension" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eduardovil" }
+          "usingenvironmentsextension" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eduardovil" },
+          "envsexplicitfalsescope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
        }
      */
     [EventName.EDITOR_LOAD]: {
@@ -410,6 +411,23 @@ export interface IEventNamePropertyMapping {
          * If user has enabled the Python Environments extension integration
          */
         usingEnvironmentsExtension?: boolean;
+        /**
+         * Scope kinds explicitly setting python.useEnvironmentsExtension to false, even if overridden.
+         * 'none' excludes defaults; 'multiple' means more than one of user, workspace, or folder.
+         */
+        envsExplicitFalseScope?: EnvsExplicitFalseScope;
+    };
+    /**
+     * Reports explicit-false scopes after a python.useEnvironmentsExtension configuration change.
+     * This is a configuration notification, not proof of user intent or a changed integration decision.
+     */
+    /* __GDPR__
+       "environments_extension.setting_changed" : {
+          "envsexplicitfalsescope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
+       }
+     */
+    [EventName.ENVIRONMENTS_EXTENSION_SETTING_CHANGED]: {
+        envsExplicitFalseScope: EnvsExplicitFalseScope;
     };
     /**
      * Telemetry event sent when substituting Environment variables to calculate value of variables
