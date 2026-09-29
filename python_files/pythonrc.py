@@ -119,9 +119,6 @@ def _initialize():
         def __repr__(self):
             return "<Custom PS1 for VS Code Python Shell Integration>"
 
-    # if sys.platform != "win32" and (not is_wsl):
-    #     sys.ps1 = PS1()
-
     sys.ps1 = PS1()
 
     ctrl_key = "Cmd" if sys.platform == "darwin" else "Ctrl"
