@@ -13,7 +13,7 @@ def _initialize():
             r"\x1b(?:\[[ -@]*[A-~]|\][^\x1b\x07]*(?:\x07|\x1b\\))"
         )
 
-    original_ps1 = getattr(sys, "ps1", ">>> ")
+    original_ps1 = ">>> "
     # PYTHONSTARTUP executes this file's code inside the user's __main__
     # namespace, so PS1.__str__'s globals are the user's globals. If the
     # user later shadows a name we rely on at prompt-render time (e.g.

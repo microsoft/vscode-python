@@ -13,7 +13,7 @@ PYTHONRC_PATH = Path(pythonrc.__file__)
 
 
 class _Hooks(Protocol):
-    failure_flag: bool
+    last_failure_flag: bool
 
 
 class _PS1(Protocol):
@@ -24,7 +24,7 @@ def test_decoration_success():
     importlib.reload(pythonrc)
     if sys.platform != "win32" and (not is_wsl):
         ps1 = cast("_PS1", sys.ps1)
-        ps1.hooks.failure_flag = False
+        ps1.hooks.last_failure_flag = False
         result = str(ps1)
         assert (
             result
@@ -36,7 +36,7 @@ def test_decoration_failure():
     importlib.reload(pythonrc)
     if sys.platform != "win32" and (not is_wsl):
         ps1 = cast("_PS1", sys.ps1)
-        ps1.hooks.failure_flag = True
+        ps1.hooks.last_failure_flag = True
         result = str(ps1)
         assert (
             result
