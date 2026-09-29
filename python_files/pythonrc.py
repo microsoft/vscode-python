@@ -1,15 +1,16 @@
 def _initialize():
     import re
     import sys
-    import _pyrepl.utils
 
     if sys.platform != "win32":
         import readline
 
-    # Override regex to support OSC codes
-    _pyrepl.utils.ANSI_ESCAPE_SEQUENCE = re.compile(
-        r"\x1b(?:\[[ -@]*[A-~]|\][^\x1b\x07]*(?:\x07|\x1b\\))"
-    )
+    # Override regex to support OSC codes (if >= 3.13)
+    if sys.version_info.major >= 3 and sys.version_info.minor >= 3.13:
+        import _pyrepl
+        _pyrepl.utils.ANSI_ESCAPE_SEQUENCE = re.compile(
+            r"\x1b(?:\[[ -@]*[A-~]|\][^\x1b\x07]*(?:\x07|\x1b\\))"
+        )
 
     original_ps1 = getattr(sys, "ps1", ">>> ")
     # PYTHONSTARTUP executes this file's code inside the user's __main__
