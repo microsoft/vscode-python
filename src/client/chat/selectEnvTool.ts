@@ -24,6 +24,7 @@ import {
     doesWorkspaceHaveVenvOrCondaEnv,
     getEnvDetailsForResponse,
     getToolResponseIfNotebook,
+    hasPythonToolsApi,
     IResourceReference,
     raceCancellationError,
 } from './utils';
@@ -38,6 +39,7 @@ import { showQuickPick } from '../common/vscodeApis/windowApis';
 import { DisposableStore } from '../common/utils/resourceLifecycle';
 import { traceError, traceVerbose, traceWarn } from '../logging';
 import { BaseTool } from './baseTool';
+import { useEnvExtension } from '../envExt/api.internal';
 
 export interface ISelectPythonEnvToolArguments extends IResourceReference {
     reason?: 'cancelled';
@@ -65,6 +67,13 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
         resource: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
+        if (await hasPythonToolsApi(token)) {
+            return new LanguageModelToolResult([
+                new LanguageModelTextPart(
+                    l10n.t('Use configure_python_environment with this version of Python Environments.'),
+                ),
+            ]);
+        }
         let selected: boolean | undefined = false;
         const hasVenvOrCondaEnvInWorkspaceFolder = doesWorkspaceHaveVenvOrCondaEnv(resource, this.api);
         if (options.input.reason === 'cancelled' || hasVenvOrCondaEnvInWorkspaceFolder) {
@@ -73,6 +82,7 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
                     commands.executeCommand(Commands.Set_Interpreter, {
                         hideCreateVenv: false,
                         showBackButton: false,
+                        ...(useEnvExtension() ? { resource } : {}),
                     }),
                 ) as Promise<SelectEnvironmentResult | undefined>,
                 token,
@@ -122,8 +132,11 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
     async prepareInvocationImpl(
         options: LanguageModelToolInvocationPrepareOptions<ISelectPythonEnvToolArguments>,
         resource: Uri | undefined,
-        _token: CancellationToken,
+        token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
+        if (await hasPythonToolsApi(token)) {
+            return {};
+        }
         if (getToolResponseIfNotebook(resource)) {
             return {};
         }
@@ -215,7 +228,11 @@ async function showCreateAndSelectEnvironmentQuickPick(
     }
     if (selectedItem && !Array.isArray(selectedItem) && selectedItem.label === selectLabel) {
         const result = (await Promise.resolve(
-            commands.executeCommand(Commands.Set_Interpreter, { hideCreateVenv: true, showBackButton: true }),
+            commands.executeCommand(Commands.Set_Interpreter, {
+                hideCreateVenv: true,
+                showBackButton: true,
+                ...(useEnvExtension() ? { resource: uri } : {}),
+            }),
         )) as SelectEnvironmentResult | undefined;
         if (result?.action === 'Back') {
             return showCreateAndSelectEnvironmentQuickPick(uri, serviceContainer, token);

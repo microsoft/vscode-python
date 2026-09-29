@@ -41,6 +41,7 @@ export function initialize() {
     generateMock('debug');
     generateMock('scm');
     generateMock('notebooks');
+    generateMock('lm');
     (mockedVSCode.commands as any).executeCommand = () => Promise.resolve(undefined);
     (mockedVSCode.notebooks as any).createNotebookController = () => {
         throw new Error('createNotebookController must be stubbed in tests that use it.');
