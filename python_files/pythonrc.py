@@ -1,13 +1,14 @@
 def _initialize():
-    import re
     import sys
 
     if sys.platform != "win32":
         import readline
 
-    # Override regex to support OSC codes (if >= 3.13)
-    if sys.version_info.major >= 3 and sys.version_info.minor >= 3.13:
-        import _pyrepl
+    # Override regex to support OSC codes
+    if sys.version_info >= (3, 13):
+        import re
+        import _pyrepl.utils
+
         _pyrepl.utils.ANSI_ESCAPE_SEQUENCE = re.compile(
             r"\x1b(?:\[[ -@]*[A-~]|\][^\x1b\x07]*(?:\x07|\x1b\\))"
         )
