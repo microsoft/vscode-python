@@ -8,6 +8,8 @@ import { EventName } from './constants';
 
 export type EditorLoadTelemetry = IEventNamePropertyMapping[EventName.EDITOR_LOAD];
 
+export type EnvsExplicitFalseScope = 'none' | 'user' | 'workspace' | 'folder' | 'multiple';
+
 export type PythonInterpreterTelemetry = IEventNamePropertyMapping[EventName.PYTHON_INTERPRETER];
 export type TestTool = 'pytest' | 'unittest';
 export type TestRunTelemetry = IEventNamePropertyMapping[EventName.UNITTEST_RUN];
