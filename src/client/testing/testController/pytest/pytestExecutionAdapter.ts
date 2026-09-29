@@ -76,8 +76,10 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 project,
             );
         } finally {
+            cSource.cancel();
             await utils.awaitDeferredWithTimeout(deferredTillServerClose, utils.RESULT_PIPE_DRAIN_TIMEOUT_MS);
             resultPipe.dispose();
+            cSource.dispose();
         }
     }
 

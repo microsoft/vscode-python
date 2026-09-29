@@ -154,7 +154,7 @@ class CombinedReader implements rpc.MessageReader {
 }
 
 // A net.Socket does not surface EOF for a nonblocking FIFO descriptor, so read
-// the descriptor directly and close after observing its writer disconnect.
+// the descriptor directly and close after EOF or owner-signaled completion.
 class FifoMessageReader extends rpc.AbstractMessageReader {
     private readonly stream = new PassThrough();
 
@@ -196,7 +196,9 @@ class FifoMessageReader extends rpc.AbstractMessageReader {
                 const { bytesRead } = await fs.read(this.fd, this.buffer, 0, this.buffer.length, null);
                 if (bytesRead > 0) {
                     this.hasReadData = true;
-                    this.stream.write(Buffer.from(this.buffer.subarray(0, bytesRead)));
+                    if (!this.stream.write(Buffer.from(this.buffer.subarray(0, bytesRead)))) {
+                        await this.waitForDrain();
+                    }
                     continue;
                 }
 
@@ -220,6 +222,18 @@ class FifoMessageReader extends rpc.AbstractMessageReader {
                 setTimeout(resolve, FIFO_READ_RETRY_DELAY_MS);
             });
         }
+    }
+
+    private waitForDrain(): Promise<void> {
+        return new Promise((resolve) => {
+            const finish = () => {
+                this.stream.off('drain', finish);
+                this.stream.off('close', finish);
+                resolve();
+            };
+            this.stream.once('drain', finish);
+            this.stream.once('close', finish);
+        });
     }
 
     private isRetryableReadError(error: unknown): boolean {
