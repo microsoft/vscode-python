@@ -7,6 +7,7 @@ def _initialize():
     # Override regex to support OSC codes
     if sys.version_info >= (3, 13):
         import re
+
         import _pyrepl.utils
 
         _pyrepl.utils.ANSI_ESCAPE_SEQUENCE = re.compile(
