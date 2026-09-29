@@ -27,6 +27,7 @@ def _initialize():
     # user code to reassign and break in the first place.
     _int = int
     _bool = bool
+    _str = str
 
     # https://code.visualstudio.com/docs/terminal/shell-integration#_supported-escape-sequences
     class ShellIntegrationSequence:
