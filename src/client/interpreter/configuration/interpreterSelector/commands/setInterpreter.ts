@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import {
+    ConfigurationTarget,
     l10n,
     QuickInputButton,
     QuickInputButtons,
@@ -566,15 +567,22 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         return Promise.resolve();
     }
 
-    /**
-     * @returns true when an interpreter was set, undefined if the user cancelled the quickpick.
-     */
+    /** Selects within the supplied resource's workspace, or prompts for a target when omitted. */
     @captureTelemetry(EventName.SELECT_INTERPRETER)
     public async setInterpreter(options?: {
         hideCreateVenv?: boolean;
         showBackButton?: boolean;
+        resource?: Resource;
     }): Promise<SelectEnvironmentResult | undefined> {
-        const targetConfig = await this.getConfigTargets();
+        const folder = options?.resource ? this.workspaceService.getWorkspaceFolder(options.resource) : undefined;
+        if (options?.resource && !folder) {
+            throw new Error(
+                l10n.t('Open the requested resource in a workspace folder before selecting an interpreter.'),
+            );
+        }
+        const targetConfig = folder
+            ? [{ folderUri: folder.uri, configTarget: ConfigurationTarget.WorkspaceFolder }]
+            : await this.getConfigTargets();
         if (!targetConfig) {
             return;
         }

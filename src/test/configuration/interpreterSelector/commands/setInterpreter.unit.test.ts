@@ -27,6 +27,7 @@ import {
     IMultiStepInputFactory,
     InputStep,
     IQuickPickParameters,
+    MultiStepInput,
 } from '../../../../client/common/utils/multiStepInput';
 import {
     EnvGroups,
@@ -49,6 +50,7 @@ import { createDeferred, sleep } from '../../../../client/common/utils/async';
 import { SystemVariables } from '../../../../client/common/variables/systemVariables';
 import { untildify } from '../../../../client/common/helpers';
 import * as extapi from '../../../../client/envExt/api.internal';
+import * as legacyApi from '../../../../client/envExt/api.legacy';
 
 type TelemetryEventType = { eventName: EventName; properties: unknown };
 
@@ -1239,6 +1241,91 @@ suite('Set Interpreter Command', () => {
     });
 
     suite('Test method setInterpreter()', async () => {
+        for (const options of [undefined, { hideCreateVenv: true, showBackButton: true }, { resource: undefined }]) {
+            test(`Human Environments selection retains folder and interpreter pickers with options ${JSON.stringify(
+                options,
+            )}`, async () => {
+                useEnvExtensionStub.returns(true);
+                const setEnvironment = sinon.stub(legacyApi, 'setInterpreterLegacy').resolves();
+                const privateApi = sinon.stub(extapi, 'getPythonToolsApi').rejects(new Error('Unexpected agent route'));
+                const first = { name: 'first', uri: Uri.file(path.resolve('first')), index: 0 };
+                const second = { name: 'second', uri: Uri.file(path.resolve('second')), index: 1 };
+                const python = path.join(second.uri.fsPath, 'global-python');
+                workspace.setup((w) => w.workspaceFolders).returns(() => [first, second]);
+                pythonSettings.setup((p) => p.pythonPath).returns(() => 'python');
+                appShell
+                    .setup((s) => s.showQuickPick<QuickPickItem>(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve({ label: second.name, uri: second.uri }))
+                    .verifiable(TypeMoq.Times.once());
+                const pickInterpreter = sinon
+                    .stub(setInterpreterCommand, '_pickInterpreter')
+                    .callsFake(async (_, state) => {
+                        assert.strictEqual(state.workspace, second.uri);
+                        state.path = python;
+                    });
+                const input = {
+                    run: async (start: InputStep<InterpreterStateArgs>, state: InterpreterStateArgs) => {
+                        await start(input as MultiStepInput<InterpreterStateArgs>, state);
+                    },
+                };
+                multiStepInputFactory.setup((f) => f.create()).returns(() => input as IMultiStepInput<unknown>);
+                pythonPathUpdater
+                    .setup((p) => p.updatePythonPath(python, ConfigurationTarget.WorkspaceFolder, 'ui', second.uri))
+                    .returns(() => Promise.resolve())
+                    .verifiable(TypeMoq.Times.once());
+
+                assert.deepStrictEqual(await setInterpreterCommand.setInterpreter(options), { path: python });
+
+                appShell.verifyAll();
+                pythonPathUpdater.verifyAll();
+                sinon.assert.calledOnce(pickInterpreter);
+                assert.deepStrictEqual(pickInterpreter.firstCall.args[3], {
+                    showCreateEnvironment: !options?.hideCreateVenv,
+                    showBackButton: options?.showBackButton,
+                });
+                sinon.assert.calledOnceWithExactly(setEnvironment, python, second.uri);
+                sinon.assert.notCalled(privateApi);
+            });
+        }
+
+        test('An explicit resource selects only its workspace without the folder picker', async () => {
+            const first = { name: 'first', uri: Uri.file(path.resolve('first')), index: 0 };
+            const second = { name: 'second', uri: Uri.file(path.resolve('second')), index: 1 };
+            const resource = Uri.file(path.join(second.uri.fsPath, 'main.py'));
+            const python = path.join(second.uri.fsPath, '.venv', 'python');
+            workspace.setup((w) => w.workspaceFolders).returns(() => [first, second]);
+            workspace.setup((w) => w.getWorkspaceFolder(resource)).returns(() => second);
+            const multiStepInput = {
+                run: (_: unknown, state: InterpreterStateArgs) => {
+                    assert.strictEqual(state.workspace, second.uri);
+                    state.path = python;
+                    return Promise.resolve();
+                },
+            };
+            multiStepInputFactory.setup((f) => f.create()).returns(() => multiStepInput as IMultiStepInput<unknown>);
+            pythonPathUpdater
+                .setup((p) => p.updatePythonPath(python, ConfigurationTarget.WorkspaceFolder, 'ui', second.uri))
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.once());
+
+            assert.deepStrictEqual(await setInterpreterCommand.setInterpreter({ resource }), { path: python });
+            pythonPathUpdater.verifyAll();
+            appShell.verify((s) => s.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+        });
+
+        test('An explicit resource outside the workspace does not fall back to a folder picker', async () => {
+            const resource = Uri.file(path.resolve('outside'));
+            workspace.setup((w) => w.getWorkspaceFolder(resource)).returns(() => undefined);
+
+            await assert.rejects(setInterpreterCommand.setInterpreter({ resource }), /workspace folder/);
+            appShell.verify((s) => s.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+            pythonPathUpdater.verify(
+                (p) =>
+                    p.updatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                TypeMoq.Times.never(),
+            );
+        });
+
         test('Update Global settings when there are no workspaces', async () => {
             pythonSettings.setup((p) => p.pythonPath).returns(() => 'python');
             const selectedItem: IInterpreterQuickPickItem = {
