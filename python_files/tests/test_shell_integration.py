@@ -157,7 +157,7 @@ if sys.platform == "darwin":
             )
 
 
-if sys.platform == "win32":
+if sys.platform != "darwin":
 
     def test_print_statement_non_darwin(monkeypatch):
         importlib.reload(pythonrc)

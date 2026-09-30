@@ -48,6 +48,7 @@ import { registerTriggerForTerminalREPL } from './terminals/codeExecution/termin
 import { registerPythonStartup } from './terminals/pythonStartup';
 import { registerPixiFeatures } from './pythonEnvironments/common/environmentManagers/pixi';
 import { registerCustomTerminalLinkProvider } from './terminals/pythonStartupLinkProvider';
+import { registerEnvironmentsExtensionTelemetry } from './envExt/telemetry';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -84,6 +85,7 @@ export async function activateComponents(
 }
 
 export function activateFeatures(ext: ExtensionState, _components: Components): void {
+    registerEnvironmentsExtensionTelemetry(ext.disposables);
     const interpreterQuickPick: IInterpreterQuickPick = ext.legacyIOC.serviceContainer.get<IInterpreterQuickPick>(
         IInterpreterQuickPick,
     );
