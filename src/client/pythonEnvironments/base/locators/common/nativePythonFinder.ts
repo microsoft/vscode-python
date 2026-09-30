@@ -120,7 +120,6 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
             ? getGlobalStorage<boolean>(this.context, DONT_SHOW_SPAWN_ERROR_AGAIN, false)
             : ({ get: () => false, set: async () => {} } as IPersistentStorage<boolean>);
         this.connection = this.start();
-        void this.configure();
         this.firstRefreshResults = this.refreshFirstTime();
     }
 
