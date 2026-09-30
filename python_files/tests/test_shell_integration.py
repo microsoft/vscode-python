@@ -5,8 +5,6 @@ from pathlib import Path
 from typing import Any, Protocol, cast
 from unittest.mock import Mock
 
-import pytest
-
 import pythonrc
 
 is_wsl = "microsoft-standard-WSL" in platform.release()
@@ -37,18 +35,22 @@ def _expected_prompt(exit_code: int) -> str:
     )
 
 
-@pytest.mark.skipif(not prompt_is_installed, reason="Shell integration prompt is not installed")
 def test_decoration_success():
     importlib.reload(pythonrc)
+    if not prompt_is_installed:
+        return
+
     ps1 = cast("_PS1", sys.ps1)
     ps1.hooks.last_failure_flag = False
 
     assert str(ps1) == _expected_prompt(0)
 
 
-@pytest.mark.skipif(not prompt_is_installed, reason="Shell integration prompt is not installed")
 def test_decoration_failure():
     importlib.reload(pythonrc)
+    if not prompt_is_installed:
+        return
+
     ps1 = cast("_PS1", sys.ps1)
     ps1.hooks.last_failure_flag = True
 
@@ -84,8 +86,10 @@ def test_does_not_pollute_namespace():
     assert not [name for name in vars(pythonrc) if not name.startswith("__")]
 
 
-@pytest.mark.skipif(sys.version_info < (3, 13), reason="_pyrepl requires Python 3.13+")
 def test_replacement_regex_removes_bel_terminated_osc():
+    if sys.version_info < (3, 13):
+        return
+
     pyrepl_utils = importlib.import_module("_pyrepl.utils")
     importlib.reload(pythonrc)
 
@@ -94,8 +98,10 @@ def test_replacement_regex_removes_bel_terminated_osc():
     )
 
 
-@pytest.mark.skipif(sys.version_info < (3, 13), reason="_pyrepl requires Python 3.13+")
 def test_replacement_regex_removes_st_terminated_osc():
+    if sys.version_info < (3, 13):
+        return
+
     pyrepl_utils = importlib.import_module("_pyrepl.utils")
     importlib.reload(pythonrc)
 
@@ -104,8 +110,10 @@ def test_replacement_regex_removes_st_terminated_osc():
     )
 
 
-@pytest.mark.skipif(sys.version_info < (3, 13), reason="_pyrepl requires Python 3.13+")
 def test_replacement_regex_preserves_csi_handling():
+    if sys.version_info < (3, 13):
+        return
+
     pyrepl_utils = importlib.import_module("_pyrepl.utils")
     importlib.reload(pythonrc)
 
@@ -114,7 +122,6 @@ def test_replacement_regex_preserves_csi_handling():
     )
 
 
-@pytest.mark.skipif(not prompt_is_installed, reason="Shell integration prompt is not installed")
 def test_prompt_survives_shadowed_builtins_under_pythonstartup():
     # PYTHONSTARTUP executes pythonrc's source directly inside the real
     # REPL's __main__ namespace, not as an imported module. The tests
@@ -123,6 +130,9 @@ def test_prompt_survives_shadowed_builtins_under_pythonstartup():
     # the real PYTHONSTARTUP path by exec-ing the source into a synthetic
     # __main__-like namespace, then shadow the names PS1 relies on at
     # prompt-render time and confirm rendering the prompt still works.
+    if not prompt_is_installed:
+        return
+
     source = PYTHONRC_PATH.read_text(encoding="utf-8")
     namespace: dict[str, Any] = {"__name__": "__main__"}
     exec(compile(source, str(PYTHONRC_PATH), "exec"), namespace)
