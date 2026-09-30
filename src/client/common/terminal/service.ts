@@ -90,7 +90,7 @@ export class TerminalService implements ITerminalService, Disposable {
     ): Promise<TerminalShellExecution | undefined> {
         if (isPythonShell) {
             if (this.isReplReady) {
-                this.terminal?.sendText(commandLine);
+                this.sendTextToPythonRepl(commandLine);
                 traceVerbose(`Python REPL sendText: ${commandLine}`);
             } else {
                 // Queue command to run once REPL is ready.
@@ -156,9 +156,16 @@ export class TerminalService implements ITerminalService, Disposable {
             const commandLine = this.pythonReplCommandQueue.shift();
             if (commandLine) {
                 traceVerbose(`Executing queued REPL command: ${commandLine}`);
-                this.terminal?.sendText(commandLine);
+                this.sendTextToPythonRepl(commandLine);
             }
         }
+    }
+
+    // PyREPL-only: wrap the code in bracketed-paste markers so the PyREPL
+    // preserves the code's existing whitespace, then submit with Enter AFTER
+    // leaving bracketed-paste mode.
+    private sendTextToPythonRepl(commandLine: string): void {
+        this.terminal?.sendText(`\x1b[200~${commandLine}\x1b[201~`);
     }
 
     private async executeCommandInternal(commandLine: string): Promise<TerminalShellExecution | undefined> {
