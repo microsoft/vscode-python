@@ -1,8 +1,5 @@
-from sys import platform
-import sys
-
-
 def _initialize():
+    import platform
     import sys
 
     if sys.platform != "win32":
