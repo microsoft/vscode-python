@@ -8,40 +8,48 @@ from unittest.mock import Mock
 import pythonrc
 
 is_wsl = "microsoft-standard-WSL" in platform.release()
+prompt_is_installed = not is_wsl and (sys.platform != "win32" or sys.version_info >= (3, 13))
 
 PYTHONRC_PATH = Path(pythonrc.__file__)
 
 
 class _Hooks(Protocol):
-    failure_flag: bool
+    last_failure_flag: bool
 
 
 class _PS1(Protocol):
     hooks: _Hooks
 
 
+def _expected_prompt(exit_code: int) -> str:
+    if sys.platform == "win32":
+        return f"\x1b]633;D;{exit_code}\x07\x1b]633;A\x07>>> \x1b]633;B\x07\x1b]633;C\x07"
+    return (
+        "\x01\x1b]633;C\x07\x1b]633;E;None\x07"
+        f"\x1b]633;D;{exit_code}\x07\x1b]633;A\x07\x02>>> \x01\x1b]633;B\x07\x02"
+    )
+
+
 def test_decoration_success():
     importlib.reload(pythonrc)
-    if sys.platform != "win32" and (not is_wsl):
-        ps1 = cast("_PS1", sys.ps1)
-        ps1.hooks.failure_flag = False
-        result = str(ps1)
-        assert (
-            result
-            == "\x01\x1b]633;C\x07\x1b]633;E;None\x07\x1b]633;D;0\x07\x1b]633;A\x07\x02>>> \x01\x1b]633;B\x07\x02"
-        )
+    if not prompt_is_installed:
+        return
+
+    ps1 = cast("_PS1", sys.ps1)
+    ps1.hooks.last_failure_flag = False
+
+    assert str(ps1) == _expected_prompt(0)
 
 
 def test_decoration_failure():
     importlib.reload(pythonrc)
-    if sys.platform != "win32" and (not is_wsl):
-        ps1 = cast("_PS1", sys.ps1)
-        ps1.hooks.failure_flag = True
-        result = str(ps1)
-        assert (
-            result
-            == "\x01\x1b]633;C\x07\x1b]633;E;None\x07\x1b]633;D;1\x07\x1b]633;A\x07\x02>>> \x01\x1b]633;B\x07\x02"
-        )
+    if not prompt_is_installed:
+        return
+
+    ps1 = cast("_PS1", sys.ps1)
+    ps1.hooks.last_failure_flag = True
+
+    assert str(ps1) == _expected_prompt(1)
 
 
 def test_displayhook_call():
@@ -73,6 +81,40 @@ def test_does_not_pollute_namespace():
     assert not [name for name in vars(pythonrc) if not name.startswith("__")]
 
 
+def test_replacement_regex_removes_bel_terminated_osc():
+    if sys.version_info < (3, 13):
+        return
+
+    pyrepl_utils = importlib.import_module("_pyrepl.utils")
+    importlib.reload(pythonrc)
+
+    assert pyrepl_utils.ANSI_ESCAPE_SEQUENCE.sub("", "before\x1b]633;A\x07after") == ("beforeafter")
+
+
+def test_replacement_regex_removes_st_terminated_osc():
+    if sys.version_info < (3, 13):
+        return
+
+    pyrepl_utils = importlib.import_module("_pyrepl.utils")
+    importlib.reload(pythonrc)
+
+    assert pyrepl_utils.ANSI_ESCAPE_SEQUENCE.sub("", "before\x1b]633;A\x1b\\after") == (
+        "beforeafter"
+    )
+
+
+def test_replacement_regex_preserves_csi_handling():
+    if sys.version_info < (3, 13):
+        return
+
+    pyrepl_utils = importlib.import_module("_pyrepl.utils")
+    importlib.reload(pythonrc)
+
+    assert pyrepl_utils.ANSI_ESCAPE_SEQUENCE.sub("", "before\x1b[31mred\x1b[0mafter") == (
+        "beforeredafter"
+    )
+
+
 def test_prompt_survives_shadowed_builtins_under_pythonstartup():
     # PYTHONSTARTUP executes pythonrc's source directly inside the real
     # REPL's __main__ namespace, not as an imported module. The tests
@@ -81,7 +123,7 @@ def test_prompt_survives_shadowed_builtins_under_pythonstartup():
     # the real PYTHONSTARTUP path by exec-ing the source into a synthetic
     # __main__-like namespace, then shadow the names PS1 relies on at
     # prompt-render time and confirm rendering the prompt still works.
-    if sys.platform == "win32" or is_wsl:
+    if not prompt_is_installed:
         return
 
     source = PYTHONRC_PATH.read_text(encoding="utf-8")
@@ -100,11 +142,7 @@ def test_prompt_survives_shadowed_builtins_under_pythonstartup():
     )
 
     ps1 = cast("_PS1", sys.ps1)
-    result = str(ps1)
-    assert (
-        result
-        == "\x01\x1b]633;C\x07\x1b]633;E;None\x07\x1b]633;D;0\x07\x1b]633;A\x07\x02>>> \x01\x1b]633;B\x07\x02"
-    )
+    assert str(ps1) == _expected_prompt(0)
 
 
 if sys.platform == "darwin":
