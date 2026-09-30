@@ -8,9 +8,7 @@ from unittest.mock import Mock
 import pythonrc
 
 is_wsl = "microsoft-standard-WSL" in platform.release()
-prompt_is_installed = not is_wsl and (
-    sys.platform != "win32" or sys.version_info >= (3, 13)
-)
+prompt_is_installed = not is_wsl and (sys.platform != "win32" or sys.version_info >= (3, 13))
 
 PYTHONRC_PATH = Path(pythonrc.__file__)
 
@@ -25,10 +23,7 @@ class _PS1(Protocol):
 
 def _expected_prompt(exit_code: int) -> str:
     if sys.platform == "win32":
-        return (
-            f"\x1b]633;D;{exit_code}\x07\x1b]633;A\x07>>> "
-            "\x1b]633;B\x07\x1b]633;C\x07"
-        )
+        return f"\x1b]633;D;{exit_code}\x07\x1b]633;A\x07>>> \x1b]633;B\x07\x1b]633;C\x07"
     return (
         "\x01\x1b]633;C\x07\x1b]633;E;None\x07"
         f"\x1b]633;D;{exit_code}\x07\x1b]633;A\x07\x02>>> \x01\x1b]633;B\x07\x02"
@@ -93,9 +88,7 @@ def test_replacement_regex_removes_bel_terminated_osc():
     pyrepl_utils = importlib.import_module("_pyrepl.utils")
     importlib.reload(pythonrc)
 
-    assert pyrepl_utils.ANSI_ESCAPE_SEQUENCE.sub("", "before\x1b]633;A\x07after") == (
-        "beforeafter"
-    )
+    assert pyrepl_utils.ANSI_ESCAPE_SEQUENCE.sub("", "before\x1b]633;A\x07after") == ("beforeafter")
 
 
 def test_replacement_regex_removes_st_terminated_osc():
