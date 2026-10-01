@@ -90,7 +90,7 @@ export class TerminalService implements ITerminalService, Disposable {
     ): Promise<TerminalShellExecution | undefined> {
         if (isPythonShell) {
             if (this.isReplReady) {
-                await this.sendPythonShellCommand(commandLine);
+                this.sendPythonShellCommand(commandLine);
                 traceVerbose(`Python REPL sendText: ${commandLine}`);
             } else {
                 // Queue command to run once REPL is ready.
@@ -136,7 +136,7 @@ export class TerminalService implements ITerminalService, Disposable {
             return;
         }
         this.isReplReady = true;
-        void this.flushReplQueue();
+        this.flushReplQueue();
         this.disposeReplListener();
     }
 
@@ -151,18 +151,18 @@ export class TerminalService implements ITerminalService, Disposable {
         }
     }
 
-    private async flushReplQueue(): Promise<void> {
+    private flushReplQueue(): void {
         while (this.pythonReplCommandQueue.length > 0) {
             const commandLine = this.pythonReplCommandQueue.shift();
             if (commandLine) {
                 traceVerbose(`Executing queued REPL command: ${commandLine}`);
-                await this.sendPythonShellCommand(commandLine);
+                this.sendPythonShellCommand(commandLine);
             }
         }
     }
 
     // Send PyREPL's carriage-return binding for Enter separately from the bracketed-paste sequence.
-    private async sendPythonShellCommand(commandLine: string): Promise<void> {
+    private sendPythonShellCommand(commandLine: string): void {
         if (commandLine.startsWith('\u001b[200~') && commandLine.endsWith('\u001b[201~')) {
             this.terminal?.sendText(commandLine, false);
             this.terminal?.sendText('\r', false);
