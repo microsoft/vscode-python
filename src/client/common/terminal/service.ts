@@ -90,7 +90,7 @@ export class TerminalService implements ITerminalService, Disposable {
     ): Promise<TerminalShellExecution | undefined> {
         if (isPythonShell) {
             if (this.isReplReady) {
-                this.terminal?.sendText(commandLine);
+                this.terminal?.sendText(commandLine, true);
                 traceVerbose(`Python REPL sendText: ${commandLine}`);
             } else {
                 // Queue command to run once REPL is ready.
@@ -156,7 +156,7 @@ export class TerminalService implements ITerminalService, Disposable {
             const commandLine = this.pythonReplCommandQueue.shift();
             if (commandLine) {
                 traceVerbose(`Executing queued REPL command: ${commandLine}`);
-                this.terminal?.sendText(commandLine);
+                this.terminal?.sendText(commandLine, true);
             }
         }
     }
