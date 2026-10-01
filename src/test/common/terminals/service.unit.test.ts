@@ -40,8 +40,6 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('Terminal Service', () => {
-    const bracketedPaste = (text: string) => `\x1b[200~${text}\x1b[201~`;
-
     let service: TerminalService;
     let terminal: TypeMoq.IMock<VSCodeTerminal>;
     let terminalManager: TypeMoq.IMock<ITerminalManager>;
@@ -258,7 +256,7 @@ suite('Terminal Service', () => {
         await executePromise;
 
         terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
-        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(bracketedPaste(textToSend))), TypeMoq.Times.exactly(1));
+        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
     test('Ensure sendText is called when terminal.shellIntegration enabled but Python shell integration disabled', async () => {
@@ -281,7 +279,7 @@ suite('Terminal Service', () => {
         await executePromise;
 
         terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
-        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(bracketedPaste(textToSend))), TypeMoq.Times.exactly(1));
+        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
     test('Ensure sendText is called when Python shell integration and terminal shell integration are both enabled - Mac, Linux && Python < 3.13', async () => {
@@ -305,7 +303,7 @@ suite('Terminal Service', () => {
         await executePromise;
 
         terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
-        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(bracketedPaste(textToSend))), TypeMoq.Times.exactly(1));
+        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
     test('Ensure sendText is called when Python shell integration and terminal shell integration are both enabled - Mac, Linux && Python >= 3.13', async () => {
@@ -337,7 +335,7 @@ suite('Terminal Service', () => {
         onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
         await executePromise;
 
-        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(bracketedPaste(textToSend))), TypeMoq.Times.once());
+        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.once());
     });
 
     test('Ensure sendText IS called even when Python shell integration and terminal shell integration are both enabled - Window', async () => {
@@ -361,7 +359,7 @@ suite('Terminal Service', () => {
         await executePromise;
 
         terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
-        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(bracketedPaste(textToSend))), TypeMoq.Times.exactly(1));
+        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
     test('Ensure REPL ready when onDidChangeTerminalState fires with python shell', async () => {
@@ -385,34 +383,7 @@ suite('Terminal Service', () => {
         onDidChangeTerminalStateEmitter.fire(terminal.object);
         await executePromise;
 
-        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(bracketedPaste(textToSend))), TypeMoq.Times.exactly(1));
-    });
-
-    test('Ensure commands sent after the Python REPL is ready use bracketed paste mode', async () => {
-        pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => false);
-        terminalHelper
-            .setup((helper) => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(undefined));
-        service = new TerminalService(mockServiceContainer.object);
-        terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
-        terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
-
-        await service.ensureTerminal();
-        await service.executeCommand('queued command', true);
-        onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
-
-        await service.executeCommand('  indented command', true);
-
-        // Queued command is wrapped when flushed once the REPL becomes ready.
-        terminal.verify(
-            (t) => t.sendText(TypeMoq.It.isValue('\x1b[200~queued command\x1b[201~')),
-            TypeMoq.Times.once(),
-        );
-        // Command sent after the REPL is ready is wrapped too.
-        terminal.verify(
-            (t) => t.sendText(TypeMoq.It.isValue('\x1b[200~  indented command\x1b[201~')),
-            TypeMoq.Times.once(),
-        );
+        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
     test('Ensure terminal is not shown if `hideFromUser` option is set to `true`', async () => {
