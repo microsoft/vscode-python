@@ -309,7 +309,10 @@ suite('Terminal Service', () => {
         await executePromise;
 
         terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
-        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
+        terminal.verify(
+            (t) => t.sendText(TypeMoq.It.isValue(textToSend), TypeMoq.It.isValue(true)),
+            TypeMoq.Times.exactly(1),
+        );
     });
 
     test('Ensure sendText is called when Python shell integration and terminal shell integration are both enabled - Mac, Linux && Python >= 3.13', async () => {
