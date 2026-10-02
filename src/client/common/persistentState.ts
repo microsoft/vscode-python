@@ -6,7 +6,7 @@
 import { inject, injectable, named, optional } from 'inversify';
 import { Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { traceError } from '../logging';
+import { traceError, traceVerbose } from '../logging';
 import { ICommandManager } from './application/types';
 import { Commands } from './constants';
 import {
@@ -43,6 +43,7 @@ export async function updateWorkspaceStateValue<T>(key: string, value: T): Promi
         throw new Error('Workspace state not initialized');
     }
     try {
+        traceVerbose(`Updating workspace persistent state for key [${key}]`);
         _workspaceKeys.push(key);
         await _workspaceState.update(key, value);
         const after = getWorkspaceStateValue(key);
@@ -85,6 +86,7 @@ export class PersistentState<T> implements IPersistentState<T> {
 
     public async updateValue(newValue: T, retryOnce = true): Promise<void> {
         try {
+            traceVerbose(`Updating persistent state for key [${this.key}]`);
             if (this.expiryDurationMs) {
                 await this.storage.update(this.key, { data: newValue, expiry: Date.now() + this.expiryDurationMs });
             } else {
