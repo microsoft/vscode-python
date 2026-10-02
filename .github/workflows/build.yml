@@ -17,7 +17,7 @@ env:
   # Unicode characters are causing 2.7 failures so skip that for now.
   special-working-directory: './path with spaces'
   special-working-directory-relative: 'path with spaces'
-  # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
+  # Send output to both console (spec) and JUnit-compatible XML.
   # Also enables a reporter which exits the process running the tests if it haven't already.
   MOCHA_REPORTER_JUNIT: true
 

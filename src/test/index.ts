@@ -25,6 +25,7 @@ type SetupOptions = Mocha.MochaOptions & {
     reporterOptions?: {
         mochaFile?: string;
         properties?: string;
+        consoleReporter?: string;
     };
     exit: boolean;
 };
@@ -73,14 +74,14 @@ function configure(): SetupOptions {
     };
 
     // If the `MOCHA_REPORTER_JUNIT` env var is true, set up the CI reporter for
-    // reporting to both the console (spec) and to a JUnit XML file. The xml file
-    // written to is `test-report.xml` in the root folder by default, but can be
+    // reporting to both the console (spec) and to a JUnit-compatible XML file. The xml file
+    // written to is `test-results.xml` in the root folder by default, but can be
     // changed by setting env var `MOCHA_FILE` (we do this in our CI).
     if (MOCHA_REPORTER_JUNIT) {
-        options.reporter = 'mocha-multi-reporters';
+        options.reporter = path.join(__dirname, '..', '..', 'build', 'ci', 'scripts', 'ci_reporter.js');
         const reporterPath = path.join(__dirname, 'common', 'exitCIAfterTestReporter.js');
         options.reporterOptions = {
-            reporterEnabled: `spec,mocha-junit-reporter,${reporterPath}`,
+            consoleReporter: reporterPath,
         };
     }
 
