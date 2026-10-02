@@ -62,6 +62,6 @@ suite('CI reporter', () => {
     });
 
     test('supports the extension test completion reporter', async () => {
-        await runTests(undefined, path.join(__dirname, 'exitCIAfterTestReporter.js'));
+        await runTests(undefined, path.join(__dirname, 'exitCIAfterTestReporter'));
     });
 });
