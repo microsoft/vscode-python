@@ -2,11 +2,18 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
+import * as path from 'path';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { TestController, Uri } from 'vscode';
 
-import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
+import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
+import {
+    DEFAULT_TEST_DISCOVERY_ON_SAVE_PATTERN,
+    PYTEST_PROVIDER,
+    UNITTEST_PROVIDER,
+} from '../../../client/testing/common/constants';
+import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 import * as envExtApiInternal from '../../../client/envExt/api.internal';
 import * as projectUtils from '../../../client/testing/testController/common/projectUtils';
 import { PythonTestController } from '../../../client/testing/testController/controller';
@@ -46,7 +53,15 @@ suite('PythonTestController', () => {
         sandbox.restore();
     });
 
-    function createController(options?: { unittestEnabled?: boolean; interpreter?: any; workspaceService?: any }): any {
+    function createController(options?: {
+        unittestEnabled?: boolean;
+        interpreter?: any;
+        workspaceService?: any;
+        testingSettings?: {
+            autoTestDiscoverOnSaveEnabled: boolean;
+            autoTestDiscoverOnSavePattern: string;
+        };
+    }): any {
         const unittestEnabled = options?.unittestEnabled ?? false;
         const interpreter =
             options?.interpreter ??
@@ -63,6 +78,7 @@ suite('PythonTestController', () => {
                 testing: {
                     unittestEnabled,
                     autoTestDiscoverOnSaveEnabled: false,
+                    ...options?.testingSettings,
                 },
             }),
         } as unknown) as any;
@@ -112,6 +128,73 @@ suite('PythonTestController', () => {
             const provider = (controller as any).getTestProvider(workspaceUri);
 
             assert.strictEqual(provider, PYTEST_PROVIDER);
+        });
+    });
+
+    suite('watchForTestContentChangeOnSave', () => {
+        function registerSaveHandler(pattern: string) {
+            let saveHandler: ((document: vscode.TextDocument) => void) | undefined;
+            sandbox.stub(workspaceApis, 'onDidSaveTextDocument').callsFake((handler) => {
+                saveHandler = handler;
+                return { dispose: () => undefined };
+            });
+            const controller = createController({
+                testingSettings: {
+                    autoTestDiscoverOnSaveEnabled: true,
+                    autoTestDiscoverOnSavePattern: pattern,
+                },
+            });
+            const triggerStub = sandbox.stub((controller as any).refreshData, 'trigger');
+            (controller as any).watchForTestContentChangeOnSave();
+
+            assert.ok(saveHandler);
+            return { saveHandler, triggerStub };
+        }
+
+        test('uses the same default save pattern in the extension manifest and runtime fallback', () => {
+            // eslint-disable-next-line import/no-dynamic-require
+            const packageJson = require(path.join(EXTENSION_ROOT_DIR, 'package.json'));
+            const manifestDefault =
+                packageJson.contributes.configuration.properties['python.testing.autoTestDiscoverOnSavePattern']
+                    .default;
+
+            assert.strictEqual(manifestDefault, DEFAULT_TEST_DISCOVERY_ON_SAVE_PATTERN);
+        });
+
+        test('triggers discovery only when a default test-related file is saved', async () => {
+            const { saveHandler, triggerStub } = registerSaveHandler(DEFAULT_TEST_DISCOVERY_ON_SAVE_PATTERN);
+            const sourceUri = vscode.Uri.file('/workspace/src/module.py');
+            await saveHandler({
+                fileName: sourceUri.fsPath,
+                uri: sourceUri,
+            } as vscode.TextDocument);
+            assert.strictEqual(triggerStub.notCalled, true);
+
+            for (const file of ['test_sample.py', 'sample_test.py', 'conftest.py']) {
+                const testUri = vscode.Uri.file(`/workspace/tests/${file}`);
+                await saveHandler({
+                    fileName: testUri.fsPath,
+                    uri: testUri,
+                } as vscode.TextDocument);
+            }
+            assert.strictEqual(triggerStub.callCount, 3);
+        });
+
+        test('respects a custom discovery-on-save pattern', async () => {
+            const { saveHandler, triggerStub } = registerSaveHandler('**/*.spec.py');
+            const defaultTestUri = vscode.Uri.file('/workspace/tests/test_sample.py');
+            await saveHandler({
+                fileName: defaultTestUri.fsPath,
+                uri: defaultTestUri,
+            } as vscode.TextDocument);
+            assert.strictEqual(triggerStub.notCalled, true);
+
+            const customTestUri = vscode.Uri.file('/workspace/specs/sample.spec.py');
+            await saveHandler({
+                fileName: customTestUri.fsPath,
+                uri: customTestUri,
+            } as vscode.TextDocument);
+            assert.strictEqual(triggerStub.calledOnce, true);
         });
     });
 
