@@ -7,6 +7,7 @@ import * as fs from 'fs-extra';
 import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
+import { PassThrough } from 'stream';
 import * as rpc from 'vscode-jsonrpc/node';
 import { CancellationError, CancellationToken, Disposable } from 'vscode';
 import { traceVerbose } from '../../logging';
@@ -15,6 +16,9 @@ import { createDeferred } from '../utils/async';
 import { noop } from '../utils/misc';
 
 const { XDG_RUNTIME_DIR } = process.env;
+const FIFO_READ_RETRY_DELAY_MS = 10;
+const FIFO_READ_BUFFER_SIZE = 64 * 1024;
+
 export function generateRandomPipeName(prefix: string): string {
     // length of 10 picked because of the name length restriction for sockets
     const randomSuffix = crypto.randomBytes(10).toString('hex');
@@ -149,6 +153,111 @@ class CombinedReader implements rpc.MessageReader {
     }
 }
 
+// A net.Socket does not surface EOF for a nonblocking FIFO descriptor, so read
+// the descriptor directly and close after observing its writer disconnect.
+class FifoMessageReader extends rpc.AbstractMessageReader {
+    private readonly stream = new PassThrough();
+
+    private readonly messageReader = new rpc.StreamMessageReader(this.stream, 'utf-8');
+
+    private readonly buffer = Buffer.allocUnsafe(FIFO_READ_BUFFER_SIZE);
+
+    private readonly disposables: rpc.Disposable[] = [];
+
+    private hasReadData = false;
+
+    private hasObservedWriter = false;
+
+    private disposed = false;
+
+    private closePending = false;
+
+    constructor(
+        private readonly pipeName: string,
+        private readonly fd: number,
+        private readonly token?: CancellationToken,
+    ) {
+        super();
+        this.disposables.push(
+            this.messageReader.onError((error) => this.fireError(error)),
+            this.messageReader.onPartialMessage((info) => this.firePartialMessage(info)),
+        );
+    }
+
+    listen(callback: rpc.DataCallback): rpc.Disposable {
+        const listener = this.messageReader.listen(callback);
+        void this.read();
+        return listener;
+    }
+
+    private async read(): Promise<void> {
+        while (!this.disposed && !this.closePending) {
+            try {
+                const { bytesRead } = await fs.read(this.fd, this.buffer, 0, this.buffer.length, null);
+                if (bytesRead > 0) {
+                    this.hasReadData = true;
+                    this.stream.write(Buffer.from(this.buffer.subarray(0, bytesRead)));
+                    continue;
+                }
+
+                if (this.hasReadData || this.hasObservedWriter || this.token?.isCancellationRequested) {
+                    this.complete();
+                    return;
+                }
+            } catch (error) {
+                if (this.isRetryableReadError(error)) {
+                    this.hasObservedWriter = true;
+                } else {
+                    if (!this.disposed) {
+                        this.fireError(error);
+                        this.complete();
+                    }
+                    return;
+                }
+            }
+
+            await new Promise<void>((resolve) => {
+                setTimeout(resolve, FIFO_READ_RETRY_DELAY_MS);
+            });
+        }
+    }
+
+    private isRetryableReadError(error: unknown): boolean {
+        if (!(error instanceof Error) || !('code' in error)) {
+            return false;
+        }
+        const { code } = error as NodeJS.ErrnoException;
+        return code === 'EAGAIN' || code === 'EWOULDBLOCK';
+    }
+
+    private complete(): void {
+        if (this.disposed || this.closePending) {
+            return;
+        }
+        this.closePending = true;
+        this.stream.end();
+        setImmediate(() => {
+            if (!this.disposed) {
+                this.fireClose();
+            }
+        });
+    }
+
+    dispose(): void {
+        if (this.disposed) {
+            return;
+        }
+        this.disposed = true;
+        this.stream.destroy();
+        this.messageReader.dispose();
+        this.disposables.forEach((disposable) => disposable.dispose());
+        this.disposables.length = 0;
+        fs.close(this.fd).catch(noop);
+        fs.unlink(this.pipeName).catch(noop);
+        super.dispose();
+    }
+}
+
 export async function createReaderPipe(pipeName: string, token?: CancellationToken): Promise<rpc.MessageReader> {
     if (isWindows()) {
         // windows implementation of FIFO using named pipes
@@ -189,12 +298,5 @@ export async function createReaderPipe(pipeName: string, token?: CancellationTok
         // Intentionally ignored
     }
     const fd = await fs.open(pipeName, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK);
-    const socket = new net.Socket({ fd });
-    const reader = new rpc.SocketMessageReader(socket, 'utf-8');
-    socket.on('close', () => {
-        fs.close(fd).catch(noop);
-        reader.dispose();
-    });
-
-    return reader;
+    return new FifoMessageReader(pipeName, fd, token);
 }
