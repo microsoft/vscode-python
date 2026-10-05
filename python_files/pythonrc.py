@@ -9,11 +9,22 @@ def _initialize():
     if sys.version_info >= (3, 13):
         import re
 
+        import _pyrepl.simple_interact
         import _pyrepl.utils
 
         _pyrepl.utils.ANSI_ESCAPE_SEQUENCE = re.compile(
             r"\x1b(?:\[[ -@]*[A-~]|\][^\x1b\x07]*(?:\x07|\x1b\\))"
         )
+
+        # Patch _pyrepl.simple_interact.multiline_input to ensure prompts are strings
+        _original_multiline_input = _pyrepl.simple_interact.multiline_input
+        if getattr(_original_multiline_input, "_vscode_prompts_as_strings", False) is not True:
+
+            def _multiline_input(more_lines, ps1, ps2):
+                return _original_multiline_input(more_lines, _str(ps1), _str(ps2))
+
+            _multiline_input.__dict__["_vscode_prompts_as_strings"] = True
+            _pyrepl.simple_interact.multiline_input = _multiline_input
 
     original_ps1 = ">>> "
     # PYTHONSTARTUP executes this file's code inside the user's __main__
