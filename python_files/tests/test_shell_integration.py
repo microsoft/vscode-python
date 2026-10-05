@@ -115,6 +115,29 @@ def test_replacement_regex_preserves_csi_handling():
     )
 
 
+def test_pyrepl_multiline_input_converts_prompts_to_strings(monkeypatch):
+    if sys.version_info < (3, 13):
+        return
+
+    pyrepl_simple_interact = importlib.import_module("_pyrepl.simple_interact")
+    original_multiline_input = Mock(return_value="statement")
+
+    with monkeypatch.context() as m:
+        m.setattr(pyrepl_simple_interact, "multiline_input", original_multiline_input)
+        importlib.reload(pythonrc)
+
+        more_lines = Mock()
+        ps1 = Mock()
+        ps1.__str__ = Mock(return_value="primary")
+        ps2 = Mock()
+        ps2.__str__ = Mock(return_value="secondary")
+
+        result = pyrepl_simple_interact.multiline_input(more_lines, ps1, ps2)
+
+    assert result == "statement"
+    original_multiline_input.assert_called_once_with(more_lines, "primary", "secondary")
+
+
 def test_prompt_survives_shadowed_builtins_under_pythonstartup():
     # PYTHONSTARTUP executes pythonrc's source directly inside the real
     # REPL's __main__ namespace, not as an imported module. The tests
