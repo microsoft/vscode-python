@@ -145,7 +145,10 @@ export function buildEnvironmentApi(
         return getWorkspaceFolder(uri)?.uri.fsPath ?? uri?.fsPath ?? '';
     }
 
-    function cacheActiveEnvExtPath(resource: Resource | undefined, environment: EnvExtPythonEnvironment | undefined): void {
+    function cacheActiveEnvExtPath(
+        resource: Resource | undefined,
+        environment: EnvExtPythonEnvironment | undefined,
+    ): void {
         const key = getActiveEnvironmentKey(resource);
         if (!environment) {
             activeEnvExtPaths.delete(key);

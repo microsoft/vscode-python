@@ -253,7 +253,8 @@ suite('Python Environment API', () => {
             .setup((c) => c.getSettings(workspaceFolder.uri))
             .returns(() => (({ pythonPath: configuredPath } as unknown) as IPythonSettings));
         sinon.stub(envExtApi, 'getCachedEnvExtApi').returns({
-            getEnvironmentSync: (scope) => (scope?.fsPath === workspaceFolder.uri.fsPath ? selectedEnvironment : undefined),
+            getEnvironmentSync: (scope) =>
+                scope?.fsPath === workspaceFolder.uri.fsPath ? selectedEnvironment : undefined,
         } as ReturnType<typeof envExtApi.getCachedEnvExtApi>);
         useEnvExtension = true;
 
