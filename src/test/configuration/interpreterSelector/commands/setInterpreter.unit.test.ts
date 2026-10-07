@@ -939,6 +939,35 @@ suite('Set Interpreter Command', () => {
             expect(state.path).to.equal(item.interpreter.envPath, '');
         });
 
+        test('Create Environment receives a pinned workspace only when supplied', async () => {
+            const pinnedWorkspace = { name: 'second', uri: Uri.file(path.resolve('second')), index: 1 };
+            const createdPath = path.join(pinnedWorkspace.uri.fsPath, '.venv', 'python');
+            const state: InterpreterStateArgs = { path: 'some path', workspace: pinnedWorkspace.uri };
+            const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+            let createOptions: unknown;
+            multiStepInput
+                .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(expectedCreateEnvSuggestion));
+            commandManager
+                .setup((c) => c.executeCommand(Commands.Create_Environment, TypeMoq.It.isAny()))
+                .callback((_command, options) => {
+                    createOptions = options;
+                })
+                .returns(() => Promise.resolve({ path: createdPath }));
+
+            await setInterpreterCommand._pickInterpreter(multiStepInput.object, state, undefined, {
+                showCreateEnvironment: true,
+                createEnvironmentWorkspaceFolder: pinnedWorkspace,
+            });
+
+            assert.deepStrictEqual(createOptions, {
+                showBackButton: false,
+                selectEnvironment: true,
+                workspaceFolder: pinnedWorkspace,
+            });
+            assert.strictEqual(state.path, createdPath);
+        });
+
         test('If an item is selected, send SELECT_INTERPRETER_SELECTED telemetry with the "selected" property value', async () => {
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
@@ -1295,11 +1324,16 @@ suite('Set Interpreter Command', () => {
             const python = path.join(second.uri.fsPath, '.venv', 'python');
             workspace.setup((w) => w.workspaceFolders).returns(() => [first, second]);
             workspace.setup((w) => w.getWorkspaceFolder(resource)).returns(() => second);
-            const multiStepInput = {
-                run: (_: unknown, state: InterpreterStateArgs) => {
-                    assert.strictEqual(state.workspace, second.uri);
+            const pickInterpreter = sinon
+                .stub(setInterpreterCommand, '_pickInterpreter')
+                .callsFake(async (_input, state, _filter, params) => {
+                    assert.strictEqual(params?.createEnvironmentWorkspaceFolder, second);
                     state.path = python;
-                    return Promise.resolve();
+                });
+            const multiStepInput = {
+                run: async (start: InputStep<InterpreterStateArgs>, state: InterpreterStateArgs) => {
+                    assert.strictEqual(state.workspace, second.uri);
+                    await start(multiStepInput as MultiStepInput<InterpreterStateArgs>, state);
                 },
             };
             multiStepInputFactory.setup((f) => f.create()).returns(() => multiStepInput as IMultiStepInput<unknown>);
@@ -1310,6 +1344,7 @@ suite('Set Interpreter Command', () => {
 
             assert.deepStrictEqual(await setInterpreterCommand.setInterpreter({ resource }), { path: python });
             pythonPathUpdater.verifyAll();
+            sinon.assert.calledOnce(pickInterpreter);
             appShell.verify((s) => s.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
         });
 

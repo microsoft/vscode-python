@@ -68,7 +68,9 @@ export class GetExecutableTool extends BaseTool<IResourceReference> implements L
                 this.extraTelemetryProperties.envType = getPythonToolTelemetry(result?.environment).envType;
                 return getPythonToolResponse(result);
             }
-            return invokePythonToolCompatibility(target, token, (resource) => this.invokePreviousFlow(resource, token));
+            return invokePythonToolCompatibility(target, resourcePath, token, (resource) =>
+                this.invokePreviousFlow(resource, token),
+            );
         }
 
         return this.invokePreviousFlow(resourcePath, token);

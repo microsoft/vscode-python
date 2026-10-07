@@ -15,6 +15,7 @@ import {
     QuickPickItem,
     QuickPickItemKind,
     ThemeIcon,
+    WorkspaceFolder,
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands, Octicons, ThemeIcons } from '../../../../common/constants';
@@ -54,6 +55,9 @@ import { CreateEnvironmentResult } from '../../../../pythonEnvironments/creation
 
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
 export type QuickPickType = IInterpreterQuickPickItem | ISpecialQuickPickItem | QuickPickItem;
+type SetInterpreterQuickPickParams = InterpreterQuickPickParams & {
+    createEnvironmentWorkspaceFolder?: WorkspaceFolder;
+};
 
 function isInterpreterQuickPickItem(item: QuickPickType): item is IInterpreterQuickPickItem {
     return 'interpreter' in item;
@@ -148,7 +152,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs,
         filter?: (i: PythonEnvironment) => boolean,
-        params?: InterpreterQuickPickParams,
+        params?: SetInterpreterQuickPickParams,
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         // If the list is refreshing, it's crucial to maintain sorting order at all
         // times so that the visible items do not change.
@@ -235,6 +239,9 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
                 this.commandManager.executeCommand(Commands.Create_Environment, {
                     showBackButton: false,
                     selectEnvironment: true,
+                    ...(params?.createEnvironmentWorkspaceFolder
+                        ? { workspaceFolder: params.createEnvironmentWorkspaceFolder }
+                        : {}),
                 }),
             ).catch(noop)) as CreateEnvironmentResult | undefined;
             state.path = createdEnv?.path;
@@ -596,6 +603,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
                     this._pickInterpreter(input, s, undefined, {
                         showCreateEnvironment: !options?.hideCreateVenv,
                         showBackButton: options?.showBackButton,
+                        ...(folder ? { createEnvironmentWorkspaceFolder: folder } : {}),
                     }),
                 interpreterState,
             );
