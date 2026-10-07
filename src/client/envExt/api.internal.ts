@@ -61,10 +61,16 @@ export function useEnvExtension(): boolean {
     }
     const config = getConfiguration('python');
     const inExpSetting = config?.get<boolean>('useEnvironmentsExtension', false) ?? false;
-    // If extension is installed and in experiment, then use it.
-    _useExt = !!getExtension(ENVS_EXTENSION_ID) && inExpSetting;
+    // Use the extension only when it will also accept activation.
+    _useExt = inExpSetting && shouldEnvExtHandleActivation();
     return _useExt;
 }
+
+export const EnvExtApiInternalTests = {
+    resetState: (): void => {
+        _useExt = undefined;
+    },
+};
 
 const onDidChangeEnvironmentEnvExtEmitter: EventEmitter<DidChangeEnvironmentEventArgs> = new EventEmitter<
     DidChangeEnvironmentEventArgs
