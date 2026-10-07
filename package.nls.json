@@ -22,6 +22,8 @@
     "python.command.python.execSelectionInTerminal.shortTitle": "Run Selection/Line",
     "python.command.python.execInREPL.title": "Run Selection/Line in Native Python REPL",
     "python.command.python.execSelectionInDjangoShell.title": "Run Selection/Line in Django Shell",
+    "python.command.python.execSelectionInDjangoShell.shortTitle": "Run in Django Shell",
+    "python.command.python.execInREPL.shortTitle": "Run Selection/Line in REPL",
     "python.command.python.reportIssue.title": "Report Issue...",
     "python.command.python.clearCacheAndReload.title": "Clear Cache and Reload Window",
     "python.command.python.analysis.restartLanguageServer.title": "Restart Language Server",
