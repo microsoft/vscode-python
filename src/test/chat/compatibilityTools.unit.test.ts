@@ -14,6 +14,8 @@ import {
     ConfigurationTarget,
     EventEmitter,
     Extension,
+    FileSystem,
+    FileType,
     LanguageModelTextPart,
     LanguageModelToolInvocationOptions,
     LanguageModelToolResult,
@@ -367,6 +369,43 @@ suite('Older Environments tool compatibility', () => {
         expect(text(result)).to.include('Successfully installed');
         expect(text(result)).to.include(folders[0].uri.fsPath);
         sinon.assert.calledOnce(managePackages);
+    });
+
+    test('preserves remote workspace URIs through compatibility validation and nested selection', async () => {
+        const remoteFolder = {
+            name: 'remote',
+            uri: Uri.parse('vscode-remote://ssh-remote+host/workspace'),
+            index: 0,
+        };
+        const remoteFile = Uri.parse('vscode-remote://ssh-remote+host/workspace/main.py');
+        folders = [remoteFolder];
+        const remoteStat = sinon.stub().callsFake(async (resource: Uri) => ({
+            type: resource.toString() === remoteFolder.uri.toString() ? FileType.Directory : FileType.File,
+        }));
+        when(mockedVSCodeNamespaces.workspace!.fs).thenReturn(({
+            stat: remoteStat,
+        } as unknown) as FileSystem);
+        sinon.stub(create, 'shouldCreateNewVirtualEnv').resolves(false);
+
+        for (const [input, expected] of [
+            [{}, remoteFolder.uri],
+            [{ resourcePath: remoteFile.toString() }, remoteFile],
+        ] as const) {
+            nestedTool.resetHistory();
+            remoteStat.resetHistory();
+
+            const result = await configure.invoke(options(input), source.token);
+
+            expect(text(result)).to.include(expected.toString());
+            expect(nestedTool.firstCall.args[1].input.resourcePath).to.equal(expected.toString());
+            expect((remoteStat.firstCall.args[0] as Uri).toString()).to.equal(expected.toString());
+        }
+
+        nestedTool.resetHistory();
+        remoteStat.resolves({ type: FileType.Unknown });
+        const invalidResult = await configure.invoke(options({}), source.token);
+        expect(text(invalidResult)).to.include('operation failed').and.include(remoteFolder.uri.toString());
+        sinon.assert.notCalled(nestedTool);
     });
 
     test('keeps the previous no-workspace install only after private capability absence', async () => {

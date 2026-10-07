@@ -84,7 +84,7 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageArgs>
             if (!workspaceScoped) {
                 return this.invokePreviousEnvsFlow(options, resourcePath, successMessage, token);
             }
-            return invokePythonToolCompatibility(target, token, (resource) =>
+            return invokePythonToolCompatibility(target, resourcePath, token, (resource) =>
                 this.invokePreviousEnvsFlow(options, resource, successMessage, token),
             );
         }

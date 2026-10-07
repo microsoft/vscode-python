@@ -97,9 +97,15 @@ export class ConfigurePythonEnvTool extends BaseTool<IConfigurePythonEnvToolArgu
                         : result?.status ?? 'invalidResult';
                 return getPythonToolResponse(result, l10n.t('A Python Environment has been configured.'));
             }
-            return invokePythonToolCompatibility(resourcePath, token, (target) =>
+            return invokePythonToolCompatibility(resourcePath, resource, token, (target) =>
                 this.invokePreviousFlow(
-                    { ...options, input: { ...options.input, resourcePath: target.fsPath } },
+                    {
+                        ...options,
+                        input: {
+                            ...options.input,
+                            resourcePath: target.scheme === 'file' ? target.fsPath : target.toString(),
+                        },
+                    },
                     target,
                     token,
                 ),

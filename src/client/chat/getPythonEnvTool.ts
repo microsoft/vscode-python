@@ -81,7 +81,9 @@ export class GetEnvironmentInfoTool extends BaseTool<IResourceReference>
                 }
                 return getPythonToolResponse(result, undefined, true);
             }
-            return invokePythonToolCompatibility(target, token, (resource) => this.invokePreviousFlow(resource, token));
+            return invokePythonToolCompatibility(target, resourcePath, token, (resource) =>
+                this.invokePreviousFlow(resource, token),
+            );
         }
 
         return this.invokePreviousFlow(resourcePath, token);

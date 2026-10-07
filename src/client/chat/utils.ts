@@ -5,6 +5,7 @@ import {
     CancellationError,
     CancellationToken,
     extensions,
+    FileType,
     l10n,
     LanguageModelTextPart,
     LanguageModelToolResult,
@@ -358,12 +359,14 @@ export async function invokePythonTool(
 /** Runs the previous Environments integration against a validated, fixed target. */
 export async function invokePythonToolCompatibility(
     resourcePath: string | undefined,
+    resolvedResource: Uri | undefined,
     token: CancellationToken,
     invoke: (resource: Uri) => Promise<LanguageModelToolResult>,
 ): Promise<LanguageModelToolResult> {
     if (token.isCancellationRequested) {
         throw new CancellationError();
     }
+    let validatedResource: Uri | undefined;
     try {
         if (resourcePath === undefined) {
             throw new ErrorWithTelemetrySafeReason(
@@ -375,28 +378,33 @@ export async function invokePythonToolCompatibility(
             typeof resourcePath !== 'string' ||
             !resourcePath.trim() ||
             /[\0\r\n]/.test(resourcePath) ||
-            (!/^file:/i.test(resourcePath) && !isAbsolute(resourcePath))
+            (!/^file:/i.test(resourcePath) &&
+                !/^[a-z][a-z0-9+.-]*:\/\//i.test(resourcePath) &&
+                !isAbsolute(resourcePath))
         ) {
             throw new ErrorWithTelemetrySafeReason(
-                l10n.t('resourcePath must be an absolute path or file URI.'),
+                l10n.t('resourcePath must be an absolute path or workspace URI.'),
                 'INVALID_RESOURCE',
             );
         }
-        const resource = /^file:/i.test(resourcePath) ? Uri.parse(resourcePath) : Uri.file(resourcePath);
-        if (
-            resource.scheme !== 'file' ||
-            resource.query ||
-            resource.fragment ||
-            !isAbsolute(resource.fsPath) ||
-            !getWorkspaceFolder(resource)
-        ) {
+        const isUri = /^file:/i.test(resourcePath) || /^[a-z][a-z0-9+.-]*:\/\//i.test(resourcePath);
+        validatedResource = isUri ? Uri.parse(resourcePath) : resolvedResource ?? Uri.file(resourcePath);
+        const resource = validatedResource;
+        if (resource.query || resource.fragment || !isAbsolute(resource.fsPath) || !getWorkspaceFolder(resource)) {
             throw new ErrorWithTelemetrySafeReason(
                 l10n.t('Open {0} in a workspace folder before configuring its environment.', resource.fsPath),
                 'INVALID_RESOURCE',
             );
         }
-        const target = await raceCancellationError(stat(resource.fsPath), token);
-        if (!target.isFile() && !target.isDirectory()) {
+        const isFileOrDirectory =
+            resource.scheme === 'file'
+                ? await raceCancellationError(stat(resource.fsPath), token).then(
+                      (target) => target.isFile() || target.isDirectory(),
+                  )
+                : await raceCancellationError(Promise.resolve(workspace.fs.stat(resource)), token).then(
+                      (target) => !!(target.type & (FileType.File | FileType.Directory)),
+                  );
+        if (!isFileOrDirectory) {
             throw new ErrorWithTelemetrySafeReason(
                 l10n.t('resourcePath must identify a file or directory.'),
                 'INVALID_RESOURCE',
@@ -410,7 +418,9 @@ export async function invokePythonToolCompatibility(
             throw new CancellationError();
         }
         const response = new LanguageModelToolResult([
-            new LanguageModelTextPart(l10n.t('Resource: {0}', resource.fsPath)),
+            new LanguageModelTextPart(
+                l10n.t('Resource: {0}', resource.scheme === 'file' ? resource.fsPath : resource.toString()),
+            ),
         ]);
         response.content.push(...result.content);
         return response;
@@ -423,7 +433,14 @@ export async function invokePythonToolCompatibility(
             status: 'error',
             code: error instanceof ErrorWithTelemetrySafeReason ? error.telemetrySafeReason : 'operationFailed',
             message: error instanceof Error ? error.message : String(error),
-            resourcePath: typeof resourcePath === 'string' ? resourcePath : undefined,
+            resourcePath:
+                validatedResource === undefined
+                    ? typeof resourcePath === 'string'
+                        ? resourcePath
+                        : undefined
+                    : validatedResource.scheme === 'file'
+                    ? validatedResource.fsPath
+                    : validatedResource.toString(),
         });
     }
 }
