@@ -35,6 +35,13 @@ import { buildEnvironmentCreationApi } from './pythonEnvironments/creation/creat
 import { EnvironmentKnownCache } from './environmentKnownCache';
 import type { JupyterPythonEnvironmentApi } from './jupyter/jupyterIntegration';
 import { noop } from './common/utils/misc';
+import {
+    getCachedEnvExtApi,
+    onDidChangeEnvironmentEnvExt,
+    setActiveEnvironment,
+    useEnvExtension,
+} from './envExt/api.internal';
+import type { PythonEnvironment as EnvExtPythonEnvironment } from './envExt/types';
 
 type ActiveEnvironmentChangeEvent = {
     resource: WorkspaceFolder | undefined;
@@ -131,6 +138,34 @@ export function buildEnvironmentApi(
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
     const envVarsProvider = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
     let knownCache: EnvironmentKnownCache;
+    const activeEnvExtPaths = new Map<string, string>();
+
+    function getActiveEnvironmentKey(resource?: Resource): string {
+        const uri = resource && 'uri' in resource ? resource.uri : resource;
+        return getWorkspaceFolder(uri)?.uri.fsPath ?? uri?.fsPath ?? '';
+    }
+
+    function cacheActiveEnvExtPath(
+        resource: Resource | undefined,
+        environment: EnvExtPythonEnvironment | undefined,
+    ): void {
+        const key = getActiveEnvironmentKey(resource);
+        if (!environment) {
+            activeEnvExtPaths.delete(key);
+            return;
+        }
+        activeEnvExtPaths.set(key, environment.execInfo.run.executable);
+    }
+
+    if (useEnvExtension()) {
+        const envExtApi = getCachedEnvExtApi();
+        if (envExtApi) {
+            cacheActiveEnvExtPath(undefined, envExtApi.getEnvironmentSync(undefined));
+            getWorkspaceFolders()?.forEach((folder) =>
+                cacheActiveEnvExtPath(folder.uri, envExtApi.getEnvironmentSync(folder.uri)),
+            );
+        }
+    }
 
     function initKnownCache() {
         const knownEnvs = discoveryApi
@@ -167,6 +202,13 @@ export function buildEnvironmentApi(
             return {
                 id: jupyterEnv.id,
                 path: jupyterEnv.path,
+            };
+        }
+        const envExtPath = activeEnvExtPaths.get(getActiveEnvironmentKey(resource));
+        if (useEnvExtension() && envExtPath) {
+            return {
+                id: getEnvID(envExtPath),
+                path: envExtPath,
             };
         }
         const path = configService.getSettings(resource).pythonPath;
@@ -242,6 +284,15 @@ export function buildEnvironmentApi(
                 env: envVarsProvider.getEnvironmentVariablesSync(e),
             });
         }),
+        onDidChangeEnvironmentEnvExt((e) => {
+            cacheActiveEnvExtPath(e.uri, e.new);
+            if (e.new) {
+                reportActiveInterpreterChanged({
+                    resource: getWorkspaceFolder(e.uri),
+                    path: e.new.execInfo.run.executable,
+                });
+            }
+        }),
         onEnvironmentsChanged,
         onEnvironmentVariablesChanged,
         jupyterPythonEnvsApi.onDidChangePythonEnvironment
@@ -273,10 +324,18 @@ export function buildEnvironmentApi(
             sendApiTelemetry('getActiveEnvironmentPath');
             return getActiveEnvironmentPath(resource);
         },
-        updateActiveEnvironmentPath(env: Environment | EnvironmentPath | string, resource?: Resource): Promise<void> {
+        async updateActiveEnvironmentPath(
+            env: Environment | EnvironmentPath | string,
+            resource?: Resource,
+        ): Promise<void> {
             sendApiTelemetry('updateActiveEnvironmentPath');
             const path = typeof env !== 'string' ? env.path : env;
             resource = resource && 'uri' in resource ? resource.uri : resource;
+            if (useEnvExtension()) {
+                const environment = await setActiveEnvironment(path, resource);
+                cacheActiveEnvExtPath(resource, environment);
+                return;
+            }
             return interpreterPathService.update(resource, ConfigurationTarget.WorkspaceFolder, path);
         },
         get onDidChangeActiveEnvironmentPath() {

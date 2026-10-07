@@ -78,6 +78,10 @@ export function onDidChangeEnvironmentEnvExt(
 }
 
 let _extApi: PythonEnvironmentApi | undefined;
+export function getCachedEnvExtApi(): PythonEnvironmentApi | undefined {
+    return _extApi;
+}
+
 export async function getEnvExtApi(): Promise<PythonEnvironmentApi> {
     if (_extApi) {
         return _extApi;
@@ -126,6 +130,20 @@ export async function getEnvironment(scope: GetEnvironmentScope): Promise<Python
 export async function resolveEnvironment(pythonPath: string): Promise<PythonEnvironment | undefined> {
     const envExtApi = await getEnvExtApi();
     return envExtApi.resolveEnvironment(Uri.file(pythonPath));
+}
+
+export async function setActiveEnvironment(
+    pythonPath: string,
+    scope: GetEnvironmentScope,
+): Promise<PythonEnvironment | undefined> {
+    const envExtApi = await getEnvExtApi();
+    const environment = await envExtApi.resolveEnvironment(Uri.file(pythonPath));
+    if (!environment) {
+        traceError(`EnvExt: Failed to resolve environment for ${pythonPath}`);
+        return undefined;
+    }
+    await envExtApi.setEnvironment(scope, environment);
+    return environment;
 }
 
 export async function refreshEnvironments(scope: RefreshEnvironmentsScope): Promise<void> {

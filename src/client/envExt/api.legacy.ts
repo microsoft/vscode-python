@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Terminal, Uri } from 'vscode';
-import { getEnvExtApi, getEnvironment } from './api.internal';
+import { getEnvExtApi, getEnvironment, setActiveEnvironment } from './api.internal';
 import { EnvironmentType, PythonEnvironment as PythonEnvironmentLegacy } from '../pythonEnvironments/info';
 import { PythonEnvironment, PythonTerminalCreateOptions } from './types';
 import { Architecture } from '../common/utils/platform';
@@ -150,13 +150,7 @@ export async function getActiveInterpreterLegacy(
 }
 
 export async function setInterpreterLegacy(pythonPath: string, uri: Uri | undefined): Promise<void> {
-    const api = await getEnvExtApi();
-    const pythonEnv = await api.resolveEnvironment(Uri.file(pythonPath));
-    if (!pythonEnv) {
-        traceError(`EnvExt: Failed to resolve environment for ${pythonPath}`);
-        return;
-    }
-    await api.setEnvironment(uri, pythonEnv);
+    await setActiveEnvironment(pythonPath, uri);
 }
 
 export async function resetInterpreterLegacy(uri: Uri | undefined): Promise<void> {
