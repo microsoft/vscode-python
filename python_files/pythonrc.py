@@ -9,12 +9,13 @@ def _initialize():
     if sys.version_info >= (3, 13):
         import re
 
-        import _pyrepl.simple_interact
         import _pyrepl.utils
 
-        _pyrepl.utils.ANSI_ESCAPE_SEQUENCE = re.compile(
-            r"\x1b(?:\[[ -@]*[A-~]|\][^\x1b\x07]*(?:\x07|\x1b\\))"
-        )
+        _ansi_escape_sequence = re.compile(r"\x1b(?:\[[ -@]*[A-~]|\][^\x1b\x07]*(?:\x07|\x1b\\))")
+        _pyrepl.utils.ANSI_ESCAPE_SEQUENCE = _ansi_escape_sequence
+
+        # Import again to ensure the module is loaded after patching the ANSI_ESCAPE_SEQUENCE
+        import _pyrepl.simple_interact
 
         # Patch _pyrepl.simple_interact.multiline_input to ensure prompts are strings
         _original_multiline_input = _pyrepl.simple_interact.multiline_input
@@ -70,6 +71,7 @@ def _initialize():
         @classmethod
         def command_line(cls, command: object) -> str:
             """Explicitly set the command line interpreted by the shell."""
+            return ""
             return cls.template.format(f"E;{command}")
 
     class REPLHooks:
@@ -136,12 +138,12 @@ def _initialize():
             return "<Custom PS1 for VS Code Python Shell Integration>"
 
     is_wsl = "microsoft-standard-WSL" in platform.release()
-    if not is_wsl and (sys.platform != "win32" or sys.version_info >= (3, 13)):
+    if True and (sys.platform != "win32" or sys.version_info >= (3, 13)):
         sys.ps1 = PS1()
 
     ctrl_key = "Cmd" if sys.platform == "darwin" else "Ctrl"
 
-    print(f"{ctrl_key} click to launch VS Code Native REPL (https://aka.ms/python-native-repl)")
+    print(f"{ctrl_key} click to launch VS Code Native REPL (https://aka.ms/python-native-repl) :-)")
 
 
 _initialize()
