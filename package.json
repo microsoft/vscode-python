@@ -1509,7 +1509,7 @@
                 "name": "get_python_environment_details",
                 "displayName": "Get Python Environment Info",
                 "userDescription": "%python.languageModelTools.get_python_environment_details.userDescription%",
-                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. The details returned include the 1. Type of Python Environment (conda, venv, etc), 2. Version of Python, 3. List of all installed Python packages with their versions. ALWAYS call configure_python_environment before using this tool. IMPORTANT: This tool is only for Python environments (venv, virtualenv, conda, pipenv, poetry, pyenv, pixi, or any other Python environment manager). Do not use this tool for npm packages, system packages, Ruby gems, or any other non-Python dependencies.",
+                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. The details returned include the 1. Type of Python Environment (conda, venv, etc), 2. Version of Python, 3. List of all installed Python packages with their versions. This is read-only: it never creates an environment or changes the selection. With a compatible Python Environments tools API, this runs without extension prompts and reports the selected environment and its packages together. Older Environments versions use the previous compatibility workflow, which may prompt. Host tool approval still applies. ALWAYS call configure_python_environment before using this tool and reuse its returned Resource path as resourcePath. IMPORTANT: This tool is only for Python environments (venv, virtualenv, conda, pipenv, poetry, pyenv, pixi, or any other Python environment manager). Do not use this tool for npm packages, system packages, Ruby gems, or any other non-Python dependencies.",
                 "toolReferenceName": "getPythonEnvironmentInfo",
                 "tags": [
                     "python",
@@ -1524,7 +1524,7 @@
                     "properties": {
                         "resourcePath": {
                             "type": "string",
-                            "description": "The path to the Python file or workspace to get the environment information for."
+                            "description": "The path to the Python file or project to get the environment information for. When omitted, the first open workspace folder is used. Pass the task's target when known, and reuse the Resource path returned by configure_python_environment for subsequent calls."
                         }
                     },
                     "required": []
@@ -1534,7 +1534,7 @@
                 "name": "get_python_executable_details",
                 "displayName": "Get Python Executable",
                 "userDescription": "%python.languageModelTools.get_python_executable_details.userDescription%",
-                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. ALWAYS use this tool before executing any Python command in the terminal. This tool returns the details of how to construct the fully qualified path and or command including details such as arguments required to run Python in a terminal. Note: Instead of executing `python --version` or `python -c 'import sys; print(sys.executable)'`, use this tool to get the Python executable path to replace the `python` command. E.g. instead of using `python -c 'import sys; print(sys.executable)'`, use this tool to build the command `conda run -n <env_name> -c 'import sys; print(sys.executable)'`. ALWAYS call configure_python_environment before using this tool. IMPORTANT: This tool is only for Python environments (venv, virtualenv, conda, pipenv, poetry, pyenv, pixi, or any other Python environment manager). Do not use this tool for npm packages, system packages, Ruby gems, or any other non-Python dependencies.",
+                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. ALWAYS use this tool before executing any Python command in the terminal. This tool returns the details of how to construct the fully qualified path and or command including details such as arguments required to run Python in a terminal. This is read-only: it never creates an environment or changes the selection. With a compatible Python Environments tools API, this runs without extension prompts. Older Environments versions use the previous compatibility workflow, which may prompt. Host tool approval still applies. Note: Instead of executing `python --version` or `python -c 'import sys; print(sys.executable)'`, use this tool to get the Python executable path to replace the `python` command. E.g. instead of using `python -c 'import sys; print(sys.executable)'`, use this tool to build the command `conda run -n <env_name> -c 'import sys; print(sys.executable)'`. ALWAYS call configure_python_environment before using this tool and reuse its returned Resource path as resourcePath. IMPORTANT: This tool is only for Python environments (venv, virtualenv, conda, pipenv, poetry, pyenv, pixi, or any other Python environment manager). Do not use this tool for npm packages, system packages, Ruby gems, or any other non-Python dependencies.",
                 "toolReferenceName": "getPythonExecutableCommand",
                 "tags": [
                     "python",
@@ -1549,7 +1549,7 @@
                     "properties": {
                         "resourcePath": {
                             "type": "string",
-                            "description": "The path to the Python file or workspace to get the executable information for. If not provided, the current workspace will be used. Where possible pass the path to the file or workspace."
+                            "description": "The path to the Python file or project to get the executable information for. When omitted, the first open workspace folder is used. Pass the task's target when known, and reuse the Resource path returned by configure_python_environment for subsequent calls."
                         }
                     },
                     "required": []
@@ -1559,7 +1559,7 @@
                 "name": "install_python_packages",
                 "displayName": "Install Python Package",
                 "userDescription": "%python.languageModelTools.install_python_packages.userDescription%",
-                "modelDescription": "Installs Python packages in the given workspace. Use this tool to install Python packages in the user's chosen Python environment. ALWAYS call configure_python_environment before using this tool. IMPORTANT: This tool should only be used to install Python packages using package managers like pip or conda (works with any Python environment: venv, virtualenv, pipenv, poetry, pyenv, pixi, conda, etc.). Do not use this tool to install npm packages, system packages (apt/brew/yum), Ruby gems, or any other non-Python dependencies.",
+                "modelDescription": "Installs Python packages in the selected environment for the given workspace. With a compatible Python Environments tools API, installation runs without extension prompts or package pickers and requires an open workspace, a selected isolated environment, and an explicit nonempty package list. Global Python and Conda base are always rejected with ENVIRONMENT_NOT_ISOLATED, even if manually selected or selected by configure_python_environment with pythonPath. Configure without pythonPath or select an isolated environment before retrying. Missing selection returns ENVIRONMENT_NOT_CONFIGURED; no open workspace returns NO_WORKSPACE. These errors never fall back to a global installation. Older Environments versions use the previous compatibility workflow, which may prompt; disabled Environments integration retains the legacy Python workflow. Host tool approval still applies and does not change these target restrictions. ALWAYS call configure_python_environment before using this tool and reuse its returned Resource path as resourcePath. IMPORTANT: This tool should only be used to install Python packages using package managers like pip or conda. Do not use this tool to install npm packages, system packages (apt/brew/yum), Ruby gems, or any other non-Python dependencies.",
                 "toolReferenceName": "installPythonPackage",
                 "tags": [
                     "python",
@@ -1582,7 +1582,7 @@
                         },
                         "resourcePath": {
                             "type": "string",
-                            "description": "The path to the Python file or workspace into which the packages are installed. If not provided, the current workspace will be used. Where possible pass the path to the file or workspace."
+                            "description": "The path to the Python file or project into which the packages are installed. When omitted, the first open workspace folder is used. Pass the task's target when known, and reuse the Resource path returned by configure_python_environment for subsequent calls."
                         }
                     },
                     "required": [
@@ -1593,7 +1593,7 @@
             {
                 "name": "configure_python_environment",
                 "displayName": "Configure Python Environment",
-                "modelDescription": "This tool configures a Python environment in the given workspace. ALWAYS Use this tool to set up the user's chosen environment and ALWAYS call this tool before using any other Python related tools or running any Python command in the terminal. If you already know which Python interpreter to use (e.g. from a previous tool call or user message), pass it as 'pythonPath' to skip interactive prompts and configure the environment automatically. IMPORTANT: This tool is only for Python environments (venv, virtualenv, conda, pipenv, poetry, pyenv, pixi, or any other Python environment manager). Do not use this tool for npm packages, system packages, Ruby gems, or any other non-Python dependencies.",
+                "modelDescription": "This tool configures a Python environment in the given workspace. ALWAYS call this tool before using any other Python related tools or running any Python command in the terminal. With a compatible Python Environments tools API, this runs without extension prompts or pickers, whether or not pythonPath is supplied. Without pythonPath, it reuses an existing isolated venv, Poetry, Pipenv or non-base Conda environment, or creates and selects an isolated project environment. A selected global Python is used as the base for a new venv, whether selected automatically or manually; Conda base leads to an isolated Conda environment. Supply pythonPath only to select that exact existing interpreter or environment instead, including global Python or Conda base; this override does not permit package installation into global/base environments. Older Environments versions use the previous compatibility workflow, which may prompt; disabled Environments integration retains the legacy Python workflow. An omitted resourcePath defaults to the first open workspace folder; pass the task's file or project path when known. Reuse the returned Resource path as resourcePath in subsequent Python tool calls. Host tool approval still applies and does not change target behavior. Legacy users can supply pythonPath to configure an existing interpreter without extension prompts. IMPORTANT: This tool is only for Python environments (venv, virtualenv, conda, pipenv, poetry, pyenv, pixi, or any other Python environment manager). Do not use this tool for npm packages, system packages, Ruby gems, or any other non-Python dependencies.",
                 "userDescription": "%python.languageModelTools.configure_python_environment.userDescription%",
                 "toolReferenceName": "configurePythonEnvironment",
                 "tags": [
@@ -1608,11 +1608,11 @@
                     "properties": {
                         "resourcePath": {
                             "type": "string",
-                            "description": "The path to the Python file or workspace for which a Python Environment needs to be configured."
+                            "description": "The path to the Python file or project to configure. When omitted, the first open workspace folder is used; with a compatible Python Environments tools API, no folder picker is shown. Pass the task's target when known, and reuse the returned Resource path for subsequent Python tool calls."
                         },
                         "pythonPath": {
                             "type": "string",
-                            "description": "Optional absolute path to a Python interpreter to use. When provided, the environment is configured automatically without any interactive prompts. Use this to avoid blocking the session on user input."
+                            "description": "Optional absolute path to the exact existing Python interpreter or environment to select, including global Python or Conda base. This overrides isolated reuse/creation, but does not allow package installation into global/base environments. Omit it to reuse or create an isolated project environment automatically. With a compatible Python Environments tools API, invalid paths fail without changing the selection and both supplied-path and automatic routes run without extension prompts or pickers. Older Environments versions use the previous compatibility workflow, which may prompt. Host tool approval does not change target behavior. Legacy users can supply an interpreter path to avoid extension prompts."
                         }
                     },
                     "required": []
@@ -1621,7 +1621,7 @@
             {
                 "name": "create_virtual_environment",
                 "displayName": "Create a Virtual Environment",
-                "modelDescription": "This tool will create a Virual Environment",
+                "modelDescription": "Internal virtual environment creation tool for legacy Python and older Python Environments versions. Use configure_python_environment instead.",
                 "tags": [],
                 "canBeReferencedInPrompt": false,
                 "inputSchema": {

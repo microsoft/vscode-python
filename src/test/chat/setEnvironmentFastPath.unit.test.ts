@@ -4,6 +4,7 @@
 'use strict';
 
 import { expect } from 'chai';
+import * as path from 'path';
 import * as sinon from 'sinon';
 import {
     CancellationError,
@@ -20,9 +21,13 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { ICodeExecutionService } from '../../client/terminals/types';
 import { ITerminalHelper, TerminalShellType } from '../../client/common/terminal/types';
 import { IRecommendedEnvironmentService } from '../../client/interpreter/configuration/types';
+import { ErrorWithTelemetrySafeReason } from '../../client/common/errors/errorUtils';
+import { createDeferred } from '../../client/common/utils/async';
 import { TerminalCodeExecutionProvider } from '../../client/terminals/codeExecution/terminalCodeExecution';
 import { CreateVirtualEnvTool } from '../../client/chat/createVirtualEnvTool';
 import { mockedVSCodeNamespaces } from '../vscode-mock';
+import * as envExtApi from '../../client/envExt/api.internal';
+import { PythonEnvironment as BackendEnvironment, PythonEnvironmentApi as BackendApi } from '../../client/envExt/types';
 
 suite('Chat fast-path environment setup', () => {
     const pythonPath = '/usr/bin/python3';
@@ -47,6 +52,7 @@ suite('Chat fast-path environment setup', () => {
 
     setup(() => {
         tokenSource = new CancellationTokenSource();
+        sinon.stub(envExtApi, 'useEnvExtension').returns(false);
         when(mockedVSCodeNamespaces.workspace!.notebookDocuments).thenReturn([]);
         when(mockedVSCodeNamespaces.workspace!.isTrusted).thenReturn(true);
     });
@@ -175,6 +181,127 @@ suite('Chat fast-path environment setup', () => {
     });
 
     suite('setEnvironmentDirectlyByPath()', () => {
+        test('distinguishes a saved Environments selection from a slow Python cache refresh', async () => {
+            (envExtApi.useEnvExtension as sinon.SinonStub).returns(true);
+            const clock = sinon.useFakeTimers();
+            const resource = Uri.file(path.resolve('slow-cache-project'));
+            const requested = Uri.file(path.join(resource.fsPath, '.venv', 'python'));
+            const candidate: ResolvedEnvironment = {
+                ...environment,
+                path: requested.fsPath,
+                executable: { ...environment.executable, uri: requested },
+            };
+            const backendEnvironment: BackendEnvironment = {
+                envId: { id: 'saved', managerId: 'ms-python.python:venv' },
+                name: 'saved',
+                displayName: 'saved',
+                displayPath: requested.fsPath,
+                environmentPath: requested,
+                execInfo: { run: { executable: requested.fsPath } },
+                version: '3.13.0',
+                sysPrefix: path.dirname(requested.fsPath),
+            };
+            const saved = createDeferred<void>();
+            const setBackend = sinon.stub().callsFake(async () => saved.resolve());
+            const backend: Partial<BackendApi> = {
+                resolveEnvironment: sinon.stub().resolves(backendEnvironment),
+                setEnvironment: setBackend,
+            };
+            sinon.stub(envExtApi, 'getEnvExtApi').resolves(backend as BackendApi);
+            const emitter = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
+            const api = ({
+                onDidChangeActiveEnvironmentPath: emitter.event,
+                getActiveEnvironmentPath: () => ({ path: path.join(resource.fsPath, 'old-python'), id: 'old' }),
+                resolveEnvironment: sinon.stub().resolves(candidate),
+                updateActiveEnvironmentPath: sinon.stub().resolves(),
+            } as unknown) as PythonExtension['environments'];
+            const result = setEnvironmentDirectlyByPath(requested.fsPath, api, resource, tokenSource.token).then(
+                () => undefined,
+                (error: unknown) => error,
+            );
+            await saved.promise;
+            await clock.tickAsync(5001);
+            const error = await result;
+            expect(error).to.be.instanceOf(ErrorWithTelemetrySafeReason);
+            if (!(error instanceof ErrorWithTelemetrySafeReason)) {
+                throw new Error('Expected a saved-selection readiness error');
+            }
+            expect(error.telemetrySafeReason).to.equal('selectionPending');
+            expect(error.message).to.include('selection was saved').and.not.include('No environment found');
+            sinon.assert.calledOnceWithExactly(setBackend, resource, backendEnvironment);
+            emitter.dispose();
+        });
+
+        for (const { resolvable, cacheMatches } of [
+            { resolvable: true, cacheMatches: true },
+            { resolvable: false, cacheMatches: true },
+            { resolvable: true, cacheMatches: false },
+        ]) {
+            test(`Environments selection is authoritative (resolvable=${resolvable}, cached=${cacheMatches})`, async () => {
+                (envExtApi.useEnvExtension as sinon.SinonStub).returns(true);
+                const resource = Uri.file(path.resolve('compatibility-project'));
+                const requested = Uri.file(path.join(resource.fsPath, '.venv', 'python'));
+                const candidate: ResolvedEnvironment = {
+                    ...environment,
+                    path: requested.fsPath,
+                    executable: { ...environment.executable, uri: requested },
+                };
+                const backendEnvironment: BackendEnvironment = {
+                    envId: { id: 'selected', managerId: 'ms-python.python:venv' },
+                    name: 'selected',
+                    displayName: 'selected',
+                    displayPath: requested.fsPath,
+                    environmentPath: requested,
+                    execInfo: { run: { executable: requested.fsPath } },
+                    version: '3.13.0',
+                    sysPrefix: path.dirname(requested.fsPath),
+                };
+                const calls: string[] = [];
+                const setBackend = sinon.stub().callsFake(async () => {
+                    calls.push('backend');
+                });
+                const resolveBackend = sinon.stub().resolves(resolvable ? backendEnvironment : undefined);
+                const backend: Partial<BackendApi> = {
+                    resolveEnvironment: resolveBackend,
+                    setEnvironment: setBackend,
+                };
+                sinon.stub(envExtApi, 'getEnvExtApi').resolves(backend as BackendApi);
+                const emitter = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
+                let activePath = {
+                    path: cacheMatches ? requested.fsPath : path.join(resource.fsPath, 'old-python'),
+                    id: 'python-env',
+                };
+                const updatePython = sinon.stub().callsFake(async (pythonPath: string) => {
+                    calls.push('python-cache');
+                    activePath = { path: pythonPath, id: 'python-env' };
+                    emitter.fire({ ...activePath, resource });
+                });
+                const api = ({
+                    onDidChangeActiveEnvironmentPath: emitter.event,
+                    getActiveEnvironmentPath: () => activePath,
+                    resolveEnvironment: sinon.stub().resolves(candidate),
+                    updateActiveEnvironmentPath: updatePython,
+                } as unknown) as PythonExtension['environments'];
+
+                const result = await setEnvironmentDirectlyByPath(requested.fsPath, api, resource, tokenSource.token);
+
+                expect(result).to.equal(resolvable ? candidate : undefined);
+                sinon.assert.calledOnceWithExactly(resolveBackend, requested);
+                if (resolvable) {
+                    sinon.assert.calledOnceWithExactly(setBackend, resource, backendEnvironment);
+                } else {
+                    sinon.assert.notCalled(setBackend);
+                }
+                if (!cacheMatches) {
+                    sinon.assert.calledOnceWithExactly(updatePython, requested.fsPath, resource);
+                    expect(calls).to.deep.equal(['backend', 'python-cache']);
+                } else {
+                    sinon.assert.notCalled(updatePython);
+                }
+                emitter.dispose();
+            });
+        }
+
         test('validates before updating and returns the newly active environment', async () => {
             const emitter = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
             const calls: string[] = [];

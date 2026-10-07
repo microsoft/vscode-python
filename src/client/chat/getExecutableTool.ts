@@ -21,8 +21,15 @@ import {
     getEnvironmentDetails,
     getEnvTypeForTelemetry,
     getToolResponseIfNotebook,
+    getPythonToolResponse,
+    getPythonToolTelemetry,
+    getPythonToolResourcePath,
     IResourceReference,
+    invokePythonTool,
+    invokePythonToolCompatibility,
+    PYTHON_TOOLS_UNAVAILABLE,
     raceCancellationError,
+    usePythonToolsRoute,
 } from './utils';
 import { ITerminalHelper } from '../common/terminal/types';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
@@ -45,7 +52,7 @@ export class GetExecutableTool extends BaseTool<IResourceReference> implements L
         this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
     }
     async invokeImpl(
-        _options: LanguageModelToolInvocationOptions<IResourceReference>,
+        options: LanguageModelToolInvocationOptions<IResourceReference>,
         resourcePath: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
@@ -54,6 +61,25 @@ export class GetExecutableTool extends BaseTool<IResourceReference> implements L
             return notebookResponse;
         }
 
+        if (usePythonToolsRoute()) {
+            const target = getPythonToolResourcePath(options.input.resourcePath, resourcePath);
+            const result = await invokePythonTool((api) => api.getEnvironment({ resourcePath: target }, token), token);
+            if (result !== PYTHON_TOOLS_UNAVAILABLE) {
+                this.extraTelemetryProperties.envType = getPythonToolTelemetry(result?.environment).envType;
+                return getPythonToolResponse(result);
+            }
+            return invokePythonToolCompatibility(target, resourcePath, token, (resource) =>
+                this.invokePreviousFlow(resource, token),
+            );
+        }
+
+        return this.invokePreviousFlow(resourcePath, token);
+    }
+
+    private async invokePreviousFlow(
+        resourcePath: Uri | undefined,
+        token: CancellationToken,
+    ): Promise<LanguageModelToolResult> {
         const envPath = this.api.getActiveEnvironmentPath(resourcePath);
         const environment = await raceCancellationError(this.api.resolveEnvironment(envPath), token);
         if (environment) {
@@ -72,12 +98,21 @@ export class GetExecutableTool extends BaseTool<IResourceReference> implements L
     }
 
     async prepareInvocationImpl(
-        _options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
+        options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
         resourcePath: Uri | undefined,
         token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
         if (getToolResponseIfNotebook(resourcePath)) {
             return {};
+        }
+
+        if (usePythonToolsRoute()) {
+            const target = getPythonToolResourcePath(options.input.resourcePath, resourcePath);
+            return {
+                invocationMessage: target
+                    ? l10n.t('Fetching Python executable information for {0}', target)
+                    : l10n.t('Fetching Python executable information'),
+            };
         }
 
         const envName = await raceCancellationError(getEnvDisplayName(this.discovery, resourcePath, this.api), token);

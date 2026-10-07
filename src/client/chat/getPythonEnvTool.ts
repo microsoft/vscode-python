@@ -21,8 +21,15 @@ import {
     getEnvironmentDetails,
     getEnvTypeForTelemetry,
     getToolResponseIfNotebook,
+    getPythonToolResponse,
+    getPythonToolTelemetry,
+    getPythonToolResourcePath,
     IResourceReference,
+    invokePythonTool,
+    invokePythonToolCompatibility,
+    PYTHON_TOOLS_UNAVAILABLE,
     raceCancellationError,
+    usePythonToolsRoute,
 } from './utils';
 import { getPythonPackagesResponse } from './listPackagesTool';
 import { ITerminalHelper } from '../common/terminal/types';
@@ -52,7 +59,7 @@ export class GetEnvironmentInfoTool extends BaseTool<IResourceReference>
     }
 
     async invokeImpl(
-        _options: LanguageModelToolInvocationOptions<IResourceReference>,
+        options: LanguageModelToolInvocationOptions<IResourceReference>,
         resourcePath: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
@@ -61,6 +68,31 @@ export class GetEnvironmentInfoTool extends BaseTool<IResourceReference>
             return notebookResponse;
         }
 
+        if (usePythonToolsRoute()) {
+            const target = getPythonToolResourcePath(options.input.resourcePath, resourcePath);
+            const result = await invokePythonTool(
+                (api) => api.getEnvironment({ resourcePath: target, includePackages: true }, token),
+                token,
+            );
+            if (result !== PYTHON_TOOLS_UNAVAILABLE) {
+                this.extraTelemetryProperties.envType = getPythonToolTelemetry(result?.environment).envType;
+                if (result?.status === 'success' && Array.isArray(result.packages)) {
+                    this.extraTelemetryProperties.responsePackageCount = String(result.packages.length);
+                }
+                return getPythonToolResponse(result, undefined, true);
+            }
+            return invokePythonToolCompatibility(target, resourcePath, token, (resource) =>
+                this.invokePreviousFlow(resource, token),
+            );
+        }
+
+        return this.invokePreviousFlow(resourcePath, token);
+    }
+
+    private async invokePreviousFlow(
+        resourcePath: Uri | undefined,
+        token: CancellationToken,
+    ): Promise<LanguageModelToolResult> {
         // environment
         const envPath = this.api.getActiveEnvironmentPath(resourcePath);
         const environment = await raceCancellationError(this.api.resolveEnvironment(envPath), token);
@@ -80,15 +112,10 @@ export class GetEnvironmentInfoTool extends BaseTool<IResourceReference>
             const pkgs = env ? await api.getPackages(env) : [];
             if (pkgs && pkgs.length > 0) {
                 responsePackageCount = pkgs.length;
-                // Installed Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown. Returns an empty array if no packages are installed.
-                const response = [
-                    'Below is a list of the Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown: ',
-                ];
-                pkgs.forEach((pkg) => {
-                    const version = pkg.version;
-                    response.push(version ? `- ${pkg.name} (${version})` : `- ${pkg.name}`);
-                });
-                packages = response.join('\n');
+                packages = [
+                    l10n.t('Installed Python packages (name and version, when known):'),
+                    ...pkgs.map((pkg) => (pkg.version ? `- ${pkg.name} (${pkg.version})` : `- ${pkg.name}`)),
+                ].join('\n');
             }
         }
         if (!packages) {
@@ -99,7 +126,6 @@ export class GetEnvironmentInfoTool extends BaseTool<IResourceReference>
                 resourcePath,
                 token,
             );
-            // Count lines starting with '- ' to get the number of packages
             responsePackageCount = (packages.match(/^- /gm) || []).length;
         }
         this.extraTelemetryProperties.responsePackageCount = String(responsePackageCount);
@@ -116,7 +142,7 @@ export class GetEnvironmentInfoTool extends BaseTool<IResourceReference>
     }
 
     async prepareInvocationImpl(
-        _options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
+        options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
         resourcePath: Uri | undefined,
         _token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
@@ -124,8 +150,13 @@ export class GetEnvironmentInfoTool extends BaseTool<IResourceReference>
             return {};
         }
 
+        const target = usePythonToolsRoute()
+            ? getPythonToolResourcePath(options.input.resourcePath, resourcePath)
+            : undefined;
         return {
-            invocationMessage: l10n.t('Fetching Python environment information'),
+            invocationMessage: target
+                ? l10n.t('Fetching Python environment information for {0}', target)
+                : l10n.t('Fetching Python environment information'),
         };
     }
 }
