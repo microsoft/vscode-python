@@ -7,11 +7,17 @@ import {
     NotebookEdit,
     WorkspaceEdit,
     Uri,
+    window,
+    TabGroup,
 } from 'vscode';
 import { getExistingReplViewColumn, getTabNameForUri } from './replUtils';
 import { showNotebookDocument } from '../common/vscodeApis/windowApis';
 import { openNotebookDocument, applyEdit } from '../common/vscodeApis/workspaceApis';
 import { executeCommand } from '../common/vscodeApis/commandApis';
+
+export function getNewReplViewColumn(tabGroups: readonly TabGroup[]): ViewColumn {
+    return tabGroups.some((tabGroup) => tabGroup.tabs.length > 0) ? ViewColumn.Beside : ViewColumn.Active;
+}
 
 /**
  * Function that opens/show REPL using IW UI.
@@ -20,7 +26,7 @@ export async function openInteractiveREPL(
     notebookDocument: NotebookDocument | Uri | undefined,
     preserveFocus: boolean = true,
 ): Promise<{ notebookEditor: NotebookEditor; documentCreated: boolean } | undefined> {
-    let viewColumn = ViewColumn.Beside;
+    let viewColumn = getNewReplViewColumn(window.tabGroups.all);
     let alreadyExists = false;
     if (notebookDocument instanceof Uri) {
         // Case where NotebookDocument is undefined, but workspace mementoURI exists.
