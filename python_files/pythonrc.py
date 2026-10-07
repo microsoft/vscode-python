@@ -9,12 +9,13 @@ def _initialize():
     if sys.version_info >= (3, 13):
         import re
 
-        import _pyrepl.simple_interact
         import _pyrepl.utils
 
-        _pyrepl.utils.ANSI_ESCAPE_SEQUENCE = re.compile(
-            r"\x1b(?:\[[ -@]*[A-~]|\][^\x1b\x07]*(?:\x07|\x1b\\))"
-        )
+        _ansi_escape_sequence = re.compile(r"\x1b(?:\[[ -@]*[A-~]|\][^\x1b\x07]*(?:\x07|\x1b\\))")
+        _pyrepl.utils.ANSI_ESCAPE_SEQUENCE = _ansi_escape_sequence
+
+        # Import again to ensure the module is loaded after patching the ANSI_ESCAPE_SEQUENCE
+        import _pyrepl.simple_interact
 
         # Patch _pyrepl.simple_interact.multiline_input to ensure prompts are strings
         _original_multiline_input = _pyrepl.simple_interact.multiline_input

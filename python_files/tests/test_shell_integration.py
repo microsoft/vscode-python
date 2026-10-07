@@ -115,6 +115,18 @@ def test_replacement_regex_preserves_csi_handling():
     )
 
 
+def test_replacement_regex_is_imported_by_pyrepl_modules():
+    if sys.version_info < (3, 15):
+        return
+
+    pyrepl_reader = importlib.import_module("_pyrepl.reader")
+    pyrepl_render = importlib.import_module("_pyrepl.render")
+
+    assert pyrepl_reader.ANSI_ESCAPE_SEQUENCE.sub("", "\x1b]633;A\x07>>> ") == ">>> "
+    assert pyrepl_render.ANSI_ESCAPE_SEQUENCE.sub("", "\x1b]633;A\x07>>> ") == ">>> "
+    assert pyrepl_render.RenderLine.from_rendered_text("\x1b]633;A\x07>>> ").width == 4
+
+
 def test_pyrepl_multiline_input_converts_prompts_to_strings(monkeypatch):
     if sys.version_info < (3, 13):
         return
