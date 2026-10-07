@@ -409,14 +409,32 @@ suite('PythonTestController', () => {
             assert.strictEqual(triggerStub.notCalled, true);
         });
 
-        test('ignores workspaces that are not in project-based mode', () => {
+        test('ignores workspaces in legacy mode (legacy adapter registered)', () => {
             const { controller, triggerStub } = setupController(false);
+            // A registered legacy adapter marks the workspace as legacy mode, so environment
+            // changes must not queue a project-based re-discovery for it.
+            (controller as any).testAdapters.set(workspaceUri, {});
 
             (controller as any).handleEnvironmentChange({ uri: workspaceUri, old: undefined, new: newEnv });
 
             const pending = (controller as any).pendingEnvChangeWorkspaces as Map<string, vscode.WorkspaceFolder>;
             assert.strictEqual(pending.size, 0);
             assert.strictEqual(triggerStub.notCalled, true);
+        });
+
+        test('queues workspaces whose initial project registration is still in flight', () => {
+            // Startup race: the environments extension assigns an environment while the initial
+            // project discovery for the workspace is still running. No projects are registered yet
+            // (hasProjects === false) and no legacy adapter exists. The assignment must still queue
+            // a re-discovery, otherwise the workspace stays on the fallback default project (using
+            // the workspace-root interpreter) until a manual refresh.
+            const { controller, triggerStub } = setupController(false);
+
+            (controller as any).handleEnvironmentChange({ uri: workspaceUri, old: undefined, new: newEnv });
+
+            const pending = (controller as any).pendingEnvChangeWorkspaces as Map<string, vscode.WorkspaceFolder>;
+            assert.strictEqual(pending.has(workspaceUri.toString()), true);
+            assert.strictEqual(triggerStub.calledOnce, true);
         });
 
         test('re-discovers each pending workspace and clears the queue', async () => {
@@ -429,6 +447,36 @@ suite('PythonTestController', () => {
 
             assert.strictEqual(rediscoverStub.calledOnceWithExactly(workspaceUri), true);
             assert.strictEqual(pending.size, 0);
+        });
+
+        test('activate() subscribes to project and environment changes before initial project discovery', async () => {
+            // Subscribing after the initial discovery misses project registrations and environment
+            // assignments raised by the environments extension while discovery is running (its
+            // initial refresh is kicked off by acquiring its API during discovery).
+            sandbox.stub(envExtApiInternal, 'useEnvExtension').returns(true);
+            sandbox.stub(envExtApiInternal, 'getEnvExtApi').resolves({
+                getPythonProjects: () => [],
+                getEnvironment: sandbox.stub().resolves(undefined),
+                onDidChangePythonProjects: sandbox.stub().returns({ dispose: () => undefined }),
+                onDidChangeEnvironment: sandbox.stub().returns({ dispose: () => undefined }),
+            } as any);
+
+            const controller = createController({
+                workspaceService: ({
+                    workspaceFolders: [workspaceFolder],
+                    getWorkspaceFolder: () => workspaceFolder,
+                } as unknown) as any,
+            });
+
+            const subscribeProjectsSpy = sandbox.spy(controller as any, 'subscribeToProjectChanges');
+            const subscribeEnvSpy = sandbox.spy(controller as any, 'subscribeToEnvironmentChanges');
+            const discoverSpy = sandbox.spy((controller as any).projectRegistry, 'discoverAndRegisterProjects');
+
+            await controller.activate();
+
+            assert.strictEqual(discoverSpy.calledOnceWithExactly(workspaceUri), true);
+            assert.strictEqual(subscribeProjectsSpy.calledBefore(discoverSpy), true);
+            assert.strictEqual(subscribeEnvSpy.calledBefore(discoverSpy), true);
         });
     });
 });
