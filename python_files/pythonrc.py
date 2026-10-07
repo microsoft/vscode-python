@@ -71,7 +71,6 @@ def _initialize():
         @classmethod
         def command_line(cls, command: object) -> str:
             """Explicitly set the command line interpreted by the shell."""
-            return ""
             return cls.template.format(f"E;{command}")
 
     class REPLHooks:
@@ -138,12 +137,12 @@ def _initialize():
             return "<Custom PS1 for VS Code Python Shell Integration>"
 
     is_wsl = "microsoft-standard-WSL" in platform.release()
-    if True and (sys.platform != "win32" or sys.version_info >= (3, 13)):
+    if not is_wsl and (sys.platform != "win32" or sys.version_info >= (3, 13)):
         sys.ps1 = PS1()
 
     ctrl_key = "Cmd" if sys.platform == "darwin" else "Ctrl"
 
-    print(f"{ctrl_key} click to launch VS Code Native REPL (https://aka.ms/python-native-repl) :-)")
+    print(f"{ctrl_key} click to launch VS Code Native REPL (https://aka.ms/python-native-repl)")
 
 
 _initialize()
