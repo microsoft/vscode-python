@@ -1,8 +1,7 @@
 {
     "spec": "./src/test/**/*.unit.test.ts",
-    "require": ["ts-node/register", "out/test/unittests.js"],
-    "reporter": "mocha-multi-reporters",
-    "reporter-option": "configFile=build/.mocha-multi-reporters.config",
+    "require": ["ts-node/register/files", "./out/test/unittests.js"],
+    "reporter": "./build/ci/scripts/ci_reporter.js",
     "ui": "tdd",
     "recursive": true,
     "colors": true

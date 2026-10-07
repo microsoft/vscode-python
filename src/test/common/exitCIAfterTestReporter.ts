@@ -55,19 +55,23 @@ function notifyCompleted(hasFailures: boolean) {
     }
 }
 
-class ExitReporter {
+class ExitReporter extends mochaTests.reporters.Spec {
     constructor(runner: any) {
+        super(runner);
         console.log('Initialize Exit Reporter for Mocha (PVSC).');
         connectToServer().catch(noop);
-        const stats = runner.stats;
         runner
             .once(EVENT_RUN_BEGIN, () => {
                 console.info('Start Exit Reporter for Mocha.');
             })
-            .once(EVENT_RUN_END, async () => {
-                notifyCompleted(stats.failures > 0);
+            .once(EVENT_RUN_END, () => {
                 console.info('End Exit Reporter for Mocha.');
             });
+    }
+
+    done(failures: number, callback: (failures: number) => void) {
+        notifyCompleted(failures > 0);
+        callback(failures);
     }
 }
 
