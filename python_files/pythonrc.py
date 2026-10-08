@@ -1,14 +1,33 @@
 def _initialize():
     import platform
     import sys
-    from enum import Enum
 
     if sys.platform != "win32":
         import readline
 
-    original_ps1 = ">>> "
-    is_wsl = "microsoft-standard-WSL" in platform.release()
+    # Override regex to support OSC codes
+    if sys.version_info >= (3, 13):
+        import re
 
+        import _pyrepl.utils
+
+        _ansi_escape_sequence = re.compile(r"\x1b(?:\[[ -@]*[A-~]|\][^\x1b\x07]*(?:\x07|\x1b\\))")
+        _pyrepl.utils.ANSI_ESCAPE_SEQUENCE = _ansi_escape_sequence
+
+        # Import again to ensure the module is loaded after patching the ANSI_ESCAPE_SEQUENCE
+        import _pyrepl.simple_interact
+
+        # Patch _pyrepl.simple_interact.multiline_input to ensure prompts are strings
+        _original_multiline_input = _pyrepl.simple_interact.multiline_input
+        if getattr(_original_multiline_input, "_vscode_prompts_as_strings", False) is not True:
+
+            def _multiline_input(more_lines, ps1, ps2):
+                return _original_multiline_input(more_lines, _str(ps1), _str(ps2))
+
+            _multiline_input.__dict__["_vscode_prompts_as_strings"] = True
+            _pyrepl.simple_interact.multiline_input = _multiline_input
+
+    original_ps1 = ">>> "
     # PYTHONSTARTUP executes this file's code inside the user's __main__
     # namespace, so PS1.__str__'s globals are the user's globals. If the
     # user later shadows a name we rely on at prompt-render time (e.g.
@@ -23,23 +42,41 @@ def _initialize():
     _bool = bool
     _str = str
 
-    class ShellIntegrationSequence(str, Enum):
-        SOH = "\001"
-        STX = "\002"
-        COMMAND_EXECUTED = "\x1b]633;C\x07"
-        COMMAND_LINE = "\x1b]633;E;"
-        COMMAND_FINISHED = "\x1b]633;D;"
-        PROMPT_STARTED = "\x1b]633;A\x07"
-        COMMAND_START = "\x1b]633;B\x07"
-        TERMINATOR = "\x07"
+    # https://code.visualstudio.com/docs/terminal/shell-integration#_supported-escape-sequences
+    class ShellIntegrationSequence:
+        soh = "\001"
+        stx = "\002"
+        template = "\x1b]633;{}\x07"
 
-        def __str__(self):
-            return self.value
+        # Before the prompt (>>>) is displayed
+        @classmethod
+        def prompt_start(cls) -> str:
+            return cls.template.format("A")
+
+        # After the prompt (>>>) is displayed
+        @classmethod
+        def prompt_end(cls) -> str:
+            return cls.template.format("B")
+
+        # After the user has typed a command but before it is executed
+        @classmethod
+        def pre_execution(cls) -> str:
+            return cls.template.format("C")
+
+        @classmethod
+        def execution_finished(cls, exit_code: int) -> str:
+            """Mark execution as finished with its exit code."""
+            return cls.template.format(f"D;{exit_code}")
+
+        @classmethod
+        def command_line(cls, command: object) -> str:
+            """Explicitly set the command line interpreted by the shell."""
+            return cls.template.format(f"E;{command}")
 
     class REPLHooks:
         def __init__(self):
             self.global_exit = None
-            self.failure_flag = False
+            self.last_failure_flag = False
             self.original_excepthook = sys.excepthook
             self.original_displayhook = sys.displayhook
             sys.excepthook = self.vscode_excepthook
@@ -47,12 +84,12 @@ def _initialize():
 
         def vscode_displayhook(self, value):
             if value is None:
-                self.failure_flag = False
+                self.last_failure_flag = False
             self.original_displayhook(value)
 
         def vscode_excepthook(self, type_, value, traceback):
             self.global_exit = value
-            self.failure_flag = True
+            self.last_failure_flag = True
             self.original_excepthook(type_, value, traceback)
 
     def get_last_command():
@@ -67,43 +104,40 @@ def _initialize():
 
         # str will get called for every prompt with exit code to show success/failure
         def __str__(self):
-            exit_code = _int(_bool(self.hooks.failure_flag))
-            self.hooks.failure_flag = False
+            last_exit_code = _int(_bool(self.hooks.last_failure_flag))
+            self.hooks.last_failure_flag = False
             # Guide following official VS Code doc for shell integration sequence:
             result = ""
             # For non-windows allow recent_command history.
+            # fmt: off
             if sys.platform != "win32":
-                result = "{soh}{command_executed}{command_line}{command_finished}{prompt_started}{stx}{prompt}{soh}{command_start}{stx}".format(
-                    soh=ShellIntegrationSequence.SOH,
-                    stx=ShellIntegrationSequence.STX,
-                    command_executed=ShellIntegrationSequence.COMMAND_EXECUTED,
-                    command_line=ShellIntegrationSequence.COMMAND_LINE
-                    + _str(get_last_command())
-                    + ShellIntegrationSequence.TERMINATOR,
-                    command_finished=ShellIntegrationSequence.COMMAND_FINISHED
-                    + _str(exit_code)
-                    + ShellIntegrationSequence.TERMINATOR,
-                    prompt_started=ShellIntegrationSequence.PROMPT_STARTED,
+                result = "{soh}{pre_execution}{command_line}{execution_finished}{prompt_start}{stx}{prompt}{soh}{prompt_end}{stx}".format(  # noqa: UP032
+                    soh=ShellIntegrationSequence.soh,
+                    pre_execution=ShellIntegrationSequence.pre_execution(),
+                    command_line=ShellIntegrationSequence.command_line(get_last_command()),
+                    execution_finished=ShellIntegrationSequence.execution_finished(last_exit_code),
+                    prompt_start=ShellIntegrationSequence.prompt_start(),
+                    stx=ShellIntegrationSequence.stx,
                     prompt=original_ps1,
-                    command_start=ShellIntegrationSequence.COMMAND_START,
+                    prompt_end=ShellIntegrationSequence.prompt_end(),
                 )
             else:
-                result = "{command_finished}{prompt_started}{prompt}{command_start}{command_executed}".format(
-                    command_finished=ShellIntegrationSequence.COMMAND_FINISHED
-                    + _str(exit_code)
-                    + ShellIntegrationSequence.TERMINATOR,
-                    prompt_started=ShellIntegrationSequence.PROMPT_STARTED,
+                result = "{execution_finished}{prompt_start}{prompt}{prompt_end}{pre_execution}".format(  # noqa: UP032
+                    execution_finished=ShellIntegrationSequence.execution_finished(last_exit_code),
+                    prompt_start=ShellIntegrationSequence.prompt_start(),
                     prompt=original_ps1,
-                    command_start=ShellIntegrationSequence.COMMAND_START,
-                    command_executed=ShellIntegrationSequence.COMMAND_EXECUTED,
+                    prompt_end=ShellIntegrationSequence.prompt_end(),
+                    pre_execution=ShellIntegrationSequence.pre_execution(),
                 )
+            # fmt: on
 
             return result
 
         def __repr__(self):
             return "<Custom PS1 for VS Code Python Shell Integration>"
 
-    if sys.platform != "win32" and (not is_wsl):
+    is_wsl = "microsoft-standard-WSL" in platform.release()
+    if not is_wsl and (sys.platform != "win32" or sys.version_info >= (3, 13)):
         sys.ps1 = PS1()
 
     ctrl_key = "Cmd" if sys.platform == "darwin" else "Ctrl"

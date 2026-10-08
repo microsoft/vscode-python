@@ -137,13 +137,22 @@ suite('Terminal - Code Execution Helper', async () => {
         editor.setup((e) => e.document).returns(() => document.object);
     });
 
-    test('normalizeLines with BASIC_REPL does not attach bracketed paste mode', async () => {
+    test('normalizeLines attaches bracketed paste for 3.13+ terminal even when shell integration is enabled (#26176)', async () => {
+        // The new PyREPL (3.13+) auto-indents typed input. Terminal REPL code is sent via sendText
+        // (never shellIntegration.executeCommand), so bracketed paste must be attached regardless of
+        // the terminal.shellIntegration.enabled setting; otherwise multiline indentation grows
+        // progressively and eventually raises IndentationError.
         configurationService
             .setup((c) => c.getSettings(TypeMoq.It.isAny()))
             .returns({
                 REPL: {
-                    EnableREPLSmartSend: false,
+                    enableREPLSmartSend: false,
                     REPLSmartSend: false,
+                },
+                terminal: {
+                    shellIntegration: {
+                        enabled: true,
+                    },
                 },
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any);
@@ -155,15 +164,13 @@ suite('Terminal - Code Execution Helper', async () => {
             );
 
         jsonParseStub = sinon.stub(JSON, 'parse');
-        const mockResult = {
-            normalized: 'print("Looks like you are on 3.13")',
-            attach_bracket_paste: true,
-        };
-        jsonParseStub.returns(mockResult);
+        const normalized = 'valid = (\n    isinstance(x)\n    and y\n)\n';
+        jsonParseStub.returns({ normalized, attach_bracket_paste: true });
 
-        const result = await helper.normalizeLines('print("Looks like you are on 3.13")', ReplType.terminal);
+        const result = await helper.normalizeLines('valid = (\n    isinstance(x)\n    and y\n)', ReplType.terminal);
 
-        expect(result).to.equal(`print("Looks like you are on 3.13")`);
+        // Indentation is preserved verbatim inside the bracketed-paste markers.
+        expect(result).to.equal('\u001b[200~valid = (\n    isinstance(x)\n    and y\n)\u001b[201~');
         jsonParseStub.restore();
     });
 
