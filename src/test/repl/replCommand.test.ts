@@ -1,6 +1,6 @@
 // Create test suite and test cases for the `replUtils` module
 import * as TypeMoq from 'typemoq';
-import { commands, Disposable, Uri } from 'vscode';
+import { commands, Disposable, Uri, window } from 'vscode';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 import { IInterpreterService } from '../../client/interpreter/contracts';
@@ -163,7 +163,13 @@ suite('REPL - register native repl command', () => {
 
         expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
 
-        await commandHandler!('uri');
+        const originalActiveTextEditor = window.activeTextEditor;
+        (window as any).activeTextEditor = undefined;
+        try {
+            await commandHandler!('uri');
+        } finally {
+            (window as any).activeTextEditor = originalActiveTextEditor;
+        }
         sinon.assert.calledOnce(getNativeReplStub);
     });
 

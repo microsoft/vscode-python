@@ -41,6 +41,19 @@ export function initialize() {
     generateMock('debug');
     generateMock('scm');
     generateMock('notebooks');
+    (mockedVSCode.commands as any).executeCommand = () => Promise.resolve(undefined);
+    (mockedVSCode.notebooks as any).createNotebookController = () => {
+        throw new Error('createNotebookController must be stubbed in tests that use it.');
+    };
+    when(mockedVSCodeNamespaces.window!.tabGroups).thenReturn({
+        all: [],
+        get activeTabGroup(): vscode.TabGroup {
+            throw new Error('activeTabGroup must be stubbed in tests that use it.');
+        },
+        onDidChangeTabGroups: new vscodeMocks.EventEmitter<any>().event,
+        onDidChangeTabs: new vscodeMocks.EventEmitter<any>().event,
+        close: () => Promise.resolve(true),
+    });
 
     // Notebook output helpers used by REPL tests.
     (mockedVSCode as any).NotebookCellOutputItem = {

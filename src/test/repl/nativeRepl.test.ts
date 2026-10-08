@@ -5,7 +5,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as TypeMoq from 'typemoq';
 import * as sinon from 'sinon';
-import { reset, when } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { Disposable, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { expect } from 'chai';
@@ -18,7 +17,6 @@ import * as PythonServer from '../../client/repl/pythonServer';
 import * as vscodeWorkspaceApis from '../../client/common/vscodeApis/workspaceApis';
 import * as replController from '../../client/repl/replController';
 import { executeCommand } from '../../client/common/vscodeApis/commandApis';
-import { mockedVSCodeNamespaces } from '../vscode-mock';
 
 suite('REPL - Native REPL', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
@@ -144,9 +142,7 @@ suite('REPL - Native REPL', () => {
             executeHandler: undefined,
         } as any) as vscode.NotebookController;
 
-        when(
-            mockedVSCodeNamespaces.notebooks!.createNotebookController('pythonREPL', 'jupyter-notebook', 'Python REPL'),
-        ).thenReturn(mockNotebookController);
+        sinon.stub(vscode.notebooks, 'createNotebookController').returns(mockNotebookController);
         createReplControllerStub.restore();
 
         const disposables: Disposable[] = [];
@@ -173,7 +169,6 @@ suite('REPL - Native REPL', () => {
             expect(outputText).to.equal('hello\nworld');
         } finally {
             disposables.forEach((disposable) => disposable.dispose());
-            reset(mockedVSCodeNamespaces.notebooks!);
         }
     });
 
