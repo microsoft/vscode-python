@@ -76,6 +76,7 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
             sinon.stub(envExt, 'getEnvExtensionDecisionTelemetry').returns({
                 envsDecisionReason: 'resolvedSettingFalse',
                 envsAvailableToHostNow: true,
+                envsActiveNow: true,
                 envsResolvedSettingNow: false,
                 envsCachedDecision: false,
             });
@@ -111,6 +112,7 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
                         envsExplicitFalseScope: 'workspace',
                         envsDecisionReason: 'resolvedSettingFalse',
                         envsAvailableToHostNow: true,
+                        envsActiveNow: true,
                         envsResolvedSettingNow: false,
                         isFirstSession: false,
                     }),

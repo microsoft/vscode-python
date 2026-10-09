@@ -39,6 +39,7 @@ suite('Python Environments integration decision telemetry', () => {
         {
             name: 'extension unavailable',
             available: false,
+            active: false,
             resolvedSetting: true,
             decision: false,
             reason: 'extensionUnavailable',
@@ -46,6 +47,7 @@ suite('Python Environments integration decision telemetry', () => {
         {
             name: 'resolved setting false',
             available: true,
+            active: true,
             resolvedSetting: false,
             decision: false,
             reason: 'resolvedSettingFalse',
@@ -53,21 +55,23 @@ suite('Python Environments integration decision telemetry', () => {
         {
             name: 'integration enabled',
             available: true,
+            active: true,
             resolvedSetting: true,
             decision: true,
             reason: 'enabled',
         },
     ] as const;
 
-    cases.forEach(({ name, available, resolvedSetting, decision, reason }) => {
+    cases.forEach(({ name, available, active, resolvedSetting, decision, reason }) => {
         test(`captures ${name}`, () => {
             getConfiguration.returns(configuration(resolvedSetting));
-            getExtension.returns(available ? ({} as Extension<unknown>) : undefined);
+            getExtension.returns(available ? ({ isActive: active } as Extension<unknown>) : undefined);
 
             assert.strictEqual(useEnvExtension(), decision);
             assert.deepEqual(getEnvExtensionDecisionTelemetry(), {
                 envsDecisionReason: reason,
                 envsAvailableToHostNow: available,
+                envsActiveNow: active,
                 envsResolvedSettingNow: resolvedSetting,
                 envsCachedDecision: decision,
             });
@@ -78,11 +82,12 @@ suite('Python Environments integration decision telemetry', () => {
     test('reports live inputs without changing a stale cached decision', () => {
         assert.isFalse(useEnvExtension());
         getConfiguration.returns(configuration(true));
-        getExtension.returns({} as Extension<unknown>);
+        getExtension.returns({ isActive: true } as Extension<unknown>);
 
         assert.deepEqual(getEnvExtensionDecisionTelemetry(), {
             envsDecisionReason: 'extensionUnavailable',
             envsAvailableToHostNow: true,
+            envsActiveNow: true,
             envsResolvedSettingNow: true,
             envsCachedDecision: false,
         });
@@ -91,11 +96,12 @@ suite('Python Environments integration decision telemetry', () => {
 
     test('does not initialize the cached decision when telemetry is requested', () => {
         getConfiguration.returns(configuration(true));
-        getExtension.returns({} as Extension<unknown>);
+        getExtension.returns({ isActive: false } as Extension<unknown>);
 
         assert.deepEqual(getEnvExtensionDecisionTelemetry(), {
             envsDecisionReason: undefined,
             envsAvailableToHostNow: true,
+            envsActiveNow: false,
             envsResolvedSettingNow: true,
             envsCachedDecision: undefined,
         });

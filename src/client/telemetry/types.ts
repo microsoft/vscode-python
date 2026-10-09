@@ -15,6 +15,7 @@ export type EnvsIntegrationDecisionReason = 'enabled' | 'extensionUnavailable' |
 export type EnvsIntegrationDecisionTelemetry = {
     envsDecisionReason?: EnvsIntegrationDecisionReason;
     envsAvailableToHostNow: boolean;
+    envsActiveNow: boolean;
     envsResolvedSettingNow: boolean;
     envsCachedDecision?: boolean;
 };

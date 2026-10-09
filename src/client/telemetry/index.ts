@@ -363,6 +363,7 @@ export interface IEventNamePropertyMapping {
           "envsexplicitfalsescope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
           "envsdecisionreason" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
           "envsavailabletohostnow" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "envsactivenow" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
           "envsresolvedsettingnow" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
        }
      */
@@ -428,6 +429,10 @@ export interface IEventNamePropertyMapping {
          */
         envsAvailableToHostNow?: boolean;
         /**
+         * Whether Python Environments is currently active in this extension host.
+         */
+        envsActiveNow?: boolean;
+        /**
          * The current resolved value of python.useEnvironmentsExtension.
          */
         envsResolvedSettingNow?: boolean;
@@ -441,6 +446,7 @@ export interface IEventNamePropertyMapping {
           "envsexplicitfalsescope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
           "envsdecisionreason" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
           "envsavailabletohostnow" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "envsactivenow" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
           "envsresolvedsettingnow" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
           "envscacheddecision" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
        }
@@ -449,6 +455,7 @@ export interface IEventNamePropertyMapping {
         envsExplicitFalseScope: EnvsExplicitFalseScope;
         envsDecisionReason?: EnvsIntegrationDecisionReason;
         envsAvailableToHostNow: boolean;
+        envsActiveNow: boolean;
         envsResolvedSettingNow: boolean;
         envsCachedDecision?: boolean;
     };

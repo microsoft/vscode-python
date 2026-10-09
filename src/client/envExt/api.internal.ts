@@ -57,11 +57,13 @@ export function shouldEnvExtHandleActivation(): boolean {
 
 function getEnvExtensionDecisionInputs(): Pick<
     EnvsIntegrationDecisionTelemetry,
-    'envsAvailableToHostNow' | 'envsResolvedSettingNow'
+    'envsAvailableToHostNow' | 'envsActiveNow' | 'envsResolvedSettingNow'
 > {
     const config = getConfiguration('python');
+    const extension = getExtension(ENVS_EXTENSION_ID);
     return {
-        envsAvailableToHostNow: !!getExtension(ENVS_EXTENSION_ID),
+        envsAvailableToHostNow: !!extension,
+        envsActiveNow: extension?.isActive ?? false,
         envsResolvedSettingNow: config?.get<boolean>('useEnvironmentsExtension', false) ?? false,
     };
 }

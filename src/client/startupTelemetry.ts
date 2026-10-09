@@ -24,6 +24,7 @@ function getEnvExtensionStartupTelemetry() {
     return {
         envsDecisionReason: telemetry.envsDecisionReason,
         envsAvailableToHostNow: telemetry.envsAvailableToHostNow,
+        envsActiveNow: telemetry.envsActiveNow,
         envsResolvedSettingNow: telemetry.envsResolvedSettingNow,
     };
 }

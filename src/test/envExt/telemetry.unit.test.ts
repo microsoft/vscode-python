@@ -48,6 +48,7 @@ suite('Environments extension telemetry', () => {
     const decisionTelemetry = {
         envsDecisionReason: 'resolvedSettingFalse' as const,
         envsAvailableToHostNow: true,
+        envsActiveNow: true,
         envsResolvedSettingNow: false,
         envsCachedDecision: false,
     };
