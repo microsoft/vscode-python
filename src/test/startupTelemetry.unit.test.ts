@@ -131,7 +131,7 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
                 test(`Return false if using settings equals {globalValue: ${globalValue}, workspaceValue: ${workspaceValue}, workspaceFolderValue: ${workspaceFolderValue}}`, () => {
                     interpreterPathService
                         .setup((i) => i.inspect(resource))
-                        .returns(() => ({ globalValue, workspaceValue, workspaceFolderValue }) as any);
+                        .returns(() => ({ globalValue, workspaceValue, workspaceFolderValue } as any));
                     const result = hasUserDefinedPythonPath(resource, serviceContainer.object);
                     expect(result).to.equal(false, 'Should be false');
                 });
@@ -142,7 +142,7 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
     test('Return true if using setting value equals something else', () => {
         interpreterPathService
             .setup((i) => i.inspect(resource))
-            .returns(() => ({ globalValue: 'something else' }) as any);
+            .returns(() => ({ globalValue: 'something else' } as any));
         const result = hasUserDefinedPythonPath(resource, serviceContainer.object);
         expect(result).to.equal(true, 'Should be true');
     });
