@@ -13,7 +13,7 @@ import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { TensorBoardPromptSelection } from '../tensorBoard/constants';
 import { EventName } from './constants';
 import type { UnitTestRunFailureCategory } from './constants';
-import type { EnvsExplicitFalseScope, TestTool } from './types';
+import type { EnvsExplicitFalseScope, EnvsIntegrationDecisionReason, TestTool } from './types';
 
 /**
  * Checks whether telemetry is supported.
@@ -360,7 +360,10 @@ export interface IEventNamePropertyMapping {
           "usingglobalinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "isfirstsession" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "usingenvironmentsextension" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eduardovil" },
-          "envsexplicitfalsescope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
+          "envsexplicitfalsescope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "envsdecisionreason" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "envsavailabletohostnow" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "envsresolvedsettingnow" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
        }
      */
     [EventName.EDITOR_LOAD]: {
@@ -416,6 +419,18 @@ export interface IEventNamePropertyMapping {
          * 'none' excludes defaults; 'multiple' means more than one of user, workspace, or folder.
          */
         envsExplicitFalseScope?: EnvsExplicitFalseScope;
+        /**
+         * The inputs that produced the cached Python Environments integration decision.
+         */
+        envsDecisionReason?: EnvsIntegrationDecisionReason;
+        /**
+         * Whether Python Environments is currently available to this extension host.
+         */
+        envsAvailableToHostNow?: boolean;
+        /**
+         * The current resolved value of python.useEnvironmentsExtension.
+         */
+        envsResolvedSettingNow?: boolean;
     };
     /**
      * Reports explicit-false scopes after a python.useEnvironmentsExtension configuration change.
@@ -423,11 +438,19 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "environments_extension.setting_changed" : {
-          "envsexplicitfalsescope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
+          "envsexplicitfalsescope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "envsdecisionreason" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "envsavailabletohostnow" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "envsresolvedsettingnow" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "envscacheddecision" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
        }
      */
     [EventName.ENVIRONMENTS_EXTENSION_SETTING_CHANGED]: {
         envsExplicitFalseScope: EnvsExplicitFalseScope;
+        envsDecisionReason?: EnvsIntegrationDecisionReason;
+        envsAvailableToHostNow: boolean;
+        envsResolvedSettingNow: boolean;
+        envsCachedDecision?: boolean;
     };
     /**
      * Telemetry event sent when substituting Environment variables to calculate value of variables

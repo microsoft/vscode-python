@@ -73,6 +73,12 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
                 .returns(() => interpreterPathService.object);
             sinon.stub(constants, 'isTestExecution').returns(false);
             sinon.stub(envExt, 'useEnvExtension').returns(false);
+            sinon.stub(envExt, 'getEnvExtensionDecisionTelemetry').returns({
+                envsDecisionReason: 'resolvedSettingFalse',
+                envsAvailableToHostNow: true,
+                envsResolvedSettingNow: false,
+                envsCachedDecision: false,
+            });
             sinon.stub(envExtTelemetry, 'getEnvsExplicitFalseScope').returns('workspace');
             sendTelemetryEvent = sinon.stub(telemetry, 'sendTelemetryEvent');
             durations = {
@@ -101,11 +107,18 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
                     sendTelemetryEvent,
                     EventName.EDITOR_LOAD,
                     durations,
-                    sinon.match({ envsExplicitFalseScope: 'workspace', isFirstSession: false }),
+                    sinon.match({
+                        envsExplicitFalseScope: 'workspace',
+                        envsDecisionReason: 'resolvedSettingFalse',
+                        envsAvailableToHostNow: true,
+                        envsResolvedSettingNow: false,
+                        isFirstSession: false,
+                    }),
                 );
                 if (isTrusted) {
                     expect(sendTelemetryEvent.firstCall.args[2].usingEnvironmentsExtension).to.equal(false);
                 }
+                expect(sendTelemetryEvent.firstCall.args[2]).not.to.have.property('envsCachedDecision');
             });
         });
     });
@@ -116,7 +129,7 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
                 test(`Return false if using settings equals {globalValue: ${globalValue}, workspaceValue: ${workspaceValue}, workspaceFolderValue: ${workspaceFolderValue}}`, () => {
                     interpreterPathService
                         .setup((i) => i.inspect(resource))
-                        .returns(() => ({ globalValue, workspaceValue, workspaceFolderValue } as any));
+                        .returns(() => ({ globalValue, workspaceValue, workspaceFolderValue }) as any);
                     const result = hasUserDefinedPythonPath(resource, serviceContainer.object);
                     expect(result).to.equal(false, 'Should be false');
                 });
@@ -127,7 +140,7 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
     test('Return true if using setting value equals something else', () => {
         interpreterPathService
             .setup((i) => i.inspect(resource))
-            .returns(() => ({ globalValue: 'something else' } as any));
+            .returns(() => ({ globalValue: 'something else' }) as any);
         const result = hasUserDefinedPythonPath(resource, serviceContainer.object);
         expect(result).to.equal(true, 'Should be true');
     });

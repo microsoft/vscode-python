@@ -16,8 +16,17 @@ import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
 import { EditorLoadTelemetry } from './telemetry/types';
 import { IStartupDurations } from './types';
-import { useEnvExtension } from './envExt/api.internal';
+import { getEnvExtensionDecisionTelemetry, useEnvExtension } from './envExt/api.internal';
 import { getEnvsExplicitFalseScope } from './envExt/telemetry';
+
+function getEnvExtensionStartupTelemetry() {
+    const telemetry = getEnvExtensionDecisionTelemetry();
+    return {
+        envsDecisionReason: telemetry.envsDecisionReason,
+        envsAvailableToHostNow: telemetry.envsAvailableToHostNow,
+        envsResolvedSettingNow: telemetry.envsResolvedSettingNow,
+    };
+}
 
 export async function sendStartupTelemetry(
     activatedPromise: Promise<any>,
@@ -99,6 +108,7 @@ async function getActivationTelemetryProps(
             terminal: terminalShellType,
             isFirstSession,
             envsExplicitFalseScope: getEnvsExplicitFalseScope(),
+            ...getEnvExtensionStartupTelemetry(),
         };
     }
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -157,5 +167,6 @@ async function getActivationTelemetryProps(
         isFirstSession,
         usingEnvironmentsExtension,
         envsExplicitFalseScope: getEnvsExplicitFalseScope(),
+        ...getEnvExtensionStartupTelemetry(),
     };
 }
