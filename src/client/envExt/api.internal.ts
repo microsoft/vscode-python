@@ -16,6 +16,7 @@ import { executeCommand } from '../common/vscodeApis/commandApis';
 import { getConfiguration, getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
 import { traceError, traceLog } from '../logging';
 import { Interpreters } from '../common/utils/localize';
+import type { EnvsIntegrationDecisionReason, EnvsIntegrationDecisionTelemetry } from '../telemetry/types';
 
 export const ENVS_EXTENSION_ID = 'ms-python.vscode-python-envs';
 
@@ -54,16 +55,53 @@ export function shouldEnvExtHandleActivation(): boolean {
     return true;
 }
 
+function getEnvExtensionDecisionInputs(): Pick<
+    EnvsIntegrationDecisionTelemetry,
+    'envsAvailableToHostNow' | 'envsActiveNow' | 'envsResolvedSettingNow'
+> {
+    const config = getConfiguration('python');
+    const extension = getExtension(ENVS_EXTENSION_ID);
+    return {
+        envsAvailableToHostNow: !!extension,
+        envsActiveNow: extension?.isActive ?? false,
+        envsResolvedSettingNow: config?.get<boolean>('useEnvironmentsExtension', false) ?? false,
+    };
+}
+
 let _useExt: boolean | undefined;
+let _envsDecisionReason: EnvsIntegrationDecisionReason | undefined;
 export function useEnvExtension(): boolean {
     if (_useExt !== undefined) {
         return _useExt;
     }
-    const config = getConfiguration('python');
-    const inExpSetting = config?.get<boolean>('useEnvironmentsExtension', false) ?? false;
+    const { envsAvailableToHostNow, envsResolvedSettingNow } = getEnvExtensionDecisionInputs();
     // If extension is installed and in experiment, then use it.
-    _useExt = !!getExtension(ENVS_EXTENSION_ID) && inExpSetting;
+    _useExt = envsAvailableToHostNow && envsResolvedSettingNow;
+    _envsDecisionReason = !envsAvailableToHostNow
+        ? 'extensionUnavailable'
+        : envsResolvedSettingNow
+        ? 'enabled'
+        : 'resolvedSettingFalse';
     return _useExt;
+}
+
+/**
+ * Reports the cached integration decision inputs and their current values without initializing or changing the cache.
+ */
+export function getEnvExtensionDecisionTelemetry(): EnvsIntegrationDecisionTelemetry {
+    return {
+        envsDecisionReason: _envsDecisionReason,
+        ...getEnvExtensionDecisionInputs(),
+        envsCachedDecision: _useExt,
+    };
+}
+
+/**
+ * Resets the cached integration decision for unit tests.
+ */
+export function _resetEnvExtensionDecisionCache(): void {
+    _useExt = undefined;
+    _envsDecisionReason = undefined;
 }
 
 const onDidChangeEnvironmentEnvExtEmitter: EventEmitter<DidChangeEnvironmentEventArgs> = new EventEmitter<
