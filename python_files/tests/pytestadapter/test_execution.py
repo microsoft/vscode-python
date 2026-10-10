@@ -232,6 +232,36 @@ def test_pytest_execution(test_ids, expected_const):
     assert actual_result_dict == expected_const
 
 
+def test_pytest_execution_teardown_error():
+    """Test that a test whose fixture teardown or finalizer fails is not reported as passed.
+
+    The outcome of the call is sent first and the teardown error is sent after it for the same
+    test, so every message is compared in order rather than merged into one result per test.
+    """
+    args = [
+        "teardown_error.py::test_teardown_raises",
+        "teardown_error.py::test_teardown_asserts",
+        "teardown_error.py::test_finalizer_raises",
+        "teardown_error.py::test_call_and_teardown_fail",
+        "teardown_error.py::test_no_teardown_error",
+        "teardown_error.py::TestClassTeardown::test_class_teardown_raises",
+    ]
+    actual = runner(args)
+    assert actual
+    actual_results = []
+    for actual_item in actual:
+        assert all(item in actual_item for item in ("status", "cwd", "result"))
+        assert actual_item.get("status") == "success"
+        assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
+        for result in actual_item["result"].values():
+            if result["outcome"] in ("failure", "error"):
+                result["message"] = "ERROR MESSAGE"
+            if result["traceback"] is not None:
+                result["traceback"] = "TRACEBACK"
+        actual_results.append(actual_item["result"])
+    assert actual_results == expected_execution_test_output.teardown_error_execution_expected_output
+
+
 def test_symlink_run():
     """Test to test pytest discovery with the command line arg --rootdir specified as a symlink path.
 
