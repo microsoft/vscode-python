@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+import importlib.util
 import json
 import os
 import pathlib
@@ -198,6 +199,26 @@ def test_rootdir_specified():
             ["skip_test_fixture.py::test_docker_client"],
             expected_execution_test_output.skip_test_fixture_execution_expected_output,
             id="skip_test_fixture",
+        ),
+        pytest.param(
+            [
+                "subtests_execution.py::test_pass_then_fail",
+                "subtests_execution.py::test_fail_then_pass",
+                "subtests_execution.py::test_all_pass",
+                "subtests_execution.py::test_pass_then_body_fails",
+            ],
+            expected_execution_test_output.subtests_execution_expected_output,
+            id="pytest_subtests",
+            marks=pytest.mark.skipif(
+                pytest.version_tuple < (9, 0)
+                and importlib.util.find_spec("pytest_subtests") is None,
+                reason="needs pytest 9 or the pytest-subtests plugin",
+            ),
+        ),
+        pytest.param(
+            ["subtests_execution.py::TestUnittestSubTest::test_pass_then_fail"],
+            expected_execution_test_output.unittest_subtest_execution_expected_output,
+            id="unittest_subtest",
         ),
     ],
 )
