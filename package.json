@@ -612,13 +612,13 @@
                 },
                 "python.terminal.activateEnvInCurrentTerminal": {
                     "default": false,
-                    "description": "%python.terminal.activateEnvInCurrentTerminal.description%",
+                    "markdownDescription": "%python.terminal.activateEnvInCurrentTerminal.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.terminal.activateEnvironment": {
                     "default": true,
-                    "description": "%python.terminal.activateEnvironment.description%",
+                    "markdownDescription": "%python.terminal.activateEnvironment.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
