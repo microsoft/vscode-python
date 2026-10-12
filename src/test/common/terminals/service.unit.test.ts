@@ -338,6 +338,27 @@ suite('Terminal Service', () => {
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.once());
     });
 
+    test('Ensure bracketed paste and Enter are sent separately to the Python shell', async () => {
+        terminalHelper
+            .setup((helper) => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
+        service = new TerminalService(mockServiceContainer.object);
+        const textToSend = '\u001b[200~print("hello")\u001b[201~';
+        terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+        terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
+        await service.ensureTerminal();
+        const executePromise = service.executeCommand(textToSend, true);
+        onDidWriteTerminalDataEmitter.fire({ terminal: terminal.object, data: '>>> ' });
+        await executePromise;
+
+        terminal.verify(
+            (t) => t.sendText(TypeMoq.It.isValue(textToSend), TypeMoq.It.isValue(false)),
+            TypeMoq.Times.once(),
+        );
+        terminal.verify((t) => t.sendText(TypeMoq.It.isValue('\r'), TypeMoq.It.isValue(false)), TypeMoq.Times.once());
+    });
+
     test('Ensure sendText IS called even when Python shell integration and terminal shell integration are both enabled - Window', async () => {
         isWindowsStub.returns(true);
         pythonConfig
