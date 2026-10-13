@@ -24,34 +24,11 @@ export function isEnvExtensionInstalled(): boolean {
 }
 
 /**
- * Returns true if the Python Environments extension is installed and not explicitly
- * disabled by the user. Mirrors the envs extension's own activation logic: it
- * deactivates only when `python.useEnvironmentsExtension` is explicitly set to false
- * at the global, workspace, or workspace-folder level.
+ * Uses the same window-wide decision for terminal activation and UI ownership as
+ * environment discovery and API routing.
  */
 export function shouldEnvExtHandleActivation(): boolean {
-    if (!isEnvExtensionInstalled()) {
-        return false;
-    }
-    const config = getConfiguration('python');
-    const inspection = config.inspect<boolean>('useEnvironmentsExtension');
-    if (inspection?.globalValue === false || inspection?.workspaceValue === false) {
-        return false;
-    }
-    // The envs extension also checks folder-scoped settings in multi-root workspaces.
-    // Any single folder with the setting set to false causes the envs extension to
-    // deactivate entirely (window-wide), so we must mirror that here.
-    const workspaceFolders = getWorkspaceFolders();
-    if (workspaceFolders) {
-        for (const folder of workspaceFolders) {
-            const folderConfig = getConfiguration('python', folder.uri);
-            const folderInspection = folderConfig.inspect<boolean>('useEnvironmentsExtension');
-            if (folderInspection?.workspaceFolderValue === false) {
-                return false;
-            }
-        }
-    }
-    return true;
+    return useEnvExtension();
 }
 
 let _useExt: boolean | undefined;
@@ -59,10 +36,14 @@ export function useEnvExtension(): boolean {
     if (_useExt !== undefined) {
         return _useExt;
     }
-    const config = getConfiguration('python');
-    const inExpSetting = config?.get<boolean>('useEnvironmentsExtension', false) ?? false;
-    // If extension is installed and in experiment, then use it.
-    _useExt = !!getExtension(ENVS_EXTENSION_ID) && inExpSetting;
+    // Configuration.get resolves folder > workspace > user > experiment/manifest default.
+    // Any effectively disabled folder disables environment management for the window.
+    const isEnabled = (resource?: Uri) =>
+        getConfiguration('python', resource).get<boolean>('useEnvironmentsExtension') ?? true;
+    const folders = getWorkspaceFolders();
+    // Keep all consumers on the same decision until reload, as required by the setting.
+    _useExt =
+        isEnvExtensionInstalled() && (folders?.length ? folders.every((folder) => isEnabled(folder.uri)) : isEnabled());
     return _useExt;
 }
 

@@ -22,7 +22,9 @@ These extensions are optional dependencies, meaning the Python extension will re
 You may now see that the **Python Environments Extension** is installed for you, but it may or may not be "enabled" in your VS Code experience. Enablement is controlled by the setting `"python.useEnvironmentsExtension": true` (or `false`).
 
 - If you set this setting to `true`, you will manually opt in to using the Python Environments Extension for environment management.
-- If you do not have this setting specified, you may be randomly assigned to have it turned on as we roll it out until it becomes the default experience for all users.
+- If you set this setting to `false`, you will opt out. Explicit settings take precedence over experiment assignments, with folder settings overriding workspace settings and workspace settings overriding user settings.
+- If you do not have this setting specified, an experiment assignment can enable or disable it. Without an assignment (including when experiments or telemetry are disabled), it defaults to enabled.
+- In multi-root workspaces, an effectively disabled folder disables Python Environments integration for the entire window. Reload the window after changing this setting.
 
 The Python Environments Extension is still under active development and experimentation. Its goal is to provide a dedicated view and improved workflows for creating, deleting, and switching between Python environments, as well as managing packages. If you have feedback, please let us know via [issues](https://github.com/microsoft/vscode-python/issues).
 

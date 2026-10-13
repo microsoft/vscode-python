@@ -4,6 +4,7 @@
 'use strict';
 
 import { assert } from 'chai';
+import rewiremock from 'rewiremock';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { Terminal, Uri } from 'vscode';
@@ -138,15 +139,46 @@ suite('Terminal Activator', () => {
 });
 
 suite('shouldEnvExtHandleActivation', () => {
+    let api: typeof extapi;
     let getExtensionStub: sinon.SinonStub;
     let getConfigurationStub: sinon.SinonStub;
     let getWorkspaceFoldersStub: sinon.SinonStub;
 
+    type SettingValues = {
+        defaultValue?: boolean;
+        globalValue?: boolean;
+        workspaceValue?: boolean;
+        workspaceFolderValue?: boolean;
+    };
+
+    function configuration(values: SettingValues = {}) {
+        return {
+            get: sinon
+                .stub()
+                .withArgs('useEnvironmentsExtension')
+                .returns(
+                    values.workspaceFolderValue ?? values.workspaceValue ?? values.globalValue ?? values.defaultValue,
+                ),
+            inspect: sinon.stub().returns(values),
+        };
+    }
+
+    function assertOwnership(expected: boolean) {
+        assert.strictEqual(api.shouldEnvExtHandleActivation(), expected);
+        assert.strictEqual(api.useEnvExtension(), expected);
+    }
+
     setup(() => {
         getExtensionStub = sinon.stub(extensionsApi, 'getExtension');
+        getExtensionStub.returns({ id: extapi.ENVS_EXTENSION_ID });
         getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
-        getWorkspaceFoldersStub = sinon.stub(workspaceApis, 'getWorkspaceFolders');
-        getWorkspaceFoldersStub.returns(undefined);
+        getConfigurationStub.returns(configuration());
+        getWorkspaceFoldersStub = sinon.stub(workspaceApis, 'getWorkspaceFolders').returns(undefined);
+        // A fresh module represents a new window, including its cached ownership decision.
+        api = rewiremock.proxy(() => require('../../../../client/envExt/api.internal'), {
+            [require.resolve('../../../../client/common/vscodeApis/extensionsApi')]: extensionsApi,
+            [require.resolve('../../../../client/common/vscodeApis/workspaceApis')]: workspaceApis,
+        });
     });
 
     teardown(() => {
@@ -155,55 +187,115 @@ suite('shouldEnvExtHandleActivation', () => {
 
     test('Returns false when envs extension is not installed', () => {
         getExtensionStub.returns(undefined);
-        assert.strictEqual(extapi.shouldEnvExtHandleActivation(), false);
+        assertOwnership(false);
     });
 
-    test('Returns true when envs extension is installed and setting is not explicitly set', () => {
-        getExtensionStub.returns({ id: extapi.ENVS_EXTENSION_ID });
-        getConfigurationStub.returns({
-            inspect: () => ({ globalValue: undefined, workspaceValue: undefined }),
-        });
-        assert.strictEqual(extapi.shouldEnvExtHandleActivation(), true);
+    test('Registers an enabled fallback that experiments can override', () => {
+        const manifest = require('../../../../../package.json');
+        const setting = manifest.contributes.configuration.properties['python.useEnvironmentsExtension'];
+        assert.strictEqual(setting.default, true);
+        assert.include(setting.tags, 'onExP');
     });
 
-    test('Returns false when envs extension is installed but globalValue is false', () => {
-        getExtensionStub.returns({ id: extapi.ENVS_EXTENSION_ID });
-        getConfigurationStub.returns({
-            inspect: () => ({ globalValue: false, workspaceValue: undefined }),
+    [undefined, true, false].forEach((defaultValue) => {
+        [undefined, true, false].forEach((globalValue) => {
+            [undefined, true, false].forEach((workspaceValue) => {
+                test(`Uses effective value: default=${defaultValue}, user=${globalValue}, workspace=${workspaceValue}`, () => {
+                    const config = configuration({ defaultValue, globalValue, workspaceValue });
+                    getConfigurationStub.returns(config);
+
+                    assertOwnership(workspaceValue ?? globalValue ?? defaultValue ?? true);
+                    sinon.assert.calledWithExactly(config.get, 'useEnvironmentsExtension');
+                    sinon.assert.notCalled(config.inspect);
+                });
+            });
         });
-        assert.strictEqual(extapi.shouldEnvExtHandleActivation(), false);
     });
 
-    test('Returns false when envs extension is installed but workspaceValue is false', () => {
-        getExtensionStub.returns({ id: extapi.ENVS_EXTENSION_ID });
-        getConfigurationStub.returns({
-            inspect: () => ({ globalValue: undefined, workspaceValue: false }),
+    [undefined, []].forEach((folders) => {
+        test(`Uses window configuration when workspace folders are ${JSON.stringify(folders)}`, () => {
+            getWorkspaceFoldersStub.returns(folders);
+            getConfigurationStub.returns(configuration({ defaultValue: false }));
+
+            assertOwnership(false);
+            sinon.assert.calledWithExactly(getConfigurationStub, 'python', undefined);
         });
-        assert.strictEqual(extapi.shouldEnvExtHandleActivation(), false);
     });
 
-    test('Returns true when envs extension is installed and setting is explicitly true', () => {
-        getExtensionStub.returns({ id: extapi.ENVS_EXTENSION_ID });
-        getConfigurationStub.returns({
-            inspect: () => ({ globalValue: true, workspaceValue: undefined }),
+    const folderCases: {
+        name: string;
+        inherited: SettingValues;
+        folders: (boolean | undefined)[];
+        expected: boolean;
+    }[] = [
+        {
+            name: 'a single folder true overrides workspace and user false',
+            inherited: { globalValue: false, workspaceValue: false },
+            folders: [true],
+            expected: true,
+        },
+        {
+            name: 'all folders true override workspace false',
+            inherited: { workspaceValue: false },
+            folders: [true, true],
+            expected: true,
+        },
+        {
+            name: 'one folder false disables the whole window',
+            inherited: { globalValue: true },
+            folders: [true, false],
+            expected: false,
+        },
+        {
+            name: 'an unset folder inherits workspace false',
+            inherited: { workspaceValue: false },
+            folders: [true, undefined],
+            expected: false,
+        },
+        {
+            name: 'workspace true overrides user and experiment false in every folder',
+            inherited: { defaultValue: false, globalValue: false, workspaceValue: true },
+            folders: [undefined, undefined],
+            expected: true,
+        },
+        {
+            name: 'an unset folder inherits experiment false',
+            inherited: { defaultValue: false },
+            folders: [true, undefined],
+            expected: false,
+        },
+        {
+            name: 'unset folders without a treatment default to enabled',
+            inherited: {},
+            folders: [undefined, undefined],
+            expected: true,
+        },
+    ];
+    folderCases.forEach(({ name, inherited, folders, expected }) => {
+        test(`Uses folder precedence: ${name}`, () => {
+            const workspaceFolders = folders.map((workspaceFolderValue, index) => {
+                const uri = Uri.parse(`file:///workspace/folder${index}`);
+                getConfigurationStub
+                    .withArgs('python', uri)
+                    .returns(configuration({ ...inherited, workspaceFolderValue }));
+                return { uri, name: `folder${index}`, index };
+            });
+            getWorkspaceFoldersStub.returns(workspaceFolders);
+            getConfigurationStub.withArgs('python', undefined).returns(configuration(inherited));
+
+            assertOwnership(expected);
+            assert.isTrue(getConfigurationStub.firstCall.args[1] instanceof Uri);
         });
-        assert.strictEqual(extapi.shouldEnvExtHandleActivation(), true);
     });
 
-    test('Returns false when a workspace folder has workspaceFolderValue set to false', () => {
-        getExtensionStub.returns({ id: extapi.ENVS_EXTENSION_ID });
-        const folderUri = Uri.parse('file:///workspace/folder1');
-        getWorkspaceFoldersStub.returns([{ uri: folderUri, name: 'folder1', index: 0 }]);
-        getConfigurationStub.callsFake((_section: string, scope?: Uri) => {
-            if (scope) {
-                return {
-                    inspect: () => ({ workspaceFolderValue: false }),
-                };
-            }
-            return {
-                inspect: () => ({ globalValue: undefined, workspaceValue: undefined }),
-            };
+    [false, true].forEach((enabled) => {
+        test(`Keeps ownership aligned until reload after an initial ${enabled} decision`, () => {
+            getConfigurationStub.returns(configuration({ defaultValue: enabled }));
+            assert.strictEqual(api.useEnvExtension(), enabled);
+
+            getConfigurationStub.returns(configuration({ globalValue: !enabled }));
+
+            assertOwnership(enabled);
         });
-        assert.strictEqual(extapi.shouldEnvExtHandleActivation(), false);
     });
 });

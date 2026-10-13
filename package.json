@@ -447,7 +447,7 @@
                     "type": "string"
                 },
                 "python.useEnvironmentsExtension": {
-                    "default": false,
+                    "default": true,
                     "description": "%python.useEnvironmentsExtension.description%",
                     "scope": "machine-overridable",
                     "type": "boolean",
