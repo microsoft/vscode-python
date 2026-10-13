@@ -48,7 +48,7 @@ suite('Execution Flow Run Adapters', () => {
         myTestPath = path.join('/', 'my', 'test', 'path', '/');
         configService = ({
             getSettings: () => ({
-                testing: { pytestArgs: ['.'], unittestArgs: ['-v', '-s', '.', '-p', 'test*'] },
+                testing: { pytestArgs: ['.'], unittestArgs: [] },
             }),
             isTestExecution: () => false,
         } as unknown) as IConfigurationService;
