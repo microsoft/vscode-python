@@ -55,6 +55,8 @@ export function initialize() {
     when(packageJson.contributes).thenReturn(instance(contributes));
     when(contributes.debuggers).thenReturn([{ aiKey: '' }]);
     when(mockedVSCodeNamespaces.extensions!.getExtension(anything())).thenReturn(instance(extension));
+    // Tests opt into the optional environments extension explicitly.
+    when(mockedVSCodeNamespaces.extensions!.getExtension('ms-python.vscode-python-envs')).thenReturn(undefined);
     when(mockedVSCodeNamespaces.extensions!.all).thenReturn([]);
 
     // When upgrading to npm 9-10, this might have to change, as we could have explicit imports (named imports).
