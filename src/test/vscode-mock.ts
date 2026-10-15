@@ -41,6 +41,7 @@ export function initialize() {
     generateMock('debug');
     generateMock('scm');
     generateMock('notebooks');
+    generateMock('lm');
 
     // Use mock clipboard fo testing purposes.
     const clipboard = new MockClipboard();
