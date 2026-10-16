@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as path from 'path';
-import { PixiLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/pixiLocator';
+import { PixiLocator, getVirtualEnvRootDirs } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/pixiLocator';
 import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import * as platformUtils from '../../../../../client/common/utils/platform';
 import { makeExecHandler, projectDirs } from '../../../common/environmentManagers/pixi.unit.test';
@@ -79,6 +80,22 @@ suite('Pixi Locator', () => {
                 createBasicEnv(PythonEnvKind.Pixi, path.join(info.prefix, 'bin/python'), undefined, info.prefix),
             );
             assertBasicEnvsEqual(actualEnvs, expectedEnvs);
+        });
+    });
+
+    suite('getVirtualEnvRootDirs()', () => {
+        test('returns pixi envs root dir when directory exists', async () => {
+            pathExistsStub.resolves(true);
+            const root = '/path/to/project';
+            const result = await getVirtualEnvRootDirs(root);
+            assert.deepStrictEqual(result, [path.join(root, '.pixi', 'envs')]);
+        });
+
+        test('returns empty array when .pixi/envs directory does not exist', async () => {
+            pathExistsStub.resolves(false);
+            const root = '/path/to/non-pixi-project';
+            const result = await getVirtualEnvRootDirs(root);
+            assert.deepStrictEqual(result, []);
         });
     });
 });
