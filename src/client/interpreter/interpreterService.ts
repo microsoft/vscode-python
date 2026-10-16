@@ -47,7 +47,7 @@ import {
     TriggerRefreshOptions,
 } from '../pythonEnvironments/base/locator';
 import { sleep } from '../common/utils/async';
-import { useEnvExtension } from '../envExt/api.internal';
+import { shouldEnvExtHandleActivation, useEnvExtension } from '../envExt/api.internal';
 import { getActiveInterpreterLegacy } from '../envExt/api.legacy';
 
 type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
@@ -329,7 +329,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     private async resolveActiveInterpreter(resource?: Uri): Promise<StoredPythonEnvironment | undefined> {
-        if (useEnvExtension()) {
+        if (useEnvExtension() || shouldEnvExtHandleActivation()) {
             return getActiveInterpreterLegacy(resource);
         }
 
