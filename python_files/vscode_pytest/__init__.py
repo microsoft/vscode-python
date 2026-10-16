@@ -23,6 +23,12 @@ from typing import (
 
 import pytest
 
+PYTEST_INTERNAL_AVAILABLE = False
+with contextlib.suppress(ImportError):
+    from _pytest._code.code import Code
+
+    PYTEST_INTERNAL_AVAILABLE = True
+
 if TYPE_CHECKING:
     from pluggy import Result
     from pytest_describe.plugin import DescribeBlock as DescribeBlockType
@@ -843,9 +849,18 @@ def create_test_node(
     Keyword arguments:
     test_case -- the pytest test case.
     """
-    test_case_loc: str = (
-        str(test_case.location[1] + 1) if (test_case.location[1] is not None) else ""
-    )
+    lineno0: int | None = None
+    if PYTEST_INTERNAL_AVAILABLE:
+        obj = getattr(test_case, "obj", None)
+        if obj is not None:
+            try:
+                lineno0 = Code.from_function(obj).firstlineno
+            except (AttributeError, OSError, TypeError):
+                lineno0 = None
+
+    if lineno0 is None:
+        lineno0 = test_case.location[1]
+    test_case_loc: str = str(lineno0 + 1) if (lineno0 is not None) else ""
     absolute_test_id = get_absolute_test_id(test_case.nodeid, get_node_path(test_case))
     return {
         "name": test_case.name,
