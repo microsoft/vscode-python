@@ -63,7 +63,7 @@ export class NativeRepl implements Disposable {
     }
 
     dispose(): void {
-        this.disposables.forEach((d) => d.dispose());
+        this.disposables.forEach((d) => d?.dispose());
     }
 
     /**
