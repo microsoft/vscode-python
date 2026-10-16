@@ -13,7 +13,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { Commands } from '../commands';
 import { JediLanguageClientMiddleware } from './languageClientMiddleware';
 import { ILanguageServerAnalysisOptions, ILanguageServerManager, ILanguageServerProxy } from '../types';
 import { traceDecoratorError, traceDecoratorVerbose, traceVerbose } from '../../logging';
@@ -27,8 +26,6 @@ export class JediLanguageServerManager implements ILanguageServerManager {
 
     private disposables: IDisposable[] = [];
 
-    private static commandDispose: IDisposable;
-
     private connected = false;
 
     private lsVersion: string | undefined;
@@ -37,15 +34,8 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         private readonly serviceContainer: IServiceContainer,
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
         private readonly languageServerProxy: ILanguageServerProxy,
-        commandManager: ICommandManager,
-    ) {
-        if (JediLanguageServerManager.commandDispose) {
-            JediLanguageServerManager.commandDispose.dispose();
-        }
-        JediLanguageServerManager.commandDispose = commandManager.registerCommand(Commands.RestartLS, () => {
-            this.restartLanguageServer().ignoreErrors();
-        });
-    }
+        _commandManager: ICommandManager,
+    ) {}
 
     private static versionTelemetryProps(instance: JediLanguageServerManager) {
         return {
@@ -55,7 +45,6 @@ export class JediLanguageServerManager implements ILanguageServerManager {
 
     public dispose(): void {
         this.stopLanguageServer().ignoreErrors();
-        JediLanguageServerManager.commandDispose.dispose();
         this.disposables.forEach((d) => d.dispose());
     }
 
