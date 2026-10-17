@@ -55,3 +55,38 @@ def test_cached_fsdecode():
     result3 = cached_fsdecode(test_path2)
     assert result3 == os.fspath(test_path2)
     assert result3 != result1
+
+
+def test_hidden_param_discovery(tmp_path):
+    """Test that parameterized test with pytest.HIDDEN_PARAM builds tree without error."""
+    import pytest
+
+    test_file = tmp_path / "test_hidden.py"
+    test_file.write_text(
+        "import pytest\n"
+        "@pytest.mark.parametrize('setup', [pytest.param('setup', id=pytest.HIDDEN_PARAM)])\n"
+        "def test_main(setup):\n"
+        "    assert True\n"
+    )
+
+    class Collector:
+        def __init__(self):
+            self.tree = None
+
+        def pytest_sessionfinish(self, session, exitstatus):
+            from vscode_pytest import build_test_tree
+
+            self.tree = build_test_tree(session)
+
+    collector = Collector()
+    pytest.main(["--collect-only", str(test_file)], plugins=[collector])
+    assert collector.tree is not None
+    file_nodes = list(collector.tree["children"].values())
+    assert len(file_nodes) == 1
+    file_node = file_nodes[0]
+    assert file_node["name"] == "test_hidden.py"
+    children = file_node["children"]
+    test_nodes = list(children.values() if hasattr(children, "values") else children)
+    assert len(test_nodes) == 1
+    assert test_nodes[0]["name"] == "test_main"
+    assert test_nodes[0]["type_"] == "test"
