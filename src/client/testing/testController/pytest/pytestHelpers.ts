@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { traceInfo, traceWarn } from '../../../logging';
 import { addValueIfKeyNotExist, hasSymlinkParent } from '../common/utils';
+import { arePathsSame } from '../../../common/platform/fs-paths';
 
 /**
  * Checks if the current working directory contains a symlink and ensures --rootdir is set in pytest args.
@@ -16,7 +17,7 @@ export async function handleSymlinkAndRootDir(cwd: string, pytestArgs: string[])
     if (stats.isSymbolicLink()) {
         isSymbolicLink = true;
         traceWarn(`Working directory is a symbolic link: ${cwd} -> ${resolvedPath}`);
-    } else if (resolvedPath !== cwd) {
+    } else if (!arePathsSame(resolvedPath, cwd)) {
         traceWarn(
             `Working directory resolves to different path: ${cwd} -> ${resolvedPath}. Checking for symlinks in parent directories.`,
         );
