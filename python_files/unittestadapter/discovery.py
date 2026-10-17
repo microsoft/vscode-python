@@ -142,9 +142,10 @@ if __name__ == "__main__":
             raise VSCodeUnittestError(error_msg)  # noqa: B904
     else:
         # Check for PROJECT_ROOT_PATH environment variable (project-based testing).
-        # When set, this overrides top_level_dir to root the test tree at the project directory.
+        # When set, this overrides top_level_dir to root the test tree at the project directory
+        # if an explicit top-level directory was not provided.
         project_root_path = os.environ.get("PROJECT_ROOT_PATH")
-        if project_root_path:
+        if project_root_path and not top_level_dir:
             top_level_dir = project_root_path
 
         # Perform regular unittest test discovery.

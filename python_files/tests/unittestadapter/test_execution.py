@@ -472,3 +472,45 @@ def test_symlink_with_project_root_path(mock_send_run_data) -> None:  # noqa: AR
         assert actual["cwd"] == os.fsdecode(destination), (
             f"CWD does not match symlink path: expected {os.fsdecode(destination)}, got {actual['cwd']}"
         )
+
+
+def test_project_root_path_defaults_top_level_dir(mock_send_run_data) -> None:  # noqa: ARG001
+    """Test that project_root_path acts as top_level_dir during execution when start_dir is a subdir.
+
+    When tests are in a subdirectory (e.g. ./test_outer_folder/test_inner_folder) and top_level_dir
+    is None, passing project_root_path as top_level_dir ensures the discovered test IDs match
+    those discovered during the discovery phase.
+    """
+    project_path = TEST_DATA_PATH / "utils_complex_tree"
+    start_dir = os.fsdecode(
+        pathlib.PurePath(
+            TEST_DATA_PATH,
+            "utils_complex_tree",
+            "test_outer_folder",
+            "test_inner_folder",
+        )
+    )
+    pattern = "test_*.py"
+    top_level_dir = os.fsdecode(project_path)
+    test_ids = [
+        "test_outer_folder.test_inner_folder.test_utils_complex_tree.TreeOne.test_one",
+    ]
+
+    os.environ["TEST_RUN_PIPE"] = "fake"
+
+    actual = run_tests(
+        start_dir,
+        test_ids,
+        pattern,
+        None,
+        1,
+        None,
+        project_root_path=top_level_dir,
+    )
+
+    assert actual["status"] == "success"
+    assert actual["cwd"] == os.fsdecode(project_path)
+    assert actual["result"] is not None
+    assert test_ids[0] in actual["result"]
+    assert actual["result"][test_ids[0]]["outcome"] == "success"
+
