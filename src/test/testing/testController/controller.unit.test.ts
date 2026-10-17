@@ -92,8 +92,40 @@ suite('PythonTestController', () => {
             pythonExecFactory,
             debugLauncher,
             envVarsService,
+
+            
         );
     }
+    test('discovers tests for existing workspace during activation', async () => {
+        const workspaceUri = vscode.Uri.file('/workspace');
+        const workspaceFolder = {
+            uri: workspaceUri,
+            name: 'workspace',
+            index: 0,
+        } as vscode.WorkspaceFolder;
+
+        sandbox.stub(envExtApiInternal, 'useEnvExtension').returns(false);
+
+        const discoveryAdapter = {
+            discoverTests: sandbox.stub().resolves(undefined),
+        };
+
+        sandbox.stub(projectUtils, 'createTestAdapters').returns({
+            discoveryAdapter,
+            executionAdapter: {},
+        } as any);
+
+        const controller = createController({
+            workspaceService: {
+                workspaceFolders: [workspaceFolder],
+            },
+        });
+
+        await controller.activate();
+        await new Promise((resolve) => setTimeout(resolve, 350));
+
+        assert.strictEqual(discoveryAdapter.discoverTests.calledOnce, true);
+    });
 
     suite('getTestProvider', () => {
         test('returns unittest when enabled', () => {
