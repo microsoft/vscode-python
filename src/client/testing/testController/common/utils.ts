@@ -33,6 +33,11 @@ export function createTestingDeferred(): Deferred<void> {
 // platform-specific named-pipe quirks) so the adapter's `finally` block can never hang.
 export const RESULT_PIPE_DRAIN_TIMEOUT_MS = 5_000;
 
+// Grace period (ms) to allow buffered results to drain after cancellation
+// or subprocess termination before closing the result pipe when `reader.onClose`
+// does not fire (such as non-blocking FIFO sockets on macOS).
+export const RESULT_PIPE_DRAIN_GRACE_PERIOD_MS = 100;
+
 /**
  * Awaits `deferred.promise` but resolves after at most `timeoutMs` so callers
  * cannot hang indefinitely if the underlying event source never fires.
@@ -119,17 +124,38 @@ export async function startRunResultNamedPipe(
     traceVerbose('Starting Test Result named pipe');
     const pipeName: string = generateRandomPipeName('python-test-results');
 
-    // `cancellationToken` only cancels pipe creation; disposal is driven by
-    // `reader.onClose` so buffered results are not dropped on cancel.
+    // `cancellationToken` cancels pipe creation immediately. On cancellation or subprocess
+    // completion, a brief drain window is started so buffered messages are delivered before
+    // disposal when `reader.onClose` never fires (e.g. non-blocking FIFOs on macOS).
     const reader = await createReaderPipe(pipeName, cancellationToken);
     traceVerbose(`Test Results named pipe ${pipeName} connected`);
+    let drainTimer: NodeJS.Timeout | undefined;
     let disposables: Disposable[] = [];
     const disposable = new Disposable(() => {
+        if (drainTimer) {
+            clearTimeout(drainTimer);
+            drainTimer = undefined;
+        }
         traceVerbose(`Test Results named pipe ${pipeName} disposed`);
         disposables.forEach((d) => d.dispose());
         disposables = [];
         deferredTillServerClose.resolve();
     });
+
+    if (cancellationToken) {
+        const scheduleDrain = () => {
+            if (!drainTimer) {
+                drainTimer = setTimeout(() => {
+                    disposable.dispose();
+                }, RESULT_PIPE_DRAIN_GRACE_PERIOD_MS);
+            }
+        };
+        if (cancellationToken.isCancellationRequested) {
+            scheduleDrain();
+        } else {
+            disposables.push(cancellationToken.onCancellationRequested(scheduleDrain));
+        }
+    }
 
     disposables.push(
         reader,
