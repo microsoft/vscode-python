@@ -73,7 +73,7 @@ def test_hidden_param_discovery(tmp_path):
         def __init__(self):
             self.tree = None
 
-        def pytest_sessionfinish(self, session, exitstatus):
+        def pytest_sessionfinish(self, session, exitstatus):  # noqa: ARG002
             from vscode_pytest import build_test_tree
 
             self.tree = build_test_tree(session)
