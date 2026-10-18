@@ -647,8 +647,6 @@ def process_parameterized_test(
     """
     function_name: str = ""
     # parameterized test cases cut the repetitive part of the name off.
-    if "[" not in test_node["name"]:
-        return test_node
     parent_part, parameterized_section = test_node["name"].split("[", 1)
     test_node["name"] = "[" + parameterized_section
 
