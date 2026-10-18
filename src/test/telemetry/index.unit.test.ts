@@ -6,6 +6,8 @@ import { expect } from 'chai';
 import rewiremock from 'rewiremock';
 import * as sinon from 'sinon';
 import * as fs from '../../client/common/platform/fs-paths';
+import { TerminalShellType } from '../../client/common/terminal/types';
+import { EventName } from '../../client/telemetry/constants';
 
 import {
     _resetSharedProperties,
@@ -84,6 +86,38 @@ suite('Telemetry', () => {
         expect(Reporter.eventName).to.deep.equal([eventName]);
         expect(Reporter.measures).to.deep.equal([undefined], 'Measures should be empty');
         expect(Reporter.properties).to.deep.equal([{}], 'Properties should be empty');
+    });
+    test('Serialize Environments decision booleans on the existing startup event', () => {
+        rewiremock.enable();
+        rewiremock('@vscode/extension-telemetry').with({ TelemetryReporter: Reporter });
+
+        sendTelemetryEvent(EventName.EDITOR_LOAD, undefined, {
+            terminal: TerminalShellType.bash,
+            workspaceFolderCount: 0,
+            envsAvailableAtDecision: false,
+            envsEnabledAtDecision: true,
+        });
+
+        expect(Reporter.eventName).to.deep.equal([EventName.EDITOR_LOAD]);
+        expect(Reporter.properties[0]).to.include({
+            envsAvailableAtDecision: 'false',
+            envsEnabledAtDecision: 'true',
+        });
+    });
+    test('Unknown Environments decision inputs are omitted from the startup payload', () => {
+        rewiremock.enable();
+        rewiremock('@vscode/extension-telemetry').with({ TelemetryReporter: Reporter });
+
+        sendTelemetryEvent(EventName.EDITOR_LOAD, undefined, {
+            terminal: TerminalShellType.bash,
+            workspaceFolderCount: 0,
+            envsAvailableAtDecision: undefined,
+            envsEnabledAtDecision: undefined,
+        });
+
+        expect(Reporter.eventName).to.deep.equal([EventName.EDITOR_LOAD]);
+        expect(Reporter.properties[0]).not.to.have.property('envsAvailableAtDecision');
+        expect(Reporter.properties[0]).not.to.have.property('envsEnabledAtDecision');
     });
     test('Send Telemetry with shared properties', () => {
         rewiremock.enable();
