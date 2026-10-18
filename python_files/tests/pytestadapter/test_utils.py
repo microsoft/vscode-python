@@ -79,7 +79,7 @@ def test_hidden_param_discovery(tmp_path):
             self.tree = build_test_tree(session)
 
     collector = Collector()
-    pytest.main(["--collect-only", str(test_file)], plugins=[collector])
+    pytest.main(["--collect-only", f"--rootdir={tmp_path}", str(test_file)], plugins=[collector])
     assert collector.tree is not None
     file_nodes = list(collector.tree["children"].values())
     assert len(file_nodes) == 1
