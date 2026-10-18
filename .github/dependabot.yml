@@ -6,6 +6,8 @@ updates:
       interval: daily
     labels:
       - 'no-changelog'
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: 'github-actions'
     directory: .github/actions/build-vsix
@@ -13,6 +15,8 @@ updates:
       interval: daily
     labels:
       - 'no-changelog'
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: 'github-actions'
     directory: .github/actions/lint
@@ -20,6 +24,8 @@ updates:
       interval: daily
     labels:
       - 'no-changelog'
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: 'github-actions'
     directory: .github/actions/smoke-test
@@ -27,6 +33,8 @@ updates:
       interval: daily
     labels:
       - 'no-changelog'
+    cooldown:
+      default-days: 7
 
   # Not skipping the news for some Python dependencies in case it's actually useful to communicate to users.
   - package-ecosystem: 'pip'

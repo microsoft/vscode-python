@@ -22,17 +22,17 @@ runs:
   using: 'composite'
   steps:
     - name: Install Node
-      uses: actions/setup-node@v7
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: ${{ inputs.node_version }}
         cache: 'npm'
 
     - name: Rust Tool Chain setup
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # v1
 
     # Jedi LS depends on dataclasses which is not in the stdlib in Python 3.7.
     - name: Use Python 3.10 for JediLSP
-      uses: actions/setup-python@v7
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
       with:
         python-version: '3.10'
         cache: 'pip'
