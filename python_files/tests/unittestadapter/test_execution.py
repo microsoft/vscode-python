@@ -513,4 +513,3 @@ def test_project_root_path_defaults_top_level_dir(mock_send_run_data) -> None:  
     assert actual["result"] is not None
     assert test_ids[0] in actual["result"]
     assert actual["result"][test_ids[0]]["outcome"] == "success"
-
