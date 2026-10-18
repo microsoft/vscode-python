@@ -4,7 +4,10 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as path from 'path';
-import { PixiLocator, getVirtualEnvRootDirs } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/pixiLocator';
+import {
+    PixiLocator,
+    getVirtualEnvRootDirs,
+} from '../../../../../client/pythonEnvironments/base/locators/lowLevel/pixiLocator';
 import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import * as platformUtils from '../../../../../client/common/utils/platform';
 import { makeExecHandler, projectDirs } from '../../../common/environmentManagers/pixi.unit.test';
