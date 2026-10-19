@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+import importlib.util
 import json
 import os
 import pathlib
@@ -12,10 +13,139 @@ from packaging.version import Version
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 
+from vscode_pytest import has_branch_coverage, run_pytest_script  # noqa: E402
+
 from .helpers import (  # noqa: E402
     TEST_DATA_PATH,
     runner_with_cwd_env,
 )
+
+
+def test_coverage_fallback_without_pytest_cov(monkeypatch):
+    """Run coverage directly when pytest-cov is not installed."""
+
+    class FakeCoverage:
+        started = False
+        stopped = False
+        saved = False
+
+        def start(self):
+            self.started = True
+
+        def stop(self):
+            self.stopped = True
+
+        def save(self):
+            self.saved = True
+
+    fake_coverage = FakeCoverage()
+    coverage_kwargs = {}
+
+    def create_coverage(**kwargs):
+        coverage_kwargs.update(kwargs)
+        return fake_coverage
+
+    monkeypatch.setenv("COVERAGE_ENABLED", "True")
+    monkeypatch.setattr(run_pytest_script.importlib.util, "find_spec", lambda _name: None)
+    monkeypatch.setattr(coverage, "Coverage", create_coverage)
+
+    args, coverage_plugin = run_pytest_script.configure_coverage([])
+
+    assert args == []
+    assert coverage_plugin is not None
+    assert coverage_kwargs == {"branch": True}
+    assert fake_coverage.started
+
+    captured = {}
+
+    def fake_pytest_main(pytest_args, plugins):
+        captured["args"] = pytest_args
+        captured["plugins"] = plugins
+
+    monkeypatch.setattr(run_pytest_script.pytest, "main", fake_pytest_main)
+    run_pytest_script.run_pytest(args, coverage_plugin=coverage_plugin)
+
+    assert "--cov=." not in captured["args"]
+    assert "--cov-branch" not in captured["args"]
+    assert captured["plugins"] == [coverage_plugin]
+
+    coverage_plugin.pytest_sessionfinish(None, 0)
+
+    assert fake_coverage.stopped
+    assert fake_coverage.saved
+
+
+def test_coverage_fallback_collects_branch_arcs(tmp_path, monkeypatch):
+    """Collect branch data when coverage.py runs without pytest-cov."""
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("COVERAGE_ENABLED", "True")
+    monkeypatch.setattr(run_pytest_script.importlib.util, "find_spec", lambda _name: None)
+    module_path = tmp_path / "branch_module.py"
+    module_path.write_text(
+        "def classify(number):\n"
+        "    if number > 0:\n"
+        "        return 'positive'\n"
+        "    return 'non-positive'\n",
+        encoding="utf-8",
+    )
+
+    args, coverage_plugin = run_pytest_script.configure_coverage([])
+
+    assert args == []
+    assert coverage_plugin is not None
+    spec = importlib.util.spec_from_file_location("fallback_branch_module", module_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.classify(1) == "positive"
+
+    coverage_plugin.pytest_sessionfinish(None, 0)
+
+    loaded_coverage = coverage.Coverage(data_file=os.fspath(tmp_path / ".coverage"))
+    loaded_coverage.load()
+    assert has_branch_coverage(loaded_coverage.get_data())
+
+
+def test_coverage_uses_pytest_cov_when_available(monkeypatch):
+    """Keep the existing pytest-cov arguments when the plugin is installed."""
+    monkeypatch.setenv("COVERAGE_ENABLED", "True")
+    monkeypatch.setattr(run_pytest_script.importlib.util, "find_spec", lambda _name: object())
+
+    args, coverage_plugin = run_pytest_script.configure_coverage([])
+
+    assert args == ["--cov=.", "--cov-branch"]
+    assert coverage_plugin is None
+
+
+def test_user_coverage_args_are_preserved(monkeypatch):
+    """Do not override coverage arguments supplied by the user."""
+    monkeypatch.setenv("COVERAGE_ENABLED", "True")
+
+    args, coverage_plugin = run_pytest_script.configure_coverage(["--cov=package"])
+
+    assert args == ["--cov=package"]
+    assert coverage_plugin is None
+
+
+@pytest.mark.parametrize("branch", [False, True])
+def test_branch_coverage_is_derived_from_collected_data(tmp_path, branch):
+    """Use recorded arcs rather than pytest-cov command-line arguments."""
+    data_file = tmp_path / ".coverage"
+    cov = coverage.Coverage(data_file=os.fspath(data_file), branch=branch)
+
+    def measured_function():
+        return 1
+
+    cov.start()
+    measured_function()
+    cov.stop()
+    cov.save()
+
+    loaded_coverage = coverage.Coverage(data_file=os.fspath(data_file))
+    loaded_coverage.load()
+
+    assert has_branch_coverage(loaded_coverage.get_data()) is branch
 
 
 def test_simple_pytest_coverage():
