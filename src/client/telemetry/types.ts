@@ -10,6 +10,16 @@ export type EditorLoadTelemetry = IEventNamePropertyMapping[EventName.EDITOR_LOA
 
 export type EnvsExplicitFalseScope = 'none' | 'user' | 'workspace' | 'folder' | 'multiple';
 
+export type EnvsIntegrationDecisionReason = 'enabled' | 'extensionUnavailable' | 'resolvedSettingFalse';
+
+export type EnvsIntegrationDecisionTelemetry = {
+    envsDecisionReason?: EnvsIntegrationDecisionReason;
+    envsAvailableToHostNow: boolean;
+    envsActiveNow: boolean;
+    envsResolvedSettingNow: boolean;
+    envsCachedDecision?: boolean;
+};
+
 export type PythonInterpreterTelemetry = IEventNamePropertyMapping[EventName.PYTHON_INTERPRETER];
 export type TestTool = 'pytest' | 'unittest';
 export type TestRunTelemetry = IEventNamePropertyMapping[EventName.UNITTEST_RUN];
