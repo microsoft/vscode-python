@@ -1,6 +1,8 @@
 import importlib
+import linecache
 import platform
 import sys
+from importlib.machinery import ModuleSpec, SourceFileLoader
 from pathlib import Path
 from typing import Any, Protocol, cast
 from unittest.mock import Mock
@@ -79,6 +81,23 @@ def test_does_not_pollute_namespace():
     importlib.reload(pythonrc)
 
     assert not [name for name in vars(pythonrc) if not name.startswith("__")]
+
+
+def test_pythonstartup_clears_loader_metadata_for_tracebacks(monkeypatch, tmp_path):
+    source = PYTHONRC_PATH.read_text(encoding="utf-8")
+    loader = SourceFileLoader("__main__", str(PYTHONRC_PATH))
+    namespace: dict[str, Any] = {
+        "__name__": "__main__",
+        "__loader__": loader,
+        "__spec__": ModuleSpec("__main__", loader),
+    }
+    monkeypatch.setattr(linecache, "cache", {})
+
+    exec(compile(source, str(PYTHONRC_PATH), "exec"), namespace)
+
+    assert linecache.getline(str(tmp_path / "missing.py"), 1, namespace) == ""
+    assert namespace["__loader__"] is None
+    assert namespace["__spec__"] is None
 
 
 def test_replacement_regex_removes_bel_terminated_osc():
