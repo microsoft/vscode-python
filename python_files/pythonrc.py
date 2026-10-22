@@ -1,5 +1,7 @@
 # PYTHONSTARTUP runs in __main__; clear its metadata at module scope so linecache
 # cannot use this file's loader for later interactive tracebacks.
+# CPython issue: https://github.com/python/cpython/issues/129098
+# CPython fix: https://github.com/python/cpython/pull/130721
 __spec__ = __loader__ = None
 
 
