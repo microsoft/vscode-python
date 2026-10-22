@@ -90,6 +90,10 @@ ERRORS = []
 IS_DISCOVERY = False
 map_id_to_path = {}
 collected_tests_so_far = set()
+# Failure messages of subtests, keyed by the absolute id of their parent test. Subtest reports
+# share the parent's node id, so they are collected here and folded into the parent's single
+# outcome when its own call report arrives.
+subtest_failures: dict[str, list[str]] = {}
 TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 PROJECT_ROOT_PATH = os.getenv(
     "PROJECT_ROOT_PATH"
@@ -202,6 +206,9 @@ def pytest_exception_interact(node, call, report):
         else:
             ERRORS.append(report.longreprtext + "\n Check Python Logs for more details.")
     else:
+        if is_subtest_report(report):
+            # Folded into the parent's outcome by pytest_report_teststatus.
+            return
         # If during execution, send this data that the given node failed.
         report_value = "error"
         if call.excinfo.typename == "AssertionError":
@@ -303,6 +310,18 @@ class TestRunResultDict(Dict[str, Dict[str, TestOutcome]]):
     tests: dict[str, TestOutcome]
 
 
+def is_subtest_report(report) -> bool:
+    """Return True for a report produced by a subtest rather than by the test itself.
+
+    pytest 9 reports `subtests.test()` blocks and unittest `subTest()` blocks as
+    `SubtestReport`; the pytest-subtests plugin used on older pytest versions reports
+    them as `SubTestReport`. Both are call phase reports that reuse the parent's node id.
+    """
+    return type(report).__name__ in ("SubtestReport", "SubTestReport") and hasattr(
+        report, "context"
+    )
+
+
 @pytest.hookimpl(hookwrapper=True, trylast=True)
 def pytest_report_teststatus(report, config):  # noqa: ARG001
     """A pytest hook that is called when a test is called.
@@ -332,8 +351,25 @@ def pytest_report_teststatus(report, config):  # noqa: ARG001
             node_path = cwd
         # Calculate the absolute test id and use this as the ID moving forward.
         absolute_node_id = get_absolute_test_id(report.nodeid, node_path)
-        if absolute_node_id not in collected_tests_so_far:
+        if is_subtest_report(report):
+            # A subtest report carries its parent's node id, so it must not publish or claim that
+            # id; its failure is kept for the parent's own call report. The terminal summary can
+            # call this hook again after the parent is published, hence the id check.
+            if report.failed and absolute_node_id not in collected_tests_so_far:
+                subtest_failures.setdefault(absolute_node_id, []).append(
+                    f"{report.head_line}\n{report.longreprtext}"
+                )
+        elif absolute_node_id not in collected_tests_so_far:
             collected_tests_so_far.add(absolute_node_id)
+            failed_subtests = subtest_failures.pop(absolute_node_id, None)
+            if failed_subtests:
+                # The parent's report can still say passed here: pytest 9 marks it failed only
+                # in its own hook, which runs after this code, and never does for unittest
+                # subTest() or the pytest-subtests plugin. Any failed subtest fails the parent.
+                if message:
+                    failed_subtests.append(message)
+                report_value = "failure"
+                message = "\n\n".join(failed_subtests)
             item_result = create_test_outcome(
                 absolute_node_id,
                 report_value,
