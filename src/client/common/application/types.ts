@@ -939,6 +939,8 @@ export interface ITerminalManager {
     onDidChangeTerminalShellIntegration(handler: (e: TerminalShellIntegrationChangeEvent) => void): Disposable;
 
     onDidEndTerminalShellExecution(handler: (e: TerminalShellExecutionEndEvent) => void): Disposable;
+
+    onDidChangeTerminalState(handler: (e: Terminal) => void): Disposable;
 }
 
 export const IDebugService = Symbol('IDebugManager');

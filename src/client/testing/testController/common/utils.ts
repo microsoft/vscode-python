@@ -13,11 +13,12 @@ import {
     DiscoveredTestNode,
     DiscoveredTestPayload,
     ExecutionTestPayload,
-    ITestResultResolver,
+    ITestItemMappings,
 } from './types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
 import { createReaderPipe, generateRandomPipeName } from '../../../common/pipes/namedPipes';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
+import { PROJECT_ID_SEPARATOR } from './projectUtils';
 
 export function fixLogLinesNoTrailing(content: string): string {
     const lines = content.split(/\r?\n/g);
@@ -25,6 +26,36 @@ export function fixLogLinesNoTrailing(content: string): string {
 }
 export function createTestingDeferred(): Deferred<void> {
     return createDeferred<void>();
+}
+
+// Maximum time (ms) to wait for the result pipe to drain after the subprocess exits.
+// Acts as a backstop in case `reader.onClose` never fires (e.g. abnormal subprocess exit,
+// platform-specific named-pipe quirks) so the adapter's `finally` block can never hang.
+export const RESULT_PIPE_DRAIN_TIMEOUT_MS = 5_000;
+
+/**
+ * Awaits `deferred.promise` but resolves after at most `timeoutMs` so callers
+ * cannot hang indefinitely if the underlying event source never fires.
+ */
+export async function awaitDeferredWithTimeout<T>(deferred: Deferred<T>, timeoutMs: number): Promise<void> {
+    let timeoutHandle: NodeJS.Timeout | undefined;
+    try {
+        await Promise.race([
+            deferred.promise,
+            new Promise<void>((resolve) => {
+                timeoutHandle = setTimeout(() => {
+                    traceVerbose(
+                        `awaitDeferredWithTimeout: deferred did not settle within ${timeoutMs}ms; giving up and continuing.`,
+                    );
+                    resolve();
+                }, timeoutMs);
+            }),
+        ]);
+    } finally {
+        if (timeoutHandle) {
+            clearTimeout(timeoutHandle);
+        }
+    }
 }
 
 interface ExecutionResultMessage extends Message {
@@ -88,6 +119,8 @@ export async function startRunResultNamedPipe(
     traceVerbose('Starting Test Result named pipe');
     const pipeName: string = generateRandomPipeName('python-test-results');
 
+    // `cancellationToken` only cancels pipe creation; disposal is driven by
+    // `reader.onClose` so buffered results are not dropped on cancel.
     const reader = await createReaderPipe(pipeName, cancellationToken);
     traceVerbose(`Test Results named pipe ${pipeName} connected`);
     let disposables: Disposable[] = [];
@@ -98,14 +131,6 @@ export async function startRunResultNamedPipe(
         deferredTillServerClose.resolve();
     });
 
-    if (cancellationToken) {
-        disposables.push(
-            cancellationToken?.onCancellationRequested(() => {
-                traceLog(`Test Result named pipe ${pipeName}  cancelled`);
-                disposable.dispose();
-            }),
-        );
-    }
     disposables.push(
         reader,
         reader.listen((data: Message) => {
@@ -114,9 +139,7 @@ export async function startRunResultNamedPipe(
             dataReceivedCallback((data as ExecutionResultMessage).params as ExecutionTestPayload);
         }),
         reader.onClose(() => {
-            // this is called once the server close, once per run instance
             traceVerbose(`Test Result named pipe ${pipeName} closed. Disposing of listener/s.`);
-            // dispose of all data listeners and cancelation listeners
             disposable.dispose();
         }),
         reader.onError((error) => {
@@ -175,46 +198,76 @@ export async function startDiscoveryNamedPipe(
 }
 
 /**
- * Detects if an error message indicates that pytest is not installed.
- * @param message The error message to check
- * @returns True if the error indicates pytest is not installed
+ * Extracts the missing module name from a ModuleNotFoundError or ImportError message.
+ * @param message The error message to parse
+ * @returns The module name if found, undefined otherwise
  */
-function isPytestNotInstalledError(message: string): boolean {
-    return (
-        (message.includes('ModuleNotFoundError') && message.includes('pytest')) ||
-        (message.includes('No module named') && message.includes('pytest')) ||
-        (message.includes('ImportError') && message.includes('pytest'))
-    );
+function extractMissingModuleName(message: string): string | undefined {
+    // Match patterns like:
+    // - No module named 'requests'
+    // - No module named "requests"
+    // - ModuleNotFoundError: No module named 'requests'
+    // - ImportError: No module named requests
+    const patterns = [/No module named ['"]([^'"]+)['"]/, /No module named (\S+)/];
+
+    for (const pattern of patterns) {
+        const match = message.match(pattern);
+        if (match) {
+            return match[1];
+        }
+    }
+    return undefined;
 }
 
-export function buildErrorNodeOptions(uri: Uri, message: string, testType: string): ErrorTestItemOptions {
+export function buildErrorNodeOptions(
+    uri: Uri,
+    message: string,
+    testType: string,
+    projectName?: string,
+): ErrorTestItemOptions {
     let labelText = testType === 'pytest' ? 'pytest Discovery Error' : 'Unittest Discovery Error';
     let errorMessage = message;
 
-    // Provide more specific error message if pytest is not installed
-    if (testType === 'pytest' && isPytestNotInstalledError(message)) {
-        labelText = 'pytest Not Installed';
-        errorMessage =
-            'pytest is not installed in the selected Python environment. Please install pytest to enable test discovery and execution.';
+    // Check for missing module errors and provide specific messaging
+    const missingModule = extractMissingModuleName(message);
+    if (missingModule) {
+        labelText = `Missing Module: ${missingModule}`;
+        errorMessage = `The module '${missingModule}' is not installed in the selected Python environment. Please install it to enable test discovery.`;
     }
+
+    // Use project name for label if available (project-based testing), otherwise use folder name
+    const displayName = projectName ?? path.basename(uri.fsPath);
 
     return {
         id: `DiscoveryError:${uri.fsPath}`,
-        label: `${labelText} [${path.basename(uri.fsPath)}]`,
+        label: `${labelText} [${displayName}]`,
         error: errorMessage,
     };
 }
 
+/**
+ * Populates the VS Code test tree from discovered test data.
+ * @returns The number of leaf test items added or updated while walking the tree.
+ */
 export function populateTestTree(
     testController: TestController,
     testTreeData: DiscoveredTestNode,
     testRoot: TestItem | undefined,
-    resultResolver: ITestResultResolver,
+    testItemMappings: ITestItemMappings,
     token?: CancellationToken,
-): void {
+    projectId?: string,
+    projectName?: string,
+): number {
+    // Count leaf tests while walking the tree so telemetry does not need a second traversal.
+    let testCount = 0;
+
     // If testRoot is undefined, use the info of the root item of testTreeData to create a test item, and append it to the test controller.
     if (!testRoot) {
-        testRoot = testController.createTestItem(testTreeData.path, testTreeData.name, Uri.file(testTreeData.path));
+        // Create project-scoped ID if projectId is provided
+        const rootId = projectId ? `${projectId}${PROJECT_ID_SEPARATOR}${testTreeData.path}` : testTreeData.path;
+        // Use "Project: {name}" label for project-based testing, otherwise use folder name
+        const rootLabel = projectName ? `Project: ${projectName}` : testTreeData.name;
+        testRoot = testController.createTestItem(rootId, rootLabel, Uri.file(testTreeData.path));
 
         testRoot.canResolveChildren = true;
         testRoot.tags = [RunTestTag, DebugTestTag];
@@ -226,7 +279,9 @@ export function populateTestTree(
     testTreeData.children.forEach((child) => {
         if (!token?.isCancellationRequested) {
             if (isTestItem(child)) {
-                const testItem = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
+                // Create project-scoped vsId
+                const vsId = projectId ? `${projectId}${PROJECT_ID_SEPARATOR}${child.id_}` : child.id_;
+                const testItem = testController.createTestItem(vsId, child.name, Uri.file(child.path));
                 testItem.tags = [RunTestTag, DebugTestTag];
 
                 let range: Range | undefined;
@@ -245,15 +300,18 @@ export function populateTestTree(
                 testItem.tags = [RunTestTag, DebugTestTag];
 
                 testRoot!.children.add(testItem);
-                // add to our map
-                resultResolver.runIdToTestItem.set(child.runID, testItem);
-                resultResolver.runIdToVSid.set(child.runID, child.id_);
-                resultResolver.vsIdToRunId.set(child.id_, child.runID);
+                // add to our map - use runID as key, vsId as value
+                testItemMappings.runIdToTestItem.set(child.runID, testItem);
+                testItemMappings.runIdToVSid.set(child.runID, vsId);
+                testItemMappings.vsIdToRunId.set(vsId, child.runID);
+                testCount += 1;
             } else {
-                let node = testController.items.get(child.path);
+                // Use project-scoped ID for non-test nodes and look up within the current root
+                const nodeId = projectId ? `${projectId}${PROJECT_ID_SEPARATOR}${child.id_}` : child.id_;
+                let node = testRoot!.children.get(nodeId);
 
                 if (!node) {
-                    node = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
+                    node = testController.createTestItem(nodeId, child.name, Uri.file(child.path));
 
                     node.canResolveChildren = true;
                     node.tags = [RunTestTag, DebugTestTag];
@@ -274,10 +332,20 @@ export function populateTestTree(
 
                     testRoot!.children.add(node);
                 }
-                populateTestTree(testController, child, node, resultResolver, token);
+                testCount += populateTestTree(
+                    testController,
+                    child,
+                    node,
+                    testItemMappings,
+                    token,
+                    projectId,
+                    projectName,
+                );
             }
         }
     });
+
+    return testCount;
 }
 
 function isTestItem(test: DiscoveredTestNode | DiscoveredTestItem): test is DiscoveredTestItem {

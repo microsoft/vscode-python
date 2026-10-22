@@ -7,6 +7,7 @@ import * as vscode from 'vscode';
 import * as vscodeMocks from './mocks/vsc';
 import { vscMockTelemetryReporter } from './mocks/vsc/telemetryReporter';
 import { anything, instance, mock, when } from 'ts-mockito';
+import { TestItem } from 'vscode';
 const Module = require('module');
 
 type VSCode = typeof vscode;
@@ -40,6 +41,32 @@ export function initialize() {
     generateMock('debug');
     generateMock('scm');
     generateMock('notebooks');
+    (mockedVSCode.commands as any).executeCommand = () => Promise.resolve(undefined);
+    (mockedVSCode.notebooks as any).createNotebookController = () => {
+        throw new Error('createNotebookController must be stubbed in tests that use it.');
+    };
+    when(mockedVSCodeNamespaces.window!.tabGroups).thenReturn({
+        all: [],
+        get activeTabGroup(): vscode.TabGroup {
+            throw new Error('activeTabGroup must be stubbed in tests that use it.');
+        },
+        onDidChangeTabGroups: new vscodeMocks.EventEmitter<any>().event,
+        onDidChangeTabs: new vscodeMocks.EventEmitter<any>().event,
+        close: () => Promise.resolve(true),
+    });
+
+    // Notebook output helpers used by REPL tests.
+    (mockedVSCode as any).NotebookCellOutputItem = {
+        stdout: (value: string) => ({ mime: 'application/vnd.code.notebook.stdout', data: Buffer.from(value) }),
+    };
+    (mockedVSCode as any).NotebookCellOutput = class {
+        public items: any[];
+        public metadata?: any;
+        constructor(items: any[], metadata?: any) {
+            this.items = items;
+            this.metadata = metadata;
+        }
+    };
 
     // Use mock clipboard fo testing purposes.
     const clipboard = new MockClipboard();
@@ -147,4 +174,36 @@ mockedVSCode.TestRunProfileKind = vscodeMocks.TestRunProfileKind;
 };
 (mockedVSCode as any).StatementCoverage = class StatementCoverage {
     constructor(public executed: number | boolean, public location: any, public branches?: any) {}
+};
+(mockedVSCode as any).LanguageModelTextPart = class LanguageModelTextPart {
+    constructor(public value: string) {}
+};
+(mockedVSCode as any).LanguageModelToolResult = class LanguageModelToolResult {
+    constructor(public content: unknown[]) {}
+};
+
+// Mock TestController for vscode.tests namespace
+function createMockTestController(): vscode.TestController {
+    const disposable = { dispose: () => undefined };
+    return ({
+        items: {
+            forEach: () => undefined,
+            get: () => undefined,
+            add: () => undefined,
+            replace: () => undefined,
+            delete: () => undefined,
+            size: 0,
+            [Symbol.iterator]: function* () {},
+        },
+        createRunProfile: () => disposable,
+        createTestItem: () => ({} as TestItem),
+        dispose: () => undefined,
+        resolveHandler: undefined,
+        refreshHandler: undefined,
+    } as unknown) as vscode.TestController;
+}
+
+// Add tests namespace with createTestController
+(mockedVSCode as any).tests = {
+    createTestController: (_id: string, _label: string) => createMockTestController(),
 };

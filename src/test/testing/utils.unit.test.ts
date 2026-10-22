@@ -1,51 +1,93 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import { TestItem, env } from 'vscode';
 import * as utils from '../../client/testing/utils';
-import sinon from 'sinon';
+import { PROJECT_ID_SEPARATOR } from '../../client/testing/testController/common/projectUtils';
+
 use(chaiAsPromised.default);
 
-function test_idToModuleClassMethod() {
-    try {
-        expect(utils.idToModuleClassMethod('foo')).to.equal('foo');
-        expect(utils.idToModuleClassMethod('a/b/c.pyMyClass')).to.equal('c.MyClass');
-        expect(utils.idToModuleClassMethod('a/b/c.pyMyClassmy_method')).to.equal('c.MyClass.my_method');
-        expect(utils.idToModuleClassMethod('\\MyClass')).to.be.undefined;
-        console.log('test_idToModuleClassMethod passed');
-    } catch (e) {
-        console.error('test_idToModuleClassMethod failed:', e);
-    }
-}
+suite('Testing - utils', () => {
+    suite('idToModuleClassMethod', () => {
+        test('single part is returned as is', () => {
+            expect(utils.idToModuleClassMethod('foo')).to.equal('foo');
+        });
 
-async function test_writeTestIdToClipboard() {
-    let clipboardStub = sinon.stub(utils, 'clipboardWriteText').resolves();
-    const { writeTestIdToClipboard } = utils;
-    try {
-        // unittest id
-        const testItem = { id: 'a/b/c.pyMyClass\\my_method' };
-        await writeTestIdToClipboard(testItem as any);
-        sinon.assert.calledOnceWithExactly(clipboardStub, 'c.MyClass.my_method');
-        clipboardStub.resetHistory();
+        test('file and class are converted to module.class', () => {
+            expect(utils.idToModuleClassMethod('a/b/c.py\\MyClass')).to.equal('c.MyClass');
+        });
 
-        // pytest id
-        const testItem2 = { id: 'tests/test_foo.py::TestClass::test_method' };
-        await writeTestIdToClipboard(testItem2 as any);
-        sinon.assert.calledOnceWithExactly(clipboardStub, 'tests/test_foo.py::TestClass::test_method');
-        clipboardStub.resetHistory();
+        test('file, class and method are converted to module.class.method', () => {
+            expect(utils.idToModuleClassMethod('a/b/c.py\\MyClass\\my_method')).to.equal('c.MyClass.my_method');
+        });
 
-        // undefined
-        await writeTestIdToClipboard(undefined as any);
-        sinon.assert.notCalled(clipboardStub);
+        test('missing file name results in undefined', () => {
+            expect(utils.idToModuleClassMethod('\\MyClass')).to.be.undefined;
+        });
+    });
 
-        console.log('test_writeTestIdToClipboard passed');
-    } catch (e) {
-        console.error('test_writeTestIdToClipboard failed:', e);
-    } finally {
-        sinon.restore();
-    }
-}
+    suite('writeTestIdToClipboard', () => {
+        async function copiedText(id: string): Promise<string> {
+            await utils.writeTestIdToClipboard(({ id } as unknown) as TestItem);
+            return env.clipboard.readText();
+        }
 
-// Run tests
-(async () => {
-    test_idToModuleClassMethod();
-    await test_writeTestIdToClipboard();
-})();
+        setup(async () => {
+            await env.clipboard.writeText('');
+        });
+
+        test('legacy pytest id is copied as is', async () => {
+            expect(await copiedText('tests/test_foo.py::TestClass::test_method')).to.equal(
+                'tests/test_foo.py::TestClass::test_method',
+            );
+        });
+
+        test('project scoped pytest id drops the project prefix', async () => {
+            const id = `file:///path/to/workspace${PROJECT_ID_SEPARATOR}/path/to/workspace/tests/unit/test_foo.py::test_bar`;
+
+            expect(await copiedText(id)).to.equal('/path/to/workspace/tests/unit/test_foo.py::test_bar');
+        });
+
+        test('project scoped parameterized pytest id keeps the parameters', async () => {
+            const id = `file:///path/to/workspace${PROJECT_ID_SEPARATOR}tests/unit/test_foo.py::test_pipe_single[False]`;
+
+            expect(await copiedText(id)).to.equal('tests/unit/test_foo.py::test_pipe_single[False]');
+        });
+
+        test('legacy parameterized pytest id containing the separator text is copied as is', async () => {
+            const id = `tests/test_foo.py::test_value[value${PROJECT_ID_SEPARATOR}suffix]`;
+
+            expect(await copiedText(id)).to.equal(id);
+        });
+
+        test('project scoped parameterized pytest id containing the separator text keeps the parameters', async () => {
+            const id = `file:///path/to/workspace${PROJECT_ID_SEPARATOR}tests/test_foo.py::test_value[value${PROJECT_ID_SEPARATOR}suffix]`;
+
+            expect(await copiedText(id)).to.equal(`tests/test_foo.py::test_value[value${PROJECT_ID_SEPARATOR}suffix]`);
+        });
+
+        test('project scoped windows pytest id drops the project prefix', async () => {
+            const id = `file:///c%3A/workspace${PROJECT_ID_SEPARATOR}c:\\workspace\\tests\\test_foo.py::test_bar`;
+
+            expect(await copiedText(id)).to.equal('c:\\workspace\\tests\\test_foo.py::test_bar');
+        });
+
+        test('legacy unittest id is converted to module.class.method', async () => {
+            expect(await copiedText('a/b/c.py\\MyClass\\my_method')).to.equal('c.MyClass.my_method');
+        });
+
+        test('project scoped unittest id is converted to module.class.method', async () => {
+            const id = `file:///path/to/workspace${PROJECT_ID_SEPARATOR}a/b/c.py\\MyClass\\my_method`;
+
+            expect(await copiedText(id)).to.equal('c.MyClass.my_method');
+        });
+
+        test('nothing is copied when there is no test item', async () => {
+            await utils.writeTestIdToClipboard((undefined as unknown) as TestItem);
+
+            expect(await env.clipboard.readText()).to.equal('');
+        });
+    });
+});

@@ -341,3 +341,134 @@ def test_basic_run_django():
             assert id_result["outcome"] == "failure"
         else:
             assert id_result["outcome"] == "success"
+
+
+def test_project_root_path_with_cwd_override(mock_send_run_data) -> None:  # noqa: ARG001
+    """Test unittest execution with project_root_path parameter.
+
+    This simulates project-based testing where the cwd in the payload should be
+    the project root (project_root_path) rather than the start_dir.
+
+    When project_root_path is provided:
+    - The cwd in the response should match project_root_path
+    - Test execution should still work correctly with start_dir
+    """
+    # Use unittest_folder as our "project" directory
+    project_path = TEST_DATA_PATH / "unittest_folder"
+    start_dir = os.fsdecode(project_path)
+    pattern = "test_add*"
+    test_ids = [
+        "test_add.TestAddFunction.test_add_positive_numbers",
+    ]
+
+    os.environ["TEST_RUN_PIPE"] = "fake"
+
+    # Call run_tests with project_root_path to simulate PROJECT_ROOT_PATH
+    actual = run_tests(
+        start_dir,
+        test_ids,
+        pattern,
+        None,
+        1,
+        None,
+        project_root_path=start_dir,
+    )
+
+    assert actual["status"] == "success"
+    # cwd in response should match the project_root_path (project root)
+    assert actual["cwd"] == os.fsdecode(project_path), (
+        f"Expected cwd '{os.fsdecode(project_path)}', got '{actual['cwd']}'"
+    )
+    assert actual["result"] is not None
+    assert test_ids[0] in actual["result"]
+    assert actual["result"][test_ids[0]]["outcome"] == "success"
+
+
+def test_project_root_path_with_different_cwd_and_start_dir(mock_send_run_data) -> None:  # noqa: ARG001
+    """Test unittest execution where project_root_path differs from start_dir.
+
+    This simulates the scenario where:
+    - start_dir points to a subfolder where tests are located
+    - project_root_path (PROJECT_ROOT_PATH) points to the project root
+
+    The cwd in the response should be the project root, while execution
+    still runs from the start_dir.
+    """
+    # Use utils_nested_cases as our test case
+    project_path = TEST_DATA_PATH / "utils_nested_cases"
+    start_dir = os.fsdecode(project_path)
+    pattern = "*"
+    test_ids = [
+        "file_one.CaseTwoFileOne.test_one",
+    ]
+
+    os.environ["TEST_RUN_PIPE"] = "fake"
+
+    # Call run_tests with project_root_path set to project root
+    actual = run_tests(
+        start_dir,
+        test_ids,
+        pattern,
+        None,
+        1,
+        None,
+        project_root_path=os.fsdecode(project_path),
+    )
+
+    assert actual["status"] == "success"
+    # cwd should be the project root (project_root_path)
+    assert actual["cwd"] == os.fsdecode(project_path), (
+        f"Expected cwd '{os.fsdecode(project_path)}', got '{actual['cwd']}'"
+    )
+    assert actual["result"] is not None
+    assert test_ids[0] in actual["result"]
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Symlinks require elevated privileges on Windows",
+)
+def test_symlink_with_project_root_path(mock_send_run_data) -> None:  # noqa: ARG001
+    """Test unittest execution with both symlink and project_root_path set.
+
+    This tests the combination of:
+    1. A symlinked test directory
+    2. project_root_path (PROJECT_ROOT_PATH) set to the symlink path
+
+    This simulates project-based testing where the project root is a symlink,
+    ensuring execution payloads correctly use the symlink path.
+    """
+    with helpers.create_symlink(TEST_DATA_PATH, "unittest_folder", "symlink_unittest_exec") as (
+        _source,
+        destination,
+    ):
+        assert destination.is_symlink()
+
+        # Run execution with:
+        # - start_dir pointing to the symlink destination
+        # - project_root_path set to the symlink destination (simulating PROJECT_ROOT_PATH)
+        start_dir = os.fsdecode(destination)
+        pattern = "test_add*"
+        test_ids = [
+            "test_add.TestAddFunction.test_add_positive_numbers",
+        ]
+
+        os.environ["TEST_RUN_PIPE"] = "fake"
+
+        actual = run_tests(
+            start_dir,
+            test_ids,
+            pattern,
+            None,
+            1,
+            None,
+            project_root_path=start_dir,
+        )
+
+        assert actual["status"] == "success", (
+            f"Status is not 'success', error is: {actual.get('error')}"
+        )
+        # cwd should be the symlink path (project_root_path)
+        assert actual["cwd"] == os.fsdecode(destination), (
+            f"CWD does not match symlink path: expected {os.fsdecode(destination)}, got {actual['cwd']}"
+        )

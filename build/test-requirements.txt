@@ -7,13 +7,12 @@ pylint
 pycodestyle
 pydocstyle
 prospector
-pytest
 flask
 fastapi
 uvicorn
 django
-testresources
 testscenarios
+testtools
 
 # Integrated TensorBoard tests
 tensorboard
@@ -39,4 +38,3 @@ pytest-describe
 
 # for pytest-ruff related tests
 pytest-ruff
-pytest-black

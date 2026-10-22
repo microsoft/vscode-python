@@ -4,7 +4,7 @@
 
 import * as path from 'path';
 import { Event, EventEmitter, Disposable, Uri } from 'vscode';
-import { PythonEnvInfo, PythonEnvKind, PythonEnvType, PythonVersion } from '../pythonEnvironments/base/info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from '../pythonEnvironments/base/info';
 import {
     GetRefreshEnvironmentsOptions,
     IDiscoveryAPI,
@@ -17,7 +17,7 @@ import { PythonEnvCollectionChangedEvent } from '../pythonEnvironments/base/watc
 import { getEnvExtApi } from './api.internal';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { StopWatch } from '../common/utils/stopWatch';
-import { traceLog } from '../logging';
+import { traceError, traceLog, traceWarn } from '../logging';
 import {
     DidChangeEnvironmentsEventArgs,
     EnvironmentChangeKind,
@@ -26,7 +26,8 @@ import {
 } from './types';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { Architecture, isWindows } from '../common/utils/platform';
-import { parseVersion } from '../pythonEnvironments/base/info/pythonVersion';
+import { Interpreters } from '../common/utils/localize';
+import { parsePythonEnvironmentVersion } from './utils';
 
 function getKind(pythonEnv: PythonEnvironment): PythonEnvKind {
     if (pythonEnv.envId.managerId.toLowerCase().endsWith('system')) {
@@ -126,39 +127,51 @@ function getEnvType(kind: PythonEnvKind): PythonEnvType | undefined {
 }
 
 function toPythonEnvInfo(pythonEnv: PythonEnvironment): PythonEnvInfo | undefined {
-    const kind = getKind(pythonEnv);
-    const arch = Architecture.x64;
-    const version: PythonVersion = parseVersion(pythonEnv.version);
-    const { name, displayName, sysPrefix } = pythonEnv;
-    const executable = getExecutable(pythonEnv);
-    const location = getLocation(pythonEnv);
+    const version = parsePythonEnvironmentVersion(pythonEnv);
+    if (!version) {
+        return undefined;
+    }
 
-    return {
-        name,
-        location,
-        kind,
-        id: executable,
-        executable: {
-            filename: executable,
-            sysPrefix,
-            ctime: -1,
-            mtime: -1,
-        },
-        version: {
-            sysVersion: pythonEnv.version,
-            major: version.major,
-            minor: version.minor,
-            micro: version.micro,
-        },
-        arch,
-        distro: {
-            org: '',
-        },
-        source: [],
-        detailedDisplayName: displayName,
-        display: displayName,
-        type: getEnvType(kind),
-    };
+    try {
+        const kind = getKind(pythonEnv);
+        const arch = Architecture.x64;
+        const { name, displayName, sysPrefix } = pythonEnv;
+        const executable = getExecutable(pythonEnv);
+        const location = getLocation(pythonEnv);
+
+        return {
+            name,
+            location,
+            kind,
+            id: executable,
+            executable: {
+                filename: executable,
+                sysPrefix,
+                ctime: -1,
+                mtime: -1,
+            },
+            version: {
+                sysVersion: pythonEnv.version,
+                major: version.major,
+                minor: version.minor,
+                micro: version.micro,
+            },
+            arch,
+            distro: {
+                org: '',
+            },
+            source: [],
+            detailedDisplayName: displayName,
+            display: displayName,
+            type: getEnvType(kind),
+        };
+    } catch (error) {
+        traceError(
+            `Failed to convert environment "${pythonEnv.displayName}" from the Python Environments extension`,
+            error,
+        );
+        return undefined;
+    }
 }
 
 function hasChanged(old: PythonEnvInfo, newEnv: PythonEnvInfo): boolean {
@@ -213,11 +226,16 @@ class EnvExtApis implements IDiscoveryAPI, Disposable {
             this._onChanged,
             this.envExtApi.onDidChangeEnvironments((e) => this.onDidChangeEnvironments(e)),
             this.envExtApi.onDidChangeEnvironment((e) => {
+                const oldEnv = e.old ? toPythonEnvInfo(e.old) : undefined;
+                const newEnv = e.new ? toPythonEnvInfo(e.new) : undefined;
+                if ((e.old && !oldEnv) || (e.new && !newEnv)) {
+                    return;
+                }
                 this._onChanged.fire({
                     type: FileChangeType.Changed,
                     searchLocation: e.uri,
-                    old: e.old ? toPythonEnvInfo(e.old) : undefined,
-                    new: e.new ? toPythonEnvInfo(e.new) : undefined,
+                    old: oldEnv,
+                    new: newEnv,
                 });
             }),
         );
@@ -242,13 +260,23 @@ class EnvExtApis implements IDiscoveryAPI, Disposable {
         this._onProgress.fire({ stage: this.refreshState });
         this._refreshPromise = createDeferred();
 
+        const SLOW_DISCOVERY_THRESHOLD_MS = 25_000;
+        const slowDiscoveryTimer = setTimeout(() => {
+            traceWarn(Interpreters.envExtDiscoverySlow);
+        }, SLOW_DISCOVERY_THRESHOLD_MS);
+
         setImmediate(async () => {
             try {
                 await this.envExtApi.refreshEnvironments(undefined);
+                if (this._envs.length === 0) {
+                    traceWarn(Interpreters.envExtDiscoveryNoEnvironments);
+                }
                 this._refreshPromise?.resolve();
             } catch (error) {
+                traceError(Interpreters.envExtDiscoveryFailed, error);
                 this._refreshPromise?.reject(error);
             } finally {
+                clearTimeout(slowDiscoveryTimer);
                 traceLog(`Native locator: Refresh finished in ${stopwatch.elapsedTime} ms`);
                 this.refreshState = ProgressReportStage.discoveryFinished;
                 this._refreshPromise = undefined;
@@ -282,24 +310,27 @@ class EnvExtApis implements IDiscoveryAPI, Disposable {
         return info;
     }
 
-    private removeEnv(env: PythonEnvInfo | string): void {
-        if (typeof env === 'string') {
-            const old = this._envs.find((item) => item.executable.filename === env);
-            this._envs = this._envs.filter((item) => item.executable.filename !== env);
-            this._onChanged.fire({ type: FileChangeType.Deleted, old });
-            return;
-        }
-        this._envs = this._envs.filter((item) => item.executable.filename !== env.executable.filename);
-        this._onChanged.fire({ type: FileChangeType.Deleted, old: env });
+    private removeEnv(env: PythonEnvironment): void {
+        const executable = getExecutable(env);
+        const old = this._envs.find((item) => item.executable.filename === executable);
+        this._envs = this._envs.filter((item) => item.executable.filename !== executable);
+        this._onChanged.fire({ type: FileChangeType.Deleted, old });
     }
 
     async resolveEnv(envPath?: string): Promise<PythonEnvInfo | undefined> {
         if (envPath === undefined) {
             return undefined;
         }
-        const pythonEnv = await this.envExtApi.resolveEnvironment(Uri.file(envPath));
-        if (pythonEnv) {
-            return this.addEnv(pythonEnv);
+        try {
+            const pythonEnv = await this.envExtApi.resolveEnvironment(Uri.file(envPath));
+            if (pythonEnv) {
+                return this.addEnv(pythonEnv);
+            }
+        } catch (error) {
+            traceError(
+                `Failed to resolve environment "${envPath}" via the Python Environments extension (ms-python.vscode-python-envs). Check the "Python Environments" output channel for details.`,
+                error,
+            );
         }
         return undefined;
     }
@@ -310,11 +341,20 @@ class EnvExtApis implements IDiscoveryAPI, Disposable {
 
     onDidChangeEnvironments(e: DidChangeEnvironmentsEventArgs): void {
         e.forEach((item) => {
-            if (item.kind === EnvironmentChangeKind.remove) {
-                this.removeEnv(item.environment.environmentPath.fsPath);
-            }
-            if (item.kind === EnvironmentChangeKind.add) {
-                this.addEnv(item.environment);
+            try {
+                if (item.kind === EnvironmentChangeKind.remove) {
+                    this.removeEnv(item.environment);
+                }
+                if (item.kind === EnvironmentChangeKind.add) {
+                    this.addEnv(item.environment);
+                }
+            } catch (error) {
+                traceError(
+                    `Failed to process environment change for "${
+                        item?.environment?.displayName ?? 'unknown environment'
+                    }" from the Python Environments extension`,
+                    error,
+                );
             }
         });
     }

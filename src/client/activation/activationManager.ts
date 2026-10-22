@@ -10,12 +10,16 @@ import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IDisposable, IInterpreterPathService, Resource } from '../common/types';
-import { Deferred } from '../common/utils/async';
+import { Deferred, sleep } from '../common/utils/async';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
-import { traceDecoratorError } from '../logging';
+import { traceDecoratorError, traceError } from '../logging';
 import { sendActivationTelemetry } from '../telemetry/envFileTelemetry';
 import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
+
+// Upper bound on how long workspace activation waits for interpreter auto-selection before
+// proceeding. Auto-selection still completes in the background after this point.
+const AUTO_SELECT_INTERPRETER_TIMEOUT_MS = 100;
 
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {
@@ -94,7 +98,15 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
 
         if (this.workspaceService.isTrusted) {
             // Do not interact with interpreters in a untrusted workspace.
-            await this.autoSelection.autoSelectInterpreter(resource);
+            // Don't block activation (and therefore language server startup) on auto-selection.
+            // On a cold start it can wait for a full environment refresh to complete, which would
+            // delay starting the language server. Let it finish in the background; the selected
+            // interpreter is reported to listeners (e.g. Pylance) via the environments API once it
+            // is ready. We still wait briefly so the common warm-start case is unchanged.
+            const autoSelection = this.autoSelection
+                .autoSelectInterpreter(resource)
+                .catch((ex) => traceError('Auto-selection of interpreter failed', ex));
+            await Promise.race([autoSelection, sleep(AUTO_SELECT_INTERPRETER_TIMEOUT_MS)]);
             await this.interpreterPathService.copyOldInterpreterStorageValuesToNew(resource);
         }
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);

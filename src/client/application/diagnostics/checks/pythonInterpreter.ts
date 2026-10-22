@@ -20,7 +20,7 @@ import {
     IDiagnosticHandlerService,
     IDiagnosticMessageOnCloseHandler,
 } from '../types';
-import { Common } from '../../../common/utils/localize';
+import { Common, Interpreters } from '../../../common/utils/localize';
 import { Commands } from '../../../common/constants';
 import { ICommandManager, IWorkspaceService } from '../../../common/application/types';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -30,11 +30,12 @@ import { cache } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
 import { getEnvironmentVariable, getOSType, OSType } from '../../../common/utils/platform';
 import { IFileSystem } from '../../../common/platform/types';
-import { traceError } from '../../../logging';
+import { traceError, traceWarn } from '../../../logging';
 import { getExecutable } from '../../../common/process/internal/python';
 import { getSearchPathEnvVarNames } from '../../../common/utils/exec';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { normCasePath } from '../../../common/platform/fs-paths';
+import { useEnvExtension } from '../../../envExt/api.internal';
 
 const messages = {
     [DiagnosticCodes.NoPythonInterpretersDiagnostic]: l10n.t(
@@ -144,6 +145,9 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
         const isInterpreterSetToDefault = interpreterPathService.get(resource) === 'python';
 
         if (!hasInterpreters && isInterpreterSetToDefault) {
+            if (useEnvExtension()) {
+                traceWarn(Interpreters.envExtDiscoveryNoEnvironments);
+            }
             return [
                 new InvalidPythonInterpreterDiagnostic(
                     DiagnosticCodes.NoPythonInterpretersDiagnostic,
@@ -156,6 +160,9 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
 
         const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
         if (!currentInterpreter) {
+            if (useEnvExtension()) {
+                traceWarn(Interpreters.envExtNoActiveEnvironment);
+            }
             return [
                 new InvalidPythonInterpreterDiagnostic(
                     DiagnosticCodes.InvalidPythonInterpreterDiagnostic,

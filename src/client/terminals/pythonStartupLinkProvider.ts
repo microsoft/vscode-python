@@ -21,13 +21,10 @@ export class CustomTerminalLinkProvider implements TerminalLinkProvider<CustomTe
         _token: CancellationToken,
     ): ProviderResult<CustomTerminalLink[]> {
         const links: CustomTerminalLink[] = [];
-        let expectedNativeLink;
-
-        if (process.platform === 'darwin') {
-            expectedNativeLink = 'Cmd click to launch VS Code Native REPL';
-        } else {
-            expectedNativeLink = 'Ctrl click to launch VS Code Native REPL';
-        }
+        let expectedNativeLink =
+            process.platform === 'darwin'
+                ? 'Cmd click to launch VS Code Native REPL'
+                : 'Ctrl click to launch VS Code Native REPL';
 
         if (context.line.includes(expectedNativeLink)) {
             links.push({

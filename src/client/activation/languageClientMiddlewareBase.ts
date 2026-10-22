@@ -87,7 +87,19 @@ export class LanguageClientMiddlewareBase implements Middleware {
                     const settingDict: LSPObject & { pythonPath: string; _envPYTHONPATH: string } = settings[
                         i
                     ] as LSPObject & { pythonPath: string; _envPYTHONPATH: string };
-                    settingDict.pythonPath = (await interpreterService.getActiveInterpreter(uri))?.path ?? 'python';
+                    // For a .py file resource, resolve the interpreter for that exact file rather than its
+                    // containing workspace folder, so a per-file environment (such as a PEP 723 inline-script
+                    // environment created for a single script) is honored for the language client hosted by
+                    // this extension. This only diverges from workspace-folder resolution when the Python
+                    // Environments extension is in use; otherwise getActiveInterpreter ignores exactResource.
+                    const exactResource = uri && path.extname(uri.fsPath).toLowerCase() === '.py';
+                    settingDict.pythonPath =
+                        (
+                            await interpreterService.getActiveInterpreter(
+                                uri,
+                                exactResource ? { exactResource: true } : undefined,
+                            )
+                        )?.path ?? 'python';
 
                     const env = await envService.getEnvironmentVariables(uri);
                     const envPYTHONPATH = env.PYTHONPATH;

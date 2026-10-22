@@ -27,6 +27,8 @@ import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import * as utils from '../common/utils';
 import { getEnvironment, runInBackground, useEnvExtension } from '../../../envExt/api.internal';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { ProjectAdapter } from '../common/projectAdapter';
 
 /**
  * Wrapper Class for unittest test execution. This is where we call `runTestCommand`?
@@ -46,6 +48,8 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         runInstance: TestRun,
         executionFactory: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
+        _interpreter?: PythonEnvironment,
+        project?: ProjectAdapter,
     ): Promise<void> {
         // deferredTillServerClose awaits named pipe server close
         const deferredTillServerClose: Deferred<void> = utils.createTestingDeferred();
@@ -66,9 +70,10 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             cSource.token, // token to cancel
         );
         runInstance.token.onCancellationRequested(() => {
-            console.log(`Test run cancelled, resolving 'till TillAllServerClose' deferred for ${uri.fsPath}.`);
-            // if canceled, stop listening for results
-            deferredTillServerClose.resolve();
+            traceInfo(`Test run cancelled for ${uri.fsPath}; waiting for result pipe to drain.`);
+            // Don't resolve the deferred here: the pipe must drain first.
+            // `reader.onClose` in `startRunResultNamedPipe` will resolve it
+            // once the subprocess closes its end of the pipe.
         });
         try {
             await this.runTestsNew(
@@ -80,11 +85,12 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                 profileKind,
                 executionFactory,
                 debugLauncher,
+                project,
             );
         } catch (error) {
             traceError(`Error in running unittest tests: ${error}`);
         } finally {
-            await deferredTillServerClose.promise;
+            await utils.awaitDeferredWithTimeout(deferredTillServerClose, utils.RESULT_PIPE_DRAIN_TIMEOUT_MS);
         }
     }
 
@@ -97,6 +103,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         profileKind: boolean | TestRunProfileKind | undefined,
         executionFactory: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
+        project?: ProjectAdapter,
     ): Promise<ExecutionTestPayload> {
         const settings = this.configSettings.getSettings(uri);
         const { unittestArgs } = settings.testing;
@@ -111,6 +118,15 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         const pythonPathCommand = [cwd, ...pythonPathParts].join(path.delimiter);
         mutableEnv.PYTHONPATH = pythonPathCommand;
         mutableEnv.TEST_RUN_PIPE = resultNamedPipeName;
+
+        // Set PROJECT_ROOT_PATH for project-based testing (tells Python where to root the test tree)
+        if (project) {
+            mutableEnv.PROJECT_ROOT_PATH = project.projectUri.fsPath;
+            traceInfo(
+                `[test-by-project] Setting PROJECT_ROOT_PATH=${project.projectUri.fsPath} for unittest execution`,
+            );
+        }
+
         if (profileKind && profileKind === TestRunProfileKind.Coverage) {
             mutableEnv.COVERAGE_ENABLED = cwd;
         }
@@ -165,6 +181,8 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                     testProvider: UNITTEST_PROVIDER,
                     runTestIdsPort: testIdsFileName,
                     pytestPort: resultNamedPipeName, // change this from pytest
+                    // Pass project for project-based debugging (Python path and session name derived from this)
+                    project: project?.pythonProject,
                 };
                 const sessionOptions: DebugSessionOptions = {
                     testRun: runInstance,
@@ -183,7 +201,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                     sessionOptions,
                 );
             } else if (useEnvExtension()) {
-                const pythonEnv = await getEnvironment(uri);
+                const pythonEnv = project?.pythonEnvironment ?? (await getEnvironment(uri));
                 if (pythonEnv) {
                     traceInfo(`Running unittest with arguments: ${args.join(' ')} for workspace ${uri.fsPath} \r\n`);
                     const deferredTillExecClose = createDeferred();

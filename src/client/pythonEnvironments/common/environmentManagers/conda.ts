@@ -257,6 +257,15 @@ export class Conda {
      */
     private static condaPromise = new Map<string | undefined, Promise<Conda | undefined>>();
 
+    /**
+     * When another component (e.g. the Python Environments extension via pet) owns
+     * environment discovery, the legacy registry/known-path probing performed by
+     * locate() is redundant and was a significant startup cost (sequential
+     * `conda info --json` probes and reg.exe spawns). When set, locate() only honors
+     * the explicit `python.condaPath` setting and `conda` on PATH.
+     */
+    private static skipDeepProbe = false;
+
     private condaInfoCached = new Map<string | undefined, Promise<CondaInfo> | undefined>();
 
     /**
@@ -297,6 +306,18 @@ export class Conda {
     }
 
     /**
+     * Restrict {@link locate} to the explicit `python.condaPath` setting and `conda` on
+     * PATH, skipping the expensive registry/known-path filesystem probing. Used when
+     * environment discovery is delegated to another component (e.g. the Python
+     * Environments extension), which is the source of truth for locating conda.
+     */
+    public static setSkipDeepProbe(value: boolean): void {
+        Conda.skipDeepProbe = value;
+        // Drop any cached resolution so the new probing policy takes effect.
+        Conda.condaPromise = new Map<string | undefined, Promise<Conda | undefined>>();
+    }
+
+    /**
      * Locates the preferred "conda" utility on this system by considering user settings,
      * binaries on PATH, Python interpreters in the registry, and known install locations.
      *
@@ -314,6 +335,7 @@ export class Conda {
         const suffix = getOSType() === OSType.Windows ? 'Scripts\\conda.exe' : 'bin/conda';
 
         // Produce a list of candidate binaries to be probed by exec'ing them.
+        const skipDeepProbe = Conda.skipDeepProbe;
         async function* getCandidates() {
             if (customCondaPath && customCondaPath !== 'conda') {
                 // If user has specified a custom conda path, use it first.
@@ -321,6 +343,11 @@ export class Conda {
             }
             // Check unqualified filename first, in case it's on PATH.
             yield 'conda';
+            if (skipDeepProbe) {
+                // Discovery is delegated to another component (e.g. the Python
+                // Environments extension); skip the costly registry/known-path probing.
+                return;
+            }
             if (getOSType() === OSType.Windows) {
                 yield* getCandidatesFromRegistry();
             }

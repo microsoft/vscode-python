@@ -9,7 +9,7 @@ import { IConfigurationService, IExperimentService } from '../../types';
 import { ITerminalActivationHandler, ITerminalActivator, ITerminalHelper, TerminalActivationOptions } from '../types';
 import { BaseTerminalActivator } from './base';
 import { inTerminalEnvVarExperiment } from '../../experiments/helpers';
-import { useEnvExtension } from '../../../envExt/api.internal';
+import { shouldEnvExtHandleActivation } from '../../../envExt/api.internal';
 import { EventName } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry';
 
@@ -44,8 +44,8 @@ export class TerminalActivator implements ITerminalActivator {
         const settings = this.configurationService.getSettings(options?.resource);
         const activateEnvironment =
             settings.terminal.activateEnvironment && !inTerminalEnvVarExperiment(this.experimentService);
-        if (!activateEnvironment || options?.hideFromUser || useEnvExtension()) {
-            if (useEnvExtension()) {
+        if (!activateEnvironment || options?.hideFromUser || shouldEnvExtHandleActivation()) {
+            if (shouldEnvExtHandleActivation()) {
                 sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL);
             }
             return false;

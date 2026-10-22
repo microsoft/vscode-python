@@ -9,6 +9,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
+import { IExtensionActivationService } from '../../client/activation/types';
 import { IApplicationDiagnostics } from '../../client/application/types';
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
@@ -173,6 +174,51 @@ suite('Activation Manager', () => {
 
             autoSelection.verifyAll();
             appDiagnostics.verifyAll();
+        });
+
+        test('Does not block activation when interpreter auto-selection is slow', async () => {
+            const resource = Uri.parse('two');
+            const workspaceFolder = {
+                index: 0,
+                name: 'one',
+                uri: resource,
+            };
+            when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
+
+            // Auto-selection never resolves (simulating a long-running first-run refresh).
+            autoSelection
+                .setup((a) => a.autoSelectInterpreter(resource))
+                .returns(() => new Promise<void>(() => undefined))
+                .verifiable(typemoq.Times.once());
+            appDiagnostics
+                .setup((a) => a.performPreStartupHealthCheck(resource))
+                .returns(() => Promise.resolve())
+                .verifiable(typemoq.Times.once());
+
+            const activationService = typemoq.Mock.ofType<IExtensionActivationService>();
+            activationService
+                .setup((a) => a.activate(typemoq.It.isAny(), typemoq.It.isAny()))
+                .returns(() => Promise.resolve())
+                .verifiable(typemoq.Times.once());
+
+            managerTest = new ExtensionActivationManagerTest(
+                [activationService.object],
+                [],
+                documentManager.object,
+                autoSelection.object,
+                appDiagnostics.object,
+                instance(workspaceService),
+                instance(fileSystem),
+                instance(activeResourceService),
+                interpreterPathService.object,
+            );
+
+            // Should resolve even though auto-selection never does.
+            await managerTest.activateWorkspace(resource);
+
+            autoSelection.verifyAll();
+            appDiagnostics.verifyAll();
+            activationService.verifyAll();
         });
 
         test('Initialize will add event handlers and will dispose them when running dispose', async () => {
