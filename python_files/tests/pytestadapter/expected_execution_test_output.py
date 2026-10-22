@@ -221,6 +221,42 @@ error_raised_exception_execution_expected_output = {
     }
 }
 
+# This is the expected output for the teardown_error.py file, one result per message in the
+# order they are sent. When a teardown fails, a second result follows the one for the call.
+# └── teardown_error.py
+#   ├── test_teardown_raises: success, then error
+#   ├── test_teardown_asserts: success, then failure
+#   ├── test_finalizer_raises: success, then error
+#   ├── test_call_and_teardown_fail: failure, then error
+#   ├── test_no_teardown_error: success
+#   └── TestClassTeardown
+#       └── test_class_teardown_raises: success, then error
+teardown_error_path = TEST_DATA_PATH / "teardown_error.py"
+teardown_error_execution_expected_output = [
+    {
+        get_absolute_test_id(f"teardown_error.py::{test_name}", teardown_error_path): {
+            "test": get_absolute_test_id(f"teardown_error.py::{test_name}", teardown_error_path),
+            "outcome": outcome,
+            "message": None if outcome == SUCCESS else "ERROR MESSAGE",
+            "traceback": "TRACEBACK" if from_teardown else None,
+            "subtest": None,
+        }
+    }
+    for test_name, outcome, from_teardown in [
+        ("test_teardown_raises", SUCCESS, False),
+        ("test_teardown_raises", "error", True),
+        ("test_teardown_asserts", SUCCESS, False),
+        ("test_teardown_asserts", FAILURE, True),
+        ("test_finalizer_raises", SUCCESS, False),
+        ("test_finalizer_raises", "error", True),
+        ("test_call_and_teardown_fail", FAILURE, False),
+        ("test_call_and_teardown_fail", "error", True),
+        ("test_no_teardown_error", SUCCESS, False),
+        ("TestClassTeardown::test_class_teardown_raises", SUCCESS, False),
+        ("TestClassTeardown::test_class_teardown_raises", "error", True),
+    ]
+]
+
 # This is the expected output for the skip_tests.py file.
 # └── test_something: success
 # └── test_another_thing: skipped
