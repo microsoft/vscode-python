@@ -793,6 +793,8 @@ suite('Unit Tests - Debug Launcher', () => {
 
             expect(capturedConfigs).to.have.length(1);
             expect(capturedConfigs[0].name).to.equal('Debug Tests: myproject (Python 3.11)');
+            expect(capturedConfigs[0].env?.PROJECT_ROOT_PATH).to.equal(Uri.file('one/two/three').fsPath);
+            expect(capturedConfigs[0].env?.PYTHONPATH).to.include(path.join(EXTENSION_ROOT_DIR, 'python_files'));
         });
 
         test('should use default python when no project provided', async () => {
@@ -812,6 +814,8 @@ suite('Unit Tests - Debug Launcher', () => {
             expect(capturedConfigs).to.have.length(1);
             // Should use the default 'python' from interpreterService mock
             expect(capturedConfigs[0].python).to.equal('python');
+            expect(capturedConfigs[0].env?.PROJECT_ROOT_PATH).to.be.undefined;
+            expect(capturedConfigs[0].env?.PYTHONPATH).to.include(path.join(EXTENSION_ROOT_DIR, 'python_files'));
         });
 
         test('should add unique session marker to launch config', async () => {
