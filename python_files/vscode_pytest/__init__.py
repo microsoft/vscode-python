@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import ast
 import atexit
 import contextlib
 import json
@@ -874,6 +875,38 @@ def create_session_node(session: pytest.Session) -> TestNode:
     }
 
 
+class _ClassFinder(ast.NodeVisitor):
+    def __init__(self) -> None:
+        self.stack: list[str] = []
+        self.classes: dict[str, int] = {}
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self.stack.append(node.name)
+        if node.name.startswith("describe_"):
+            qualname = ".".join(self.stack)
+            self.classes[qualname] = (
+                node.decorator_list[0].lineno if node.decorator_list else node.lineno
+            )
+        self.stack.append("<locals>")
+        self.generic_visit(node)
+        self.stack.pop()
+        self.stack.pop()
+
+    visit_AsyncFunctionDef = visit_FunctionDef  # noqa: N815
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        self.stack.append(node.name)
+        qualname = ".".join(self.stack)
+        self.classes[qualname] = (
+            node.decorator_list[0].lineno if node.decorator_list else node.lineno
+        )
+        self.generic_visit(node)
+        self.stack.pop()
+
+
+_CLASS_LINENO_CACHE: dict[pathlib.Path, dict[str, int]] = {}
+
+
 def create_class_node(class_module: pytest.Class | DescribeBlockType) -> TestNode:
     """Creates a class node from a pytest class object.
 
@@ -884,10 +917,31 @@ def create_class_node(class_module: pytest.Class | DescribeBlockType) -> TestNod
     class_line = ""
     try:
         if hasattr(class_module, "obj"):
-            import inspect
+            firstlineno = getattr(class_module.obj, "__firstlineno__", None)
+            if firstlineno is not None:
+                class_line = str(firstlineno)
+            else:
+                node_path = get_node_path(class_module)
+                if node_path not in _CLASS_LINENO_CACHE:
+                    try:
+                        tree = ast.parse(node_path.read_text(encoding="utf-8"))
+                        finder = _ClassFinder()
+                        finder.visit(tree)
+                        _CLASS_LINENO_CACHE[node_path] = finder.classes
+                    except Exception:
+                        _CLASS_LINENO_CACHE[node_path] = {}
 
-            _, lineno = inspect.getsourcelines(class_module.obj)
-            class_line = str(lineno)
+                qualname = getattr(class_module.obj, "__qualname__", "")
+                cached_line = _CLASS_LINENO_CACHE[node_path].get(qualname)
+                if cached_line is None and hasattr(class_module, "name"):
+                    cached_line = _CLASS_LINENO_CACHE[node_path].get(class_module.name)
+                if cached_line is not None:
+                    class_line = str(cached_line)
+                else:
+                    import inspect
+
+                    _, lineno = inspect.getsourcelines(class_module.obj)
+                    class_line = str(lineno)
     except (OSError, TypeError):
         # If we can't get the source lines, leave lineno empty
         pass
