@@ -30,6 +30,7 @@ import { ILanguageServerExtensionManager, ILanguageServerWatcher } from './types
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { StopWatch } from '../common/utils/stopWatch';
+import { Commands } from '../activation/commands';
 
 @injectable()
 /**
@@ -110,6 +111,13 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
             this.disposables.push(
                 this.extensions.onDidChange(async () => {
                     await this.extensionsChangeHandler();
+                }),
+            );
+
+            this.disposables.push(
+                this.commandManager.registerCommand(Commands.RestartLS, async () => {
+                    sendTelemetryEvent(EventName.LANGUAGE_SERVER_RESTART, undefined, { reason: 'command' });
+                    await this.restartLanguageServers();
                 }),
             );
 
@@ -195,12 +203,15 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
     }
 
     public async restartLanguageServers(): Promise<void> {
-        this.workspaceLanguageServers.forEach(async (_, resourceString) => {
-            sendTelemetryEvent(EventName.LANGUAGE_SERVER_RESTART, undefined, { reason: 'notebooksExperiment' });
-            const resource = Uri.parse(resourceString);
+        const resourceStrings = [...this.workspaceLanguageServers.keys()];
+        for (const resourceString of resourceStrings) {
+            const resource =
+                resourceString === 'Pylance' || resourceString === 'None'
+                    ? undefined
+                    : Uri.file(resourceString);
             await this.stopLanguageServer(resource);
             await this.startLanguageServer(this.languageServerType, resource);
-        });
+        }
     }
 
     public async get(resource?: Resource): Promise<ILanguageServerExtensionManager> {
