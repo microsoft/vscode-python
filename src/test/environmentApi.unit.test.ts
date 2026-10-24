@@ -39,6 +39,8 @@ import {
     PythonExtension,
 } from '../client/api/types';
 import { JupyterPythonEnvironmentApi } from '../client/jupyter/jupyterIntegration';
+import * as envExtApi from '../client/envExt/api.internal';
+import { DidChangeEnvironmentEventArgs, PythonEnvironment } from '../client/envExt/types';
 
 suite('Python Environment API', () => {
     const workspacePath = 'path/to/workspace';
@@ -57,6 +59,9 @@ suite('Python Environment API', () => {
     let onDidChangeRefreshState: EventEmitter<ProgressNotificationEvent>;
     let onDidChangeEnvironments: EventEmitter<PythonEnvCollectionChangedEvent>;
     let onDidChangeEnvironmentVariables: EventEmitter<Uri | undefined>;
+    let onDidChangeEnvExtEnvironment: EventEmitter<DidChangeEnvironmentEventArgs>;
+    let useEnvExtension: boolean;
+    let jupyterApi: JupyterPythonEnvironmentApi;
 
     let environmentApi: PythonExtension['environments'];
 
@@ -81,6 +86,14 @@ suite('Python Environment API', () => {
         onDidChangeRefreshState = new EventEmitter();
         onDidChangeEnvironments = new EventEmitter();
         onDidChangeEnvironmentVariables = new EventEmitter();
+        onDidChangeEnvExtEnvironment = new EventEmitter();
+        useEnvExtension = false;
+        sinon.stub(envExtApi, 'useEnvExtension').callsFake(() => useEnvExtension);
+        sinon
+            .stub(envExtApi, 'onDidChangeEnvironmentEnvExt')
+            .callsFake((listener, thisArgs, disposables) =>
+                onDidChangeEnvExtEnvironment.event(listener, thisArgs, disposables),
+            );
         serviceContainer.setup((s) => s.get(IExtensions)).returns(() => extensions.object);
         serviceContainer.setup((s) => s.get(IInterpreterPathService)).returns(() => interpreterPathService.object);
         serviceContainer.setup((s) => s.get(IConfigurationService)).returns(() => configService.object);
@@ -95,7 +108,7 @@ suite('Python Environment API', () => {
         discoverAPI.setup((d) => d.onChanged).returns(() => onDidChangeEnvironments.event);
         discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
         const onDidChangePythonEnvironment = new EventEmitter<Uri>();
-        const jupyterApi: JupyterPythonEnvironmentApi = {
+        jupyterApi = {
             onDidChangePythonEnvironment: onDidChangePythonEnvironment.event,
             getPythonEnvironment: (_uri: Uri) => undefined,
         };
@@ -191,6 +204,65 @@ suite('Python Environment API', () => {
         assert.deepEqual(actual, {
             id: normCasePath(pythonPath),
             path: pythonPath,
+        });
+    });
+
+    test('getActiveEnvironmentPath: uses environment extension selection', () => {
+        const configuredPath = Uri.joinPath(workspaceFolder.uri, 'env-a', 'python').fsPath;
+        const selectedPath = Uri.joinPath(workspaceFolder.uri, 'env-b', 'python').fsPath;
+        configService
+            .setup((c) => c.getSettings(workspaceFolder.uri))
+            .returns(() => (({ pythonPath: configuredPath } as unknown) as IPythonSettings));
+        useEnvExtension = true;
+
+        onDidChangeEnvExtEnvironment.fire({
+            uri: workspaceFolder.uri,
+            old: undefined,
+            new: {
+                envId: { id: 'env-b', managerId: 'ms-python.python:venv' },
+                name: 'env-b',
+                displayName: 'env-b',
+                displayPath: 'env-b',
+                version: '3.12.0',
+                environmentPath: Uri.joinPath(workspaceFolder.uri, 'env-b'),
+                execInfo: { run: { executable: selectedPath } },
+                sysPrefix: Uri.joinPath(workspaceFolder.uri, 'env-b').fsPath,
+            } as PythonEnvironment,
+        });
+
+        assert.deepEqual(environmentApi.getActiveEnvironmentPath(workspaceFolder.uri), {
+            id: normCasePath(selectedPath),
+            path: selectedPath,
+        });
+    });
+
+    test('getActiveEnvironmentPath: uses selection present before API construction', () => {
+        const configuredPath = Uri.joinPath(workspaceFolder.uri, 'env-a', 'python').fsPath;
+        const selectedPath = Uri.joinPath(workspaceFolder.uri, 'env-b', 'python').fsPath;
+        const selectedEnvironment = {
+            envId: { id: 'env-b', managerId: 'ms-python.python:venv' },
+            name: 'env-b',
+            displayName: 'env-b',
+            displayPath: 'env-b',
+            version: '3.12.0',
+            environmentPath: Uri.joinPath(workspaceFolder.uri, 'env-b'),
+            execInfo: { run: { executable: selectedPath } },
+            sysPrefix: Uri.joinPath(workspaceFolder.uri, 'env-b').fsPath,
+        } as PythonEnvironment;
+        configService
+            .setup((c) => c.getSettings(workspaceFolder.uri))
+            .returns(() => (({ pythonPath: configuredPath } as unknown) as IPythonSettings));
+        sinon.stub(envExtApi, 'getCachedEnvExtApi').returns({
+            getEnvironmentSync: (scope) =>
+                scope?.fsPath === workspaceFolder.uri.fsPath ? selectedEnvironment : undefined,
+        } as ReturnType<typeof envExtApi.getCachedEnvExtApi>);
+        useEnvExtension = true;
+
+        environmentApi = buildEnvironmentApi(discoverAPI.object, serviceContainer.object, jupyterApi);
+
+        assert.deepEqual(environmentApi.getActiveEnvironmentPath(workspaceFolder.uri), {
+            id: normCasePath(selectedPath),
+            path: selectedPath,
         });
     });
 
@@ -491,6 +563,37 @@ suite('Python Environment API', () => {
         await environmentApi.updateActiveEnvironmentPath('this/is/a/test/python/path', workspace);
 
         interpreterPathService.verifyAll();
+    });
+
+    test('updateActiveEnvironmentPath: delegates to environment extension', async () => {
+        const pythonPath = Uri.joinPath(workspaceFolder.uri, 'env-b', 'python').fsPath;
+        const selectedEnvironment = {
+            envId: { id: 'env-b', managerId: 'ms-python.python:venv' },
+            name: 'env-b',
+            displayName: 'env-b',
+            displayPath: 'env-b',
+            version: '3.12.0',
+            environmentPath: Uri.joinPath(workspaceFolder.uri, 'env-b'),
+            execInfo: { run: { executable: pythonPath } },
+            sysPrefix: Uri.joinPath(workspaceFolder.uri, 'env-b').fsPath,
+        } as PythonEnvironment;
+        const setActiveEnvironment = sinon.stub(envExtApi, 'setActiveEnvironment').resolves(selectedEnvironment);
+        configService
+            .setup((c) => c.getSettings(workspaceFolder.uri))
+            .returns(() => (({ pythonPath: 'stale' } as unknown) as IPythonSettings));
+        useEnvExtension = true;
+
+        await environmentApi.updateActiveEnvironmentPath(pythonPath, workspaceFolder);
+
+        sinon.assert.calledOnceWithExactly(setActiveEnvironment, pythonPath, workspaceFolder.uri);
+        assert.deepEqual(environmentApi.getActiveEnvironmentPath(workspaceFolder.uri), {
+            id: normCasePath(pythonPath),
+            path: pythonPath,
+        });
+        interpreterPathService.verify(
+            (i) => i.update(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()),
+            typemoq.Times.never(),
+        );
     });
 
     test('refreshInterpreters: default', async () => {
