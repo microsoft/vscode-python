@@ -273,7 +273,9 @@ jobs:
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
       - name: Rust Tool Chain setup
-        uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # v1
+        uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # stable
+        with:
+          toolchain: stable
 
       - name: Build Native Binaries
         run: nox --session native_build

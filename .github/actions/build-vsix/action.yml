@@ -28,7 +28,9 @@ runs:
         cache: 'npm'
 
     - name: Rust Tool Chain setup
-      uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # v1
+      uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # stable
+      with:
+        toolchain: stable
 
     # Jedi LS depends on dataclasses which is not in the stdlib in Python 3.7.
     - name: Use Python 3.10 for JediLSP
