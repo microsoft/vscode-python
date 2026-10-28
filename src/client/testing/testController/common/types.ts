@@ -205,6 +205,9 @@ export type DiscoveredTestCommon = {
 export type DiscoveredTestItem = DiscoveredTestCommon & {
     lineno: number | string;
     runID: string;
+    // Pytest marks exposed as tags (e.g. ["slow", "integration"]).
+    // Absent for items from adapters that do not report marks.
+    tags?: string[];
 };
 
 export type DiscoveredTestNode = DiscoveredTestCommon & {
