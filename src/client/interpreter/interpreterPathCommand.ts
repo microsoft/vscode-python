@@ -43,6 +43,17 @@ export class InterpreterPathCommand implements IExtensionSingleActivationService
             if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
                 workspaceFolder = workspace.workspaceFolders[0].uri.fsPath;
             }
+        } else if (
+            Array.isArray(args) &&
+            Array.isArray(workspace.workspaceFolders) &&
+            workspace.workspaceFolders.length === 1
+        ) {
+            // tasks.json case: args[1] isn't always populated by VS Code's task variable resolver
+            // when other variable kinds (${input:...}, ${env:...}) are resolved alongside this
+            // command in the same task. Single-root workspace is unambiguous, so fall back to it
+            // instead of resolving the global interpreter. Multi-root stays undefined below --
+            // we can't guess which folder without args.
+            workspaceFolder = workspace.workspaceFolders[0].uri.fsPath;
         } else {
             workspaceFolder = undefined;
         }
