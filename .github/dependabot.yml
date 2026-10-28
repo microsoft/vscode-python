@@ -2,7 +2,7 @@ version: 2
 multi-ecosystem-groups:
   dependencies:
     schedule:
-      interval: weekly
+      interval: daily
     open-pull-requests-limit: 1
 
 updates:
