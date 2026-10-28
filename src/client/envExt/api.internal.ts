@@ -55,14 +55,19 @@ export function shouldEnvExtHandleActivation(): boolean {
 }
 
 let _useExt: boolean | undefined;
+export function shouldUseEnvExtension(): boolean {
+    const config = getConfiguration('python');
+    const inExpSetting = config?.get<boolean>('useEnvironmentsExtension', false) ?? false;
+    return inExpSetting && shouldEnvExtHandleActivation();
+}
+
 export function useEnvExtension(): boolean {
     if (_useExt !== undefined) {
         return _useExt;
     }
-    const config = getConfiguration('python');
-    const inExpSetting = config?.get<boolean>('useEnvironmentsExtension', false) ?? false;
-    // If extension is installed and in experiment, then use it.
-    _useExt = !!getExtension(ENVS_EXTENSION_ID) && inExpSetting;
+    // Use the extension only when it is enabled and its own activation logic
+    // will expose the API.
+    _useExt = shouldUseEnvExtension();
     return _useExt;
 }
 
