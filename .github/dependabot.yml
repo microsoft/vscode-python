@@ -1,57 +1,49 @@
 version: 2
+multi-ecosystem-groups:
+  dependencies:
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 1
+
 updates:
   - package-ecosystem: 'github-actions'
-    directory: /
-    schedule:
-      interval: daily
+    directories:
+      - /
+      - /.github/actions/build-vsix
+      - /.github/actions/lint
+      - /.github/actions/smoke-tests
+    patterns: ['*']
+    multi-ecosystem-group: dependencies
     labels:
+      - 'dependencies'
       - 'no-changelog'
     cooldown:
       default-days: 7
 
-  - package-ecosystem: 'github-actions'
-    directory: .github/actions/build-vsix
-    schedule:
-      interval: daily
+  - package-ecosystem: 'npm'
+    directories:
+      - /
+      - /pythonExtensionApi
+    patterns: ['*']
+    multi-ecosystem-group: dependencies
     labels:
+      - 'dependencies'
       - 'no-changelog'
-    cooldown:
-      default-days: 7
-
-  - package-ecosystem: 'github-actions'
-    directory: .github/actions/lint
-    schedule:
-      interval: daily
-    labels:
-      - 'no-changelog'
-    cooldown:
-      default-days: 7
-
-  - package-ecosystem: 'github-actions'
-    directory: .github/actions/smoke-test
-    schedule:
-      interval: daily
-    labels:
-      - 'no-changelog'
-    cooldown:
-      default-days: 7
+      - 'skip package*.json'
 
   # Not skipping the news for some Python dependencies in case it's actually useful to communicate to users.
   - package-ecosystem: 'pip'
-    directory: /
-    schedule:
-      interval: daily
+    directories:
+      - /
+      - /build
+      - /python_files/jedilsp_requirements
+    patterns: ['*']
+    multi-ecosystem-group: dependencies
     ignore:
       - dependency-name: prospector # Due to Python 2.7 and #14477.
       - dependency-name: pytest # Due to Python 2.7 and #13776.
       - dependency-name: py # Due to Python 2.7.
       - dependency-name: jedi-language-server
     labels:
+      - 'dependencies'
       - 'no-changelog'
-  # Activate when we feel ready to keep up with frequency.
-  # - package-ecosystem: 'npm'
-  #   directory: /
-  #   schedule:
-  #     interval: daily
-  #   default_labels:
-  #     - "no-changelog"
