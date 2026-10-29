@@ -1,0 +1,60 @@
+name: Check supported Python versions
+
+on:
+  schedule:
+    - cron: '0 12 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: check-supported-python-versions
+  cancel-in-progress: false
+
+jobs:
+  check:
+    if: github.repository_owner == 'microsoft'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.15'
+      - name: Check for a new Python version
+        id: check
+        shell: bash
+        run: |
+          version="$(python build/update_python_versions.py)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Create issue
+        if: steps.check.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.check.outputs.version }}
+        shell: bash
+        run: |
+          title="CI Python Versions: Update to Python $VERSION"
+          issue_number="$(
+            gh api --paginate \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
+              --jq ".[] | select(has(\"pull_request\") | not) | select(.title == \"$title\") | .number"
+          )"
+          if [[ -z "$issue_number" ]]; then
+            gh issue create \
+              --title "$title" \
+              --label debt \
+              --label python-version \
+              --body "Python $VERSION has a published release candidate according to the [Python.org downloads API](https://www.python.org/api/v2/downloads/release/?is_published=true&pre_release=true&version=3), but is missing from at least one CI test matrix.
+
+          ### Requested changes
+          - [ ] Ensure every explicit-version \`python\` matrix in \`.github/workflows/pr-check.yml\` includes Python $VERSION.
+          - [ ] Ensure every explicit-version \`python\` matrix in \`.github/workflows/build.yml\` includes Python $VERSION.
+          - [ ] Run the tests on Python $VERSION and resolve any compatibility failures.
+
+          Compare matrix entries by major.minor; patch and prerelease/dev variants of $VERSION already count as coverage. Add the version only where missing and preserve existing entries. Floating \`3.x\` entries do not declare release-candidate coverage.
+
+          Keep minimum-supported-version and build-runtime Python pins unchanged; adding CI coverage does not require raising the minimum supported Python version."
+          fi
