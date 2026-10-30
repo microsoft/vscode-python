@@ -3,6 +3,7 @@
 
 import { IDisposableRegistry } from '../common/types';
 import { getConfiguration, getWorkspaceFolders, onDidChangeConfiguration } from '../common/vscodeApis/workspaceApis';
+import { getEnvExtensionDecisionTelemetry } from './api.internal';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { EnvsExplicitFalseScope } from '../telemetry/types';
@@ -45,6 +46,7 @@ export function registerEnvironmentsExtensionTelemetry(disposables: IDisposableR
             if (event.affectsConfiguration('python.useEnvironmentsExtension')) {
                 sendTelemetryEvent(EventName.ENVIRONMENTS_EXTENSION_SETTING_CHANGED, undefined, {
                     envsExplicitFalseScope: getEnvsExplicitFalseScope(),
+                    ...getEnvExtensionDecisionTelemetry(),
                 });
             }
         }),
