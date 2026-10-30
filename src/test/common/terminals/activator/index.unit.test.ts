@@ -207,3 +207,37 @@ suite('shouldEnvExtHandleActivation', () => {
         assert.strictEqual(extapi.shouldEnvExtHandleActivation(), false);
     });
 });
+
+suite('useEnvExtension', () => {
+    let getConfigurationStub: sinon.SinonStub;
+
+    setup(() => {
+        extapi.EnvExtApiInternalTests.resetState();
+        const getExtensionStub: sinon.SinonStub = sinon.stub(extensionsApi, 'getExtension');
+        getExtensionStub.returns({ id: extapi.ENVS_EXTENSION_ID });
+        sinon.stub(workspaceApis, 'getWorkspaceFolders').returns(undefined);
+        getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
+        getConfigurationStub.returns({
+            get: () => true,
+            inspect: () => ({ globalValue: false, workspaceValue: true }),
+        });
+    });
+
+    teardown(() => {
+        extapi.EnvExtApiInternalTests.resetState();
+        sinon.restore();
+    });
+
+    test('Returns false when the effective workspace value is true but the global value is false', () => {
+        assert.strictEqual(extapi.useEnvExtension(), false);
+    });
+
+    test('Returns true when the effective value is true and no scope explicitly disables the extension', () => {
+        getConfigurationStub.returns({
+            get: () => true,
+            inspect: () => ({ globalValue: undefined, workspaceValue: true }),
+        });
+
+        assert.strictEqual(extapi.useEnvExtension(), true);
+    });
+});
