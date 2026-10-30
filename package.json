@@ -719,13 +719,7 @@
                     "type": "string"
                 },
                 "python.testing.unittestArgs": {
-                    "default": [
-                        "-v",
-                        "-s",
-                        ".",
-                        "-p",
-                        "*test*.py"
-                    ],
+                    "default": [],
                     "description": "%python.testing.unittestArgs.description%",
                     "items": {
                         "type": "string"
