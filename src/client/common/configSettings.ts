@@ -390,7 +390,7 @@ export class PythonSettings implements IPythonSettings {
             this.experiments = experiments;
         }
         // Note we directly access experiment settings using workspace service in ExperimentService class.
-        // Any changes here specific to these settings should propogate their as well.
+        // Any changes here specific to these settings should propagate their as well.
         this.experiments = this.experiments
             ? this.experiments
             : {
