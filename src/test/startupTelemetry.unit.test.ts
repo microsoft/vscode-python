@@ -73,6 +73,13 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
                 .returns(() => interpreterPathService.object);
             sinon.stub(constants, 'isTestExecution').returns(false);
             sinon.stub(envExt, 'useEnvExtension').returns(false);
+            sinon.stub(envExt, 'getEnvExtensionDecisionTelemetry').returns({
+                envsDecisionReason: 'resolvedSettingFalse',
+                envsAvailableToHostNow: true,
+                envsActiveNow: true,
+                envsResolvedSettingNow: false,
+                envsCachedDecision: false,
+            });
             sinon.stub(envExtTelemetry, 'getEnvsExplicitFalseScope').returns('workspace');
             sendTelemetryEvent = sinon.stub(telemetry, 'sendTelemetryEvent');
             durations = {
@@ -101,11 +108,19 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
                     sendTelemetryEvent,
                     EventName.EDITOR_LOAD,
                     durations,
-                    sinon.match({ envsExplicitFalseScope: 'workspace', isFirstSession: false }),
+                    sinon.match({
+                        envsExplicitFalseScope: 'workspace',
+                        envsDecisionReason: 'resolvedSettingFalse',
+                        envsAvailableToHostNow: true,
+                        envsActiveNow: true,
+                        envsResolvedSettingNow: false,
+                        isFirstSession: false,
+                    }),
                 );
                 if (isTrusted) {
                     expect(sendTelemetryEvent.firstCall.args[2].usingEnvironmentsExtension).to.equal(false);
                 }
+                expect(sendTelemetryEvent.firstCall.args[2]).not.to.have.property('envsCachedDecision');
             });
         });
     });

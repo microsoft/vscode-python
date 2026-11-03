@@ -8,6 +8,7 @@ import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, EventEmitter, Uri, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { IDisposableRegistry } from '../../client/common/types';
 import * as workspaceApis from '../../client/common/vscodeApis/workspaceApis';
+import * as envExt from '../../client/envExt/api.internal';
 import { getEnvsExplicitFalseScope, registerEnvironmentsExtensionTelemetry } from '../../client/envExt/telemetry';
 import * as telemetry from '../../client/telemetry';
 import { EventName } from '../../client/telemetry/constants';
@@ -44,6 +45,13 @@ suite('Environments extension telemetry', () => {
     let sendTelemetryEvent: sinon.SinonStub;
     let changes: EventEmitter<ConfigurationChangeEvent>;
     let disposables: IDisposableRegistry;
+    const decisionTelemetry = {
+        envsDecisionReason: 'resolvedSettingFalse' as const,
+        envsAvailableToHostNow: true,
+        envsActiveNow: true,
+        envsResolvedSettingNow: false,
+        envsCachedDecision: false,
+    };
 
     setup(() => {
         getConfiguration = sinon.stub(workspaceApis, 'getConfiguration').returns(configuration({}));
@@ -51,6 +59,7 @@ suite('Environments extension telemetry', () => {
         sendTelemetryEvent = sinon.stub(telemetry, 'sendTelemetryEvent');
         changes = new EventEmitter<ConfigurationChangeEvent>();
         sinon.stub(workspaceApis, 'onDidChangeConfiguration').callsFake((listener) => changes.event(listener));
+        sinon.stub(envExt, 'getEnvExtensionDecisionTelemetry').returns(decisionTelemetry);
         disposables = [];
     });
 
@@ -170,7 +179,7 @@ suite('Environments extension telemetry', () => {
             ['user', 'workspace', 'none'].map((envsExplicitFalseScope) => [
                 EventName.ENVIRONMENTS_EXTENSION_SETTING_CHANGED,
                 undefined,
-                { envsExplicitFalseScope },
+                { envsExplicitFalseScope, ...decisionTelemetry },
             ]),
         );
     });
@@ -185,7 +194,7 @@ suite('Environments extension telemetry', () => {
             sendTelemetryEvent,
             EventName.ENVIRONMENTS_EXTENSION_SETTING_CHANGED,
             undefined,
-            { envsExplicitFalseScope: 'folder' },
+            { envsExplicitFalseScope: 'folder', ...decisionTelemetry },
         );
     });
 
