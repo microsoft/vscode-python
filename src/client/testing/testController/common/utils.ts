@@ -115,7 +115,7 @@ export async function startRunResultNamedPipe(
     dataReceivedCallback: (payload: ExecutionTestPayload) => void,
     deferredTillServerClose: Deferred<void>,
     cancellationToken?: CancellationToken,
-): Promise<string> {
+): Promise<{ name: string; dispose: () => void }> {
     traceVerbose('Starting Test Result named pipe');
     const pipeName: string = generateRandomPipeName('python-test-results');
 
@@ -147,7 +147,10 @@ export async function startRunResultNamedPipe(
         }),
     );
 
-    return pipeName;
+    return {
+        name: pipeName,
+        dispose: () => disposable.dispose(),
+    };
 }
 
 interface DiscoveryResultMessage extends Message {
