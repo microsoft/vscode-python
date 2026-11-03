@@ -55,14 +55,28 @@ export function shouldEnvExtHandleActivation(): boolean {
 }
 
 let _useExt: boolean | undefined;
+interface EnvironmentsExtensionDecisionTelemetry {
+    readonly envsAvailableAtDecision: boolean;
+    readonly envsEnabledAtDecision: boolean;
+}
+
+let decisionTelemetry: EnvironmentsExtensionDecisionTelemetry | undefined;
+
+/** Reads the first decision's inputs without initializing or recomputing the cached decision. */
+export function getEnvironmentsExtensionDecisionTelemetry(): EnvironmentsExtensionDecisionTelemetry | undefined {
+    return decisionTelemetry;
+}
+
 export function useEnvExtension(): boolean {
     if (_useExt !== undefined) {
         return _useExt;
     }
     const config = getConfiguration('python');
     const inExpSetting = config?.get<boolean>('useEnvironmentsExtension', false) ?? false;
+    const available = !!getExtension(ENVS_EXTENSION_ID);
     // If extension is installed and in experiment, then use it.
-    _useExt = !!getExtension(ENVS_EXTENSION_ID) && inExpSetting;
+    _useExt = available && inExpSetting;
+    decisionTelemetry = { envsAvailableAtDecision: available, envsEnabledAtDecision: inExpSetting };
     return _useExt;
 }
 

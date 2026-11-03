@@ -360,7 +360,9 @@ export interface IEventNamePropertyMapping {
           "usingglobalinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "isfirstsession" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "usingenvironmentsextension" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eduardovil" },
-          "envsexplicitfalsescope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
+          "envsexplicitfalsescope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "envsavailableatdecision" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "envsenabledatdecision" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
        }
      */
     [EventName.EDITOR_LOAD]: {
@@ -416,6 +418,16 @@ export interface IEventNamePropertyMapping {
          * 'none' excludes defaults; 'multiple' means more than one of user, workspace, or folder.
          */
         envsExplicitFalseScope?: EnvsExplicitFalseScope;
+        /**
+         * Whether Environments was visible in Python's extension host at the first cached integration decision.
+         * Omitted if no decision has been made; not an activation or current installation-status signal.
+         */
+        envsAvailableAtDecision?: boolean;
+        /**
+         * Resolved integration setting at the first cached decision, including defaults and experiment overrides.
+         * Omitted if no decision has been made; not explicit user intent or a later setting snapshot.
+         */
+        envsEnabledAtDecision?: boolean;
     };
     /**
      * Reports explicit-false scopes after a python.useEnvironmentsExtension configuration change.
