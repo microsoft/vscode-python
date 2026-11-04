@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check supported Python versions
-        uses: microsoft/vscode-python-ci/actions/check-python-versions@a81ceb5dc25ea56bd0c957ccda3a48886682faea
+        uses: microsoft/vscode-python-ci/actions/check-python-versions@c1aa1190277c85c93ab142e8909bcd11453ce30b
         with:
           files: |
             - path: .github/workflows/pr-check.yml
