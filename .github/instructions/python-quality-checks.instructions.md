@@ -53,7 +53,7 @@ npm run check-python:pyright
 ## Configuration
 
 -   **Ruff**: Line length 100, Python 3.9+, 40+ rule families (flake8, isort, pyupgrade, etc.)
--   **Pyright**: Version 1.1.308 (or whatever is found in the environment), ignores `lib/` and 15+ legacy files
+-   **Pyright**: Version 1.1.414 (or whatever is found in the environment), ignores `lib/` and 15+ legacy files
 -   Config: `python_files/pyproject.toml` sections `[tool.ruff]` and `[tool.pyright]`
 
 ## Troubleshooting
@@ -93,5 +93,5 @@ This ensures your tests pass both functional checks and quality checks in CI.
 
 -   Always run `npm run check-python` before pushing to catch CI failures early (1)
 -   Use `ruff check . --fix` to auto-fix most linting issues before manual review (1)
--   Pyright version must match CI (1.1.308) to avoid inconsistent results between local and CI runs (1)
+-   Pyright version must match CI (1.1.414) to avoid inconsistent results between local and CI runs (1)
 -   Always run `ruff format` on test files after writing them to avoid formatting CI failures (1)
