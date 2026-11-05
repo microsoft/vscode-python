@@ -174,6 +174,15 @@ suite('shouldEnvExtHandleActivation', () => {
         assert.strictEqual(extapi.shouldEnvExtHandleActivation(), false);
     });
 
+    test('Does not use envs extension when workspace enables it but user settings disable activation', () => {
+        getExtensionStub.returns({ id: extapi.ENVS_EXTENSION_ID });
+        getConfigurationStub.returns({
+            get: () => true,
+            inspect: () => ({ globalValue: false, workspaceValue: true }),
+        });
+        assert.strictEqual(extapi.shouldUseEnvExtension(), false);
+    });
+
     test('Returns false when envs extension is installed but workspaceValue is false', () => {
         getExtensionStub.returns({ id: extapi.ENVS_EXTENSION_ID });
         getConfigurationStub.returns({
