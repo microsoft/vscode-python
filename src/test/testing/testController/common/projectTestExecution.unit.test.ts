@@ -28,6 +28,7 @@ import {
     groupTestItemsByProject,
     setupCoverageForProjects,
 } from '../../../../client/testing/testController/common/projectTestExecution';
+import { expandExcludeSet } from '../../../../client/testing/testController/common/testItemUtilities';
 import * as telemetry from '../../../../client/telemetry';
 import { EventName } from '../../../../client/telemetry/constants';
 import * as envExtApi from '../../../../client/envExt/api.internal';
@@ -340,6 +341,21 @@ suite('Project Test Execution', () => {
             expect(result).to.have.length(3);
             expect(new Set(result)).to.deep.equal(new Set([leaf1, leaf2, leaf3]));
         });
+
+        test('should skip excluded items and their descendants', () => {
+            // Mock - file with two classes, one class excluded
+            const leaf1 = createMockTestItem('test1', '/test.py');
+            const leaf2 = createMockTestItem('test2', '/test.py');
+            const class1 = createMockTestItem('Class1', '/test.py', [leaf1]);
+            const class2 = createMockTestItem('Class2', '/test.py', [leaf2]);
+            const fileItem = createMockTestItem('test_file.py', '/test.py', [class1, class2]);
+
+            // Run
+            const result = getTestCaseNodesRecursive(fileItem, expandExcludeSet([class2]));
+
+            // Assert
+            expect(result).to.deep.equal([leaf1]);
+        });
     });
 
     // ===== executeTestsForProject Tests =====
@@ -438,6 +454,90 @@ suite('Project Test Execution', () => {
             runMock.verify((r) => r.started(leaf2), typemoq.Times.once());
             const passedTestIds = project.executionAdapterStub.firstCall.args[1] as string[];
             expect(passedTestIds).to.have.length(2);
+        });
+
+        test('should not run test items in the exclude set', async () => {
+            // Mock - class containing two test methods, one excluded
+            const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
+            const leaf1 = createMockTestItem('test1', '/workspace/proj/test.py');
+            const leaf2 = createMockTestItem('test2', '/workspace/proj/test.py');
+            const classItem = createMockTestItem('TestClass', '/workspace/proj/test.py', [leaf1, leaf2]);
+            project.resultResolver.vsIdToRunId.set('test1', 'runId1');
+            project.resultResolver.vsIdToRunId.set('test2', 'runId2');
+            const runMock = createMockTestRun();
+            const request = { profile: { kind: TestRunProfileKind.Run } } as TestRunRequest;
+            const deps = createMockDependencies();
+
+            // Run
+            await executeTestsForProject(
+                project,
+                [classItem],
+                runMock.object,
+                request,
+                deps,
+                expandExcludeSet([leaf2]),
+            );
+
+            // Assert - only leaf1 is started and executed
+            runMock.verify((r) => r.started(leaf1), typemoq.Times.once());
+            runMock.verify((r) => r.started(leaf2), typemoq.Times.never());
+            const passedTestIds = project.executionAdapterStub.firstCall.args[1] as string[];
+            expect(passedTestIds).to.deep.equal(['runId1']);
+        });
+
+        test('should not run anything when the whole selection is excluded', async () => {
+            // Mock - the requested class is itself excluded
+            const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
+            const leaf1 = createMockTestItem('test1', '/workspace/proj/test.py');
+            const leaf2 = createMockTestItem('test2', '/workspace/proj/test.py');
+            const classItem = createMockTestItem('TestClass', '/workspace/proj/test.py', [leaf1, leaf2]);
+            project.resultResolver.vsIdToRunId.set('test1', 'runId1');
+            project.resultResolver.vsIdToRunId.set('test2', 'runId2');
+            const runMock = createMockTestRun();
+            const request = { profile: { kind: TestRunProfileKind.Run } } as TestRunRequest;
+            const deps = createMockDependencies();
+
+            // Run
+            await executeTestsForProject(
+                project,
+                [classItem],
+                runMock.object,
+                request,
+                deps,
+                expandExcludeSet([classItem]),
+            );
+
+            // Assert - nothing is started and the adapter is never called (an empty ID list would run all tests)
+            runMock.verify((r) => r.started(typemoq.It.isAny()), typemoq.Times.never());
+            expect(project.executionAdapterStub.called).to.be.false;
+        });
+
+        test('should still deduplicate test IDs when exclusions are used', async () => {
+            // Mock - the class and one of its methods are both selected, the other method is excluded
+            const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
+            const leaf1 = createMockTestItem('test1', '/workspace/proj/test.py');
+            const leaf2 = createMockTestItem('test2', '/workspace/proj/test.py');
+            const classItem = createMockTestItem('TestClass', '/workspace/proj/test.py', [leaf1, leaf2]);
+            project.resultResolver.vsIdToRunId.set('test1', 'runId1');
+            project.resultResolver.vsIdToRunId.set('test2', 'runId2');
+            const runMock = createMockTestRun();
+            const request = { profile: { kind: TestRunProfileKind.Run } } as TestRunRequest;
+            const deps = createMockDependencies();
+
+            // Run
+            await executeTestsForProject(
+                project,
+                [classItem, leaf1],
+                runMock.object,
+                request,
+                deps,
+                expandExcludeSet([leaf2]),
+            );
+
+            // Assert - leaf1 is started and sent once
+            runMock.verify((r) => r.started(leaf1), typemoq.Times.once());
+            const passedTestIds = project.executionAdapterStub.firstCall.args[1] as string[];
+            expect(passedTestIds).to.deep.equal(['runId1']);
         });
     });
 
@@ -622,6 +722,58 @@ suite('Project Test Execution', () => {
             expect(runDoneCalls.length).to.equal(1);
             const telemetryProps = runDoneCalls[0].args[2];
             expect(telemetryProps.debugging).to.be.true;
+        });
+
+        test('should respect request.exclude when executing tests', async () => {
+            // Mock - project with two test items, one excluded via request.exclude
+            const project = createMockProjectAdapter({ projectPath: '/workspace/proj', projectName: 'proj' });
+            const item1 = createMockTestItem('test1', '/workspace/proj/test.py');
+            const item2 = createMockTestItem('test2', '/workspace/proj/test.py');
+            project.resultResolver.vsIdToRunId.set('test1', 'runId1');
+            project.resultResolver.vsIdToRunId.set('test2', 'runId2');
+            const runMock = createMockTestRun();
+            const token = new CancellationTokenSource().token;
+            const request = ({
+                profile: { kind: TestRunProfileKind.Run },
+                exclude: [item2],
+            } as unknown) as TestRunRequest;
+            const deps = createMockDependencies();
+
+            // Run
+            await executeTestsForProjects([project], [item1, item2], runMock.object, request, token, deps);
+
+            // Assert - only item1 is executed
+            runMock.verify((r) => r.started(item1), typemoq.Times.once());
+            runMock.verify((r) => r.started(item2), typemoq.Times.never());
+            const passedTestIds = project.executionAdapterStub.firstCall.args[1] as string[];
+            expect(passedTestIds).to.deep.equal(['runId1']);
+        });
+
+        test('should only skip the project whose tests are all excluded', async () => {
+            // Mock - two projects with one test each, the test in proj1 is excluded
+            const proj1 = createMockProjectAdapter({ projectPath: '/workspace/proj1', projectName: 'proj1' });
+            const proj2 = createMockProjectAdapter({ projectPath: '/workspace/proj2', projectName: 'proj2' });
+            const item1 = createMockTestItem('test1', '/workspace/proj1/test.py');
+            const item2 = createMockTestItem('test2', '/workspace/proj2/test.py');
+            proj1.resultResolver.vsIdToRunId.set('test1', 'runId1');
+            proj2.resultResolver.vsIdToRunId.set('test2', 'runId2');
+            const runMock = createMockTestRun();
+            const token = new CancellationTokenSource().token;
+            const request = ({
+                profile: { kind: TestRunProfileKind.Run },
+                exclude: [item1],
+            } as unknown) as TestRunRequest;
+            const deps = createMockDependencies();
+
+            // Run
+            await executeTestsForProjects([proj1, proj2], [item1, item2], runMock.object, request, token, deps);
+
+            // Assert - proj1 is not run at all, proj2 runs item2
+            runMock.verify((r) => r.started(item1), typemoq.Times.never());
+            runMock.verify((r) => r.started(item2), typemoq.Times.once());
+            expect(proj1.executionAdapterStub.called).to.be.false;
+            expect(proj2.executionAdapterStub.calledOnce).to.be.true;
+            expect(proj2.executionAdapterStub.firstCall.args[1]).to.deep.equal(['runId2']);
         });
     });
 

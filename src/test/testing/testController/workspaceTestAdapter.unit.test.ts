@@ -357,7 +357,7 @@ suite('Workspace test adapter', () => {
             );
             resultResolver.runIdToVSid.set('mockTestItem1', 'mockTestItem1');
 
-            sinon.stub(testItemUtilities, 'getTestCaseNodes').callsFake((testNode: TestItem) =>
+            sandbox.stub(testItemUtilities, 'getTestCaseNodes').callsFake((testNode: TestItem) =>
                 // Custom implementation logic here based on the provided testNode and collection
 
                 // Example implementation: returning a predefined array of TestItem objects
@@ -412,6 +412,66 @@ suite('Workspace test adapter', () => {
             await workspaceTestAdapter.executeTests(testController, runInstance.object, [], execFactory.object);
 
             sinon.assert.calledOnce(executionTestsStub);
+        });
+
+        test('Excluded tests are not started or sent to the execution adapter', async () => {
+            const workspaceTestAdapter = new WorkspaceTestAdapter(
+                'pytest',
+                new UnittestTestDiscoveryAdapter(stubConfigSettings),
+                new UnittestTestExecutionAdapter(stubConfigSettings),
+                Uri.parse('foo'),
+                resultResolver,
+            );
+            const test1 = createRunnableTestItem('test1');
+            const test2 = createRunnableTestItem('test2');
+            const testClass = createRunnableTestItem('TestClass', [test1, test2]);
+            resultResolver.vsIdToRunId.set('test1', 'run1');
+            resultResolver.vsIdToRunId.set('test2', 'run2');
+
+            await workspaceTestAdapter.executeTests(
+                testController,
+                runInstance.object,
+                [testClass],
+                execFactory.object,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                [test2],
+            );
+
+            runInstance.verify((r) => r.started(test1), typemoq.Times.once());
+            runInstance.verify((r) => r.started(test2), typemoq.Times.never());
+            sinon.assert.calledOnce(executionTestsStub);
+            assert.deepStrictEqual(executionTestsStub.firstCall.args[1], ['run1']);
+        });
+
+        test('If every requested test is excluded, the execution adapter is not called', async () => {
+            const workspaceTestAdapter = new WorkspaceTestAdapter(
+                'pytest',
+                new UnittestTestDiscoveryAdapter(stubConfigSettings),
+                new UnittestTestExecutionAdapter(stubConfigSettings),
+                Uri.parse('foo'),
+                resultResolver,
+            );
+            const test1 = createRunnableTestItem('test1');
+            const testClass = createRunnableTestItem('TestClass', [test1]);
+            resultResolver.vsIdToRunId.set('test1', 'run1');
+
+            await workspaceTestAdapter.executeTests(
+                testController,
+                runInstance.object,
+                [testClass],
+                execFactory.object,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                [testClass],
+            );
+
+            runInstance.verify((r) => r.started(typemoq.It.isAny()), typemoq.Times.never());
+            sinon.assert.notCalled(executionTestsStub);
         });
 
         test('If execution is already running, do not call executionAdapter.runTests again', async () => {
@@ -520,4 +580,18 @@ function createMockTestItem(id: string): TestItem {
     } as unknown) as TestItem;
 
     return mockTestItem;
+}
+
+/** A test item that getTestCaseNodes treats as runnable: a leaf with tags, or a parent that can resolve children. */
+function createRunnableTestItem(id: string, children: TestItem[] = []): TestItem {
+    return ({
+        id,
+        canResolveChildren: children.length > 0,
+        tags: [testItemUtilities.RunTestTag],
+        children: {
+            size: children.length,
+            forEach: (callback: (item: TestItem) => void) => children.forEach(callback),
+        },
+        uri: Uri.file('/foo/bar'),
+    } as unknown) as TestItem;
 }
