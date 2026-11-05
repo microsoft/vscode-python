@@ -717,7 +717,8 @@ def build_test_tree(session: pytest.Session) -> TestNode:
 
     for test_case in session.items:
         test_node = create_test_node(test_case)
-        if hasattr(test_case, "callspec"):  # This means it is a parameterized test.
+        is_parameterized = hasattr(test_case, "callspec") and "[" in test_node["name"]
+        if is_parameterized:  # This means it is a parameterized test.
             # Process parameterized test and get the function node to use for further processing
             test_node = process_parameterized_test(
                 test_case, test_node, function_nodes_dict, file_nodes_dict
@@ -758,7 +759,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             # Check if the class is already a child of the file node.
             if test_class_node is not None:
                 test_file_node["children"].add(test_class_node)
-        elif not hasattr(test_case, "callspec"):
+        elif not is_parameterized:
             # This includes test cases that are pytest functions or a doctests.
             if test_case.parent is None:
                 ERRORS.append(f"Test case {test_case.name} has no parent")
