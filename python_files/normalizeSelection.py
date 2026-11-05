@@ -219,7 +219,7 @@ def traverse_file(whole_file_content, start_line, end_line, was_highlighted):  #
     # For each of the nodes in the parsed file content,
     # add the appropriate source code line(s) to be sent to the REPL, dependent on
     # user is trying to send and execute single line/statement or multiple with smart selection.
-    for top_node in ast.iter_child_nodes(parsed_file_content):
+    for top_node in parsed_file_content.body:
         if start_line == top_node.lineno and end_line == top_node.end_lineno:
             should_run_top_blocks.append(top_node)
 
