@@ -1,9 +1,7 @@
-trigger: none
-#   branches:
-#     include:
-#       - release*
-#   tags:
-#     include: ['*']
+trigger:
+  branches:
+    include:
+      - 'release/*'
 pr: none
 
 resources:
