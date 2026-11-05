@@ -3,9 +3,11 @@
 'use strict';
 
 import { expect } from 'chai';
+import * as assert from 'assert';
 import { EOL } from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
+import * as sinon from 'sinon';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
@@ -29,6 +31,10 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { getSearchPathEnvVarNames } from '../../../client/common/utils/exec';
+import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
+import * as externalDependencies from '../../../client/pythonEnvironments/common/externalDependencies';
+import { Conda } from '../../../client/pythonEnvironments/common/environmentManagers/conda';
+import * as pixi from '../../../client/pythonEnvironments/common/environmentManagers/pixi';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const defaultShells = {
@@ -50,6 +56,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
     let interpreterService: IInterpreterService;
     let onDidChangeEnvVariables: EventEmitter<Uri | undefined>;
     let onDidChangeInterpreter: EventEmitter<Resource>;
+    let getRunPixiPythonCommand: sinon.SinonStub;
     const pythonInterpreter: PythonEnvironment = {
         path: '/foo/bar/python.exe',
         version: new SemVer('3.6.6-final'),
@@ -58,6 +65,14 @@ suite('Interpreters Activation - Python Environment Variables', () => {
         envType: EnvironmentType.Unknown,
         architecture: Architecture.x64,
     };
+
+    setup(() => {
+        getRunPixiPythonCommand = sinon.stub(pixi, 'getRunPixiPythonCommand').resolves(undefined);
+    });
+
+    teardown(() => {
+        sinon.restore();
+    });
 
     function initSetup(interpreter: PythonEnvironment | undefined) {
         helper = mock(TerminalHelper);
@@ -87,6 +102,161 @@ suite('Interpreters Activation - Python Environment Variables', () => {
     function title(resource?: Uri, interpreter?: PythonEnvironment) {
         return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter' : ''}`;
     }
+
+    suite('Pixi environment variable collection', () => {
+        const projectPath = path.join(EXTENSION_ROOT_DIR, 'project with spaces');
+        const manifestPath = path.join(projectPath, 'pixi.toml');
+        const pixiExecutable = path.join(EXTENSION_ROOT_DIR, 'pixi tools', 'pixi.exe');
+        const resource = Uri.file(path.join(EXTENSION_ROOT_DIR, 'other workspace', 'notebook.ipynb'));
+        const envTypes = [EnvironmentType.Pixi, EnvironmentType.System, EnvironmentType.Unknown];
+
+        setup(() => {
+            initSetup(undefined);
+            when(platform.osType).thenReturn(OSType.Windows);
+            when(processServiceFactory.create(resource)).thenResolve(instance(processService));
+            when(envVarsService.getEnvironmentVariables(resource)).thenResolve({});
+            when(currentProcess.env).thenReturn({ INHERITED: 'preserved' });
+        });
+
+        for (const envType of envTypes) {
+            for (const envName of ['default', 'analysis']) {
+                for (const osType of [OSType.Windows, OSType.Linux, OSType.OSX]) {
+                    test(`${envType}, ${envName}, ${osType}: runs Pixi without interactive activation`, async () => {
+                        const prefix = path.join(projectPath, '.pixi', 'envs', envName);
+                        const interpreter = {
+                            ...pythonInterpreter,
+                            path:
+                                osType === OSType.Windows
+                                    ? path.join(prefix, 'python.exe')
+                                    : path.join(prefix, 'bin', 'python'),
+                            envType,
+                        };
+                        const vars = {
+                            CONDA_PREFIX: prefix,
+                            PIXI_ENVIRONMENT_NAME: envName,
+                            PYTHONWARNINGS: 'ignore',
+                        };
+                        when(platform.osType).thenReturn(osType);
+                        when(processService.shellExec(anything(), anything())).thenResolve({
+                            stdout: JSON.stringify(vars),
+                        });
+                        sinon.stub(externalDependencies, 'getPythonSetting').returns(pixiExecutable);
+                        sinon
+                            .stub(externalDependencies, 'pathExists')
+                            .callsFake(async (candidate) => candidate === pixiExecutable);
+                        sinon.stub(workspaceApis, 'getWorkspaceFolderPaths').returns([path.dirname(resource.fsPath)]);
+                        const metadata = sinon.stub(pixi.Pixi.prototype, 'getPixiEnvironmentMetadata').resolves({
+                            manifest_path: manifestPath,
+                            pixi_version: '0.76.1',
+                            environment_name: envName,
+                        });
+                        getRunPixiPythonCommand.resetBehavior();
+                        getRunPixiPythonCommand.callThrough();
+
+                        const env = await service.getActivatedEnvironmentVariables(resource, interpreter);
+
+                        expect(env).to.deep.equal({ CONDA_PREFIX: prefix, PIXI_ENVIRONMENT_NAME: envName });
+                        sinon.assert.calledOnceWithExactly(getRunPixiPythonCommand, interpreter.path);
+                        sinon.assert.calledOnceWithExactly(metadata, prefix);
+                        verify(
+                            helper.getEnvironmentActivationShellCommands(anything(), anything(), anything()),
+                        ).never();
+                        const [command, options] = capture(processService.shellExec).first();
+                        const expected = [
+                            pixiExecutable,
+                            'run',
+                            '--manifest-path',
+                            manifestPath,
+                            ...(envName === 'default' ? [] : ['--environment', envName]),
+                            'python',
+                            path
+                                .join(EXTENSION_ROOT_DIR, 'python_files', 'printEnvVariables.py')
+                                .fileToCommandArgumentForPythonExt(),
+                        ]
+                            .map((arg) => arg.toCommandArgumentForPythonExt())
+                            .join(' ');
+                        expect(command).to.equal(expected);
+                        expect(options).to.deep.equal({
+                            env: { INHERITED: 'preserved', PYTHONWARNINGS: 'ignore' },
+                            shell: defaultShells[osType],
+                            timeout: 30000,
+                            maxBuffer: 1000 * 1000,
+                            throwOnStdErr: false,
+                        });
+                        expect(interpreter.envType).to.equal(envType);
+                    });
+                }
+            }
+
+            test(`${envType}: preserves fallback when no Pixi run command is available`, async () => {
+                const interpreter = { ...pythonInterpreter, envType };
+                when(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).thenResolve([
+                    'activate-other',
+                ]);
+                when(processService.shellExec(anything(), anything())).thenResolve({ stdout: '{"RESULT":"ok"}' });
+
+                const env = await service.getActivatedEnvironmentVariables(resource, interpreter);
+
+                expect(env).to.deep.equal({ RESULT: 'ok' });
+                sinon.assert.calledOnceWithExactly(getRunPixiPythonCommand, interpreter.path);
+                verify(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).once();
+                expect(capture(processService.shellExec).first()[0]).to.contain('activate-other &&');
+            });
+        }
+
+        for (const envType of [
+            EnvironmentType.Venv,
+            EnvironmentType.Pyenv,
+            EnvironmentType.Pipenv,
+            EnvironmentType.Poetry,
+        ]) {
+            test(`${envType}: does not add Pixi detection to existing activation`, async () => {
+                const interpreter = { ...pythonInterpreter, envType };
+                when(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).thenResolve([
+                    'activate-other',
+                ]);
+                when(processService.shellExec(anything(), anything())).thenResolve({ stdout: '{"RESULT":"ok"}' });
+
+                expect(await service.getActivatedEnvironmentVariables(resource, interpreter)).to.deep.equal({
+                    RESULT: 'ok',
+                });
+                sinon.assert.notCalled(getRunPixiPythonCommand);
+                verify(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).once();
+            });
+        }
+
+        test('preserves conda run and its timeout', async () => {
+            const interpreter = { ...pythonInterpreter, envType: EnvironmentType.Conda };
+            const conda = sinon.createStubInstance(Conda);
+            conda.getRunPythonArgs.resolves(['conda', 'run', 'python']);
+            sinon.stub(Conda, 'getConda').resolves(conda);
+            when(processService.shellExec(anything(), anything())).thenResolve({ stdout: '{"RESULT":"ok"}' });
+
+            expect(await service.getActivatedEnvironmentVariables(resource, interpreter)).to.deep.equal({
+                RESULT: 'ok',
+            });
+            sinon.assert.notCalled(getRunPixiPythonCommand);
+            verify(helper.getEnvironmentActivationShellCommands(anything(), anything(), anything())).never();
+            const [command, options] = capture(processService.shellExec).first();
+            expect(command).to.contain('conda run python ');
+            expect(options?.timeout).to.equal(60000);
+        });
+
+        test('does not probe Pixi without an interpreter', async () => {
+            await service.getActivatedEnvironmentVariables(resource);
+            sinon.assert.notCalled(getRunPixiPythonCommand);
+        });
+
+        test('preserves requested exceptions when pixi run fails', async () => {
+            const interpreter = { ...pythonInterpreter, envType: EnvironmentType.System };
+            getRunPixiPythonCommand.resolves(['pixi', 'run', 'python']);
+            const error = new Error('Pixi launch failed');
+            when(processService.shellExec(anything(), anything())).thenReject(error);
+
+            await assert.rejects(service.getActivatedEnvironmentVariables(resource, interpreter, true), error);
+            verify(helper.getEnvironmentActivationShellCommands(anything(), anything(), anything())).never();
+        });
+    });
 
     [undefined, Uri.parse('a')].forEach((resource) =>
         [undefined, pythonInterpreter].forEach((interpreter) => {

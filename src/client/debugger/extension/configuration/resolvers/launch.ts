@@ -118,7 +118,12 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.envFile = settings.envFile;
         }
         let baseEnvVars: EnvironmentVariables | undefined;
-        if (this.isCustomPythonSet || debugConfiguration.console !== 'integratedTerminal') {
+        const shouldActivateEnvironment =
+            this.isCustomPythonSet ||
+            debugConfiguration.__pythonIsProgramInterpreter ||
+            debugConfiguration.console !== 'integratedTerminal';
+        delete debugConfiguration.__pythonIsProgramInterpreter;
+        if (shouldActivateEnvironment) {
             // We only have the right activated environment present in integrated terminal if no custom Python path
             // is specified. Otherwise, we need to explicitly set the variables.
             baseEnvVars = await this.environmentActivationService.getActivatedEnvironmentVariables(

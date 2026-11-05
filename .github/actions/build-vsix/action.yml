@@ -22,17 +22,19 @@ runs:
   using: 'composite'
   steps:
     - name: Install Node
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: ${{ inputs.node_version }}
         cache: 'npm'
 
     - name: Rust Tool Chain setup
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # stable
+      with:
+        toolchain: stable
 
     # Jedi LS depends on dataclasses which is not in the stdlib in Python 3.7.
     - name: Use Python 3.10 for JediLSP
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
       with:
         python-version: '3.10'
         cache: 'pip'
@@ -93,7 +95,7 @@ runs:
         VSIX_NAME: ${{ inputs.vsix_name }}
 
     - name: Upload VSIX
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: ${{ inputs.artifact_name }}
         path: ${{ inputs.vsix_name }}

@@ -13,7 +13,7 @@ import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { TensorBoardPromptSelection } from '../tensorBoard/constants';
 import { EventName } from './constants';
 import type { UnitTestRunFailureCategory } from './constants';
-import type { TestTool } from './types';
+import type { EnvsExplicitFalseScope, TestTool } from './types';
 
 /**
  * Checks whether telemetry is supported.
@@ -358,7 +358,9 @@ export interface IEventNamePropertyMapping {
           "totalnonblockingactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "usinguserdefinedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "usingglobalinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
-          "isfirstsession" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
+          "isfirstsession" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "usingenvironmentsextension" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eduardovil" },
+          "envsexplicitfalsescope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
        }
      */
     [EventName.EDITOR_LOAD]: {
@@ -409,6 +411,23 @@ export interface IEventNamePropertyMapping {
          * If user has enabled the Python Environments extension integration
          */
         usingEnvironmentsExtension?: boolean;
+        /**
+         * Scope kinds explicitly setting python.useEnvironmentsExtension to false, even if overridden.
+         * 'none' excludes defaults; 'multiple' means more than one of user, workspace, or folder.
+         */
+        envsExplicitFalseScope?: EnvsExplicitFalseScope;
+    };
+    /**
+     * Reports explicit-false scopes after a python.useEnvironmentsExtension configuration change.
+     * This is a configuration notification, not proof of user intent or a changed integration decision.
+     */
+    /* __GDPR__
+       "environments_extension.setting_changed" : {
+          "envsexplicitfalsescope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
+       }
+     */
+    [EventName.ENVIRONMENTS_EXTENSION_SETTING_CHANGED]: {
+        envsExplicitFalseScope: EnvsExplicitFalseScope;
     };
     /**
      * Telemetry event sent when substituting Environment variables to calculate value of variables
@@ -2209,14 +2228,10 @@ export interface IEventNamePropertyMapping {
             | 'env-resolution'
             | 'cancelled'
             | 'unknown';
-        /**
-         * Wall-clock duration of the discovery cycle in milliseconds.
-         */
-        totalDurationMs?: number;
-        /**
-         * Number of test items discovered (leaf nodes).
-         */
-        testCount?: number;
+        // NOTE: `totalDurationMs` and `testCount` are measurements (see the __GDPR__ block
+        // above) and MUST be passed via the `measures` argument of sendTelemetryEvent, not
+        // as properties. Fields annotated `isMeasurement: true` are dropped by telemetry
+        // ingestion when sent in the properties bag.
     };
     /**
      * Telemetry event sent when cancelling discovering tests
@@ -2286,14 +2301,10 @@ export interface IEventNamePropertyMapping {
          * Coarse failure category when `failed` is true.
          */
         failureCategory?: UnitTestRunFailureCategory;
-        /**
-         * Wall-clock duration of the run in milliseconds.
-         */
-        durationMs?: number;
-        /**
-         * Number of test items the user asked to run.
-         */
-        requestedCount?: number;
+        // NOTE: `durationMs` and `requestedCount` are measurements (see the __GDPR__ block
+        // above) and MUST be passed via the `measures` argument of sendTelemetryEvent, not
+        // as properties. Fields annotated `isMeasurement: true` are dropped by telemetry
+        // ingestion when sent in the properties bag.
     };
     /**
      * Telemetry event sent when testing is disabled for a workspace.

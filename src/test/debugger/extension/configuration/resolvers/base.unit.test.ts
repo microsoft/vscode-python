@@ -7,7 +7,7 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ConfigurationService } from '../../../../../client/common/configuration/service';
@@ -18,6 +18,7 @@ import { IInterpreterService } from '../../../../../client/interpreter/contracts
 import { PythonEnvironment } from '../../../../../client/pythonEnvironments/info';
 import * as workspaceApis from '../../../../../client/common/vscodeApis/workspaceApis';
 import * as helper from '../../../../../client/debugger/extension/configuration/resolvers/helper';
+import * as extapi from '../../../../../client/envExt/api.internal';
 
 suite('Debugging - Config Resolver', () => {
     class BaseResolver extends BaseConfigurationResolver<AttachRequestArguments | LaunchRequestArguments> {
@@ -70,6 +71,7 @@ suite('Debugging - Config Resolver', () => {
     let getWorkspaceFoldersStub: sinon.SinonStub;
     let getWorkspaceFolderStub: sinon.SinonStub;
     let getProgramStub: sinon.SinonStub;
+    let useEnvExtensionStub: sinon.SinonStub;
 
     setup(() => {
         configurationService = mock(ConfigurationService);
@@ -78,6 +80,7 @@ suite('Debugging - Config Resolver', () => {
         getWorkspaceFoldersStub = sinon.stub(workspaceApis, 'getWorkspaceFolders');
         getWorkspaceFolderStub = sinon.stub(workspaceApis, 'getWorkspaceFolder');
         getProgramStub = sinon.stub(helper, 'getProgram');
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension').returns(false);
     });
     teardown(() => {
         sinon.restore();
@@ -287,6 +290,117 @@ suite('Debugging - Config Resolver', () => {
         expect(config).to.have.property('python', pythonPath);
         expect(config).to.have.property('debugAdapterPython', pythonPath);
         expect(config).to.have.property('debugLauncherPython', pythonPath);
+    });
+
+    test('uses one exact program lookup for command-valued pythonPath and python', async () => {
+        useEnvExtensionStub.returns(true);
+        const workspaceUri = Uri.file(path.resolve('workspace'));
+        const programPath = path.join(workspaceUri.fsPath, 'script.py');
+        const workspacePython = path.resolve('workspace-env', 'python');
+        const programPython = path.resolve('program-env', 'python');
+        const config = {
+            program: path.join('${workspaceFolder}', 'script.py'),
+            pythonPath: '${command:python.interpreterPath}',
+            python: '${command:python.interpreterPath}',
+        };
+        when(interpreterService.getActiveInterpreter(anything(), anything())).thenCall(async (resource) =>
+            resource?.fsPath === Uri.file(programPath).fsPath
+                ? ({ path: programPython } as PythonEnvironment)
+                : ({ path: workspacePython } as PythonEnvironment),
+        );
+
+        await resolver.resolveAndUpdatePythonPath(workspaceUri, config as LaunchRequestArguments);
+
+        expect(config).to.not.have.property('pythonPath');
+        expect(config).to.have.property('python', programPython);
+        expect(config).to.have.property('__pythonIsProgramInterpreter', true);
+        verify(interpreterService.getActiveInterpreter(anything(), anything())).twice();
+        verify(interpreterService.getActiveInterpreter(anything())).never();
+        const [resource, options] = capture(interpreterService.getActiveInterpreter).first();
+        expect(resource?.fsPath).to.equal(Uri.file(programPath).fsPath);
+        expect(options).to.deep.equal({ exactResource: true });
+    });
+
+    test('falls back to the workspace interpreter when exact program lookup has no environment', async () => {
+        useEnvExtensionStub.returns(true);
+        const workspaceUri = Uri.file(path.resolve('workspace'));
+        const programPath = path.join(workspaceUri.fsPath, 'script.py');
+        const workspacePython = path.resolve('workspace-env', 'python');
+        const config = { program: programPath };
+        when(interpreterService.getActiveInterpreter(anything(), anything())).thenResolve(undefined);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: workspacePython,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(workspaceUri, config as LaunchRequestArguments);
+
+        expect(config).to.have.property('python', workspacePython);
+        expect(config).to.not.have.property('__pythonIsProgramInterpreter');
+        verify(interpreterService.getActiveInterpreter(anything(), anything())).once();
+        verify(interpreterService.getActiveInterpreter(anything())).once();
+    });
+
+    test('resolves a named workspace-folder program before exact interpreter lookup', async () => {
+        useEnvExtensionStub.returns(true);
+        const launchWorkspaceUri = Uri.file(path.resolve('workspace-a'));
+        const programWorkspaceUri = Uri.file(path.resolve('workspace-b'));
+        const programPath = path.join(programWorkspaceUri.fsPath, 'script.py');
+        const workspacePython = path.resolve('workspace-env', 'python');
+        const programPython = path.resolve('program-env', 'python');
+        const config = { program: path.join('${workspaceFolder:program-root}', 'script.py') };
+        getWorkspaceFoldersStub.returns([
+            { uri: launchWorkspaceUri, name: 'launch-root', index: 0 },
+            { uri: programWorkspaceUri, name: 'program-root', index: 1 },
+        ]);
+        when(interpreterService.getActiveInterpreter(anything(), anything())).thenCall(async (resource) =>
+            resource?.fsPath === Uri.file(programPath).fsPath
+                ? ({ path: programPython } as PythonEnvironment)
+                : ({ path: workspacePython } as PythonEnvironment),
+        );
+
+        await resolver.resolveAndUpdatePythonPath(launchWorkspaceUri, config as LaunchRequestArguments);
+
+        expect(config).to.have.property('python', programPython);
+        const [resource] = capture(interpreterService.getActiveInterpreter).first();
+        expect(resource?.fsPath).to.equal(Uri.file(programPath).fsPath);
+    });
+
+    test('does not mark a program interpreter that matches the workspace interpreter', async () => {
+        useEnvExtensionStub.returns(true);
+        const workspaceUri = Uri.file(path.resolve('workspace'));
+        const programPath = path.join(workspaceUri.fsPath, 'script.py');
+        const pythonPath = path.resolve('env', 'python');
+        const config = { program: programPath };
+        when(interpreterService.getActiveInterpreter(anything(), anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(workspaceUri, config as LaunchRequestArguments);
+
+        expect(config).to.have.property('python', pythonPath);
+        expect(config).to.not.have.property('__pythonIsProgramInterpreter');
+    });
+
+    test('does not use the program interpreter when the environments extension is not in use', async () => {
+        useEnvExtensionStub.returns(false);
+        const workspaceUri = Uri.file(path.resolve('workspace-a'));
+        const programWorkspaceUri = Uri.file(path.resolve('workspace-b'));
+        const programPath = path.join(programWorkspaceUri.fsPath, 'script.py');
+        const workspacePython = path.resolve('workspace-env', 'python');
+        const config = { program: programPath };
+        when(interpreterService.getActiveInterpreter(anything(), anything())).thenResolve({
+            path: path.resolve('program-env', 'python'),
+        } as PythonEnvironment);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: workspacePython,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(workspaceUri, config as LaunchRequestArguments);
+
+        expect(config).to.have.property('python', workspacePython);
+        expect(config).to.not.have.property('__pythonIsProgramInterpreter');
+        verify(interpreterService.getActiveInterpreter(anything(), anything())).never();
+        verify(interpreterService.getActiveInterpreter(anything())).once();
     });
 
     const localHostTestMatrix: Record<string, boolean> = {

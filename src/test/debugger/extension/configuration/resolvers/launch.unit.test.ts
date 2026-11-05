@@ -193,6 +193,43 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(Object.keys((debugConfig as DebugConfiguration).env)).to.have.lengthOf(0);
         });
 
+        test('activates a differing program-scoped interpreter for an integrated terminal', async () => {
+            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+            const programPython = path.join(__dirname, 'program-env', 'python');
+            const programEnvironment = { path: programPython } as any;
+            setupIoc(programPython, workspaceFolder);
+            interpreterService
+                .setup((service) => service.getInterpreterDetails(programPython))
+                .returns(() => Promise.resolve(programEnvironment));
+            environmentActivationService
+                .setup((service) => service.getActivatedEnvironmentVariables(workspaceFolder.uri, programEnvironment))
+                .returns(() => Promise.resolve(envVars));
+            const config = {
+                ...launch,
+                program: path.join(__dirname, 'script.py'),
+                python: programPython,
+                debugAdapterPython: programPython,
+                debugLauncherPython: programPython,
+                console: 'integratedTerminal' as const,
+                __pythonIsProgramInterpreter: true,
+            };
+
+            const resolved = await debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(
+                workspaceFolder,
+                config,
+            );
+
+            expect(resolved).to.not.have.property('__pythonIsProgramInterpreter');
+            environmentActivationService.verify(
+                (service) => service.getActivatedEnvironmentVariables(workspaceFolder.uri, programEnvironment),
+                TypeMoq.Times.once(),
+            );
+            debugEnvHelper.verify(
+                (helper) => helper.getEnvironmentVariables(TypeMoq.It.isAny(), envVars),
+                TypeMoq.Times.once(),
+            );
+        });
+
         test("Defaults should be returned when an object with 'noDebug' property is passed with a Workspace Folder and active file", async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);

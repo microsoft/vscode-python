@@ -27,6 +27,7 @@ import { PythonEnvironment } from '../pythonEnvironments/info';
 import {
     IActivatedEnvironmentLaunch,
     IComponentAdapter,
+    GetActiveInterpreterOptions,
     IInterpreterDisplay,
     IInterpreterService,
     IInterpreterStatusbarVisibilityFilter,
@@ -253,7 +254,17 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.didChangeInterpreterInformation.dispose();
     }
 
-    public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
+    public async getActiveInterpreter(
+        resource?: Uri,
+        options?: GetActiveInterpreterOptions,
+    ): Promise<PythonEnvironment | undefined> {
+        if (options?.exactResource && useEnvExtension()) {
+            return getActiveInterpreterLegacy(resource, { reportActiveInterpreterChanged: false }).catch((ex) => {
+                traceError('Failed to get active interpreter', ex);
+                return undefined;
+            });
+        }
+
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const key = workspaceService.getWorkspaceFolderIdentifier(resource);
 

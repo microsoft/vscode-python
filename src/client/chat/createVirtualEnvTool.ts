@@ -45,7 +45,7 @@ import { hideEnvCreation } from '../pythonEnvironments/creation/provider/hideEnv
 import { BaseTool } from './baseTool';
 
 interface ICreateVirtualEnvToolParams extends IResourceReference {
-    packageList?: string[]; // Added only becausewe have ability to create a virtual env with list of packages same tool within the in Python Env extension.
+    packageList?: string[]; // Added only because we have the ability to create a virtual env with a list of packages using the same tool within the Python Env extension.
 }
 
 export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
@@ -92,12 +92,17 @@ export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
 
             let createdEnvPath: string | undefined = undefined;
             if (useEnvExtension()) {
-                const result: PythonEnvironment | undefined = await commands.executeCommand('python-envs.createAny', {
-                    quickCreate: true,
-                    additionalPackages: options.input.packageList || [],
-                    uri: workspaceFolder.uri,
-                    selectEnvironment: true,
-                });
+                const result: PythonEnvironment | undefined = await raceCancellationError(
+                    Promise.resolve(
+                        commands.executeCommand<PythonEnvironment | undefined>('python-envs.createAny', {
+                            quickCreate: true,
+                            additionalPackages: options.input.packageList || [],
+                            uri: workspaceFolder.uri,
+                            selectEnvironment: true,
+                        }),
+                    ),
+                    token,
+                );
                 createdEnvPath = result?.environmentPath.fsPath;
             } else {
                 const created = await raceCancellationError(
@@ -116,19 +121,19 @@ export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
 
             // Wait a few secs to ensure the env is selected as the active environment..
             // If this doesn't work, then something went wrong.
-            await raceTimeout(5_000, interpreterChanged);
+            await raceCancellationError(raceTimeout(5_000, interpreterChanged), token);
 
             const stopWatch = new StopWatch();
             let env: ResolvedEnvironment | undefined;
-            while (stopWatch.elapsedTime < 5_000 || !env) {
-                env = await this.api.resolveEnvironment(createdEnvPath);
+            while (stopWatch.elapsedTime < 5_000 && !env) {
+                env = await raceCancellationError(this.api.resolveEnvironment(createdEnvPath), token);
                 if (env) {
                     break;
                 } else {
                     traceVerbose(
                         `${CreateVirtualEnvTool.toolName} tool invoked, env created but not yet resolved, waiting...`,
                     );
-                    await sleep(200);
+                    await raceCancellationError(sleep(200), token);
                 }
             }
             if (!env) {

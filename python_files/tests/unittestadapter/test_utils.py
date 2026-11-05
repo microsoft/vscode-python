@@ -8,9 +8,9 @@ import unittest
 
 import pytest
 
+from unittestadapter.pvsc_utils import TestNode as Node
+from unittestadapter.pvsc_utils import TestNodeTypeEnum as NodeTypeEnum
 from unittestadapter.pvsc_utils import (
-    TestNode,
-    TestNodeTypeEnum,
     build_test_tree,
     get_child_node,
     get_test_case,
@@ -65,27 +65,27 @@ def test_simple_test_cases(directory, pattern, expected) -> None:
 
 def test_get_existing_child_node() -> None:
     """The get_child_node fuction should return the child node of a test tree if it exists."""
-    tree: TestNode = {
+    tree: Node = {
         "name": "root",
         "path": "foo",
-        "type_": TestNodeTypeEnum.folder,
+        "type_": NodeTypeEnum.folder,
         "children": [
             {
                 "name": "childOne",
                 "path": "child/one",
-                "type_": TestNodeTypeEnum.folder,
+                "type_": NodeTypeEnum.folder,
                 "children": [
                     {
                         "name": "nestedOne",
                         "path": "nested/one",
-                        "type_": TestNodeTypeEnum.folder,
+                        "type_": NodeTypeEnum.folder,
                         "children": [],
                         "id_": "nested/one",
                     },
                     {
                         "name": "nestedTwo",
                         "path": "nested/two",
-                        "type_": TestNodeTypeEnum.folder,
+                        "type_": NodeTypeEnum.folder,
                         "children": [],
                         "id_": "nested/two",
                     },
@@ -95,7 +95,7 @@ def test_get_existing_child_node() -> None:
             {
                 "name": "childTwo",
                 "path": "child/two",
-                "type_": TestNodeTypeEnum.folder,
+                "type_": NodeTypeEnum.folder,
                 "children": [],
                 "id_": "child/two",
             },
@@ -103,7 +103,7 @@ def test_get_existing_child_node() -> None:
         "id_": "foo",
     }
 
-    get_child_node("childTwo", "child/two", TestNodeTypeEnum.folder, tree)
+    get_child_node("childTwo", "child/two", NodeTypeEnum.folder, tree)
     tree_copy = tree.copy()
 
     # Check that the tree didn't get mutated by get_child_node.
@@ -112,27 +112,27 @@ def test_get_existing_child_node() -> None:
 
 def test_no_existing_child_node() -> None:
     """The get_child_node fuction should add a child node to a test tree and return it if it does not exist."""
-    tree: TestNode = {
+    tree: Node = {
         "name": "root",
         "path": "foo",
-        "type_": TestNodeTypeEnum.folder,
+        "type_": NodeTypeEnum.folder,
         "children": [
             {
                 "name": "childOne",
                 "path": "child/one",
-                "type_": TestNodeTypeEnum.folder,
+                "type_": NodeTypeEnum.folder,
                 "children": [
                     {
                         "name": "nestedOne",
                         "path": "nested/one",
-                        "type_": TestNodeTypeEnum.folder,
+                        "type_": NodeTypeEnum.folder,
                         "children": [],
                         "id_": "nested/one",
                     },
                     {
                         "name": "nestedTwo",
                         "path": "nested/two",
-                        "type_": TestNodeTypeEnum.folder,
+                        "type_": NodeTypeEnum.folder,
                         "children": [],
                         "id_": "nested/two",
                     },
@@ -142,7 +142,7 @@ def test_no_existing_child_node() -> None:
             {
                 "name": "childTwo",
                 "path": "child/two",
-                "type_": TestNodeTypeEnum.folder,
+                "type_": NodeTypeEnum.folder,
                 "children": [],
                 "id_": "child/two",
             },
@@ -154,7 +154,7 @@ def test_no_existing_child_node() -> None:
     tree_before = tree.copy()
     tree_before["children"] = tree["children"][:]
 
-    get_child_node("childThree", "child/three", TestNodeTypeEnum.folder, tree)
+    get_child_node("childThree", "child/three", NodeTypeEnum.folder, tree)
 
     tree_after = tree.copy()
     tree_after["children"] = tree_after["children"][:-1]
@@ -174,25 +174,25 @@ def test_build_simple_tree() -> None:
     pattern = "utils_simple_tree*"
     file_path = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, "utils_simple_tree.py"))
 
-    expected: TestNode = {
+    expected: Node = {
         "path": start_dir,
-        "type_": TestNodeTypeEnum.folder,
+        "type_": NodeTypeEnum.folder,
         "name": ".data",
         "children": [
             {
                 "name": "utils_simple_tree.py",
-                "type_": TestNodeTypeEnum.file,
+                "type_": NodeTypeEnum.file,
                 "path": file_path,
                 "children": [
                     {
                         "name": "TreeOne",
                         "path": file_path,
-                        "type_": TestNodeTypeEnum.class_,
+                        "type_": NodeTypeEnum.class_,
                         "children": [
                             {
                                 "name": "test_one",
                                 "path": file_path,
-                                "type_": TestNodeTypeEnum.test,
+                                "type_": NodeTypeEnum.test,
                                 "lineno": "13",
                                 "id_": file_path + "\\" + "TreeOne" + "\\" + "test_one",
                                 "runID": "utils_simple_tree.TreeOne.test_one",
@@ -200,7 +200,7 @@ def test_build_simple_tree() -> None:
                             {
                                 "name": "test_two",
                                 "path": file_path,
-                                "type_": TestNodeTypeEnum.test,
+                                "type_": NodeTypeEnum.test,
                                 "lineno": "16",
                                 "id_": file_path + "\\" + "TreeOne" + "\\" + "test_two",
                                 "runID": "utils_simple_tree.TreeOne.test_two",
@@ -230,25 +230,25 @@ def test_build_decorated_tree() -> None:
     pattern = "utils_decorated_tree*"
     file_path = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, "utils_decorated_tree.py"))
 
-    expected: TestNode = {
+    expected: Node = {
         "path": start_dir,
-        "type_": TestNodeTypeEnum.folder,
+        "type_": NodeTypeEnum.folder,
         "name": ".data",
         "children": [
             {
                 "name": "utils_decorated_tree.py",
-                "type_": TestNodeTypeEnum.file,
+                "type_": NodeTypeEnum.file,
                 "path": file_path,
                 "children": [
                     {
                         "name": "TreeOne",
                         "path": file_path,
-                        "type_": TestNodeTypeEnum.class_,
+                        "type_": NodeTypeEnum.class_,
                         "children": [
                             {
                                 "name": "test_one",
                                 "path": file_path,
-                                "type_": TestNodeTypeEnum.test,
+                                "type_": NodeTypeEnum.test,
                                 "lineno": "24",
                                 "id_": file_path + "\\" + "TreeOne" + "\\" + "test_one",
                                 "runID": "utils_decorated_tree.TreeOne.test_one",
@@ -256,7 +256,7 @@ def test_build_decorated_tree() -> None:
                             {
                                 "name": "test_two",
                                 "path": file_path,
-                                "type_": TestNodeTypeEnum.test,
+                                "type_": NodeTypeEnum.test,
                                 "lineno": "28",
                                 "id_": file_path + "\\" + "TreeOne" + "\\" + "test_two",
                                 "runID": "utils_decorated_tree.TreeOne.test_two",

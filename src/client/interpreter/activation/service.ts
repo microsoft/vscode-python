@@ -253,7 +253,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     // Using environment prefix isn't needed as the marker script already takes care of it.
                     command = [...pythonArgv, ...args].map((arg) => arg.toCommandArgumentForPythonExt()).join(' ');
                 }
-            } else if (interpreter?.envType === EnvironmentType.Pixi) {
+            } else if (
+                interpreter &&
+                [EnvironmentType.Pixi, EnvironmentType.System, EnvironmentType.Unknown].includes(interpreter.envType)
+            ) {
+                // Pixi can be resolved by the Environments extension's System fallback.
                 const pythonArgv = await getRunPixiPythonCommand(interpreter.path);
                 if (pythonArgv) {
                     command = [...pythonArgv, ...args].map((arg) => arg.toCommandArgumentForPythonExt()).join(' ');

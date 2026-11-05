@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, Event, Terminal, Uri, TerminalShellExecution } from 'vscode';
+import { CancellationToken, Event, Terminal, TerminalOptions, Uri, TerminalShellExecution } from 'vscode';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IEventNamePropertyMapping } from '../../telemetry/index';
 import { IDisposable, Resource } from '../types';
@@ -65,6 +65,10 @@ export type TerminalCreationOptions = {
      * Object with environment variables that will be added to the Terminal.
      */
     env?: { [key: string]: string | null };
+    /**
+     * Icon displayed for the terminal.
+     */
+    iconPath?: TerminalOptions['iconPath'];
     /**
      * Resource identifier. E.g. used to determine python interpreter that needs to be used or environment variables or the like.
      *
