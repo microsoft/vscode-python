@@ -747,3 +747,69 @@ skip_test_fixture_execution_expected_output = {
         "subtest": None,
     }
 }
+
+# This is the expected output for the subtests_execution.py tests.
+# A failed subtest fails its parent test, whichever subtest reports first.
+# └── subtests_execution.py
+#    ├── test_pass_then_fail: failure
+#    ├── test_fail_then_pass: failure
+#    ├── test_all_pass: success
+#    ├── test_pass_then_body_fails: failure
+#    └── TestUnittestSubTest
+#       └── test_pass_then_fail: failure
+subtests_execution_path = TEST_DATA_PATH / "subtests_execution.py"
+subtests_execution_expected_output = {
+    get_absolute_test_id("subtests_execution.py::test_pass_then_fail", subtests_execution_path): {
+        "test": get_absolute_test_id(
+            "subtests_execution.py::test_pass_then_fail", subtests_execution_path
+        ),
+        "outcome": FAILURE,
+        "message": "ERROR MESSAGE",
+        "traceback": None,
+        "subtest": None,
+    },
+    get_absolute_test_id("subtests_execution.py::test_fail_then_pass", subtests_execution_path): {
+        "test": get_absolute_test_id(
+            "subtests_execution.py::test_fail_then_pass", subtests_execution_path
+        ),
+        "outcome": FAILURE,
+        "message": "ERROR MESSAGE",
+        "traceback": None,
+        "subtest": None,
+    },
+    get_absolute_test_id("subtests_execution.py::test_all_pass", subtests_execution_path): {
+        "test": get_absolute_test_id(
+            "subtests_execution.py::test_all_pass", subtests_execution_path
+        ),
+        "outcome": SUCCESS,
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    get_absolute_test_id(
+        "subtests_execution.py::test_pass_then_body_fails", subtests_execution_path
+    ): {
+        "test": get_absolute_test_id(
+            "subtests_execution.py::test_pass_then_body_fails", subtests_execution_path
+        ),
+        "outcome": FAILURE,
+        "message": "ERROR MESSAGE",
+        "traceback": None,
+        "subtest": None,
+    },
+}
+
+unittest_subtest_execution_expected_output = {
+    get_absolute_test_id(
+        "subtests_execution.py::TestUnittestSubTest::test_pass_then_fail", subtests_execution_path
+    ): {
+        "test": get_absolute_test_id(
+            "subtests_execution.py::TestUnittestSubTest::test_pass_then_fail",
+            subtests_execution_path,
+        ),
+        "outcome": FAILURE,
+        "message": "ERROR MESSAGE",
+        "traceback": None,
+        "subtest": None,
+    }
+}
