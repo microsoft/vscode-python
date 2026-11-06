@@ -10,7 +10,7 @@ import { Commands } from '../../../client/common/constants';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionManager } from '../../../client/terminals/codeExecution/codeExecutionManager';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../../client/terminals/types';
-import { IConfigurationService } from '../../../client/common/types';
+import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import * as triggerApis from '../../../client/pythonEnvironments/creation/createEnvironmentTrigger';
@@ -96,6 +96,45 @@ suite('Terminal - Code Execution Manager', () => {
             ].sort(),
         );
     });
+
+    for (const [command, run] of [
+        [Commands.Exec_In_Terminal_Icon, 'runInTerminal'],
+        [Commands.Exec_In_Separate_Terminal, 'runInDedicatedTerminal'],
+    ] as const) {
+        test(`passes the raw script path to Python Environments for ${command}`, async () => {
+            useEnvExtensionStub.returns(true);
+            const runInTerminalStub = sinon.stub(extapi, run).resolves();
+            let commandHandler: ((file: Uri) => Promise<void>) | undefined;
+            commandManager
+                .setup((c) => c.registerCommand as any)
+                .returns(() => {
+                    return (commandId: string, callback: (file: Uri) => Promise<void>) => {
+                        if (commandId === command) {
+                            commandHandler = callback;
+                        }
+                        return { dispose: () => void 0 };
+                    };
+                });
+
+            const helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
+            serviceContainer.setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
+            const settings = TypeMoq.Mock.ofType<IPythonSettings>();
+            const terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
+            terminalSettings.setup((s) => s.executeInFileDir).returns(() => false);
+            terminalSettings.setup((s) => s.launchArgs).returns(() => ['-u']);
+            terminalSettings.setup((s) => s.focusAfterLaunch).returns(() => false);
+            settings.setup((s) => s.terminal).returns(() => terminalSettings.object);
+            configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+
+            executionManager.registerCommands();
+            expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
+
+            const script = Uri.file('/workspace/test folder/test.py');
+            await commandHandler!(script);
+
+            sinon.assert.calledOnceWithExactly(runInTerminalStub, script, ['-u', script.fsPath], undefined, false);
+        });
+    }
 
     test('Ensure executeFileInterTerminal will do nothing if no file is avialble', async () => {
         let commandHandler: undefined | (() => Promise<void>);
