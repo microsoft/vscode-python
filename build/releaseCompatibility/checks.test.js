@@ -22,6 +22,9 @@ const {
     verifyInstalledExtension,
     verifyPythonResult,
     locatorStarts,
+    legacyDiscoveryLines,
+    locatorBackend,
+    fixtureLayout,
     verifyPetIdentity,
     observeMethod,
     childEnvironment,
@@ -254,6 +257,33 @@ describe('Packaged release compatibility guards', () => {
             CheckFailure,
         );
         assert.deepStrictEqual(locatorStarts('a package contains pet.exe, but no locator started', 'empty.log'), []);
+    });
+
+    it('keeps fixture interpreters within the legacy workspace locator two-directory search depth', () => {
+        const layout = fixtureLayout(directory);
+        assert.strictEqual(layout.prefixes.length, 2);
+        for (const prefix of layout.prefixes) {
+            assert.strictEqual(path.dirname(prefix), directory);
+            const relative = path.relative(directory, path.join(prefix, 'bin', 'python'));
+            assert.strictEqual(relative.split(path.sep).length - 1, 2);
+        }
+        assert.deepStrictEqual(layout.searchPaths, ['./.venv-one', './.venv-two']);
+    });
+
+    it('accepts positively observed legacy JS discovery only for off mode, without fabricating PET identity', () => {
+        const legacy = legacyDiscoveryLines(
+            '[info] Searching for custom virtual environments',
+            '/logs/ms-python.python/Python.log',
+        );
+        assert.strictEqual(locatorBackend(false, [], legacy).kind, 'legacy-javascript');
+        assert.throws(() => locatorBackend(true, [], legacy), CheckFailure);
+        assert.throws(() => locatorBackend(false, [], []), CheckFailure);
+        assert.throws(() => locatorBackend(false, [{ component: 'environments' }], legacy), CheckFailure);
+        assert.strictEqual(locatorBackend(false, [{ component: 'core' }], legacy).kind, 'pet');
+        assert.deepStrictEqual(
+            legacyDiscoveryLines('[info] Searching for custom virtual environments', '/other/Python.log'),
+            [],
+        );
     });
 
     it('observes delegation without changing the result, receiver, or thrown error', () => {
@@ -490,11 +520,12 @@ describe('Packaged release compatibility guards', () => {
         }
     });
 
-    it('records process errors and bounds only its own child process', async () => {
+    it('records process errors and bounds only its own child process', async function () {
+        this.timeout(30000);
         const result = await runProcess(process.execPath, ['-e', 'process.stdout.write("result"); process.exit(3)'], {
             cwd: directory,
             env: process.env,
-            timeout: 3000,
+            timeout: process.platform === 'win32' ? 15000 : 3000,
         });
         assert.strictEqual(result.code, 3);
         assert.strictEqual(result.stdout, 'result');
@@ -509,7 +540,7 @@ describe('Packaged release compatibility guards', () => {
     });
 
     it('contains grandchildren holding pipes after their direct parent exits', async function () {
-        this.timeout(15000);
+        this.timeout(30000);
         const log = path.join(directory, 'grandchild.log');
         const started = Date.now();
         const command =
@@ -542,11 +573,12 @@ describe('Packaged release compatibility guards', () => {
                           'setTimeout(() => process.exit(0), 50);',
                       ].join('\n'),
                   ];
+        const timeout = process.platform === 'win32' ? 15000 : 3000;
         await assert.rejects(
-            runProcess(command, args, { cwd: directory, env: process.env, timeout: 3000, log }),
+            runProcess(command, args, { cwd: directory, env: process.env, timeout, log }),
             InfrastructureError,
         );
-        assert(Date.now() - started < 9000, 'Cleanup must settle within its deadline');
+        assert(Date.now() - started < timeout + 6000, 'Cleanup must settle within its deadline');
         const match = /OWNED_(\d+)/.exec(fs.readFileSync(log, 'utf8'));
         assert(match, 'The test must actually start the grandchild before timing out');
         const pid = Number(match[1]);

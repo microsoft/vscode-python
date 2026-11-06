@@ -18,6 +18,9 @@ const {
     installVsix,
     verifyInstalledFiles,
     locatorStarts,
+    legacyDiscoveryLines,
+    locatorBackend,
+    fixtureLayout,
     verifyPetIdentity,
     childEnvironment,
 } = require('./checks');
@@ -229,12 +232,14 @@ function logOffsets(directory) {
 function observeLogs(directory, offsets) {
     const starts = [];
     const errors = [];
+    const legacy = [];
     for (const file of logFiles(directory)) {
         const size = fs.statSync(file).size;
         if (size > 64 * 1024 * 1024) throw new InfrastructureError(`Host log exceeds capture bounds: ${file}`);
         const offset = size >= (offsets[file] ?? 0) ? offsets[file] ?? 0 : 0;
         const text = fs.readFileSync(file).subarray(offset).toString('utf8');
         starts.push(...locatorStarts(text, file));
+        legacy.push(...legacyDiscoveryLines(text, file));
         errors.push(
             ...text
                 .split(/\r?\n/)
@@ -242,7 +247,7 @@ function observeLogs(directory, offsets) {
                 .map((line) => ({ logFile: file, line })),
         );
     }
-    return { starts, errors };
+    return { starts, errors, legacy };
 }
 
 async function makeProfile(directory, mode, pythonExecutable) {
@@ -265,12 +270,13 @@ async function makeProfile(directory, mode, pythonExecutable) {
     ]) {
         await fs.promises.mkdir(env[key], { recursive: true });
     }
+    const layout = fixtureLayout(workspace);
     const settings = {
         'python.useEnvironmentsExtension': mode,
         'python.languageServer': 'None',
         'python.terminal.executeInFileDir': true,
         'python.terminal.focusAfterLaunch': false,
-        'python-envs.workspaceSearchPaths': ['./**/.venv'],
+        'python-envs.workspaceSearchPaths': layout.searchPaths,
         'extensions.autoUpdate': false,
         'extensions.autoCheckUpdates': false,
         'update.mode': 'none',
@@ -292,9 +298,9 @@ async function makeProfile(directory, mode, pythonExecutable) {
     }
     writeJson(path.join(userData, 'User', 'settings.json'), settings);
     writeJson(path.join(workspace, '.vscode', 'settings.json'), settings);
+    fs.writeFileSync(path.join(workspace, 'app.py'), '');
     const fixtures = [];
-    for (const name of ['one', 'two']) {
-        const prefix = path.join(workspace, name, '.venv');
+    for (const prefix of layout.prefixes) {
         const creation = await runProcess(pythonExecutable, ['-m', 'venv', '--without-pip', prefix], {
             cwd: workspace,
             env,
@@ -353,38 +359,49 @@ async function runPhase(plan, profile, core, environments, phase, vscodeExecutab
             throw new InfrastructureError(`Extension host did not complete successfully; see ${phaseDirectory}`);
         }
         record.logs = observeLogs(logDirectory, offsets);
-        const component = profile.mode ? 'environments' : 'core';
-        const starts = record.logs.starts.filter((start) => start.component === component);
-        check(starts.length > 0, `No runtime ${component} PET startup evidence was captured`);
-        const supplier = profile.mode && environments.pet ? environments : core;
-        const location = supplier === core ? coreLocation : environmentLocation;
-        const expected = {
-            path: path.join(location, ...supplier.pet.relativePath.split('/')),
-            sha256: supplier.pet.sha256,
-        };
-        record.pet = { supplier: supplier.id, expected, observations: [] };
-        for (const start of starts) {
-            check(samePath(expected.path, start.path), 'Runtime PET selected an unexpected location');
-            check(fs.existsSync(start.path), 'The runtime-selected PET binary is missing');
-            const actual = { ...start, sha256: await hashFile(start.path) };
-            verifyPetIdentity(expected, actual);
-            record.pet.observations.push(actual);
-        }
-        try {
-            const info = await runProcess(expected.path, ['--version'], {
-                cwd: phaseDirectory,
-                env: profile.env,
-                timeout: 10000,
-            });
-            record.pet.info = {
-                status: info.code === 0 ? 'observed' : 'unavailable',
-                command: '--version',
-                exitCode: info.code,
-                stdout: info.stdout,
-                stderr: info.stderr,
+        const backend = locatorBackend(profile.mode, record.logs.starts, record.logs.legacy);
+        record.discoveryBackend = backend;
+        if (backend.kind === 'legacy-javascript') {
+            record.pet = {
+                status: 'not-started-by-observed-legacy-backend',
+                supplier: null,
+                path: null,
+                sha256: null,
+                info: null,
+                observations: [],
+                packagedCorePet: core.pet,
             };
-        } catch (infoError) {
-            record.pet.info = { status: 'unavailable', command: '--version', error: errorRecord(infoError) };
+        } else {
+            const supplier = profile.mode && environments.pet ? environments : core;
+            const location = supplier === core ? coreLocation : environmentLocation;
+            const expected = {
+                path: path.join(location, ...supplier.pet.relativePath.split('/')),
+                sha256: supplier.pet.sha256,
+            };
+            record.pet = { status: 'observed', supplier: supplier.id, expected, observations: [] };
+            for (const start of backend.starts) {
+                check(samePath(expected.path, start.path), 'Runtime PET selected an unexpected location');
+                check(fs.existsSync(start.path), 'The runtime-selected PET binary is missing');
+                const actual = { ...start, sha256: await hashFile(start.path) };
+                verifyPetIdentity(expected, actual);
+                record.pet.observations.push(actual);
+            }
+            try {
+                const info = await runProcess(expected.path, ['--version'], {
+                    cwd: phaseDirectory,
+                    env: profile.env,
+                    timeout: 10000,
+                });
+                record.pet.info = {
+                    status: info.code === 0 ? 'observed' : 'unavailable',
+                    command: '--version',
+                    exitCode: info.code,
+                    stdout: info.stdout,
+                    stderr: info.stderr,
+                };
+            } catch (infoError) {
+                record.pet.info = { status: 'unavailable', command: '--version', error: errorRecord(infoError) };
+            }
         }
         await verifyInstalledFiles(core, coreLocation);
         await verifyInstalledFiles(environments, environmentLocation);
