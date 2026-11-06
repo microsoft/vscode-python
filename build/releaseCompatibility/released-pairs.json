@@ -1,0 +1,18 @@
+{
+    "schemaVersion": 1,
+    "vscodeVersion": "1.110.0",
+    "coreVersion": "2026.10.0",
+    "environmentsVersion": "1.42.0",
+    "platforms": {
+        "win32": {
+            "target": "win32-x64",
+            "coreSha256": "ab1c1bf0f5ab273118ca3218e62934a4030203cce2e4b24bb86f0f416de05768",
+            "environmentsSha256": "ce79778a60dfd83892cbd572f5e23f2919e66e6cdaf6880ba2970604a4d7fa98"
+        },
+        "linux": {
+            "target": "linux-x64",
+            "coreSha256": "9a84de731b622ee440e0bd979965f6a7577afa48bea6c3d4257d8865efc74780",
+            "environmentsSha256": "05b8f25276fdc622e8bc70710a70f643a51ef034f5afe054a27dd0520084b184"
+        }
+    }
+}

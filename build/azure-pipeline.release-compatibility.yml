@@ -1,0 +1,178 @@
+# Opt-in report only. This pipeline never signs, publishes, or approves a release.
+trigger: none
+pr: none
+
+parameters:
+  - name: target
+    type: string
+    default: win32-x64
+    values: [win32-x64, linux-x64]
+  - name: coreDefinitionId
+    type: number
+    default: 0
+  - name: coreBuildId
+    type: number
+    default: 0
+  - name: coreArtifactName
+    type: string
+    default: ''
+  - name: coreVsixFile
+    type: string
+    default: ''
+  - name: coreVersion
+    type: string
+    default: ''
+  - name: coreSha256
+    type: string
+    default: ''
+  - name: inputsDefinitionId
+    type: number
+    default: 0
+  - name: inputsBuildId
+    type: number
+    default: 0
+  - name: inputsSha256
+    type: string
+    default: ''
+
+jobs:
+  - job: PackagedCompatibilityReport
+    displayName: Pre-sign packaged compatibility report
+    pool:
+      ${{ if eq(parameters.target, 'win32-x64') }}:
+        vmImage: windows-2022
+      ${{ else }}:
+        vmImage: ubuntu-22.04
+    steps:
+      - checkout: self
+        persistCredentials: false
+
+      - pwsh: |
+          $evidence = Join-Path $env:PIPELINE_WORKSPACE 'compatibility-evidence'
+          New-Item -ItemType Directory -Path $evidence -Force | Out-Null
+          @{
+            schemaVersion = 1
+            status = 'infrastructure-error'
+            validationScope = 'pre-sign-build-artifact'
+            requiresFinalSignedHashReconciliation = $true
+            message = 'Preparation or execution has not completed; inspect job output.'
+            sourceVersion = $env:BUILD_SOURCEVERSION
+            requestedTarget = $env:COMPATIBILITY_TARGET
+          } | ConvertTo-Json | Set-Content (Join-Path $evidence 'pipeline-report.json')
+          foreach ($id in @($env:CORE_DEFINITION, $env:CORE_BUILD, $env:INPUTS_DEFINITION, $env:INPUTS_BUILD)) {
+            if ($id -notmatch '^[1-9][0-9]*$') { throw 'Exact positive producer definition/build IDs are required.' }
+          }
+          if ([string]::IsNullOrWhiteSpace($env:CORE_ARTIFACT) -or [string]::IsNullOrWhiteSpace($env:CORE_FILE)) {
+            throw 'The exact final Build artifact and VSIX file are required; no artifact name is guessed.'
+          }
+          $nodeVersion = (Get-Content (Join-Path $env:BUILD_SOURCESDIRECTORY '.nvmrc') -Raw).Trim().TrimStart('v')
+          Write-Host "##vso[task.setvariable variable=nodeVersion;isReadOnly=true]$nodeVersion"
+        displayName: Initialize explicit infrastructure evidence
+        condition: always()
+        env:
+          COMPATIBILITY_TARGET: ${{ parameters.target }}
+          CORE_DEFINITION: ${{ parameters.coreDefinitionId }}
+          CORE_BUILD: ${{ parameters.coreBuildId }}
+          CORE_ARTIFACT: ${{ parameters.coreArtifactName }}
+          CORE_FILE: ${{ parameters.coreVsixFile }}
+          INPUTS_DEFINITION: ${{ parameters.inputsDefinitionId }}
+          INPUTS_BUILD: ${{ parameters.inputsBuildId }}
+
+      - task: UseNode@1
+        inputs:
+          version: $(nodeVersion)
+
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.10'
+          architecture: x64
+
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          buildType: specific
+          project: $(System.TeamProject)
+          definition: ${{ parameters.coreDefinitionId }}
+          buildVersionToDownload: specific
+          pipelineId: ${{ parameters.coreBuildId }}
+          artifactName: ${{ parameters.coreArtifactName }}
+          targetPath: $(Pipeline.Workspace)/compatibility-core
+        displayName: Download one exact official final Build artifact
+
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          buildType: specific
+          project: $(System.TeamProject)
+          definition: ${{ parameters.inputsDefinitionId }}
+          buildVersionToDownload: specific
+          pipelineId: ${{ parameters.inputsBuildId }}
+          artifactName: python-compatibility-inputs
+          targetPath: $(Pipeline.Workspace)/compatibility-inputs
+        displayName: Download one exact pinned partner input set
+
+      - script: npm ci --ignore-scripts --no-audit --no-fund
+        displayName: Restore reviewed harness dependencies, not product source
+
+      - pwsh: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path (Join-Path $env:BUILD_SOURCESDIRECTORY 'build') 'releaseCompatibility'
+          $evidence = Join-Path $env:PIPELINE_WORKSPACE 'compatibility-evidence'
+          $preparation = Join-Path $evidence 'preparation'
+          $output = Join-Path $evidence 'runner'
+          $coreDirectory = Join-Path $env:PIPELINE_WORKSPACE 'compatibility-core'
+          $core = [System.IO.Path]::GetFullPath((Join-Path $coreDirectory $env:CORE_FILE))
+          $allowed = [System.IO.Path]::GetFullPath($coreDirectory) + [System.IO.Path]::DirectorySeparatorChar
+          if (-not $core.StartsWith($allowed, [System.StringComparison]::Ordinal)) {
+            throw 'The candidate file must remain inside the downloaded artifact.'
+          }
+          $inputs = Join-Path (Join-Path $env:PIPELINE_WORKSPACE 'compatibility-inputs') 'inputs.zip'
+          $python = (Get-Command python).Source
+          function Save-Report($status, $exitCode, $phase) {
+            @{
+              schemaVersion = 1
+              status = $status
+              phase = $phase
+              validationScope = 'pre-sign-build-artifact'
+              requiresFinalSignedHashReconciliation = $true
+              sourceVersion = $env:BUILD_SOURCEVERSION
+              coreBuildId = $env:CORE_BUILD
+              inputsBuildId = $env:INPUTS_BUILD
+              runnerExitCode = $exitCode
+            } | ConvertTo-Json | Set-Content (Join-Path $evidence 'pipeline-report.json')
+          }
+          & node (Join-Path $root 'prepare.js') --inputs $inputs --inputs-sha256 $env:INPUTS_HASH `
+            --candidate $core --candidate-sha256 $env:CORE_HASH --candidate-version $env:CORE_VERSION `
+            --python $python --output $preparation
+          $preparationExit = $LASTEXITCODE
+          if ($preparationExit -ne 0) {
+            $adapter = Get-Content (Join-Path $preparation 'adapter-report.json') -Raw | ConvertFrom-Json
+            Save-Report $adapter.status $preparationExit 'preparation'
+            exit $preparationExit
+          }
+          if ($IsLinux) {
+            & xvfb-run -a node (Join-Path $root 'run.js') --plan (Join-Path $preparation 'plan.json') --output $output
+          } else {
+            & node (Join-Path $root 'run.js') --plan (Join-Path $preparation 'plan.json') --output $output
+          }
+          $result = $LASTEXITCODE
+          $report = Get-Content (Join-Path $output 'report.json') -Raw | ConvertFrom-Json
+          Save-Report $report.status $result 'execution'
+          if ($result -ne 0) {
+            Write-Host '##vso[task.logissue type=warning]Packaged compatibility failed or hit an infrastructure error. Report only; no publishing gate was changed.'
+          }
+          exit $result
+        displayName: Report real packaged on/off compatibility
+        continueOnError: true
+        env:
+          CORE_FILE: ${{ parameters.coreVsixFile }}
+          CORE_VERSION: ${{ parameters.coreVersion }}
+          CORE_HASH: ${{ parameters.coreSha256 }}
+          CORE_BUILD: ${{ parameters.coreBuildId }}
+          INPUTS_HASH: ${{ parameters.inputsSha256 }}
+          INPUTS_BUILD: ${{ parameters.inputsBuildId }}
+
+      - task: PublishPipelineArtifact@1
+        condition: always()
+        inputs:
+          targetPath: $(Pipeline.Workspace)/compatibility-evidence
+          artifact: packaged-compatibility-report-${{ parameters.target }}
+        displayName: Retain failures, infrastructure status, and raw evidence
