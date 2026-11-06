@@ -367,6 +367,26 @@ function fixtureLayout(workspace) {
     return { prefixes: names.map((name) => path.join(workspace, name)), searchPaths: names.map((name) => `./${name}`) };
 }
 
+function profileSettings(mode, layout) {
+    return {
+        user: {
+            'python.useEnvironmentsExtension': mode,
+            'python.languageServer': 'None',
+            'python.terminal.executeInFileDir': true,
+            'python.terminal.focusAfterLaunch': false,
+            'extensions.autoUpdate': false,
+            'extensions.autoCheckUpdates': false,
+            'update.mode': 'none',
+            'telemetry.telemetryLevel': 'off',
+            'terminal.integrated.enablePersistentSessions': false,
+        },
+        workspace: {
+            'python.useEnvironmentsExtension': mode,
+            'python-envs.workspaceSearchPaths': layout.searchPaths,
+        },
+    };
+}
+
 function verifyPetIdentity(expected, actual, platform = process.platform) {
     check(samePath(expected.path, actual.path, platform), 'Runtime PET came from an unexpected supplier or location');
     check(expected.sha256 === actual.sha256, 'Runtime PET differs from the final VSIX binary');
@@ -475,6 +495,7 @@ module.exports = {
     legacyDiscoveryLines,
     locatorBackend,
     fixtureLayout,
+    profileSettings,
     verifyPetIdentity,
     observeMethod,
     childEnvironment,

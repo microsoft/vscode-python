@@ -21,6 +21,7 @@ const {
     legacyDiscoveryLines,
     locatorBackend,
     fixtureLayout,
+    profileSettings,
     verifyPetIdentity,
     childEnvironment,
 } = require('./checks');
@@ -271,18 +272,8 @@ async function makeProfile(directory, mode, pythonExecutable) {
         await fs.promises.mkdir(env[key], { recursive: true });
     }
     const layout = fixtureLayout(workspace);
-    const settings = {
-        'python.useEnvironmentsExtension': mode,
-        'python.languageServer': 'None',
-        'python.terminal.executeInFileDir': true,
-        'python.terminal.focusAfterLaunch': false,
-        'python-envs.workspaceSearchPaths': layout.searchPaths,
-        'extensions.autoUpdate': false,
-        'extensions.autoCheckUpdates': false,
-        'update.mode': 'none',
-        'telemetry.telemetryLevel': 'off',
-        'terminal.integrated.enablePersistentSessions': false,
-    };
+    const configuration = profileSettings(mode, layout);
+    const settings = configuration.user;
     if (process.platform === 'win32') {
         settings['terminal.integrated.profiles.windows'] = {
             'Compatibility Command Prompt': {
@@ -297,7 +288,7 @@ async function makeProfile(directory, mode, pythonExecutable) {
         settings['terminal.integrated.defaultProfile.linux'] = 'Compatibility Bash';
     }
     writeJson(path.join(userData, 'User', 'settings.json'), settings);
-    writeJson(path.join(workspace, '.vscode', 'settings.json'), settings);
+    writeJson(path.join(workspace, '.vscode', 'settings.json'), configuration.workspace);
     fs.writeFileSync(path.join(workspace, 'app.py'), '');
     const fixtures = [];
     for (const prefix of layout.prefixes) {
