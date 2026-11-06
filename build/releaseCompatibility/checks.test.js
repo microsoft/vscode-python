@@ -33,6 +33,7 @@ const {
 const { run, runProcess } = require('./run');
 const { prepare } = require('./prepare');
 const { pack } = require('./pack');
+const { candidateCore, selfTest } = require('./selfTest');
 
 const hash = 'a'.repeat(64);
 const version = '2026.10.0';
@@ -150,6 +151,38 @@ describe('Packaged release compatibility guards', () => {
         await assert.rejects(inspectVsix({ ...artifact, sha256: hash }, 'ms-python.python'), CheckFailure);
         await assert.rejects(inspectVsix(artifact, 'ms-python.vscode-python-envs'), CheckFailure);
         await assert.rejects(inspectVsix({ ...artifact, version: '2026.8.0' }, 'ms-python.python'), CheckFailure);
+    });
+
+    it('uses the original candidate VSIX version and hash without replacing its bytes or PET', async () => {
+        const fixture = await fixtureVsix();
+        const before = fs.readFileSync(fixture.path);
+        const candidate = await candidateCore(fixture.path, { buildId: '123', artifactName: 'same-run-core' });
+        assert.strictEqual(candidate.version, fixture.version);
+        assert.strictEqual(candidate.sha256, fixture.sha256);
+        assert.notStrictEqual(
+            candidate.sha256,
+            require('./released-pairs.json').platforms[process.platform].coreSha256,
+        );
+        assert.strictEqual(candidate.provenance.channel, 'same-run-ci-built-core-candidate');
+        assert.strictEqual(candidate.provenance.buildId, '123');
+        assert.deepStrictEqual(fs.readFileSync(fixture.path), before);
+    });
+
+    it('fails missing, wrong-product or PET-free candidate inputs instead of substituting a released Core', async () => {
+        await assert.rejects(candidateCore(path.join(directory, 'missing.vsix')), InfrastructureError);
+        const wrong = await fixtureVsix('ms-python.vscode-python-envs');
+        await assert.rejects(candidateCore(wrong.path), CheckFailure);
+        const missingPet = await fixtureVsix('ms-python.python', false);
+        await assert.rejects(candidateCore(missingPet.path), CheckFailure);
+    });
+
+    it('does not turn an explicitly empty candidate input into the frozen released-pair self-test', async () => {
+        const output = path.join(directory, 'empty-candidate');
+        const report = await selfTest(output, process.execPath, '');
+        assert.strictEqual(report.scope, 'ci-built-candidate-core-compatibility');
+        assert.strictEqual(report.status, 'infrastructure-error');
+        assert.match(report.error.message, /Original candidate Core VSIX is missing/);
+        assert(!fs.existsSync(path.join(output, 'plan.json')));
     });
 
     it('distinguishes a missing artifact from a missing packaged PET', async () => {
