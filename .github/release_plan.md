@@ -90,6 +90,8 @@ NOTE: this PR should make all CI relating to `main` be passing again (such as th
     -   [ ] Click `run pipeline`.
 	-   [ ] for `branch/tag` select the release branch which is **`release/YYYY.minor`**.
 	-   NOTE: Please opt to release the python extension close to when VS Code is released to align when release notes go out. When we bump the VS Code engine number, our extension will not go out to stable until the VS Code stable release but this only occurs when we bump the engine number.
+-   [ ] After the official Build artifact exists, run the opt-in [packaged compatibility report](../build/releaseCompatibility/README.md) against that exact VSIX and a fixed supported Environments partner, with explicit on/off profiles. Record failed/infrastructure outcomes; this report does not replace the existing approval gate.
+-   [ ] Reconcile the tested VSIX SHA-256 with the final signed/published bytes without rebuilding when available. Until the shared post-sign integration is validated, record that acceptance as outstanding rather than claiming final-artifact certification.
 -   [ ] 🧍🧍 Get approval on the release on the [CD](https://dev.azure.com/monacotools/Monaco/_build?definitionId=299).
 -   [ ] Click "approve" in the publish step of [CD](https://dev.azure.com/monacotools/Monaco/_build?definitionId=299) to publish the release to the marketplace.  🎉
 -   [ ] Take the Github release out of draft.

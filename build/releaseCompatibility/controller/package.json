@@ -1,0 +1,13 @@
+{
+    "name": "python-release-compatibility-controller",
+    "publisher": "vscode-python-tests",
+    "version": "1.0.0",
+    "private": true,
+    "engines": {
+        "vscode": "^1.95.0"
+    },
+    "main": "./index.js",
+    "activationEvents": [
+        "*"
+    ]
+}
