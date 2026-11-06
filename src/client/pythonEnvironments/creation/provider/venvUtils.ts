@@ -50,7 +50,8 @@ export async function getPipRequirementsFiles(
 
 function tomlParse(content: string): tomljs.JsonMap {
     try {
-        return tomljs.parse(content);
+        // Normalize CRLF to LF to prevent @iarna/toml from throwing control-character errors on comments
+        return tomljs.parse(content.replace(/\r\n?/g, '\n'));
     } catch (err) {
         traceError('Failed to parse `pyproject.toml`:', err);
     }
