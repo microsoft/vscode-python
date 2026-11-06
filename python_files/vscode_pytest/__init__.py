@@ -126,10 +126,6 @@ def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
         raise VSCodePytestError(
             "\n \nERROR: pytest-cov is not installed, please install this before running pytest with coverage as pytest-cov is required. \n"
         )
-    if "--cov-branch" in args:
-        global INCLUDE_BRANCHES
-        INCLUDE_BRANCHES = True
-
     global TEST_RUN_PIPE
     TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
     error_string = (
@@ -426,6 +422,11 @@ class FileCoverageInfo(TypedDict):
     total_branches: int
 
 
+def has_branch_coverage(coverage_data):
+    """Return whether collected coverage data includes branch arcs."""
+    return coverage_data.has_arcs()
+
+
 def pytest_sessionfinish(session, exitstatus):
     """A pytest hook that is called after pytest has fulled finished.
 
@@ -440,6 +441,8 @@ def pytest_sessionfinish(session, exitstatus):
     Exit code 4: pytest command line usage error
     Exit code 5: No tests were collected
     """
+    global INCLUDE_BRANCHES
+
     # Get the root path for the test tree structure (not the CWD for test execution)
     # This is PROJECT_ROOT_PATH in project-based mode, or cwd in legacy mode
     test_root_path = get_test_root_path()
@@ -506,15 +509,6 @@ def pytest_sessionfinish(session, exitstatus):
 
         from packaging.version import Version
 
-        coverage_version = Version(coverage.__version__)
-        global INCLUDE_BRANCHES
-        # only include branches if coverage version is 7.7.0 or greater (as this was when the api saves)
-        if coverage_version < Version("7.7.0") and INCLUDE_BRANCHES:
-            print(
-                "Plugin warning[vscode-pytest]: Branch coverage not supported in this coverage versions < 7.7.0. Please upgrade coverage package if you would like to see branch coverage."
-            )
-            INCLUDE_BRANCHES = False
-
         try:
             from coverage.exceptions import NoSource
         except ImportError:
@@ -523,7 +517,18 @@ def pytest_sessionfinish(session, exitstatus):
         cov = coverage.Coverage()
         cov.load()
 
-        file_set: set[str] = cov.get_data().measured_files()
+        coverage_data = cov.get_data()
+        INCLUDE_BRANCHES = has_branch_coverage(coverage_data)
+        file_set: set[str] = coverage_data.measured_files()
+
+        coverage_version = Version(coverage.__version__)
+        # only include branches if coverage version is 7.7.0 or greater (as this was when the api saves)
+        if coverage_version < Version("7.7.0") and INCLUDE_BRANCHES:
+            print(
+                "Plugin warning[vscode-pytest]: Branch coverage not supported in this coverage versions < 7.7.0. Please upgrade coverage package if you would like to see branch coverage."
+            )
+            INCLUDE_BRANCHES = False
+
         file_coverage_map: dict[str, FileCoverageInfo] = {}
 
         # remove files omitted per coverage report config if any
