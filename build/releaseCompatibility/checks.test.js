@@ -25,6 +25,7 @@ const {
     legacyDiscoveryLines,
     locatorBackend,
     fixtureLayout,
+    profileSettings,
     verifyPetIdentity,
     observeMethod,
     childEnvironment,
@@ -268,6 +269,16 @@ describe('Packaged release compatibility guards', () => {
             assert.strictEqual(relative.split(path.sep).length - 1, 2);
         }
         assert.deepStrictEqual(layout.searchPaths, ['./.venv-one', './.venv-two']);
+    });
+
+    it('sets workspace-only search paths only in workspace settings while preserving explicit global opt-out', () => {
+        const layout = fixtureLayout(directory);
+        const settings = profileSettings(false, layout);
+        assert.strictEqual(settings.user['python.useEnvironmentsExtension'], false);
+        assert.strictEqual(settings.workspace['python.useEnvironmentsExtension'], false);
+        assert.strictEqual(settings.user['python-envs.workspaceSearchPaths'], undefined);
+        assert.deepStrictEqual(settings.workspace['python-envs.workspaceSearchPaths'], layout.searchPaths);
+        assert.strictEqual(settings.workspace['extensions.autoUpdate'], undefined);
     });
 
     it('accepts positively observed legacy JS discovery only for off mode, without fabricating PET identity', () => {
