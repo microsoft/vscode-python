@@ -26,11 +26,12 @@ const {
     locatorBackend,
     fixtureLayout,
     profileSettings,
+    storageContinuity,
     verifyPetIdentity,
     observeMethod,
     childEnvironment,
 } = require('./checks');
-const { run, runProcess } = require('./run');
+const { run, runProcess, hostLaunchArgs } = require('./run');
 const { prepare } = require('./prepare');
 const { pack } = require('./pack');
 const { candidateCore, selfTest } = require('./selfTest');
@@ -312,6 +313,57 @@ describe('Packaged release compatibility guards', () => {
         assert.strictEqual(settings.user['python-envs.workspaceSearchPaths'], undefined);
         assert.deepStrictEqual(settings.workspace['python-envs.workspaceSearchPaths'], layout.searchPaths);
         assert.strictEqual(settings.workspace['extensions.autoUpdate'], undefined);
+    });
+
+    it('launches upgrade hosts without extensionTestsPath and preserves the same explicit storage directories', () => {
+        const testCase = {
+            workspace: path.join(directory, 'workspace'),
+            userData: path.join(directory, 'user-data'),
+            extensions: path.join(directory, 'extensions'),
+            persistentStorage: true,
+        };
+        const args = hostLaunchArgs(testCase);
+        assert(!args.some((arg) => arg.startsWith('--extensionTestsPath')));
+        assert(args.some((arg) => arg.startsWith('--extensionDevelopmentPath=')));
+        assert.strictEqual(args[args.indexOf('--user-data-dir') + 1], testCase.userData);
+        assert.strictEqual(args[args.indexOf('--extensions-dir') + 1], testCase.extensions);
+        assert.strictEqual(args[0], testCase.workspace);
+    });
+
+    it('proves controller Mementos persist before attributing missing product selection to an upgrade', async () => {
+        const global = new Map();
+        const workspace = new Map();
+        const memento = (values) => ({
+            get: (key) => values.get(key),
+            update: async (key, value) => values.set(key, value),
+        });
+        const baseline = { globalState: memento(global), workspaceState: memento(workspace) };
+        await storageContinuity(baseline, 'same-profile-token', false);
+        const upgraded = { globalState: memento(global), workspaceState: memento(workspace) };
+        assert.strictEqual((await storageContinuity(upgraded, 'same-profile-token', true)).phase, 'verified-existing');
+        const resetHost = { globalState: memento(new Map()), workspaceState: memento(new Map()) };
+        await assert.rejects(storageContinuity(resetHost, 'same-profile-token', true), InfrastructureError);
+        assert.strictEqual(resetHost.globalState.get('pythonReleaseCompatibility.storageContinuity'), undefined);
+        await assert.rejects(storageContinuity(upgraded, 'wrong-profile-token', true), InfrastructureError);
+        const readOnlyAfter = {
+            globalState: {
+                get: () => 'same-profile-token',
+                update: () => assert.fail('Must not reseed after restart'),
+            },
+            workspaceState: {
+                get: () => 'same-profile-token',
+                update: () => assert.fail('Must not reseed after restart'),
+            },
+        };
+        await storageContinuity(readOnlyAfter, 'same-profile-token', true);
+        const failedStore = {
+            globalState: {
+                update: async () => {
+                    throw new Error('disk unavailable');
+                },
+            },
+        };
+        await assert.rejects(storageContinuity(failedStore, 'same-profile-token', false), InfrastructureError);
     });
 
     it('accepts positively observed legacy JS discovery only for off mode, without fabricating PET identity', () => {

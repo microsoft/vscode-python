@@ -307,7 +307,16 @@ async function makeProfile(directory, mode, pythonExecutable) {
         check(samePath(fixture.prefix, prefix), 'Fixture bootstrap did not create an isolated venv');
         fixtures.push(fixture);
     }
-    return { directory, workspace, userData, home, extensions, env, fixtures };
+    return {
+        directory,
+        workspace,
+        userData,
+        home,
+        extensions,
+        env,
+        fixtures,
+        storageProbeToken: crypto.randomBytes(16).toString('hex'),
+    };
 }
 
 async function runPhase(plan, profile, core, environments, phase, vscodeExecutablePath, persisted) {
@@ -320,7 +329,7 @@ async function runPhase(plan, profile, core, environments, phase, vscodeExecutab
     const caseFile = path.join(phaseDirectory, 'case.json');
     const logDirectory = path.join(profile.userData, 'logs');
     const offsets = logOffsets(logDirectory);
-    writeJson(caseFile, {
+    const testCase = {
         mode: profile.mode,
         phase,
         workspace: profile.workspace,
@@ -329,19 +338,29 @@ async function runPhase(plan, profile, core, environments, phase, vscodeExecutab
         environments: { id: environments.id, version: environments.version, location: environmentLocation },
         fixtures: profile.fixtures,
         persisted,
+        persistentStorage: Boolean(plan.upgradeFromEnvironments),
+        storageProbeToken: profile.storageProbeToken,
         vscodeVersion: plan.vscodeVersion,
         nonce: crypto.randomBytes(16).toString('hex'),
         vscodeExecutablePath,
         userData: profile.userData,
         extensions: profile.extensions,
-    });
+    };
+    writeJson(caseFile, testCase);
     try {
-        const result = await runProcess(process.execPath, [__filename, '--worker', caseFile], {
-            cwd: phaseDirectory,
-            env: profile.env,
-            timeout: HOST_TIMEOUT,
-            log: path.join(phaseDirectory, 'process.log'),
-        });
+        const persistent = testCase.persistentStorage;
+        const result = await runProcess(
+            persistent ? vscodeExecutablePath : process.execPath,
+            persistent ? hostLaunchArgs(testCase) : [__filename, '--worker', caseFile],
+            {
+                cwd: phaseDirectory,
+                env: persistent
+                    ? { ...profile.env, PYTHON_COMPATIBILITY_CASE: caseFile, PYTHON_COMPATIBILITY_PERSISTENT_HOST: '1' }
+                    : profile.env,
+                timeout: HOST_TIMEOUT,
+                log: path.join(phaseDirectory, 'process.log'),
+            },
+        );
         record.process = { pid: result.pid, exitCode: result.code, signal: result.signal, cleanup: result.cleanup };
         if (fs.existsSync(stateFile)) record.host = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
         if (record.host?.status === 'failed') throw new CheckFailure(record.host.error.message);
@@ -412,28 +431,41 @@ async function runPhase(plan, profile, core, environments, phase, vscodeExecutab
     return record;
 }
 
+function hostLaunchArgs(testCase) {
+    return [
+        testCase.workspace,
+        '--extensions-dir',
+        testCase.extensions,
+        '--user-data-dir',
+        testCase.userData,
+        '--disable-workspace-trust',
+        '--skip-welcome',
+        '--skip-release-notes',
+        '--disable-updates',
+        '--enable-proposed-api=ms-python.python',
+        '--enable-proposed-api=ms-python.vscode-python-envs',
+        ...(process.platform === 'linux' ? ['--no-sandbox'] : []),
+        ...(testCase.persistentStorage
+            ? ['--new-window', `--extensionDevelopmentPath=${path.join(__dirname, 'controller')}`]
+            : []),
+    ];
+}
+
 async function worker(caseFile) {
     const testCase = JSON.parse(fs.readFileSync(caseFile, 'utf8'));
+    if (testCase.persistentStorage) {
+        throw new InfrastructureError(
+            'Persistent cases must use the directly owned normal host, not extensionTestsPath',
+        );
+    }
+    const launchArgs = hostLaunchArgs(testCase);
     const { runTests } = require('@vscode/test-electron');
     await runTests({
         vscodeExecutablePath: testCase.vscodeExecutablePath,
         extensionDevelopmentPath: path.join(__dirname, 'controller'),
         extensionTestsPath: path.join(__dirname, 'controller', 'index.js'),
         extensionTestsEnv: { PYTHON_COMPATIBILITY_CASE: caseFile },
-        launchArgs: [
-            testCase.workspace,
-            '--extensions-dir',
-            testCase.extensions,
-            '--user-data-dir',
-            testCase.userData,
-            '--disable-workspace-trust',
-            '--skip-welcome',
-            '--skip-release-notes',
-            '--disable-updates',
-            '--enable-proposed-api=ms-python.python',
-            '--enable-proposed-api=ms-python.vscode-python-envs',
-            ...(process.platform === 'linux' ? ['--no-sandbox'] : []),
-        ],
+        launchArgs,
     });
 }
 
@@ -559,4 +591,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { run, runProcess, observeLogs, errorRecord };
+module.exports = { run, runProcess, observeLogs, errorRecord, hostLaunchArgs };

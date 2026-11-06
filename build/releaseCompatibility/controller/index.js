@@ -13,6 +13,7 @@ const {
     verifyInstalledExtension,
     verifyPythonResult,
     observeMethod,
+    storageContinuity,
 } = require('../checks');
 
 const TIMEOUT = 60000;
@@ -20,6 +21,19 @@ let controllerContext;
 
 function activate(context) {
     controllerContext = context;
+    if (process.env.PYTHON_COMPATIBILITY_PERSISTENT_HOST === '1') {
+        setTimeout(() => {
+            run()
+                .then(
+                    () => vscode.commands.executeCommand('workbench.action.quit'),
+                    (error) => {
+                        console.error('Persistent compatibility case failed', error);
+                        return vscode.commands.executeCommand('workbench.action.quit');
+                    },
+                )
+                .catch((error) => console.error('Persistent compatibility host could not quit gracefully', error));
+        }, 0);
+    }
 }
 
 async function bounded(label, operation) {
@@ -157,8 +171,9 @@ async function run() {
         check(controller, 'Independent test controller is missing');
         await bounded('controller activation', controller.activate());
         check(
-            controllerContext?.extensionMode === vscode.ExtensionMode.Test,
-            'Controller is not in the isolated test host',
+            controllerContext?.extensionMode ===
+                (testCase.persistentStorage ? vscode.ExtensionMode.Development : vscode.ExtensionMode.Test),
+            'Controller is not in the expected isolated host mode',
         );
         check(
             samePath(controllerContext.extensionPath, __dirname),
@@ -167,7 +182,15 @@ async function run() {
         report.controller = {
             location: controllerContext.extensionPath,
             extensionMode: controllerContext.extensionMode,
+            persistentStorage: Boolean(testCase.persistentStorage),
         };
+        if (testCase.persistentStorage) {
+            report.storage = await storageContinuity(
+                controllerContext,
+                testCase.storageProbeToken,
+                Boolean(testCase.persisted),
+            );
+        }
         report.vscode = { version: vscode.version, platform: process.platform, arch: process.arch };
         report.configurationBefore = configuredMode(testCase);
         const core = extension(testCase.core);
