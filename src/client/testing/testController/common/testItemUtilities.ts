@@ -498,14 +498,42 @@ export async function updateTestItemFromRawData(
     item.busy = false;
 }
 
-export function getTestCaseNodes(testNode: TestItem, collection: TestItem[] = []): TestItem[] {
+/**
+ * Builds the set of test items excluded from a run: the items in `TestRunRequest.exclude`
+ * plus all of their descendants, so a single set lookup tells whether a node is excluded.
+ */
+export function expandExcludeSet(excludes: readonly TestItem[] | undefined): Set<TestItem> | undefined {
+    if (!excludes || excludes.length === 0) {
+        return undefined;
+    }
+    const expanded = new Set<TestItem>();
+    const add = (item: TestItem) => {
+        if (expanded.has(item)) {
+            return;
+        }
+        expanded.add(item);
+        item.children.forEach(add);
+    };
+    excludes.forEach(add);
+    return expanded;
+}
+
+export function getTestCaseNodes(
+    testNode: TestItem,
+    collection: TestItem[] = [],
+    excludeSet?: Set<TestItem>,
+): TestItem[] {
+    if (excludeSet?.has(testNode)) {
+        return collection;
+    }
+
     if (!testNode.canResolveChildren && testNode.tags.length > 0) {
         collection.push(testNode);
     }
 
     testNode.children.forEach((c) => {
         if (testNode.canResolveChildren) {
-            getTestCaseNodes(c, collection);
+            getTestCaseNodes(c, collection, excludeSet);
         } else {
             collection.push(testNode);
         }
