@@ -336,6 +336,37 @@ function locatorStarts(text, logFile) {
     return result;
 }
 
+function legacyDiscoveryLines(text, logFile) {
+    if (!logFile.replace(/\\/g, '/').endsWith('/ms-python.python/Python.log')) return [];
+    return text
+        .split(/\r?\n/)
+        .filter((line) =>
+            /Searching for (interpreters in .+ locator|pyenv environments|conda environments|global virtual environments|custom virtual environments)/i.test(
+                line,
+            ),
+        )
+        .map((line) => ({ logFile, line }));
+}
+
+function locatorBackend(mode, starts, legacy) {
+    if (!mode) {
+        check(
+            !starts.some((item) => item.component === 'environments'),
+            'Environments started PET despite explicit opt-out',
+        );
+    }
+    const component = mode ? 'environments' : 'core';
+    const selected = starts.filter((item) => item.component === component);
+    if (selected.length > 0) return { kind: 'pet', starts: selected };
+    check(!mode && legacy.length > 0, `No positive runtime ${component} discovery-backend evidence was captured`);
+    return { kind: 'legacy-javascript', evidence: legacy };
+}
+
+function fixtureLayout(workspace) {
+    const names = ['.venv-one', '.venv-two'];
+    return { prefixes: names.map((name) => path.join(workspace, name)), searchPaths: names.map((name) => `./${name}`) };
+}
+
 function verifyPetIdentity(expected, actual, platform = process.platform) {
     check(samePath(expected.path, actual.path, platform), 'Runtime PET came from an unexpected supplier or location');
     check(expected.sha256 === actual.sha256, 'Runtime PET differs from the final VSIX binary');
@@ -441,6 +472,9 @@ module.exports = {
     verifyInstalledExtension,
     verifyPythonResult,
     locatorStarts,
+    legacyDiscoveryLines,
+    locatorBackend,
+    fixtureLayout,
     verifyPetIdentity,
     observeMethod,
     childEnvironment,

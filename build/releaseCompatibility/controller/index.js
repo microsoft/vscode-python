@@ -65,7 +65,7 @@ function environmentExecutable(environment) {
     return typeof value === 'string' ? value : value?.fsPath;
 }
 
-async function discovered(testCase, coreApi, environmentApi) {
+async function discovered(testCase, coreApi, environmentApi, observe) {
     if (testCase.mode) {
         await bounded('Environments refresh', environmentApi.refreshEnvironments(undefined));
     } else {
@@ -73,6 +73,12 @@ async function discovered(testCase, coreApi, environmentApi) {
     }
     return until('both fixture environments to be discovered, not merely resolved by explicit path', async () => {
         const environments = testCase.mode ? await environmentApi.getEnvironments('all') : coreApi.environments.known;
+        observe(
+            environments.map((item) => ({
+                executable: testCase.mode ? environmentExecutable(item) : item.executable?.uri?.fsPath,
+                prefix: testCase.mode ? item.sysPrefix : item.executable?.sysPrefix,
+            })),
+        );
         const matches = testCase.fixtures.map((fixture) =>
             environments.find((item) => {
                 const executable = testCase.mode ? environmentExecutable(item) : item.executable?.uri?.fsPath;
@@ -191,7 +197,9 @@ async function run() {
             }
         }
         report.configurationAfterActivation = configuredMode(testCase);
-        const matches = await discovered(testCase, coreApi, environmentApi);
+        const matches = await discovered(testCase, coreApi, environmentApi, (snapshot) => {
+            report.discoveryObserved = snapshot;
+        });
         report.discovery = matches.map((item) => ({
             executable: testCase.mode ? environmentExecutable(item) : item.executable.uri.fsPath,
             prefix: testCase.mode ? item.sysPrefix : item.executable.sysPrefix,
