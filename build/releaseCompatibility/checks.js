@@ -387,6 +387,36 @@ function profileSettings(mode, layout) {
     };
 }
 
+async function storageContinuity(context, token, verifyExisting) {
+    if (typeof token !== 'string' || token.length === 0) {
+        throw new InfrastructureError('Persistent-host storage probe token is missing');
+    }
+    const key = 'pythonReleaseCompatibility.storageContinuity';
+    let global;
+    let workspace;
+    try {
+        if (!verifyExisting) {
+            await context.globalState.update(key, token);
+            await context.workspaceState.update(key, token);
+        }
+        global = context.globalState.get(key);
+        workspace = context.workspaceState.get(key);
+    } catch (error) {
+        throw new InfrastructureError(`Controller storage probe failed: ${error.message}`);
+    }
+    if (global !== token || workspace !== token) {
+        throw new InfrastructureError(
+            'Controller storage did not persist across hosts; product selection is not certified',
+        );
+    }
+    return {
+        kind: 'disk-backed-normal-host',
+        phase: verifyExisting ? 'verified-existing' : 'initialized',
+        globalToken: global,
+        workspaceToken: workspace,
+    };
+}
+
 function verifyPetIdentity(expected, actual, platform = process.platform) {
     check(samePath(expected.path, actual.path, platform), 'Runtime PET came from an unexpected supplier or location');
     check(expected.sha256 === actual.sha256, 'Runtime PET differs from the final VSIX binary');
@@ -496,6 +526,7 @@ module.exports = {
     locatorBackend,
     fixtureLayout,
     profileSettings,
+    storageContinuity,
     verifyPetIdentity,
     observeMethod,
     childEnvironment,
