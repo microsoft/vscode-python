@@ -1126,7 +1126,7 @@ suite('Set Interpreter Command', () => {
                 Telemetry._resetSharedProperties();
             });
 
-            test('A telemetry event should be sent after manual entry of an intepreter path', async () => {
+            test('A telemetry event should be sent after manual entry of an interpreter path', async () => {
                 const state: InterpreterStateArgs = { path: undefined, workspace: undefined };
                 const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
                 multiStepInput
