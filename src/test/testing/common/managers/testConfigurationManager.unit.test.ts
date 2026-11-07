@@ -54,7 +54,7 @@ suite('Unit Test Configuration Manager (unit)', () => {
                 );
             });
 
-            test('Enabling a test product shoud disable other products', async () => {
+            test('Enabling a test product should disable other products', async () => {
                 UNIT_TEST_PRODUCTS.filter((item) => item !== product).forEach((productToDisable) => {
                     configService
                         .setup((c) => c.disable(TypeMoq.It.isValue(workspaceUri), TypeMoq.It.isValue(productToDisable)))

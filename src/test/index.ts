@@ -43,7 +43,7 @@ process.on('unhandledRejection', (ex: any, _a) => {
 });
 
 /**
- * Configure the test environment and return the optoins required to run moch tests.
+ * Configure the test environment and return the options required to run moch tests.
  */
 function configure(): SetupOptions {
     process.env.VSC_PYTHON_CI_TEST = '1';
