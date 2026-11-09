@@ -54,7 +54,7 @@ export class CondaService implements ICondaService {
             }
         }
 
-        return { path: activatePath, type: 'local' }; // return the default activate script wether it exists or not.
+        return { path: activatePath, type: 'local' }; // return the default activate script whether it exists or not.
     }
 
     /**
