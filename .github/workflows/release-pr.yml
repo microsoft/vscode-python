@@ -1,0 +1,30 @@
+name: Release PR
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Release PR / Plan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate release candidate
+        id: plan
+        uses: microsoft/vscode-python-ci/actions/release-pr@ad76df43eed2a9bb733add8d5010f7fad5899a25
+        with:
+          mode: plan
+      - name: Summarize release candidate
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+        shell: bash
+        run: |
+          if [[ -n "$VERSION" ]]; then
+            echo "Validated release candidate: $VERSION" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Not a release candidate. Release bumps must change only root package.json." >> "$GITHUB_STEP_SUMMARY"
+          fi
