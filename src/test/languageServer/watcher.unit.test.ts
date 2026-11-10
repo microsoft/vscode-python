@@ -3,12 +3,13 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { ConfigurationChangeEvent, Uri, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Uri, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import { JediLanguageServerManager } from '../../client/activation/jedi/manager';
 import { NodeLanguageServerManager } from '../../client/activation/node/manager';
 import { ILanguageServerOutputChannel, LanguageServerType } from '../../client/activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
+import { PYLANCE_EXTENSION_ID } from '../../client/common/constants';
 import {
     IConfigurationService,
     IDisposable,
@@ -17,6 +18,7 @@ import {
     IInterpreterPathService,
 } from '../../client/common/types';
 import { LanguageService } from '../../client/common/utils/localize';
+import { createDeferred } from '../../client/common/utils/async';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IInterpreterHelper, IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -566,6 +568,98 @@ suite('Language server watcher', () => {
 
         assert.ok(stopLanguageServerStub.calledOnce, 'stopLanguageServer should be called once');
         assert.ok(startLanguageServerStub.calledOnce, 'startLanguageServer should be called once');
+    });
+
+    test('The restart command waits for the Pylance client to stop before starting it again', async () => {
+        let restartCommandHandler: (() => Promise<void>) | undefined;
+        const stopStarted = createDeferred<void>();
+        const stopCompleted = createDeferred<void>();
+        const startClient = sandbox.stub().resolves();
+        const stopClient = sandbox.stub().callsFake(async () => {
+            stopStarted.resolve();
+            await stopCompleted.promise;
+        });
+        const pylanceExtension = {
+            isActive: true,
+            packageJSON: { version: '1.0.0' },
+            exports: {
+                client: {
+                    isEnabled: () => true,
+                    start: startClient,
+                    stop: stopClient,
+                },
+            },
+        };
+        const resource = Uri.file('workspace');
+        const interpreter = { path: 'python', version: { major: 3, minor: 12 } };
+        const registerEvent = () => new Disposable(() => {});
+        const testDisposables: IDisposable[] = [];
+
+        watcher = new LanguageServerWatcher(
+            {} as IServiceContainer,
+            {} as ILanguageServerOutputChannel,
+            {
+                getSettings: () => ({ languageServer: LanguageServerType.Node }),
+            } as IConfigurationService,
+            {} as IExperimentService,
+            ({
+                getActiveWorkspaceUri: () => ({ folderUri: resource }),
+            } as unknown) as IInterpreterHelper,
+            ({ onDidChange: registerEvent } as unknown) as IInterpreterPathService,
+            ({
+                getActiveInterpreter: () => interpreter,
+                onDidChangeInterpreterInformation: registerEvent,
+            } as unknown) as IInterpreterService,
+            {} as IEnvironmentVariablesProvider,
+            ({
+                isTrusted: true,
+                getWorkspaceFolder: () => ({ uri: resource }),
+                onDidChangeConfiguration: registerEvent,
+                onDidChangeWorkspaceFolders: registerEvent,
+            } as unknown) as IWorkspaceService,
+            ({
+                registerCommand: (command: string, handler: () => Promise<void>) => {
+                    if (command === Commands.RestartLS) {
+                        restartCommandHandler = handler;
+                    }
+                    return registerEvent();
+                },
+            } as unknown) as ICommandManager,
+            {} as IFileSystem,
+            ({
+                getExtension: (id: string) => (id === PYLANCE_EXTENSION_ID ? pylanceExtension : undefined),
+                onDidChange: registerEvent,
+            } as unknown) as IExtensions,
+            {} as IApplicationShell,
+            testDisposables,
+        );
+
+        try {
+            await watcher.activate(resource);
+            const originalManager = await watcher.get(resource);
+            const disposeManager = sandbox.spy(originalManager, 'dispose');
+            assert.ok(originalManager instanceof PylanceLSExtensionManager);
+            assert.ok(startClient.calledOnce, 'The dummy Pylance client should initially be started');
+            assert.ok(restartCommandHandler, 'The restart command should be registered');
+
+            const restarting = restartCommandHandler!();
+            await stopStarted.promise;
+            assert.ok(startClient.calledOnce, 'Pylance must not start again while its previous client is stopping');
+            stopCompleted.resolve();
+            await restarting;
+
+            assert.ok(stopClient.calledOnce, 'The previous Pylance client should be stopped');
+            assert.ok(disposeManager.calledOnce, 'The previous Pylance manager should be disposed');
+            assert.ok(startClient.calledTwice, 'The Pylance client should be started again');
+            assert.notStrictEqual(await watcher.get(resource), originalManager);
+        } finally {
+            stopCompleted.resolve();
+            for (const disposable of testDisposables) {
+                await disposable.dispose();
+            }
+        }
+
+        assert.ok(stopClient.calledTwice, 'The restarted Pylance client should also be stopped during cleanup');
     });
 
     test('When starting a language server with a Python 2.7 interpreter and the python.languageServer setting is Jedi, do not instantiate a language server', async () => {

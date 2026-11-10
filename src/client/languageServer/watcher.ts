@@ -206,9 +206,7 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
         const resourceStrings = [...this.workspaceLanguageServers.keys()];
         for (const resourceString of resourceStrings) {
             const resource =
-                resourceString === 'Pylance' || resourceString === 'None'
-                    ? undefined
-                    : Uri.file(resourceString);
+                resourceString === 'Pylance' || resourceString === 'None' ? undefined : Uri.file(resourceString);
             await this.stopLanguageServer(resource);
             await this.startLanguageServer(this.languageServerType, resource);
         }
