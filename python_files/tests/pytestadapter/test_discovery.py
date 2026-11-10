@@ -82,9 +82,9 @@ def test_compact_discovery_payload_keeps_paths_outside_base_absolute(tmp_path):
     base_path = tmp_path / "workspace"
     external_file = tmp_path / "external" / "test_external.py"
 
-    assert vscode_pytest.compact_path(external_file, base_path) == os.fspath(external_file)
+    assert vscode_pytest.compact_path(external_file, base_path, str(base_path)) == os.fspath(external_file)
     assert (
-        vscode_pytest.compact_test_id(f"{os.fspath(external_file)}::test_external", base_path)
+        vscode_pytest.compact_test_id(f"{os.fspath(external_file)}::test_external", base_path, str(base_path))
         == f"{os.fspath(external_file)}::test_external"
     )
 
