@@ -204,7 +204,8 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             traceVerbose(`Cleaning up unittest discovery resources for workspace ${uri.fsPath}`);
             // Dispose all cancellation handlers and event subscriptions
             disposables.forEach((d) => d.dispose());
-            // Dispose the discovery pipe cancellation token
+            // Stop the discovery pipe even when the subprocess never opened it.
+            discoveryPipeCancellation.cancel();
             discoveryPipeCancellation.dispose();
         }
     }

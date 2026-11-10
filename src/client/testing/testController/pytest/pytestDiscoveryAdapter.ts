@@ -218,7 +218,8 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         } finally {
             // Dispose all cancellation handlers and event subscriptions
             disposables.forEach((d) => d.dispose());
-            // Dispose the discovery pipe cancellation token
+            // Stop the discovery pipe even when the subprocess never opened it.
+            discoveryPipeCancellation.cancel();
             discoveryPipeCancellation.dispose();
         }
     }
