@@ -343,6 +343,45 @@ def test_basic_run_django():
             assert id_result["outcome"] == "success"
 
 
+def test_django_run_with_default_unittest_args():
+    """Django test execution should succeed when passed the default unittest discovery
+    arguments (-v, -s, -p) that the extension sends when no custom unittestArgs are
+    configured. See https://github.com/microsoft/vscode-python/issues/24991.
+    """
+    data_path: pathlib.Path = TEST_DATA_PATH / "simple_django"
+    manage_py_path: str = os.fsdecode(data_path / "manage.py")
+    execution_script: pathlib.Path = (
+        pathlib.Path(__file__).parent / "django_test_execution_script.py"
+    )
+
+    test_ids = [
+        "polls.tests.QuestionModelTests.test_was_published_recently_with_future_question",
+    ]
+    script_str = os.fsdecode(execution_script)
+    actual = helpers.runner_with_cwd_env(
+        [
+            script_str,
+            manage_py_path,
+            "-v",
+            "-s",
+            ".",
+            "-p",
+            "test*.py",
+            "--",
+            *test_ids,
+        ],
+        data_path,
+        {"MANAGE_PY_PATH": manage_py_path},
+    )
+    assert actual
+    actual_list: List[Dict[str, Dict[str, Any]]] = actual
+    assert len(actual_list) == 1
+    actual_item = actual_list[0]
+    assert all(item in actual_item for item in ("status", "cwd", "result"))
+    assert actual_item.get("cwd") == os.fspath(data_path)
+    assert actual_item["result"][test_ids[0]]["outcome"] == "success"
+
+
 def test_project_root_path_with_cwd_override(mock_send_run_data) -> None:  # noqa: ARG001
     """Test unittest execution with project_root_path parameter.
 
