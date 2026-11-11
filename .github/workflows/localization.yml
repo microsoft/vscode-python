@@ -1,0 +1,24 @@
+name: Localization
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: localization-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  localization:
+    if: github.repository == 'microsoft/vscode-python'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: microsoft/vscode-python-ci/actions/localization@05dd271ac59b698579103111304fda09068ba95a
+        with:
+          app-id: ${{ vars.PYTHON_LOCALIZATION_APP_ID }}
+          private-key: ${{ secrets.PYTHON_LOCALIZATION_PRIVATE_KEY }}
+          source-paths: '["src/client"]'
+          node-version: '22.21.1'
