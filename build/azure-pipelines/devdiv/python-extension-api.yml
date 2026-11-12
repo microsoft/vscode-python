@@ -280,10 +280,8 @@ extends:
                 clean: true
                 persistCredentials: false
 
-              - task: 1ES.DownloadPipelineArtifact@1
-                inputs:
-                  artifactName: pythonExtensionApi
-                  targetPath: $(Build.BinariesDirectory)/pythonExtensionApi
+              - download: current
+                artifact: pythonExtensionApi
                 displayName: Download npm package
 
               - template: azure-pipelines/extension/templates/steps/setup.yml@templates
@@ -294,7 +292,7 @@ extends:
 
               - task: ExtractFiles@1
                 inputs:
-                  archiveFilePatterns: $(Build.BinariesDirectory)/pythonExtensionApi/*.tgz
+                  archiveFilePatterns: $(Pipeline.Workspace)/pythonExtensionApi/*.tgz
                   destinationFolder: $(Build.ArtifactStagingDirectory)/pythonExtensionApi
                   cleanDestinationFolder: true
                 displayName: Extract npm package
@@ -317,7 +315,7 @@ extends:
                   intent: PackageDistribution
                   contentType: npm
                   contentsource: Folder
-                  folderlocation: $(Build.BinariesDirectory)/pythonExtensionApi
+                  folderlocation: $(Pipeline.Workspace)/pythonExtensionApi
                   waitforreleasecompletion: true
                   owners: stbatt@microsoft.com,lszomoru@microsoft.com
                   approvers: stbatt@microsoft.com,lszomoru@microsoft.com
