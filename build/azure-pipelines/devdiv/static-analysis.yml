@@ -30,11 +30,23 @@ extends:
       networkIsolationPolicy: Preferred,GitHub,NodeTool
     sdl:
       sourceAnalysisPool: VSEng-MicroBuildVSStable
+      bandit:
+        enabled: false
       antimalwareScan:
         enabled: false
       componentgovernance:
         enabled: false
+      credscan:
+        enabled: false
       eslint:
+        enabled: false
+      policheck:
+        enabled: false
+      publishLogs:
+        enabled: false
+      sdtReport:
+        enabled: false
+      tsa:
         enabled: false
     pool:
       name: VSEngSS-MicroBuild2022-1ES
@@ -265,7 +277,7 @@ extends:
                   codeBaseName: vscode-python-main
                   codebase: NewOrUpdate
                   instanceUrlForTsaV2: DEVDIV
-                  notificationAlias: monacotools@microsoft.com
+                  notificationAlias: kanadig@microsoft.com
                   notifyAlwaysV1: true
                   notifyAlwaysV2: false
                   projectNameDEVDIV: DevDiv
