@@ -124,3 +124,12 @@ services. Read our
 learn more. This extension respects the `telemetry.telemetryLevel`
 setting which you can learn more about at
 https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting.
+
+When usage telemetry is enabled, the existing startup event can include whether the
+Python Environments extension was available in Python's extension host and whether
+the resolved integration setting was enabled when Python first made its cached
+integration decision. These two boolean properties (`envsAvailableAtDecision` and
+`envsEnabledAtDecision`) reuse existing checks; they do not activate the extension,
+fetch experiment assignments, or send additional events. They describe the first
+decision, not current installation status or explicit user intent, and are omitted
+when that decision has not been made or startup properties cannot be collected.
