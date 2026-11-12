@@ -925,6 +925,14 @@ export interface PythonProjectEnvironmentApi {
     getEnvironment(scope: GetEnvironmentScope): Promise<PythonEnvironment | undefined>;
 
     /**
+     * Synchronously retrieves the last-known Python environment within the specified scope.
+     * This does not trigger environment discovery or refresh.
+     * @param scope - The scope within which to retrieve the environment.
+     * @returns The last-known Python environment, or undefined if none has been resolved.
+     */
+    getEnvironmentSync(scope: GetEnvironmentScope): PythonEnvironment | undefined;
+
+    /**
      * Event that is fired when the selected Python environment changes for Project, Folder or File.
      * @see {@link DidChangeEnvironmentEventArgs}
      */
