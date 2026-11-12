@@ -51,8 +51,6 @@ variables:
     value: ${{ parameters.quality }}
   - name: AZURE_ARTIFACTS_FEED
     value: 'https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/Pylance_PublicPackages/npm/registry/'
-  - name: APIScanConnectionString
-    value: 'RunAs=App;AppId=c0940da5-8bd3-4dd3-8af1-40774b50edbd;TenantId=72f988bf-86f1-41af-91ab-2d7cd011db47;'
 
 extends:
   template: azure-pipelines/MicroBuild.1ES.Official.Publish.yml@MicroBuildTemplate
@@ -63,19 +61,6 @@ extends:
       sourceAnalysisPool: VSEng-MicroBuildVSStable
       sbom:
         enabled: true
-      apiScan:
-        break: false
-        severity: Default
-      tsa:
-        enabled: true
-        config:
-          areaPath: 'DevDiv\VS Code (compliance tracking only)\Visual Studio Code NPM Packages'
-          codebaseName: devdiv_microsoft_vscode_python
-          instanceUrl: 'https://devdiv.visualstudio.com/defaultcollection'
-          notificationAliases:
-            - monacotools@microsoft.com
-          serviceTreeID: f85a34fa-964a-4306-885a-003737c8fe18
-          projectName: DevDiv
     pool:
       name: AzurePipelines-EO
       image: 1ESPT-Ubuntu22.04
@@ -243,12 +228,14 @@ extends:
                       Get-Content -Path $configPath
                     displayName: Generate TSA configuration
 
+                  # DevDiv must provide the vscode-apiscan service connection and a secret
+                  # APIScanConnectionString pipeline variable before this job can run.
                   - task: APIScan@2
                     inputs:
                       softwareFolder: $(Agent.TempDirectory)/apiscan/package
                       softwareName: pythonExtensionApi
                       softwareVersionNum: '2024'
-                      symbolsFolder: 'SRV*https://symweb.azurefd.net;SRV*https://artifacts.dev.azure.com/monacotools/_apis/symbol/symsrv;$(Agent.TempDirectory)/apiscan'
+                      symbolsFolder: 'SRV*https://symweb.azurefd.net;$(Agent.TempDirectory)/apiscan'
                       isLargeApp: false
                       toolVersion: Latest
                       azureSubscription: vscode-apiscan
