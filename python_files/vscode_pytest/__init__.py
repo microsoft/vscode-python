@@ -207,7 +207,9 @@ def pytest_exception_interact(node, call, report):
         if call.excinfo.typename == "AssertionError":
             report_value = "failure"
         node_id = get_absolute_test_id(node.nodeid, get_node_path(node))
-        if node_id not in collected_tests_so_far:
+        # A teardown error comes after the outcome of the call was already sent, so send it
+        # too. VS Code keeps the more severe state, so a passed test shows the error.
+        if node_id not in collected_tests_so_far or report.when == "teardown":
             collected_tests_so_far.add(node_id)
             item_result = create_test_outcome(
                 node_id,
