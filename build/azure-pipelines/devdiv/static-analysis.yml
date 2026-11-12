@@ -20,8 +20,6 @@ variables:
     value: vscode-python
   - name: Codeql.SkipTaskAutoInjection
     value: true
-  - name: skipComponentGovernanceDetection
-    value: true
   - name: skipNugetSecurityAnalysis
     value: true
 
@@ -32,6 +30,12 @@ extends:
       networkIsolationPolicy: Preferred,GitHub,NodeTool
     sdl:
       sourceAnalysisPool: VSEng-MicroBuildVSStable
+      antimalwareScan:
+        enabled: false
+      componentgovernance:
+        enabled: false
+      eslint:
+        enabled: false
     pool:
       name: VSEngSS-MicroBuild2022-1ES
       os: windows
