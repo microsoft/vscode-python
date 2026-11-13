@@ -142,7 +142,9 @@ export class CodeExecutionManager implements ICodeExecutionManager {
 
         // Check on setting terminal.launchArgs
         const launchArgs = pythonSettings.terminal.launchArgs;
-        const totalArgs = [...launchArgs, fileToExecute.fsPath.fileToCommandArgumentForPythonExt()];
+        // Python Environments expects raw arguments; pre-quoting makes the quotes part of the filename.
+        // Preserve the existing slash normalization for Windows paths.
+        const totalArgs = [...launchArgs, fileToExecute.fsPath.replace(/\\/g, '/')];
 
         const show = this.shouldTerminalFocusOnStart(fileToExecute);
         let terminal: Terminal | undefined;

@@ -3,14 +3,14 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import * as sinon from 'sinon';
-import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
+import { Disposable, Terminal, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionManager } from '../../../client/terminals/codeExecution/codeExecutionManager';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../../client/terminals/types';
-import { IConfigurationService } from '../../../client/common/types';
+import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import * as triggerApis from '../../../client/pythonEnvironments/creation/createEnvironmentTrigger';
@@ -95,6 +95,64 @@ suite('Terminal - Code Execution Manager', () => {
                 Commands.Exec_Selection_In_Terminal,
             ].sort(),
         );
+    });
+
+    test('Run Python File passes an unquoted script path to Python Environments', async () => {
+        useEnvExtensionStub.returns(true);
+        const commandHandlers = new Map<string, (file: Uri) => Promise<void>>();
+        commandManager
+            .setup((c) => c.registerCommand as any)
+            .returns(() => (command: string, callback: (file: Uri) => Promise<void>) => {
+                commandHandlers.set(command, callback);
+                return { dispose: () => void 0 };
+            });
+        executionManager.registerCommands();
+
+        const helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
+        serviceContainer.setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
+        configService
+            .setup((c) => c.getSettings(TypeMoq.It.isAny()))
+            .returns(
+                () =>
+                    ({
+                        terminal: { executeInFileDir: false, launchArgs: ['-I'], focusAfterLaunch: false },
+                    } as IPythonSettings),
+            );
+
+        const terminal = ({ show: sinon.stub() } as unknown) as Terminal;
+        const runInTerminalStub = sinon.stub(extapi, 'runInTerminal').resolves(terminal);
+        const runInDedicatedTerminalStub = sinon.stub(extapi, 'runInDedicatedTerminal').resolves(terminal);
+        for (const command of [
+            Commands.Exec_In_Terminal,
+            Commands.Exec_In_Terminal_Icon,
+            Commands.Exec_In_Separate_Terminal,
+        ]) {
+            for (const script of [
+                'with spaces/main.py',
+                'space and $AUDIT_UNSET.py',
+                "space and apostrophe's.py",
+                'space and "quotes".py',
+                '$(touch marker).py',
+            ]) {
+                const file = Uri.file(`/workspace/${script}`);
+                await commandHandlers.get(command)!(file);
+
+                const expectedRunner =
+                    command === Commands.Exec_In_Separate_Terminal ? runInDedicatedTerminalStub : runInTerminalStub;
+                sinon.assert.calledOnceWithExactly(
+                    expectedRunner,
+                    file,
+                    ['-I', `/workspace/${script}`],
+                    undefined,
+                    false,
+                );
+                const otherRunner =
+                    command === Commands.Exec_In_Separate_Terminal ? runInTerminalStub : runInDedicatedTerminalStub;
+                sinon.assert.notCalled(otherRunner);
+                runInTerminalStub.resetHistory();
+                runInDedicatedTerminalStub.resetHistory();
+            }
+        }
     });
 
     test('Ensure executeFileInterTerminal will do nothing if no file is avialble', async () => {
