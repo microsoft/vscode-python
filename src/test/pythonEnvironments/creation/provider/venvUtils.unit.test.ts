@@ -11,6 +11,7 @@ import * as workspaceApis from '../../../../client/common/vscodeApis/workspaceAp
 import {
     ExistingVenvAction,
     OPEN_REQUIREMENTS_BUTTON,
+    isPipInstallableToml,
     pickExistingVenvAction,
     pickPackagesToInstall,
 } from '../../../../client/pythonEnvironments/creation/provider/venvUtils';
@@ -91,6 +92,29 @@ suite('Venv Utils test', () => {
                 source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
             },
         ]);
+    });
+
+    test('Toml with CRLF line endings and comments parses correctly', async () => {
+        findFilesStub.resolves([]);
+        pathExistsStub.resolves(true);
+        readFileStub.resolves(
+            '[project]\r\n# Project comment\r\nname = "spam"\r\nversion = "2020.0.0"\r\n[build-system]\r\n# Build system comment\r\nrequires = ["setuptools ~= 58.0"]\r\n',
+        );
+
+        const actual = await pickPackagesToInstall(workspace1);
+        assert.isTrue(showQuickPickWithBackStub.notCalled);
+        assert.deepStrictEqual(actual, [
+            {
+                installType: 'toml',
+                source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
+            },
+        ]);
+    });
+
+    test('isPipInstallableToml handles CRLF and comments correctly', () => {
+        const crlfContent =
+            '[project]\r\n# Comment\r\nname = "spam"\r\n[build-system]\r\n# Another comment\r\nrequires = ["setuptools"]\r\n';
+        assert.isTrue(isPipInstallableToml(crlfContent));
     });
 
     test('Toml found with deps, but user presses escape', async () => {
