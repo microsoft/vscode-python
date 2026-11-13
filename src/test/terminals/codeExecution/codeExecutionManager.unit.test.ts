@@ -204,7 +204,9 @@ suite('Terminal - Code Execution Manager', () => {
             });
 
         const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-        pythonSettings.setup((p) => p.terminal).returns(() => ({ launchArgs: ['--custom'], executeInFileDir: false } as any));
+        pythonSettings
+            .setup((p) => p.terminal)
+            .returns(() => ({ launchArgs: ['--custom'], executeInFileDir: false } as any));
         configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
 
         const helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
