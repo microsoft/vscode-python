@@ -1701,7 +1701,7 @@
         "format-fix": "prettier --write 'src/**/*.ts' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
         "check-python": "npm run check-python:ruff && npm run check-python:pyright",
         "check-python:ruff": "cd python_files && python -m pip install -U ruff && python -m ruff check . && python -m ruff format --check",
-        "check-python:pyright": "cd python_files && npx --yes pyright@1.1.308 .",
+        "check-python:pyright": "cd python_files && npx --yes pyright@1.1.414 .",
         "clean": "gulp clean",
         "addExtensionPackDependencies": "gulp addExtensionPackDependencies",
         "updateBuildNumber": "gulp updateBuildNumber",
