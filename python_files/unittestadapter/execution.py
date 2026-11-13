@@ -210,6 +210,8 @@ def run_tests(
                           (used for project-based testing to root test tree at project)
     """
     cwd = os.path.abspath(project_root_path or start_dir)  # noqa: PTH100
+    if top_level_dir is None and project_root_path:
+        top_level_dir = project_root_path
     if "/" in start_dir:  #  is a subdir
         parent_dir = os.path.dirname(start_dir)  # noqa: PTH120
         sys.path.insert(0, parent_dir)
@@ -373,6 +375,8 @@ if __name__ == "__main__":
             # Update the module-level variable for send_run_data to use
             # pylint: disable=global-statement
             globals()["PROJECT_ROOT_PATH"] = project_root_path
+            if not top_level_dir:
+                top_level_dir = project_root_path
 
         # Perform regular unittest execution.
         # Pass project_root_path so the payload's cwd matches the project root.

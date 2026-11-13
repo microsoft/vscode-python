@@ -311,6 +311,10 @@ export class DebugLauncher implements ITestDebugLauncher {
             );
         }
 
+        if (options.project) {
+            launchArgs.env.PROJECT_ROOT_PATH = options.project.uri.fsPath;
+        }
+
         const pluginPath = path.join(EXTENSION_ROOT_DIR, 'python_files');
         // check if PYTHONPATH is already set in the environment variables
         if (launchArgs.env) {
@@ -322,7 +326,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             }
             // add the plugin path or cwd to PYTHONPATH if it is not already there using the following function
             // this function will handle if PYTHONPATH is undefined
-            addPathToPythonpath(additionalPythonPath, launchArgs.env.PYTHONPATH);
+            launchArgs.env.PYTHONPATH = addPathToPythonpath(additionalPythonPath, launchArgs.env.PYTHONPATH);
         }
 
         // Clear out purpose so we can detect if the configuration was used to
