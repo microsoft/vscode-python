@@ -328,6 +328,13 @@ jobs:
             & "./.venv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           }
 
+      - name: Set up Conda for venv tests
+        uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb # v4.1.0
+        with:
+          activate-environment: ''
+          auto-activate: false
+        if: matrix.test-suite == 'venv'
+
       - name: Prepare conda for venv tests
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
@@ -336,12 +343,23 @@ jobs:
         if: matrix.test-suite == 'venv'
         run: |
           # 1. For `*.testvirtualenvs.test.ts`
+          $condaCommand = Get-Command conda -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $condaCommand) {
+            throw 'Conda executable was not found on PATH.'
+          }
+          $condaExecPath = $condaCommand.Source
+          $condaBasePath = & $condaExecPath info --base
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($condaBasePath)) {
+            throw "Could not determine the Conda base directory using '$condaExecPath info --base'."
+          }
+          $condaBasePath = "$condaBasePath".Trim()
           if ('${{ matrix.os }}' -match 'windows-latest') {
-            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python.exe
-            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath Scripts | Join-Path -ChildPath conda
+            $condaPythonPath = Join-Path -Path $condaBasePath -ChildPath python.exe
           } else{
-            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath python
-            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath conda
+            $condaPythonPath = Join-Path -Path $condaBasePath -ChildPath bin | Join-Path -ChildPath python
+          }
+          if (-not (Test-Path -Path $condaPythonPath -PathType Leaf)) {
+            throw "Conda base Python was not found at '$condaPythonPath'."
           }
           & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaExecPath $condaExecPath
           & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaPath
@@ -610,6 +628,12 @@ jobs:
             & "./.venv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           }
 
+      - name: Set up Conda for venv tests
+        uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb # v4.1.0
+        with:
+          activate-environment: ''
+          auto-activate: false
+
       - name: Prepare conda for venv tests
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
@@ -617,12 +641,23 @@ jobs:
         shell: pwsh
         run: |
           # 1. For `*.testvirtualenvs.test.ts`
+          $condaCommand = Get-Command conda -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $condaCommand) {
+            throw 'Conda executable was not found on PATH.'
+          }
+          $condaExecPath = $condaCommand.Source
+          $condaBasePath = & $condaExecPath info --base
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($condaBasePath)) {
+            throw "Could not determine the Conda base directory using '$condaExecPath info --base'."
+          }
+          $condaBasePath = "$condaBasePath".Trim()
           if ('${{ matrix.os }}' -match 'windows-latest') {
-            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python.exe
-            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath Scripts | Join-Path -ChildPath conda
+            $condaPythonPath = Join-Path -Path $condaBasePath -ChildPath python.exe
           } else{
-            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath python
-            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath conda
+            $condaPythonPath = Join-Path -Path $condaBasePath -ChildPath bin | Join-Path -ChildPath python
+          }
+          if (-not (Test-Path -Path $condaPythonPath -PathType Leaf)) {
+            throw "Conda base Python was not found at '$condaPythonPath'."
           }
           & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaExecPath $condaExecPath
           & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaPath
