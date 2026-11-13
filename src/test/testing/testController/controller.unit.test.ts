@@ -4,9 +4,11 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { TestController, Uri } from 'vscode';
+import { TestController, TextDocument, Uri } from 'vscode';
 
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
+import { AutoTestDiscoverOnSavePattern } from '../../../client/testing/configuration/types';
+import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 import * as envExtApiInternal from '../../../client/envExt/api.internal';
 import * as projectUtils from '../../../client/testing/testController/common/projectUtils';
 import { PythonTestController } from '../../../client/testing/testController/controller';
@@ -46,8 +48,16 @@ suite('PythonTestController', () => {
         sandbox.restore();
     });
 
-    function createController(options?: { unittestEnabled?: boolean; interpreter?: any; workspaceService?: any }): any {
+    function createController(options?: {
+        unittestEnabled?: boolean;
+        autoTestDiscoverOnSaveEnabled?: boolean;
+        autoTestDiscoverOnSavePattern?: AutoTestDiscoverOnSavePattern;
+        interpreter?: any;
+        workspaceService?: any;
+    }): any {
         const unittestEnabled = options?.unittestEnabled ?? false;
+        const autoTestDiscoverOnSaveEnabled = options?.autoTestDiscoverOnSaveEnabled ?? false;
+        const autoTestDiscoverOnSavePattern = options?.autoTestDiscoverOnSavePattern ?? '**/*.py';
         const interpreter =
             options?.interpreter ??
             ({
@@ -57,12 +67,18 @@ suite('PythonTestController', () => {
                 sysPrefix: '/usr',
             } as any);
 
-        const workspaceService = options?.workspaceService ?? (({ workspaceFolders: [] } as unknown) as any);
+        const workspaceService =
+            options?.workspaceService ??
+            (({
+                workspaceFolders: [],
+                getWorkspaceFolder: () => undefined,
+            } as unknown) as any);
         const configSettings = ({
             getSettings: sandbox.stub().returns({
                 testing: {
                     unittestEnabled,
-                    autoTestDiscoverOnSaveEnabled: false,
+                    autoTestDiscoverOnSaveEnabled,
+                    autoTestDiscoverOnSavePattern,
                 },
             }),
         } as unknown) as any;
@@ -429,6 +445,61 @@ suite('PythonTestController', () => {
 
             assert.strictEqual(rediscoverStub.calledOnceWithExactly(workspaceUri), true);
             assert.strictEqual(pending.size, 0);
+        });
+    });
+
+    suite('watchForTestContentChangeOnSave', () => {
+        let saveHandler: (doc: TextDocument) => void = () => undefined;
+
+        function installSaveHandler(): void {
+            sandbox.stub(workspaceApis, 'onDidSaveTextDocument').callsFake((callback) => {
+                saveHandler = callback;
+                return { dispose: () => undefined };
+            });
+        }
+
+        test('refreshes when a saved file matches a legacy string pattern', async () => {
+            installSaveHandler();
+            const controller = createController({
+                autoTestDiscoverOnSaveEnabled: true,
+                autoTestDiscoverOnSavePattern: '**/*.py',
+            });
+            const trigger = sandbox.stub();
+            (controller as any).refreshData = { trigger };
+            (controller as any).watchForTestContentChangeOnSave();
+
+            await saveHandler({ uri: Uri.file('/workspace/pkg/readme.md') } as TextDocument);
+            assert.strictEqual(trigger.called, false);
+
+            const pyUri = Uri.file('/workspace/pkg/app.py');
+            await saveHandler({ uri: pyUri } as TextDocument);
+            assert.strictEqual(trigger.calledOnce, true);
+            assert.strictEqual(trigger.firstCall.args[0], pyUri);
+            assert.strictEqual(trigger.firstCall.args[1], false);
+        });
+
+        test('applies layered patterns and the workspace-relative path', async () => {
+            installSaveHandler();
+            const controller = createController({
+                autoTestDiscoverOnSaveEnabled: true,
+                autoTestDiscoverOnSavePattern: {
+                    '**/*.py': false,
+                    'tests/**/*.py': true,
+                },
+                workspaceService: {
+                    workspaceFolders: [],
+                    getWorkspaceFolder: () => ({ uri: Uri.file('/workspace'), name: 'workspace', index: 0 }),
+                },
+            });
+            const trigger = sandbox.stub();
+            (controller as any).refreshData = { trigger };
+            (controller as any).watchForTestContentChangeOnSave();
+
+            await saveHandler({ uri: Uri.file('/workspace/src/app.py') } as TextDocument);
+            assert.strictEqual(trigger.called, false);
+
+            await saveHandler({ uri: Uri.file('/workspace/tests/test_app.py') } as TextDocument);
+            assert.strictEqual(trigger.calledOnce, true);
         });
     });
 });
