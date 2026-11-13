@@ -1,0 +1,318 @@
+###############################################################################################
+#  Copyright (c) Microsoft Corporation. All rights reserved.
+#  Licensed under the MIT License. See License.txt in the project root for license information.
+###############################################################################################
+
+name: $(Date:yyyyMMdd)$(Rev:.r)
+
+trigger: none
+pr: none
+
+resources:
+  repositories:
+    - repository: MicroBuildTemplate
+      type: git
+      name: 1ESPipelineTemplates/MicroBuildTemplate
+      ref: refs/tags/release
+
+variables:
+  - name: TeamName
+    value: vscode-python
+  - name: Codeql.SkipTaskAutoInjection
+    value: true
+  - name: skipNugetSecurityAnalysis
+    value: true
+
+extends:
+  template: azure-pipelines/MicroBuild.1ES.Official.yml@MicroBuildTemplate
+  parameters:
+    settings:
+      networkIsolationPolicy: Preferred,GitHub,NodeTool
+    sdl:
+      sourceAnalysisPool: VSEng-MicroBuildVSStable
+      bandit:
+        enabled: false
+      antimalwareScan:
+        enabled: false
+      componentgovernance:
+        enabled: false
+      credscan:
+        enabled: false
+      eslint:
+        enabled: false
+      policheck:
+        enabled: false
+      publishLogs:
+        enabled: false
+      sdtReport:
+        enabled: false
+      tsa:
+        enabled: false
+    pool:
+      name: VSEngSS-MicroBuild2022-1ES
+      os: windows
+
+    customBuildTags:
+      - ES365AIMigrationTooling
+
+    stages:
+      - stage: StaticAnalysis
+        displayName: Static analysis
+        jobs:
+          - job: StaticAnalysis
+            displayName: Static analysis
+            steps:
+              - checkout: self
+                clean: true
+                fetchDepth: 0
+
+              - task: UsePythonVersion@0
+                inputs:
+                  versionSpec: 3.x
+                  addToPath: true
+                  architecture: x64
+                displayName: Use Python 3.x
+
+              - pwsh: |
+                  $pythonFiles = Get-ChildItem -Path '$(Build.SourcesDirectory)\python_files' -Filter '*.py' -Recurse -File |
+                      Where-Object { $_.FullName -notlike '*\python_files\tests\*' }
+                  if ($pythonFiles.Count -eq 0) {
+                      throw 'Bandit target contains no Python files.'
+                  }
+
+                  $poliCheckExceptions = '$(Build.SourcesDirectory)\build\ci\static_analysis\policheck\exceptions.mdb'
+                  if (-not (Test-Path -LiteralPath $poliCheckExceptions -PathType Leaf)) {
+                      throw "PoliCheck exceptions file was not found: $poliCheckExceptions"
+                  }
+
+                  Write-Host "Bandit will scan $($pythonFiles.Count) Python files."
+                  Write-Host "PoliCheck exceptions: $poliCheckExceptions"
+                  Write-Host "AntiMalware and CredScan will scan $(Build.SourcesDirectory)."
+                displayName: Verify scan targets
+
+              - task: Bandit@1
+                continueOnError: true
+                inputs:
+                  aggregate: vuln
+                  baseline: ''
+                  configFile: ''
+                  contextLines: ''
+                  customRules: ''
+                  debug: false
+                  excludedPaths: ''
+                  ignoreNosec: false
+                  minConfidence: low
+                  minSeverity: Low
+                  policyName: Microsoft
+                  profile: ''
+                  quiet: false
+                  ruleset: guardian
+                  skippedRules: ''
+                  targets: 'f|$(Build.SourcesDirectory)\python_files\**\*.py;-|.gdn\**;-|$(Build.SourcesDirectory)\python_files\tests\**\*.py'
+                  targetsBandit: $(Build.SourcesDirectory)
+                  targetsBanditRecursive: true
+                  targetsType: guardianGlob
+                  verbose: false
+                displayName: Run Bandit
+
+              - task: PoliCheck@1
+                continueOnError: true
+                inputs:
+                  EXGT: false
+                  SOMEnabled: false
+                  cmdLineArgs: '/F:$(Build.SourcesDirectory) /T:9 /O:PoliCheck.xml'
+                  importEx: ''
+                  inputType: Basic
+                  optionsB1: ''
+                  optionsB2: ''
+                  optionsB3: ''
+                  optionsCTGLEN: ''
+                  optionsD: ''
+                  optionsFC: none
+                  optionsFTPATH: ''
+                  optionsHMENABLE: none
+                  optionsHPATH: ''
+                  optionsHVER: ''
+                  optionsOCDB: ''
+                  optionsPE: 1|2
+                  optionsRule: ''
+                  optionsRulesDBPath: '$(Build.SourcesDirectory)\build\ci\static_analysis\policheck\exceptions.mdb'
+                  optionsSEV: ''
+                  optionsTASKNAME: ''
+                  optionsUEPATH: ''
+                  optionsWORKINGDIRECTORY: ''
+                  optionsXCLASS: ''
+                  optionsXS: none
+                  result: PoliCheck.xml
+                  targetArgument: $(Build.SourcesDirectory)
+                  targetType: F
+                  termTypeK: ''
+                  termTypeL: ''
+                  termTypeT: 0029a9
+                  termTypeTCustom: 9
+                  toolVersion: Latest
+                  uploadErrorLevel: Error
+                  uploadToSOM: false
+                  workspaceId: ''
+                displayName: Run PoliCheck
+
+              - task: AntiMalware@3
+                continueOnError: true
+                inputs:
+                  Arguments: '-Scan -ScanType 3 -DisableRemediation -File "$(Build.SourcesDirectory)"'
+                  BootSectorScan: false
+                  DisableRemediation: true
+                  EnableServices: true
+                  FileDirPath: $(Build.SourcesDirectory)
+                  InputType: Basic
+                  ScanType: CustomScan
+                  SignatureFreshness: UpToDate
+                  SupportLogOnError: false
+                  TreatSignatureUpdateFailureAs: Warning
+                  TreatStaleSignatureAs: Error
+                displayName: Run AntiMalware
+
+              - task: CredScan@2
+                continueOnError: true
+                inputs:
+                  batchSize: ''
+                  debugMode: false
+                  fileScanReadBufferSize: ''
+                  folderSuppression: false
+                  m365Version: Latest
+                  maxFileScanReadBytes: ''
+                  outputFormat: pre
+                  regexMatchTimeoutInSeconds: ''
+                  scanFolder: $(Build.SourcesDirectory)
+                  searchersFile: ''
+                  searchersFileType: Default
+                  suppressAsError: false
+                  suppressionsFile: ''
+                  toolMajorVersion: V2
+                  toolVersion: Latest
+                  toolVersionV2: Latest
+                  verboseOutput: true
+                displayName: Run CredScan
+
+              - task: AutoApplicability@1
+                continueOnError: true
+                inputs:
+                  ApplyRules: Microsoft.Security
+                  DataSensitivity: none
+                  ExternalRelease: true
+                  InternalRelease: false
+                  IsCertAuthority: false
+                  IsCodeSigner: false
+                  IsService: false
+                  IsSoftware: true
+                  UsesHSM: false
+                  VerboseWriter: false
+                  toolVersion: Latest
+                displayName: Run AutoApplicability
+
+              - task: VulnerabilityAssessment@0
+                continueOnError: true
+                displayName: Run Vulnerability Assessment
+
+              - task: SdtReport@1
+                continueOnError: true
+                inputs:
+                  APIScan: false
+                  AllTools: false
+                  BinSkim: false
+                  BinSkimBreakOn: Error
+                  CodesignValidation: false
+                  CodesignValidationBreakOn: Error
+                  CredScan: true
+                  CustomLogsFolder: ''
+                  FortifySCA: false
+                  FxCop: false
+                  FxCopBreakOn: ErrorAbove
+                  HtmlFile: true
+                  MSRD: false
+                  ModernCop: false
+                  ModernCopBreakOn: Error
+                  PoliCheck: true
+                  PoliCheckBreakOn: Severity1
+                  RoslynAnalyzers: false
+                  RoslynAnalyzersBreakOn: Error
+                  SDLNativeRules: false
+                  Semmle: false
+                  SemmleBreakOn: Error
+                  TSLint: false
+                  TSLintBreakOn: Error
+                  ToolLogsNotFoundAction: Standard
+                  TsvFile: true
+                  VstsConsole: true
+                displayName: Create Security Analysis Report
+
+              - task: PublishSecurityAnalysisLogs@2
+                inputs:
+                  APIScan: false
+                  AllTools: false
+                  AntiMalware: true
+                  ArtifactName: CodeAnalysisLogs
+                  ArtifactType: Container
+                  BinSkim: false
+                  CodesignValidation: false
+                  CredScan: true
+                  FortifySCA: false
+                  FxCop: false
+                  MSRD: false
+                  ModernCop: false
+                  PoliCheck: true
+                  RoslynAnalyzers: false
+                  SDLNativeRules: false
+                  Semmle: false
+                  TSLint: false
+                  ToolLogsNotFoundAction: Standard
+                  UploadCustomResults: false
+                  WebScout: false
+                displayName: Publish Security Analysis Logs
+
+              - task: TSAUpload@1
+                inputs:
+                  areaPath: 'DevDiv\Python and AI Tools\Python\VS Code\Static Analysis'
+                  codeBaseAdmins: ''
+                  codeBaseName: vscode-python-main
+                  codebase: NewOrUpdate
+                  instanceUrlForTsaV2: DEVDIV
+                  notificationAlias: kanadig@microsoft.com
+                  notifyAlwaysV1: true
+                  notifyAlwaysV2: false
+                  projectNameDEVDIV: DevDiv
+                  serviceTreeID: 6e6194bc-7baa-4486-86d0-9f5419626d46
+                  tsaEnvironment: PROD
+                  tsaStamp: TSA
+                  tsaVersion: TsaV2
+                  tsaWebApiUrl: $(TSAStamp)
+                  uploadAPIScan: false
+                  uploadAsync: true
+                  uploadBinSkim: false
+                  uploadCredScan: true
+                  uploadFortifySCA: false
+                  uploadFxCop: false
+                  uploadModernCop: false
+                  uploadPREfast: false
+                  uploadPoliCheck: true
+                  uploadRoslyn: false
+                  uploadTSLint: false
+                  validateCompatibility: Error
+                  validateToolOutput: Warning
+                displayName: TSA Upload
+
+              - task: ComponentGovernanceComponentDetection@0
+                inputs:
+                  alertWarningLevel: High
+                  autoInjected: false
+                  detectorsFilter: ''
+                  detectorsToRun: ''
+                  dockerImagesToScan: ''
+                  failOnAlert: false
+                  ignoreDirectories: .github,build,news
+                  scanType: Register
+                  sourceScanPath: ''
+                  useDefaultDetectors: true
+                  verbosity: Verbose
+                  whatif: false
+                displayName: Component Detection

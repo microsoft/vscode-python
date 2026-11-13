@@ -6,6 +6,7 @@ import {
     CancellationToken,
     commands,
     l10n,
+    LanguageModelTextPart,
     LanguageModelTool,
     LanguageModelToolInvocationOptions,
     LanguageModelToolInvocationPrepareOptions,
@@ -22,6 +23,7 @@ import {
     doesWorkspaceHaveVenvOrCondaEnv,
     getDisplayVersion,
     getEnvDetailsForResponse,
+    hasPythonToolsApi,
     IResourceReference,
     isCancellationError,
     raceCancellationError,
@@ -45,7 +47,7 @@ import { hideEnvCreation } from '../pythonEnvironments/creation/provider/hideEnv
 import { BaseTool } from './baseTool';
 
 interface ICreateVirtualEnvToolParams extends IResourceReference {
-    packageList?: string[]; // Added only because we have the ability to create a virtual env with a list of packages using the same tool within the Python Env extension.
+    packageList?: string[];
 }
 
 export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
@@ -76,6 +78,13 @@ export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
         resource: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
+        if (await hasPythonToolsApi(token)) {
+            return new LanguageModelToolResult([
+                new LanguageModelTextPart(
+                    l10n.t('Use configure_python_environment with this version of Python Environments.'),
+                ),
+            ]);
+        }
         let info = await this.getPreferredEnvForCreation(resource);
         if (!info) {
             traceWarn(`Called ${CreateVirtualEnvTool.toolName} tool not invoked, no preferred environment found.`);
@@ -90,9 +99,12 @@ export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
                 disposables.add(interpreterPathService.onDidChange(() => resolve()));
             });
 
-            let createdEnvPath: string | undefined = undefined;
+            let createdEnvPath: string | undefined;
             if (useEnvExtension()) {
-                const result: PythonEnvironment | undefined = await raceCancellationError(
+                if (token.isCancellationRequested) {
+                    throw new CancellationError();
+                }
+                const result = await raceCancellationError(
                     Promise.resolve(
                         commands.executeCommand<PythonEnvironment | undefined>('python-envs.createAny', {
                             quickCreate: true,
@@ -164,6 +176,9 @@ export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
     }
 
     public async shouldCreateNewVirtualEnv(resource: Uri | undefined, token: CancellationToken): Promise<boolean> {
+        if (await hasPythonToolsApi(token)) {
+            return false;
+        }
         if (doesWorkspaceHaveVenvOrCondaEnv(resource, this.api)) {
             // If we already have a .venv or .conda in this workspace, then do not prompt to create a virtual environment.
             return false;
@@ -178,6 +193,9 @@ export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
         resource: Uri | undefined,
         token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
+        if (await hasPythonToolsApi(token)) {
+            return {};
+        }
         const info = await raceCancellationError(this.getPreferredEnvForCreation(resource), token);
         if (!info) {
             return {};
