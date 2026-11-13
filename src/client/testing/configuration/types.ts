@@ -1,6 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+/**
+ * Glob used to decide which saved files trigger test discovery.
+ * A string is the legacy single-pattern form. An object maps each glob to a
+ * boolean so VS Code can merge entries across settings scopes.
+ */
+export type AutoTestDiscoverOnSavePattern = string | { readonly [glob: string]: boolean };
+
 export interface ITestingSettings {
     readonly promptToConfigure: boolean;
     readonly debugPort: number;
@@ -11,7 +18,7 @@ export interface ITestingSettings {
     unittestArgs: string[];
     cwd?: string;
     readonly autoTestDiscoverOnSaveEnabled: boolean;
-    readonly autoTestDiscoverOnSavePattern: string;
+    autoTestDiscoverOnSavePattern: AutoTestDiscoverOnSavePattern;
 }
 
 export type TestSettingsPropertyNames = {

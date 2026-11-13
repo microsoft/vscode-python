@@ -674,10 +674,15 @@
                     "type": "boolean"
                 },
                 "python.testing.autoTestDiscoverOnSavePattern": {
-                    "default": "**/*.py",
-                    "description": "%python.testing.autoTestDiscoverOnSavePattern.description%",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    },
+                    "default": {
+                        "**/*.py": true
+                    },
+                    "markdownDescription": "%python.testing.autoTestDiscoverOnSavePattern.description%",
                     "scope": "resource",
-                    "type": "string"
+                    "type": "object"
                 },
                 "python.testing.cwd": {
                     "default": null,

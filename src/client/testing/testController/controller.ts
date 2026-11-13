@@ -3,7 +3,6 @@
 
 import { inject, injectable, named } from 'inversify';
 import { uniq } from 'lodash';
-import * as minimatch from 'minimatch';
 import {
     CancellationToken,
     TestController,
@@ -35,6 +34,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import type { UnitTestRunFailureCategory } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
+import { matchesAutoTestDiscoverOnSavePattern } from '../configuration/autoTestDiscoverOnSavePattern';
 import { TestProvider } from '../types';
 import { createErrorTestItem, DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
 import { buildErrorNodeOptions } from './common/utils';
@@ -1126,9 +1126,14 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.disposables.push(
             onDidSaveTextDocument(async (doc: TextDocument) => {
                 const settings = this.configSettings.getSettings(doc.uri);
+                const workspaceFolder = this.workspaceService.getWorkspaceFolder(doc.uri);
                 if (
                     settings.testing.autoTestDiscoverOnSaveEnabled &&
-                    minimatch.default(doc.uri.fsPath, settings.testing.autoTestDiscoverOnSavePattern)
+                    matchesAutoTestDiscoverOnSavePattern(
+                        doc.uri.fsPath,
+                        settings.testing.autoTestDiscoverOnSavePattern,
+                        workspaceFolder?.uri.fsPath,
+                    )
                 ) {
                     traceVerbose(`Testing: Trigger refresh after saving ${doc.uri.fsPath}`);
                     this.sendTriggerTelemetry('watching');
