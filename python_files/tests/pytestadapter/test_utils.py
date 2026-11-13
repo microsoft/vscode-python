@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import ast
 import os
 import pathlib
 import sys
@@ -12,7 +13,13 @@ from .helpers import (
 
 script_dir = pathlib.Path(__file__).parent.parent.parent
 sys.path.append(os.fspath(script_dir))
-from vscode_pytest import cached_fsdecode, has_symlink_parent  # noqa: E402
+from vscode_pytest import (  # noqa: E402
+    _CLASS_LINENO_CACHE,
+    _ClassFinder,
+    cached_fsdecode,
+    create_class_node,
+    has_symlink_parent,
+)
 
 
 def test_has_symlink_parent_with_symlink():
@@ -55,3 +62,84 @@ def test_cached_fsdecode():
     result3 = cached_fsdecode(test_path2)
     assert result3 == os.fspath(test_path2)
     assert result3 != result1
+
+
+def test_class_finder_extracts_class_lines():
+    code = """
+class SimpleClass:
+    pass
+
+class OuterClass:
+    class InnerClass:
+        pass
+
+@some_decorator
+class DecoratedClass:
+    pass
+
+def describe_block():
+    def describe_nested():
+        pass
+"""
+    tree = ast.parse(code)
+    finder = _ClassFinder()
+    finder.visit(tree)
+    assert finder.classes["SimpleClass"] == 2
+    assert finder.classes["OuterClass"] == 5
+    assert finder.classes["OuterClass.InnerClass"] == 6
+    assert finder.classes["DecoratedClass"] == 9
+    assert finder.classes["describe_block"] == 13
+    assert finder.classes["describe_block.<locals>.describe_nested"] == 14
+
+
+def test_create_class_node_uses_firstlineno():
+    class DummyObj:
+        __firstlineno__ = 42
+
+    class DummyClassModule:
+        name = "DummyClass"
+        nodeid = "test_file.py::DummyClass"
+        obj = DummyObj()
+        path = pathlib.Path("test_file.py")
+
+    node = create_class_node(DummyClassModule())
+    assert node["lineno"] == "42"
+
+
+def test_create_class_node_caches_ast_by_file(tmp_path):
+    test_file = tmp_path / "test_sample.py"
+    test_file.write_text("class TestOne:\n    pass\n\nclass TestTwo:\n    pass\n")
+
+    class TestOne:
+        pass
+
+    class TestTwo:
+        pass
+
+    TestOne.__qualname__ = "TestOne"
+    TestTwo.__qualname__ = "TestTwo"
+
+    class DummyClass1:
+        name = "TestOne"
+        nodeid = f"{test_file}::TestOne"
+        obj = TestOne
+        path = test_file
+
+    class DummyClass2:
+        name = "TestTwo"
+        nodeid = f"{test_file}::TestTwo"
+        obj = TestTwo
+        path = test_file
+
+    # Remove __firstlineno__ if present to exercise AST caching path
+    if hasattr(TestOne, "__firstlineno__"):
+        delattr(TestOne, "__firstlineno__")
+    if hasattr(TestTwo, "__firstlineno__"):
+        delattr(TestTwo, "__firstlineno__")
+
+    node1 = create_class_node(DummyClass1())
+    assert node1["lineno"] == "1"
+    assert test_file in _CLASS_LINENO_CACHE
+
+    node2 = create_class_node(DummyClass2())
+    assert node2["lineno"] == "4"
