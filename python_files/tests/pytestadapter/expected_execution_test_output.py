@@ -747,3 +747,61 @@ skip_test_fixture_execution_expected_output = {
         "subtest": None,
     }
 }
+
+# This is the expected output for the xdist_group_tests.py file when run with --dist=loadgroup.
+# └── xdist_group_tests.py
+#    └── test_grouped: success
+#    └── test_grouped_param[user@example.com]: success
+#    └── test_grouped_param[no-at-sign]: failure
+#    └── test_grouped_skipped: skipped
+#    └── test_ungrouped: success
+xdist_group_tests_path = TEST_DATA_PATH / "xdist_group_tests.py"
+xdist_group_expected_execution_output = {
+    get_absolute_test_id("xdist_group_tests.py::test_grouped", xdist_group_tests_path): {
+        "test": get_absolute_test_id("xdist_group_tests.py::test_grouped", xdist_group_tests_path),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    get_absolute_test_id(
+        "xdist_group_tests.py::test_grouped_param[user@example.com]", xdist_group_tests_path
+    ): {
+        "test": get_absolute_test_id(
+            "xdist_group_tests.py::test_grouped_param[user@example.com]", xdist_group_tests_path
+        ),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    get_absolute_test_id(
+        "xdist_group_tests.py::test_grouped_param[no-at-sign]", xdist_group_tests_path
+    ): {
+        "test": get_absolute_test_id(
+            "xdist_group_tests.py::test_grouped_param[no-at-sign]", xdist_group_tests_path
+        ),
+        "outcome": "failure",
+        "message": "ERROR MESSAGE",
+        "traceback": None,
+        "subtest": None,
+    },
+    get_absolute_test_id("xdist_group_tests.py::test_grouped_skipped", xdist_group_tests_path): {
+        "test": get_absolute_test_id(
+            "xdist_group_tests.py::test_grouped_skipped", xdist_group_tests_path
+        ),
+        "outcome": "skipped",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    get_absolute_test_id("xdist_group_tests.py::test_ungrouped", xdist_group_tests_path): {
+        "test": get_absolute_test_id(
+            "xdist_group_tests.py::test_ungrouped", xdist_group_tests_path
+        ),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+}

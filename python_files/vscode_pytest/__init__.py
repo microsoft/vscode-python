@@ -16,6 +16,7 @@ from typing import (
     Dict,
     Generator,
     Literal,
+    Mapping,
     Protocol,
     TypedDict,
     cast,
@@ -206,7 +207,9 @@ def pytest_exception_interact(node, call, report):
         report_value = "error"
         if call.excinfo.typename == "AssertionError":
             report_value = "failure"
-        node_id = get_absolute_test_id(node.nodeid, get_node_path(node))
+        node_id = get_absolute_test_id(
+            remove_xdist_group_suffix(node.nodeid, node.keywords), get_node_path(node)
+        )
         if node_id not in collected_tests_so_far:
             collected_tests_so_far.add(node_id)
             item_result = create_test_outcome(
@@ -254,6 +257,26 @@ def get_absolute_test_id(test_id: str, test_path: pathlib.Path) -> str:
     """
     split_id = test_id.split("::")[1:]
     return "::".join([str(test_path), *split_id])
+
+
+def remove_xdist_group_suffix(test_id: str, keywords: Mapping[str, Any]) -> str:
+    """A function that returns the test id without the group suffix added by pytest-xdist.
+
+    With --dist=loadgroup, pytest-xdist renames tests marked with xdist_group to "<test id>@<group>"
+    on its workers so that each group runs on a single worker. Discovery runs without xdist, so
+    results must be sent with the original test id for the test explorer to find the test.
+
+    Keyword arguments:
+    test_id -- the pytest id of the test, which may end with the group suffix.
+    keywords -- the keywords of the test, used to check that it has the xdist_group marker.
+    """
+    if "xdist_group" in keywords:
+        suffix_start = test_id.rfind("@")
+        # Parametrize ids can contain "@" too, so only strip an "@" that comes after them,
+        # the same way pytest-xdist reads the group name back from the test id.
+        if suffix_start > test_id.rfind("]"):
+            return test_id[:suffix_start]
+    return test_id
 
 
 def pytest_keyboard_interrupt(excinfo):
@@ -331,7 +354,9 @@ def pytest_report_teststatus(report, config):  # noqa: ARG001
         except KeyError:
             node_path = cwd
         # Calculate the absolute test id and use this as the ID moving forward.
-        absolute_node_id = get_absolute_test_id(report.nodeid, node_path)
+        absolute_node_id = get_absolute_test_id(
+            remove_xdist_group_suffix(report.nodeid, report.keywords), node_path
+        )
         if absolute_node_id not in collected_tests_so_far:
             collected_tests_so_far.add(absolute_node_id)
             item_result = create_test_outcome(
@@ -363,7 +388,9 @@ def pytest_runtest_protocol(item, nextitem):  # noqa: ARG001
     map_id_to_path[item.nodeid] = get_node_path(item)
     skipped = check_skipped_wrapper(item)
     if skipped:
-        absolute_node_id = get_absolute_test_id(item.nodeid, get_node_path(item))
+        absolute_node_id = get_absolute_test_id(
+            remove_xdist_group_suffix(item.nodeid, item.keywords), get_node_path(item)
+        )
         report_value = "skipped"
         cwd = pathlib.Path.cwd()
         if absolute_node_id not in collected_tests_so_far:
