@@ -272,3 +272,36 @@ def test_symlink_run():
                 # Print the actual_item in JSON format if an assertion fails
                 print(json.dumps(actual_item, indent=4))
                 pytest.fail(str(e))
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="The test pipe on Windows accepts one connection, but pytest-xdist workers connect too",
+)
+def test_xdist_group_execution():
+    """Test pytest execution of tests marked with xdist_group when run with --dist=loadgroup.
+
+    pytest-xdist adds "@<group>" to the ids of these tests on its workers. The results must be sent
+    with the ids found during discovery so that the test explorer can match them.
+    """
+    pytest.importorskip("xdist")
+    file_path = TEST_DATA_PATH / "xdist_group_tests.py"
+    actual = runner(["-n", "1", "--dist=loadgroup", os.fspath(file_path)])
+    assert actual
+    actual_result_dict = {}
+    for actual_item in actual:
+        assert all(item in actual_item for item in ("status", "cwd", "result"))
+        assert actual_item.get("status") == "success"
+        actual_result_dict.update(actual_item["result"])
+    assert not [test_id for test_id in actual_result_dict if test_id.endswith("@group_a")]
+    # The xdist controller sends each result again under an id without the file path, which
+    # doesn't match any test. Only compare the results sent by the worker.
+    file_results = {
+        test_id: result
+        for test_id, result in actual_result_dict.items()
+        if test_id.startswith(f"{os.fspath(file_path)}::")
+    }
+    for result in file_results.values():
+        if result["outcome"] == "failure":
+            result["message"] = "ERROR MESSAGE"
+    assert file_results == expected_execution_test_output.xdist_group_expected_execution_output
