@@ -14,6 +14,7 @@ import { TestProjectRegistry } from './testProjectRegistry';
 import { getProjectId } from './projectUtils';
 import { getEnvExtApi, useEnvExtension } from '../../../envExt/api.internal';
 import { isParentPath } from '../../../pythonEnvironments/common/externalDependencies';
+import { expandExcludeSet } from './testItemUtilities';
 
 /** Dependencies for project-based test execution. */
 export interface ProjectExecutionDependencies {
@@ -53,6 +54,9 @@ export async function executeTestsForProjects(
         setupCoverageForProjects(request, projects);
     }
 
+    // Excluded items and their descendants, built once for all projects
+    const excludeSet = expandExcludeSet(request.exclude);
+
     // Execute tests for each project in parallel
     // For debug mode, multiple debug sessions will be launched in parallel
     // Each execution respects cancellation via runInstance.token
@@ -76,7 +80,7 @@ export async function executeTestsForProjects(
         let failed = false;
         let failureCategory: UnitTestRunFailureCategory | undefined;
         try {
-            await executeTestsForProject(project, items, runInstance, request, deps);
+            await executeTestsForProject(project, items, runInstance, request, deps, excludeSet);
         } catch (error) {
             failed = true;
             failureCategory = token.isCancellationRequested ? 'cancelled' : 'unknown';
@@ -235,13 +239,14 @@ export async function executeTestsForProject(
     runInstance: TestRun,
     request: TestRunRequest,
     deps: ProjectExecutionDependencies,
+    excludeSet?: Set<TestItem>,
 ): Promise<void> {
     const processedTestItemIds = new Set<string>();
     const uniqueTestCaseIds = new Set<string>();
 
     // Mark items as started and collect test IDs (deduplicated to handle overlapping selections)
     for (const item of testItems) {
-        const testCaseNodes = getTestCaseNodesRecursive(item);
+        const testCaseNodes = getTestCaseNodesRecursive(item, excludeSet);
         for (const node of testCaseNodes) {
             if (processedTestItemIds.has(node.id)) {
                 continue;
@@ -277,16 +282,22 @@ export async function executeTestsForProject(
     );
 }
 
-/** Recursively gets all leaf test case nodes from a test item tree. */
-export function getTestCaseNodesRecursive(item: TestItem): TestItem[] {
+/**
+ * Recursively gets all leaf test case nodes from a test item tree,
+ * skipping items in `excludeSet` (built by `expandExcludeSet`).
+ */
+export function getTestCaseNodesRecursive(item: TestItem, excludeSet?: Set<TestItem>): TestItem[] {
     const results: TestItem[] = [];
+    if (excludeSet?.has(item)) {
+        return results;
+    }
     if (item.children.size === 0) {
         // This is a leaf node (test case)
         results.push(item);
     } else {
         // Recursively get children
         item.children.forEach((child) => {
-            results.push(...getTestCaseNodesRecursive(child));
+            results.push(...getTestCaseNodesRecursive(child, excludeSet));
         });
     }
     return results;

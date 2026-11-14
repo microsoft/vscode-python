@@ -6,11 +6,11 @@ import { CancellationToken, TestController, TestItem, TestRun, TestRunProfileKin
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { traceError } from '../../logging';
+import { traceError, traceVerbose } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestProvider } from '../types';
-import { createErrorTestItem, getTestCaseNodes } from './common/testItemUtilities';
+import { createErrorTestItem, expandExcludeSet, getTestCaseNodes } from './common/testItemUtilities';
 import { ITestDiscoveryAdapter, ITestExecutionAdapter, ITestResultResolver } from './common/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { ITestDebugLauncher } from '../common/types';
@@ -51,6 +51,7 @@ export class WorkspaceTestAdapter {
         profileKind?: boolean | TestRunProfileKind,
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
+        excludes?: readonly TestItem[],
         project?: ProjectAdapter,
     ): Promise<void> {
         if (this.executing) {
@@ -63,10 +64,11 @@ export class WorkspaceTestAdapter {
 
         const testCaseNodes: TestItem[] = [];
         const testCaseIdsSet = new Set<string>();
+        const excludeSet = expandExcludeSet(excludes);
         try {
-            // first fetch all the individual test Items that we necessarily want
+            // first fetch all the individual test Items that we necessarily want, minus the excluded ones
             includes.forEach((t) => {
-                const nodes = getTestCaseNodes(t);
+                const nodes = getTestCaseNodes(t, [], excludeSet);
                 testCaseNodes.push(...nodes);
             });
             // iterate through testItems nodes and fetch their unittest runID to pass in as argument
@@ -78,6 +80,12 @@ export class WorkspaceTestAdapter {
                 }
             });
             const testCaseIds = Array.from(testCaseIdsSet);
+            if (excludeSet && testCaseIds.length === 0) {
+                // Everything was excluded. Don't start a run: an empty ID list makes pytest run all tests.
+                traceVerbose('All requested tests were excluded, nothing to run.');
+                deferred.resolve();
+                return deferred.promise;
+            }
             if (executionFactory === undefined) {
                 throw new Error('Execution factory is required for test execution');
             }
