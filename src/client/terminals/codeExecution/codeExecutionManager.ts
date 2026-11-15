@@ -140,9 +140,9 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         const pythonSettings = this.configSettings.getSettings(file);
         let cwd = pythonSettings.terminal.executeInFileDir ? path.dirname(fileToExecute.fsPath) : undefined;
 
-        // Check on setting terminal.launchArgs
         const launchArgs = pythonSettings.terminal.launchArgs;
-        const totalArgs = [...launchArgs, fileToExecute.fsPath.fileToCommandArgumentForPythonExt()];
+        // Python Environments quotes arguments for the selected terminal shell.
+        const totalArgs = [...launchArgs, fileToExecute.fsPath];
 
         const show = this.shouldTerminalFocusOnStart(fileToExecute);
         let terminal: Terminal | undefined;
