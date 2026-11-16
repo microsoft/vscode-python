@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import {
+    CancellationError,
     CancellationToken,
     l10n,
     LanguageModelTextPart,
@@ -18,10 +19,17 @@ import {
     getEnvDisplayName,
     getEnvTypeForTelemetry,
     getToolResponseIfNotebook,
+    getPythonToolResponse,
+    getPythonToolTelemetry,
+    getPythonToolResourcePath,
     IResourceReference,
+    invokePythonTool,
+    invokePythonToolCompatibility,
+    PYTHON_TOOLS_UNAVAILABLE,
     isCancellationError,
     isCondaEnv,
     raceCancellationError,
+    usePythonToolsRoute,
 } from './utils';
 import { IModuleInstaller } from '../common/installer/types';
 import { ModuleInstallerType } from '../pythonEnvironments/info';
@@ -59,21 +67,26 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageArgs>
         }
 
         if (useEnvExtension()) {
-            const api = await getEnvExtApi();
-            const env = await api.getEnvironment(resourcePath);
-            if (env) {
-                await raceCancellationError(api.managePackages(env, { install: options.input.packageList }), token);
-                const resultMessage = `Successfully installed ${packagePlurality}: ${options.input.packageList.join(
-                    ', ',
-                )}`;
-                return new LanguageModelToolResult([new LanguageModelTextPart(resultMessage)]);
-            } else {
-                return new LanguageModelToolResult([
-                    new LanguageModelTextPart(
-                        `Packages not installed. No environment found for: ${resourcePath?.fsPath}`,
-                    ),
-                ]);
+            const successMessage =
+                packageCount === 1
+                    ? l10n.t('Successfully installed package: {0}', options.input.packageList[0])
+                    : l10n.t('Successfully installed packages: {0}', options.input.packageList.join(', '));
+            const workspaceScoped = usePythonToolsRoute();
+            const target = getPythonToolResourcePath(options.input.resourcePath, resourcePath);
+            const result = await invokePythonTool(
+                (api) => api.installPackages({ resourcePath: target, packages: options.input.packageList }, token),
+                token,
+            );
+            if (result !== PYTHON_TOOLS_UNAVAILABLE) {
+                Object.assign(this.extraTelemetryProperties, getPythonToolTelemetry(result?.environment));
+                return getPythonToolResponse(result, successMessage);
             }
+            if (!workspaceScoped) {
+                return this.invokePreviousEnvsFlow(options, resourcePath, successMessage, token);
+            }
+            return invokePythonToolCompatibility(target, resourcePath, token, (resource) =>
+                this.invokePreviousEnvsFlow(options, resource, successMessage, token),
+            );
         }
 
         try {
@@ -122,6 +135,30 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageArgs>
         }
     }
 
+    /** Runs the previous integration after capability absence, including its no-workspace behavior. */
+    private async invokePreviousEnvsFlow(
+        options: LanguageModelToolInvocationOptions<IInstallPackageArgs>,
+        resource: Uri | undefined,
+        successMessage: string,
+        token: CancellationToken,
+    ): Promise<LanguageModelToolResult> {
+        const api = await getEnvExtApi();
+        const env = await api.getEnvironment(resource);
+        if (!env) {
+            return new LanguageModelToolResult([
+                new LanguageModelTextPart(
+                    l10n.t('Packages not installed. No environment found for: {0}', resource?.fsPath ?? ''),
+                ),
+            ]);
+        }
+        Object.assign(this.extraTelemetryProperties, getPythonToolTelemetry(env));
+        if (token.isCancellationRequested) {
+            throw new CancellationError();
+        }
+        await raceCancellationError(api.managePackages(env, { install: options.input.packageList }), token);
+        return new LanguageModelToolResult([new LanguageModelTextPart(successMessage)]);
+    }
+
     async prepareInvocationImpl(
         options: LanguageModelToolInvocationPrepareOptions<IInstallPackageArgs>,
         resourcePath: Uri | undefined,
@@ -130,6 +167,32 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageArgs>
         const packageCount = options.input.packageList.length;
         if (getToolResponseIfNotebook(resourcePath)) {
             return {};
+        }
+
+        if (useEnvExtension()) {
+            const packages = [...options.input.packageList].sort().join(', ');
+            const target = getPythonToolResourcePath(options.input.resourcePath, resourcePath);
+            return {
+                confirmationMessages: {
+                    title:
+                        packageCount === 1
+                            ? l10n.t("Install Python package '{0}'?", options.input.packageList[0])
+                            : l10n.t('Install Python packages?'),
+                    message: target
+                        ? l10n.t(
+                              'The following packages will be installed in the selected Python environment for {0}: {1}. With a compatible Python Environments tools API, an isolated environment is required; global Python and Conda base are never modified, and no extension pickers are shown.',
+                              target,
+                              packages,
+                          )
+                        : l10n.t(
+                              'The following packages will be installed: {0}. With a compatible Python Environments tools API, an open workspace and a selected isolated environment are required; global Python and Conda base are never modified, and no extension pickers are shown.',
+                              packages,
+                          ),
+                },
+                invocationMessage: target
+                    ? l10n.t('Installing Python packages for {0}: {1}', target, packages)
+                    : l10n.t('Installing Python packages: {0}', packages),
+            };
         }
 
         const envName = await raceCancellationError(getEnvDisplayName(this.discovery, resourcePath, this.api), token);

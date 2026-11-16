@@ -2016,7 +2016,7 @@ export interface IEventNamePropertyMapping {
             "resolveOutcome": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Which code path resolved the environment in configure_python_environment.", "owner": "donjayamanne" },
             "envType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"The type of Python environment (e.g. venv, conda, system).", "owner": "donjayamanne" },
             "packageCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Number of packages requested for installation (install_python_packages only).", "owner": "donjayamanne" },
-            "installerType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Which installer was used: pip or conda (install_python_packages only).", "owner": "donjayamanne" },
+            "installerType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Package manager used: pip (including uv-backed pip), conda, poetry or unknown (install_python_packages only).", "owner": "donjayamanne" },
             "responsePackageCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Number of packages in the environment response (get_python_environment_details only).", "owner": "donjayamanne" }
        }
      */
@@ -2047,7 +2047,7 @@ export interface IEventNamePropertyMapping {
          */
         packageCount?: string;
         /**
-         * Which installer was used: pip or conda (install_python_packages only).
+         * Package manager used: pip (including uv-backed pip), conda, poetry or unknown.
          */
         installerType?: string;
         /**
