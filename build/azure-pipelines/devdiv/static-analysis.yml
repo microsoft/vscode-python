@@ -277,7 +277,7 @@ extends:
                   codeBaseName: vscode-python-main
                   codebase: NewOrUpdate
                   instanceUrlForTsaV2: DEVDIV
-                  notificationAlias: kanadig@microsoft.com
+                  notificationAlias: brcan@microsoft.com,plseng@microsoft.com
                   notifyAlwaysV1: true
                   notifyAlwaysV2: false
                   projectNameDEVDIV: DevDiv

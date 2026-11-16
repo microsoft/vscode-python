@@ -216,7 +216,7 @@ extends:
                           areaPath = 'DevDiv\VS Code (compliance tracking only)\Visual Studio Code NPM Packages'
                           codebaseName = 'devdiv_microsoft_vscode_python'
                           instanceUrl = 'https://devdiv.visualstudio.com/defaultcollection'
-                          notificationAliases = @('monacotools@microsoft.com')
+                          notificationAliases = @('brcan@microsoft.com', 'plseng@microsoft.com')
                           serviceTreeID = 'f85a34fa-964a-4306-885a-003737c8fe18'
                           projectName = 'DevDiv'
                       } | ConvertTo-Json -Depth 4
