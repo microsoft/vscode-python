@@ -142,7 +142,7 @@ suite('Terminal - Code Execution Manager', () => {
                 sinon.assert.calledOnceWithExactly(
                     expectedRunner,
                     file,
-                    ['-I', `/workspace/${script}`],
+                    ['-I', file.fsPath],
                     undefined,
                     false,
                 );
