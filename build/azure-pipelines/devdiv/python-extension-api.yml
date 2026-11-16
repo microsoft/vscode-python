@@ -1,0 +1,362 @@
+###############################################################################################
+#  Copyright (c) Microsoft Corporation. All rights reserved.
+#  Licensed under the MIT License. See License.txt in the project root for license information.
+###############################################################################################
+
+name: $(Date:yyyyMMdd)$(Rev:.r)
+
+trigger: none
+pr: none
+
+resources:
+  repositories:
+    - repository: MicroBuildTemplate
+      type: git
+      name: 1ESPipelineTemplates/MicroBuildTemplate
+      ref: refs/tags/release
+    - repository: templates
+      type: git
+      name: DevDiv/Pylance-Eng
+      ref: refs/heads/main
+
+parameters:
+  - name: quality
+    displayName: Release quality
+    type: string
+    default: latest
+    values:
+      - latest
+      - next
+
+  - name: publishPythonApi
+    displayName: Publish pythonExtensionApi
+    type: boolean
+    default: false
+
+  - name: runAPIScan
+    displayName: Run API Scan
+    type: boolean
+    default: true
+
+variables:
+  - name: TeamName
+    value: vscode-python
+  - name: PackageName
+    value: '@vscode/python-extension'
+  - name: PackageDirectory
+    value: pythonExtensionApi
+  - name: NodeVersion
+    value: '22.21.1'
+  - name: NpmTag
+    value: ${{ parameters.quality }}
+  - name: AZURE_ARTIFACTS_FEED
+    value: 'https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/Pylance_PublicPackages/npm/registry/'
+
+extends:
+  template: azure-pipelines/MicroBuild.1ES.Official.Publish.yml@MicroBuildTemplate
+  parameters:
+    settings:
+      networkIsolationPolicy: Preferred,GitHub,NodeTool
+    sdl:
+      sourceAnalysisPool: VSEng-MicroBuildVSStable
+      sbom:
+        enabled: true
+    pool:
+      name: AzurePipelines-EO
+      image: 1ESPT-Ubuntu22.04
+      os: linux
+
+    customBuildTags:
+      - ES365AIMigrationTooling
+
+    stages:
+      - stage: Build
+        displayName: Build, test, and pack
+        jobs:
+          - job: ValidateConfiguration
+            displayName: Validate pipeline parameters
+            steps:
+              - ${{ if and(eq(parameters.publishPythonApi, true), eq(parameters.runAPIScan, false)) }}:
+                  - bash: |
+                      echo "Publishing requires API Scan. Set runAPIScan to true." >&2
+                      exit 1
+                    displayName: Reject publishing without API Scan
+              - ${{ else }}:
+                  - bash: echo "Pipeline parameter validation passed."
+                    displayName: Validate parameters
+
+          - job: Linux_Node_22_21_1
+            displayName: Linux (Node.js 22.21.1)
+            dependsOn: ValidateConfiguration
+            pool:
+              name: AzurePipelines-EO
+              image: 1ESPT-Ubuntu22.04
+              os: linux
+            steps:
+              - checkout: self
+                clean: true
+
+              - template: azure-pipelines/extension/templates/steps/setup.yml@templates
+                parameters:
+                  installPython: false
+                  customNPMRegistry: $(AZURE_ARTIFACTS_FEED)
+                  nodeVersion: $(NodeVersion)
+
+              - template: /build/azure-pipelines/templates/test-steps.yml@self
+                parameters:
+                  package: $(PackageDirectory)
+
+          - job: MacOS_Node_22_21_1
+            displayName: macOS (Node.js 22.21.1)
+            dependsOn: ValidateConfiguration
+            pool:
+              name: Azure Pipelines
+              image: macOS-15
+              os: macOS
+            variables:
+              BUILDSECMON_OPT_IN: false
+            steps:
+              - checkout: self
+                clean: true
+
+              - template: azure-pipelines/extension/templates/steps/setup.yml@templates
+                parameters:
+                  installPython: false
+                  customNPMRegistry: $(AZURE_ARTIFACTS_FEED)
+                  nodeVersion: $(NodeVersion)
+
+              - template: /build/azure-pipelines/templates/test-steps.yml@self
+                parameters:
+                  package: $(PackageDirectory)
+
+          - job: Windows_Node_22_21_1
+            displayName: Windows (Node.js 22.21.1)
+            dependsOn: ValidateConfiguration
+            pool:
+              name: AzurePipelines-EO
+              image: 1ESPT-Windows2022
+              os: windows
+            steps:
+              - checkout: self
+                clean: true
+
+              - template: azure-pipelines/extension/templates/steps/setup.yml@templates
+                parameters:
+                  installPython: false
+                  customNPMRegistry: $(AZURE_ARTIFACTS_FEED)
+                  nodeVersion: $(NodeVersion)
+
+              - template: /build/azure-pipelines/templates/test-steps.yml@self
+                parameters:
+                  package: $(PackageDirectory)
+
+          - job: Package
+            displayName: Pack npm package
+            dependsOn:
+              - Linux_Node_22_21_1
+              - MacOS_Node_22_21_1
+              - Windows_Node_22_21_1
+            pool:
+              name: AzurePipelines-EO
+              image: 1ESPT-Ubuntu22.04
+              os: linux
+            templateContext:
+              outputs:
+                - output: pipelineArtifact
+                  targetPath: $(Build.ArtifactStagingDirectory)
+                  artifactName: pythonExtensionApi
+            steps:
+              - checkout: self
+                clean: true
+
+              - template: azure-pipelines/extension/templates/steps/setup.yml@templates
+                parameters:
+                  installPython: false
+                  customNPMRegistry: $(AZURE_ARTIFACTS_FEED)
+                  nodeVersion: $(NodeVersion)
+
+              - template: /build/azure-pipelines/templates/pack-steps.yml@self
+                parameters:
+                  package: $(PackageDirectory)
+
+              - script: npm pack --pack-destination $(Build.ArtifactStagingDirectory)
+                workingDirectory: $(Build.SourcesDirectory)/$(PackageDirectory)
+                displayName: Pack npm package
+
+      - ${{ if eq(parameters.runAPIScan, true) }}:
+          - stage: APIScan
+            displayName: API Scan
+            dependsOn: Build
+            condition: succeeded()
+            jobs:
+              - job: APIScan
+                displayName: Scan packed API
+                pool:
+                  name: VSEngSS-MicroBuild2022-1ES
+                  os: windows
+                steps:
+                  - checkout: self
+                    clean: true
+
+                  - task: DownloadPipelineArtifact@2
+                    inputs:
+                      artifactName: pythonExtensionApi
+                      targetPath: $(Agent.TempDirectory)/pythonExtensionApi
+                    displayName: Download npm package
+
+                  - task: ExtractFiles@1
+                    inputs:
+                      archiveFilePatterns: $(Agent.TempDirectory)/pythonExtensionApi/*.tgz
+                      destinationFolder: $(Agent.TempDirectory)/apiscan
+                      cleanDestinationFolder: true
+                    displayName: Extract package for API Scan
+
+                  - pwsh: |
+                      $config = @{
+                          areaPath = 'DevDiv\VS Code (compliance tracking only)\Visual Studio Code NPM Packages'
+                          codebaseName = 'devdiv_microsoft_vscode_python'
+                          instanceUrl = 'https://devdiv.visualstudio.com/defaultcollection'
+                          notificationAliases = @('monacotools@microsoft.com')
+                          serviceTreeID = 'f85a34fa-964a-4306-885a-003737c8fe18'
+                          projectName = 'DevDiv'
+                      } | ConvertTo-Json -Depth 4
+
+                      $configDirectory = Join-Path '$(Build.SourcesDirectory)' '.config'
+                      New-Item -Path $configDirectory -ItemType Directory -Force | Out-Null
+                      $configPath = Join-Path $configDirectory 'tsaoptions.json'
+                      Set-Content -Path $configPath -Value $config
+                      Get-Content -Path $configPath
+                    displayName: Generate TSA configuration
+
+                  # DevDiv must provide the vscode-apiscan service connection and a secret
+                  # APIScanConnectionString pipeline variable before this job can run.
+                  - task: APIScan@2
+                    inputs:
+                      softwareFolder: $(Agent.TempDirectory)/apiscan/package
+                      softwareName: pythonExtensionApi
+                      softwareVersionNum: '2024'
+                      symbolsFolder: 'SRV*https://symweb.azurefd.net;$(Agent.TempDirectory)/apiscan'
+                      isLargeApp: false
+                      toolVersion: Latest
+                      azureSubscription: vscode-apiscan
+                    env:
+                      AzureServicesAuthConnectionString: $(APIScanConnectionString)
+                      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+                    displayName: Run API Scan
+
+                  - task: PublishSecurityAnalysisLogs@3
+                    inputs:
+                      ArtifactName: CodeAnalysisLogs
+                      ArtifactType: Container
+                      AllTools: true
+                      ToolLogsNotFoundAction: Standard
+                    displayName: Publish API Scan logs
+
+                  - task: securedevelopmentteam.vss-secure-development-tools.build-task-uploadtotsa.TSAUpload@2
+                    continueOnError: true
+                    inputs:
+                      GdnPublishTsaConfigFile: $(Build.SourcesDirectory)/.config/tsaoptions.json
+                      GdnPublishTsaOnboard: true
+                    displayName: TSA Upload
+
+      - stage: Publish
+        displayName: Publish npm package
+        ${{ if eq(parameters.runAPIScan, true) }}:
+          dependsOn: APIScan
+        ${{ else }}:
+          dependsOn: Build
+        condition: and(succeeded(), eq('${{ parameters.publishPythonApi }}', 'true'))
+        jobs:
+          - job: PublishPackage
+            displayName: Publish npm package
+            pool:
+              name: AzurePipelines-EO
+              image: 1ESPT-Ubuntu22.04
+              os: linux
+            templateContext:
+              isReleaseJob: true
+            steps:
+              - checkout: self
+                clean: true
+                persistCredentials: false
+
+              - download: current
+                artifact: pythonExtensionApi
+                displayName: Download npm package
+
+              - template: azure-pipelines/extension/templates/steps/setup.yml@templates
+                parameters:
+                  installPython: false
+                  customNPMRegistry: $(AZURE_ARTIFACTS_FEED)
+                  nodeVersion: $(NodeVersion)
+
+              - task: ExtractFiles@1
+                inputs:
+                  archiveFilePatterns: $(Pipeline.Workspace)/pythonExtensionApi/*.tgz
+                  destinationFolder: $(Build.ArtifactStagingDirectory)/pythonExtensionApi
+                  cleanDestinationFolder: true
+                displayName: Extract npm package
+
+              - bash: |
+                  set -euo pipefail
+                  packageVersion="$(node -p "require('./package.json').version")"
+                  echo "##vso[task.setvariable variable=PackageVersion]$packageVersion"
+                  echo "Package version: $packageVersion"
+                workingDirectory: $(Build.ArtifactStagingDirectory)/pythonExtensionApi/package
+                displayName: Read package version
+
+              - task: EsrpRelease@14
+                inputs:
+                  connectedservicename: EsrpThirdPartyPackageManager
+                  usemanagedidentity: true
+                  keyvaultname: DevDiv3rdPartyPkgMngrKV
+                  signcertname: DevDiv3rdPartyPkgMngr
+                  clientid: 15908223-fc42-4083-bd72-71dedfdac47f
+                  intent: PackageDistribution
+                  contentType: npm
+                  contentsource: Folder
+                  folderlocation: $(Pipeline.Workspace)/pythonExtensionApi
+                  waitforreleasecompletion: true
+                  owners: stbatt@microsoft.com,lszomoru@microsoft.com
+                  approvers: stbatt@microsoft.com,lszomoru@microsoft.com
+                  serviceendpointurl: https://api.esrp.microsoft.com
+                  mainpublisher: ESRPRELPACMAN
+                  domaintenantid: 975f013f-7f24-47e8-a7d3-abc4752bf346
+                  productstate: $(NpmTag)
+                displayName: Publish package to npm
+
+              - bash: |
+                  set -euo pipefail
+                  echo "registry=$(AZURE_ARTIFACTS_FEED)" > .npmrc
+                  echo "always-auth=true" >> .npmrc
+                workingDirectory: $(Build.ArtifactStagingDirectory)/pythonExtensionApi/package
+                displayName: Configure DevDiv npm feed
+
+              - task: npmAuthenticate@0
+                inputs:
+                  workingFile: $(Build.ArtifactStagingDirectory)/pythonExtensionApi/package/.npmrc
+                displayName: Authenticate DevDiv npm feed
+
+              - bash: |
+                  set -euo pipefail
+                  npm install --global npm@11.6.0 --ignore-scripts --userconfig .npmrc --prefix "$(Agent.TempDirectory)/publishing-npm"
+                  echo "##vso[task.prependpath]$(Agent.TempDirectory)/publishing-npm/bin"
+                workingDirectory: $(Build.ArtifactStagingDirectory)/pythonExtensionApi/package
+                displayName: Install npm with lifecycle scripts disabled
+
+              - task: Npm@1
+                inputs:
+                  command: publish
+                  publishRegistry: useFeed
+                  publishFeed: DevDiv/Pylance_PublicPackages
+                  workingDir: $(Build.ArtifactStagingDirectory)/pythonExtensionApi/package
+                env:
+                  NPM_CONFIG_IGNORE_SCRIPTS: 'true'
+                  NPM_CONFIG_TAG: $(NpmTag)
+                displayName: Publish package to DevDiv feed
+
+              - template: azure-pipelines/extension/templates/steps/createGitHubRelease.yml@templates
+                parameters:
+                  isPreRelease: ${{ ne(parameters.quality, 'latest') }}
+                  ghReleaseAddChangeLog: true
+                  tagName: release/pythonExtensionApi/$(PackageVersion)

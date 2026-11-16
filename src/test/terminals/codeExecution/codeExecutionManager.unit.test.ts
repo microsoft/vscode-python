@@ -243,6 +243,80 @@ suite('Terminal - Code Execution Manager', () => {
         );
     });
 
+    test('Ensure executeUsingExtension does not pass extra quotes in path with spaces', async () => {
+        useEnvExtensionStub.returns(true);
+        const runInTerminalStub = sinon.stub(extapi, 'runInTerminal');
+        const showStub = sinon.stub();
+        runInTerminalStub.resolves({ show: showStub } as any);
+
+        let commandHandler: undefined | ((file: Uri) => Promise<void>);
+        commandManager
+            .setup((c) => c.registerCommand as any)
+            .returns(() => {
+                return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
+                    if (command === Commands.Exec_In_Terminal) {
+                        commandHandler = callback;
+                    }
+                    return { dispose: () => void 0 };
+                };
+            });
+
+        const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+        pythonSettings
+            .setup((p) => p.terminal)
+            .returns(() => ({ launchArgs: ['--custom'], executeInFileDir: false } as any));
+        configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+
+        const helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
+        helper.setup((h) => h.saveFileIfDirty(TypeMoq.It.isAny())).returns((f) => Promise.resolve(f));
+        serviceContainer.setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
+
+        executionManager.registerCommands();
+
+        const fileWithSpaces = Uri.file('/path with spaces/script.py');
+        await commandHandler!(fileWithSpaces);
+
+        expect(runInTerminalStub.calledOnce).to.be.true;
+        const passedArgs = runInTerminalStub.firstCall.args[1];
+        expect(passedArgs).to.deep.equal(['--custom', fileWithSpaces.fsPath]);
+    });
+
+    test('Ensure executeUsingExtension does not pass extra quotes in path with spaces for dedicated terminal', async () => {
+        useEnvExtensionStub.returns(true);
+        const runInDedicatedTerminalStub = sinon.stub(extapi, 'runInDedicatedTerminal');
+        const showStub = sinon.stub();
+        runInDedicatedTerminalStub.resolves({ show: showStub } as any);
+
+        let commandHandler: undefined | ((file: Uri) => Promise<void>);
+        commandManager
+            .setup((c) => c.registerCommand as any)
+            .returns(() => {
+                return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
+                    if (command === Commands.Exec_In_Separate_Terminal) {
+                        commandHandler = callback;
+                    }
+                    return { dispose: () => void 0 };
+                };
+            });
+
+        const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+        pythonSettings.setup((p) => p.terminal).returns(() => ({ launchArgs: [], executeInFileDir: false } as any));
+        configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+
+        const helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
+        helper.setup((h) => h.saveFileIfDirty(TypeMoq.It.isAny())).returns((f) => Promise.resolve(f));
+        serviceContainer.setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
+
+        executionManager.registerCommands();
+
+        const fileWithSpaces = Uri.file('C:\\My Folder with Spaces\\main.py');
+        await commandHandler!(fileWithSpaces);
+
+        expect(runInDedicatedTerminalStub.calledOnce).to.be.true;
+        const passedArgs = runInDedicatedTerminalStub.firstCall.args[1];
+        expect(passedArgs).to.deep.equal([fileWithSpaces.fsPath]);
+    });
+
     async function testExecutionOfSelectionWithoutAnyActiveDocument(commandId: string, executionSericeId: string) {
         let commandHandler: undefined | (() => Promise<void>);
         commandManager
