@@ -139,13 +139,7 @@ suite('Terminal - Code Execution Manager', () => {
 
                 const expectedRunner =
                     command === Commands.Exec_In_Separate_Terminal ? runInDedicatedTerminalStub : runInTerminalStub;
-                sinon.assert.calledOnceWithExactly(
-                    expectedRunner,
-                    file,
-                    ['-I', file.fsPath],
-                    undefined,
-                    false,
-                );
+                sinon.assert.calledOnceWithExactly(expectedRunner, file, ['-I', file.fsPath], undefined, false);
                 const otherRunner =
                     command === Commands.Exec_In_Separate_Terminal ? runInTerminalStub : runInDedicatedTerminalStub;
                 sinon.assert.notCalled(otherRunner);
