@@ -47,6 +47,11 @@ export class ProgressReporting implements Disposable {
         if (this.statusBarMessage) {
             this.statusBarMessage.dispose();
         }
+        if (this.progressDeferred) {
+            this.progressDeferred.resolve();
+            this.progressDeferred = undefined;
+            this.progress = undefined;
+        }
     }
 
     private beginProgress(): void {
