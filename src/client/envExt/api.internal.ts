@@ -16,6 +16,7 @@ import { executeCommand } from '../common/vscodeApis/commandApis';
 import { getConfiguration, getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
 import { traceError, traceLog } from '../logging';
 import { Interpreters } from '../common/utils/localize';
+import { PythonToolsApi } from './pythonToolsApi';
 
 export const ENVS_EXTENSION_ID = 'ms-python.vscode-python-envs';
 
@@ -78,6 +79,38 @@ export function onDidChangeEnvironmentEnvExt(
 }
 
 let _extApi: PythonEnvironmentApi | undefined;
+
+/** Returns the validated private capability, or undefined before any tool operation. */
+export async function getPythonToolsApi(): Promise<PythonToolsApi | undefined> {
+    const extension = getExtension(ENVS_EXTENSION_ID);
+    if (!extension) {
+        return undefined;
+    }
+    if (!extension.isActive) {
+        await extension.activate();
+    }
+    const extensionApi: unknown = _extApi ?? extension.exports;
+    if (!extensionApi || typeof extensionApi !== 'object' || !('__pythonTools' in extensionApi)) {
+        return undefined;
+    }
+    return isPythonToolsApi(extensionApi.__pythonTools) ? extensionApi.__pythonTools : undefined;
+}
+
+function isPythonToolsApi(value: unknown): value is PythonToolsApi {
+    return (
+        !!value &&
+        typeof value === 'object' &&
+        'version' in value &&
+        value.version === 1 &&
+        'configureEnvironment' in value &&
+        typeof value.configureEnvironment === 'function' &&
+        'getEnvironment' in value &&
+        typeof value.getEnvironment === 'function' &&
+        'installPackages' in value &&
+        typeof value.installPackages === 'function'
+    );
+}
+
 export async function getEnvExtApi(): Promise<PythonEnvironmentApi> {
     if (_extApi) {
         return _extApi;

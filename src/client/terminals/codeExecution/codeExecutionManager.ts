@@ -142,7 +142,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
 
         // Check on setting terminal.launchArgs
         const launchArgs = pythonSettings.terminal.launchArgs;
-        const totalArgs = [...launchArgs, fileToExecute.fsPath.fileToCommandArgumentForPythonExt()];
+        const totalArgs = [...launchArgs, fileToExecute.fsPath];
 
         const show = this.shouldTerminalFocusOnStart(fileToExecute);
         let terminal: Terminal | undefined;
