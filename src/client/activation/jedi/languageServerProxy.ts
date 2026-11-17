@@ -18,6 +18,10 @@ import { traceDecoratorError, traceDecoratorVerbose, traceError } from '../../lo
 export class JediLanguageServerProxy implements ILanguageServerProxy {
     private languageClient: LanguageClient | undefined;
 
+    private startingClient: LanguageClient | undefined;
+
+    private isStopped = false;
+
     private readonly disposables: Disposable[] = [];
 
     private lsVersion: string | undefined;
@@ -51,13 +55,28 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         this.lsVersion =
             (options.middleware ? (<JediLanguageClientMiddleware>options.middleware).serverVersion : undefined) ??
             '0.19.3';
+        this.isStopped = false;
 
         try {
             const client = await this.factory.createLanguageClient(resource, interpreter, options);
+            if (this.isStopped) {
+                await this.disposeClient(client);
+                return;
+            }
+            this.startingClient = client;
             this.registerHandlers(client);
             await client.start();
+            if (this.isStopped) {
+                await this.disposeClient(client);
+                return;
+            }
             this.languageClient = client;
+            this.startingClient = undefined;
         } catch (ex) {
+            this.startingClient = undefined;
+            if (this.isStopped) {
+                return;
+            }
             traceError('Failed to start language server:', ex);
             throw new Error('Launching Jedi language server using python failed, see output.');
         }
@@ -65,31 +84,37 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
 
     @traceDecoratorVerbose('Stopping language server')
     public async stop(): Promise<void> {
+        this.isStopped = true;
         while (this.disposables.length > 0) {
             const d = this.disposables.shift()!;
             d.dispose();
         }
 
-        if (this.languageClient) {
-            const client = this.languageClient;
-            this.languageClient = undefined;
+        const clientToStop = this.languageClient ?? this.startingClient;
+        this.languageClient = undefined;
+        this.startingClient = undefined;
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const pid: number | undefined = ((client as any)._serverProcess as ChildProcess)?.pid;
-            const killServer = () => {
-                if (pid) {
-                    killPid(pid);
-                }
-            };
+        if (clientToStop) {
+            await this.disposeClient(clientToStop);
+        }
+    }
 
-            try {
-                await client.stop();
-                await client.dispose();
-                killServer();
-            } catch (ex) {
-                traceError('Stopping language client failed', ex);
-                killServer();
+    private async disposeClient(client: LanguageClient): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pid: number | undefined = ((client as any)._serverProcess as ChildProcess)?.pid;
+        const killServer = () => {
+            if (pid) {
+                killPid(pid);
             }
+        };
+
+        try {
+            await client.stop();
+            await client.dispose();
+            killServer();
+        } catch (ex) {
+            traceError('Stopping language client failed', ex);
+            killServer();
         }
     }
 
