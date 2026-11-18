@@ -231,8 +231,8 @@ extends:
                       Get-Content -Path $configPath
                     displayName: Generate TSA configuration
 
-                  # DevDiv must provide the vscode-apiscan service connection and a secret
-                  # APIScanConnectionString pipeline variable before this job can run.
+                  # Pipeline definition 28954 must authorize the shared VSEng-APIScanSC
+                  # service connection once before this job can run.
                   - task: APIScan@2
                     inputs:
                       softwareFolder: $(Agent.TempDirectory)/apiscan/package
@@ -241,9 +241,8 @@ extends:
                       symbolsFolder: 'SRV*https://symweb.azurefd.net;$(Agent.TempDirectory)/apiscan'
                       isLargeApp: false
                       toolVersion: Latest
-                      azureSubscription: vscode-apiscan
+                      azureSubscription: VSEng-APIScanSC
                     env:
-                      AzureServicesAuthConnectionString: $(APIScanConnectionString)
                       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
                     displayName: Run API Scan
 
