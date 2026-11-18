@@ -29,7 +29,10 @@ extends:
     settings:
       networkIsolationPolicy: Preferred,GitHub,NodeTool
     sdl:
-      sourceAnalysisPool: VSEng-MicroBuildVSStable
+      sourceAnalysisPool:
+        name: AzurePipelines-EO
+        image: 1ESPT-Windows2022
+        os: windows
       bandit:
         enabled: false
       antimalwareScan:
@@ -49,7 +52,8 @@ extends:
       tsa:
         enabled: false
     pool:
-      name: VSEngSS-MicroBuild2022-1ES
+      name: AzurePipelines-EO
+      image: 1ESPT-Windows2022
       os: windows
 
     customBuildTags:

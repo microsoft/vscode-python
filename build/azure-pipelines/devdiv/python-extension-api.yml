@@ -58,7 +58,10 @@ extends:
     settings:
       networkIsolationPolicy: Preferred,GitHub,NodeTool
     sdl:
-      sourceAnalysisPool: VSEng-MicroBuildVSStable
+      sourceAnalysisPool:
+        name: AzurePipelines-EO
+        image: 1ESPT-Windows2022
+        os: windows
       sbom:
         enabled: true
     pool:
@@ -192,7 +195,7 @@ extends:
               - job: APIScan
                 displayName: Scan packed API
                 pool:
-                  name: VSEngSS-MicroBuild2022-1ES
+                  name: VSEng-MicroBuildVSStable
                   os: windows
                 steps:
                   - checkout: self
