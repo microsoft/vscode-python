@@ -1,4 +1,10 @@
 ### General Notes
+
+Release PRs must originate from a branch in the upstream
+`microsoft/vscode-python` repository, not a fork. The PR's head and base
+repositories must match. **Release PR / Release** skips fork-originated PRs,
+even when opened by a maintainer.
+
 All dates should align with VS Code's [iteration](https://github.com/microsoft/vscode/labels/iteration-plan) and [endgame](https://github.com/microsoft/vscode/labels/endgame-plan) plans.
 
 Feature freeze is Monday @ 17:00 America/Vancouver, XXX XX. At that point, commits to `main` should only be in response to bugs found during endgame testing until the release candidate is ready.
