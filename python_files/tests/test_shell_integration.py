@@ -58,7 +58,7 @@ def test_displayhook_call():
     importlib.reload(pythonrc)
     mock_displayhook = Mock()
 
-    hooks = sys.displayhook.__self__
+    hooks = cast("Any", sys.displayhook).__self__
     hooks.original_displayhook = mock_displayhook
 
     hooks.vscode_displayhook("mock_value")
@@ -70,7 +70,7 @@ def test_excepthook_call():
     importlib.reload(pythonrc)
     mock_excepthook = Mock()
 
-    hooks = sys.excepthook.__self__
+    hooks = cast("Any", sys.excepthook).__self__
     hooks.original_excepthook = mock_excepthook
 
     hooks.vscode_excepthook("mock_type", "mock_value", "mock_traceback")
@@ -206,7 +206,7 @@ if sys.platform == "darwin":
         with monkeypatch.context() as m:
             m.setattr("builtins.print", Mock())
             importlib.reload(sys.modules["pythonrc"])
-            print.assert_any_call(
+            cast("Mock", print).assert_any_call(
                 "Cmd click to launch VS Code Native REPL (https://aka.ms/python-native-repl)"
             )
 
@@ -218,6 +218,6 @@ if sys.platform != "darwin":
         with monkeypatch.context() as m:
             m.setattr("builtins.print", Mock())
             importlib.reload(sys.modules["pythonrc"])
-            print.assert_any_call(
+            cast("Mock", print).assert_any_call(
                 "Ctrl click to launch VS Code Native REPL (https://aka.ms/python-native-repl)"
             )
