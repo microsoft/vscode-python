@@ -68,7 +68,7 @@ extends:
         enabled: true
       tsa:
         config:
-          areaPath: 'DevDiv\\Python and AI Tools\\Python\\VS Code'
+          areaPath: 'DevDiv\Python and AI Tools\Python\VS Code'
           codebaseName: devdiv_microsoft_vscode_python
           instanceUrl: 'https://devdiv.visualstudio.com/defaultcollection'
           notificationAliases: ['brcan@microsoft.com', 'plseng@microsoft.com']
