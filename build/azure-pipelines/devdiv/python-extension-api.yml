@@ -67,7 +67,14 @@ extends:
       sbom:
         enabled: true
       tsa:
-        enabled: false
+        config:
+          areaPath: 'DevDiv\\Python and AI Tools\\Python\\VS Code'
+          codebaseName: devdiv_microsoft_vscode_python
+          instanceUrl: 'https://devdiv.visualstudio.com/defaultcollection'
+          notificationAliases: ['brcan@microsoft.com', 'plseng@microsoft.com']
+          serviceTreeID: '6e6194bc-7baa-4486-86d0-9f5419626d46'
+          projectName: 'DevDiv'
+        enabled: true
     pool:
       name: AzurePipelines-EO
       image: 1ESPT-Ubuntu22.04
@@ -232,11 +239,11 @@ extends:
 
                   - pwsh: |
                       $config = @{
-                          areaPath = 'DevDiv\VS Code (compliance tracking only)\Visual Studio Code NPM Packages'
+                          areaPath = 'DevDiv\Python and AI Tools\Python\VS Code'
                           codebaseName = 'devdiv_microsoft_vscode_python'
                           instanceUrl = 'https://devdiv.visualstudio.com/defaultcollection'
                           notificationAliases = @('brcan@microsoft.com', 'plseng@microsoft.com')
-                          serviceTreeID = 'f85a34fa-964a-4306-885a-003737c8fe18'
+                          serviceTreeID = '6e6194bc-7baa-4486-86d0-9f5419626d46'
                           projectName = 'DevDiv'
                       } | ConvertTo-Json -Depth 4
 
@@ -285,8 +292,29 @@ extends:
           dependsOn: Build
         condition: and(succeeded(), eq('${{ parameters.publishPythonApi }}', 'true'), eq(variables['Build.Reason'], 'Manual'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
         jobs:
+          - job: ApprovePublish
+            displayName: Approve public npm publication
+            pool: server
+            timeoutInMinutes: 1445
+            templateContext:
+              mb:
+                publish:
+                  enabled: false
+            steps:
+              - task: ManualValidation@1
+                timeoutInMinutes: 1440
+                inputs:
+                  notifyUsers: 'plseng@microsoft.com'
+                  approvers: 'plseng@microsoft.com'
+                  allowApproversToApproveTheirOwnRuns: false
+                  instructions: |
+                    Review the completed build, tests, package, and security scan results.
+                    Resume only to publish the validated package to public npm through ESRP.
+                  onTimeout: reject
+
           - job: PublishPackage
             displayName: Publish npm package
+            dependsOn: ApprovePublish
             pool:
               name: AzurePipelines-EO
               image: 1ESPT-Ubuntu22.04
@@ -333,8 +361,8 @@ extends:
                   contentsource: Folder
                   folderlocation: $(Pipeline.Workspace)/pythonExtensionApi
                   waitforreleasecompletion: true
-                  owners: lszomoru@microsoft.com
-                  approvers: stbatt@microsoft.com
+                  owners: brcan@microsoft.com
+                  approvers: plseng@microsoft.com
                   serviceendpointurl: https://api.esrp.microsoft.com
                   mainpublisher: ESRPRELPACMAN
                   domaintenantid: 975f013f-7f24-47e8-a7d3-abc4752bf346
