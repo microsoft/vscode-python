@@ -328,6 +328,50 @@ def test_simple_django_collect():
         )
 
 
+def test_django_collect_with_default_unittest_args():
+    """Django discovery should succeed when passed the default unittest discovery
+    arguments (-v, -s, -p) that the extension sends when no custom unittestArgs are
+    configured. See https://github.com/microsoft/vscode-python/issues/24991.
+    """
+    test_data_path: pathlib.Path = pathlib.Path(__file__).parent / ".data"
+    python_files_path: pathlib.Path = pathlib.Path(__file__).parent.parent.parent
+    discovery_script_path: str = os.fsdecode(python_files_path / "unittestadapter" / "discovery.py")
+    data_path: pathlib.Path = test_data_path / "simple_django"
+    manage_py_path: str = os.fsdecode(pathlib.Path(data_path, "manage.py"))
+
+    actual = helpers.runner_with_cwd_env(
+        [
+            discovery_script_path,
+            "--udiscovery",
+            "-v",
+            "-s",
+            ".",
+            "-p",
+            "test*.py",
+        ],
+        data_path,
+        {"MANAGE_PY_PATH": manage_py_path},
+    )
+
+    assert actual
+    actual_list: List[Dict[str, Any]] = actual
+    assert actual_list is not None
+    if actual_list is not None:
+        actual_item = actual_list.pop(0)
+        assert all(item in actual_item for item in ("status", "cwd"))
+        assert actual_item.get("status") == "success", (
+            f"Status is not 'success', error is: {actual_item.get('error')}"
+        )
+        assert actual_item.get("cwd") == os.fspath(data_path)
+        assert len(actual_item["tests"]["children"]) == 1
+        assert actual_item["tests"]["children"][0]["children"][0]["id_"] == os.fsdecode(
+            pathlib.PurePath(test_data_path, "simple_django", "polls", "tests.py")
+        )
+        assert (
+            len(actual_item["tests"]["children"][0]["children"][0]["children"][0]["children"]) == 3
+        )
+
+
 def test_project_root_path_with_cwd_override() -> None:
     """Test unittest discovery with project_root_path parameter.
 

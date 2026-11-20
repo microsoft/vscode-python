@@ -28,6 +28,43 @@ def override_argv(argv: List[str]) -> Generator:
         sys.argv = original_argv
 
 
+_START_DIRECTORY_FLAGS = ("-s", "--start-directory")
+_VERBOSE_FLAGS = ("-v", "--verbose")
+_QUIET_FLAGS = ("-q", "--quiet")
+
+
+def _to_manage_py_args(args: List[str]) -> List[str]:
+    """Adapt unittest discovery/execution args for 'manage.py test'.
+
+    Most unittest discovery flags (-p/--pattern, -t/--top-level-directory,
+    -f/--failfast, ...) are understood by Django's 'manage.py test' the same
+    way, so they -- and any Django-specific options a user adds to
+    unittestArgs, e.g. --keepdb, --settings -- are passed through unchanged.
+    Only two flags need adapting:
+    - -s/--start-directory has no Django equivalent, since Django discovers
+      tests across installed apps rather than a start directory, so it (and
+      its value) is dropped.
+    - -v/--verbose and -q/--quiet are value-less unittest flags, but Django's
+      -v/--verbosity requires an explicit value, so they're translated to an
+      explicit "-v 2"/"-v 0".
+    """
+    manage_py_args: List[str] = []
+    skip_next = False
+    for arg in args:
+        if skip_next:
+            skip_next = False
+            continue
+        if arg in _START_DIRECTORY_FLAGS:
+            skip_next = True
+        elif arg in _VERBOSE_FLAGS:
+            manage_py_args.extend(["-v", "2"])
+        elif arg in _QUIET_FLAGS:
+            manage_py_args.extend(["-v", "0"])
+        else:
+            manage_py_args.append(arg)
+    return manage_py_args
+
+
 def django_discovery_runner(manage_py_path: str, args: List[str]) -> None:
     # Attempt a small amount of validation on the manage.py path.
     if not pathlib.Path(manage_py_path).exists():
@@ -50,7 +87,7 @@ def django_discovery_runner(manage_py_path: str, args: List[str]) -> None:
             "test",
             "--testrunner=django_test_runner.CustomDiscoveryTestRunner",
         ]
-        command.extend(args)
+        command.extend(_to_manage_py_args(args))
         print("Running Django tests with command:", command)
 
         subprocess_discovery = subprocess.run(
@@ -93,7 +130,7 @@ def django_execution_runner(manage_py_path: str, test_ids: List[str], args: List
             str(manage_path),
             "test",
             "--testrunner=django_test_runner.CustomExecutionTestRunner",
-            *args,
+            *_to_manage_py_args(args),
             *test_ids,
         ]
         print(f"Django manage.py arguments: {manage_argv}")
