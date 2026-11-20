@@ -80,7 +80,7 @@
     "python.terminal.focusAfterLaunch.description": "When launching a python terminal, whether to focus the cursor on the terminal.",
     "python.terminal.launchArgs.description": "Python launch arguments to use when executing a file in the terminal.",
     "python.testing.autoTestDiscoverOnSaveEnabled.description": "Enable auto run test discovery when saving a test file.",
-    "python.testing.autoTestDiscoverOnSavePattern.description": "Glob pattern used to determine which files are used by autoTestDiscoverOnSaveEnabled.",
+    "python.testing.autoTestDiscoverOnSavePattern.description": "Glob patterns that decide which saved files trigger automatic test discovery when `#python.testing.autoTestDiscoverOnSaveEnabled#` is enabled. Each key is a glob and the value turns that pattern on (`true`) or off (`false`). Patterns merge across default, user, workspace, and folder settings the same way `#files.exclude#` and `#search.exclude#` do, so a pattern in user settings and another in workspace settings both apply. Set a pattern to `false` to turn off that pattern from a broader scope, including the default `**/*.py`. A saved file triggers discovery when it matches any enabled pattern. Patterns are matched against the workspace-relative path and the absolute path. A single glob string is still accepted so existing settings keep working, but a string replaces the whole value and does not merge across scopes.",
     "python.testing.cwd.description": "Optional working directory for tests.",
     "python.testing.debugPort.description": "Port number used for debugging of tests.",
     "python.testing.promptToConfigure.description": "Prompt to configure a test framework if potential tests directories are discovered.",
