@@ -33,11 +33,6 @@ parameters:
     type: boolean
     default: false
 
-  - name: runAPIScan
-    displayName: Run API Scan
-    type: boolean
-    default: true
-
 variables:
   - name: TeamName
     value: vscode-python
@@ -47,6 +42,8 @@ variables:
     value: pythonExtensionApi
   - name: NodeVersion
     value: '22.21.1'
+  - name: AZURE_ARTIFACTS_FEED
+    value: 'https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/DevDiv_PublicPackages/npm/registry/'
   - name: NpmTag
     value: ${{ parameters.quality }}
 
@@ -87,21 +84,8 @@ extends:
       - stage: Build
         displayName: Build, test, and pack
         jobs:
-          - job: ValidateConfiguration
-            displayName: Validate pipeline parameters
-            steps:
-              - ${{ if and(eq(parameters.publishPythonApi, true), eq(parameters.runAPIScan, false)) }}:
-                  - bash: |
-                      echo "Publishing requires API Scan. Set runAPIScan to true." >&2
-                      exit 1
-                    displayName: Reject publishing without API Scan
-              - ${{ else }}:
-                  - bash: echo "Pipeline parameter validation passed."
-                    displayName: Validate parameters
-
           - job: Linux_Node_22_21_1
             displayName: Linux (Node.js 22.21.1)
-            dependsOn: ValidateConfiguration
             timeoutInMinutes: 30
             pool:
               name: AzurePipelines-EO
@@ -114,7 +98,25 @@ extends:
               - template: azure-pipelines/extension/templates/steps/setup.yml@templates
                 parameters:
                   installPython: false
+                  customNPMRegistry: $(AZURE_ARTIFACTS_FEED)
                   nodeVersion: $(NodeVersion)
+
+              - pwsh: |
+                  $registry = '$(AZURE_ARTIFACTS_FEED)'
+                  Set-Location '$(Build.SourcesDirectory)'
+                  npm config set '@types:registry' $registry --location=project
+                  if ($LASTEXITCODE -ne 0) {
+                      throw 'Failed to configure the @types npm registry.'
+                  }
+
+                  foreach ($key in @('registry', '@types:registry')) {
+                      $effectiveRegistry = (npm config get $key | Out-String).Trim()
+                      if ($LASTEXITCODE -ne 0 -or $effectiveRegistry.TrimEnd('/') -ne $registry.TrimEnd('/')) {
+                          throw "Unexpected npm registry for ${key}: $effectiveRegistry"
+                      }
+                      Write-Host "${key}: $effectiveRegistry"
+                  }
+                displayName: Route npm dependencies through CFS
 
               - template: /build/azure-pipelines/templates/test-steps.yml@self
                 parameters:
@@ -122,7 +124,6 @@ extends:
 
           - job: MacOS_Node_22_21_1
             displayName: macOS (Node.js 22.21.1)
-            dependsOn: ValidateConfiguration
             timeoutInMinutes: 30
             pool:
               name: Azure Pipelines
@@ -137,7 +138,25 @@ extends:
               - template: azure-pipelines/extension/templates/steps/setup.yml@templates
                 parameters:
                   installPython: false
+                  customNPMRegistry: $(AZURE_ARTIFACTS_FEED)
                   nodeVersion: $(NodeVersion)
+
+              - pwsh: |
+                  $registry = '$(AZURE_ARTIFACTS_FEED)'
+                  Set-Location '$(Build.SourcesDirectory)'
+                  npm config set '@types:registry' $registry --location=project
+                  if ($LASTEXITCODE -ne 0) {
+                      throw 'Failed to configure the @types npm registry.'
+                  }
+
+                  foreach ($key in @('registry', '@types:registry')) {
+                      $effectiveRegistry = (npm config get $key | Out-String).Trim()
+                      if ($LASTEXITCODE -ne 0 -or $effectiveRegistry.TrimEnd('/') -ne $registry.TrimEnd('/')) {
+                          throw "Unexpected npm registry for ${key}: $effectiveRegistry"
+                      }
+                      Write-Host "${key}: $effectiveRegistry"
+                  }
+                displayName: Route npm dependencies through CFS
 
               - template: /build/azure-pipelines/templates/test-steps.yml@self
                 parameters:
@@ -145,7 +164,6 @@ extends:
 
           - job: Windows_Node_22_21_1
             displayName: Windows (Node.js 22.21.1)
-            dependsOn: ValidateConfiguration
             timeoutInMinutes: 30
             pool:
               name: AzurePipelines-EO
@@ -158,7 +176,25 @@ extends:
               - template: azure-pipelines/extension/templates/steps/setup.yml@templates
                 parameters:
                   installPython: false
+                  customNPMRegistry: $(AZURE_ARTIFACTS_FEED)
                   nodeVersion: $(NodeVersion)
+
+              - pwsh: |
+                  $registry = '$(AZURE_ARTIFACTS_FEED)'
+                  Set-Location '$(Build.SourcesDirectory)'
+                  npm config set '@types:registry' $registry --location=project
+                  if ($LASTEXITCODE -ne 0) {
+                      throw 'Failed to configure the @types npm registry.'
+                  }
+
+                  foreach ($key in @('registry', '@types:registry')) {
+                      $effectiveRegistry = (npm config get $key | Out-String).Trim()
+                      if ($LASTEXITCODE -ne 0 -or $effectiveRegistry.TrimEnd('/') -ne $registry.TrimEnd('/')) {
+                          throw "Unexpected npm registry for ${key}: $effectiveRegistry"
+                      }
+                      Write-Host "${key}: $effectiveRegistry"
+                  }
+                displayName: Route npm dependencies through CFS
 
               - template: /build/azure-pipelines/templates/test-steps.yml@self
                 parameters:
@@ -187,7 +223,25 @@ extends:
               - template: azure-pipelines/extension/templates/steps/setup.yml@templates
                 parameters:
                   installPython: false
+                  customNPMRegistry: $(AZURE_ARTIFACTS_FEED)
                   nodeVersion: $(NodeVersion)
+
+              - pwsh: |
+                  $registry = '$(AZURE_ARTIFACTS_FEED)'
+                  Set-Location '$(Build.SourcesDirectory)'
+                  npm config set '@types:registry' $registry --location=project
+                  if ($LASTEXITCODE -ne 0) {
+                      throw 'Failed to configure the @types npm registry.'
+                  }
+
+                  foreach ($key in @('registry', '@types:registry')) {
+                      $effectiveRegistry = (npm config get $key | Out-String).Trim()
+                      if ($LASTEXITCODE -ne 0 -or $effectiveRegistry.TrimEnd('/') -ne $registry.TrimEnd('/')) {
+                          throw "Unexpected npm registry for ${key}: $effectiveRegistry"
+                      }
+                      Write-Host "${key}: $effectiveRegistry"
+                  }
+                displayName: Route npm dependencies through CFS
 
               - template: /build/azure-pipelines/templates/pack-steps.yml@self
                 parameters:
@@ -197,99 +251,11 @@ extends:
                 workingDirectory: $(Build.SourcesDirectory)/$(PackageDirectory)
                 displayName: Pack npm package
 
-      - ${{ if eq(parameters.runAPIScan, true) }}:
-          - stage: APIScan
-            displayName: API Scan
-            dependsOn: Build
-            condition: succeeded()
-            jobs:
-              - job: APIScan
-                displayName: Scan packed API
-                timeoutInMinutes: 30
-                pool:
-                  name: VSEng-MicroBuildVSStable
-                  os: windows
-                steps:
-                  - checkout: self
-                    clean: true
-
-                  - task: DownloadPipelineArtifact@2
-                    inputs:
-                      artifactName: pythonExtensionApi
-                      targetPath: $(Agent.TempDirectory)/pythonExtensionApi
-                    displayName: Download npm package
-
-                  - task: ExtractFiles@1
-                    inputs:
-                      archiveFilePatterns: $(Agent.TempDirectory)/pythonExtensionApi/*.tgz
-                      destinationFolder: $(Agent.TempDirectory)/apiscan
-                      cleanDestinationFolder: true
-                    displayName: Extract package for API Scan
-
-                  - pwsh: |
-                      $packageJsonPath = '$(Agent.TempDirectory)/apiscan/package/package.json'
-                      $packageVersion = (Get-Content -LiteralPath $packageJsonPath -Raw | ConvertFrom-Json).version
-                      if ([string]::IsNullOrWhiteSpace($packageVersion)) {
-                          throw "Package version was not found in $packageJsonPath."
-                      }
-
-                      Write-Host "##vso[task.setvariable variable=PackageVersion]$packageVersion"
-                      Write-Host "Package version: $packageVersion"
-                    displayName: Read package version
-
-                  - pwsh: |
-                      $config = @{
-                          areaPath = 'DevDiv\Python and AI Tools\Python\VS Code'
-                          codebaseName = 'devdiv_microsoft_vscode_python'
-                          instanceUrl = 'https://devdiv.visualstudio.com/defaultcollection'
-                          notificationAliases = @('brcan@microsoft.com', 'plseng@microsoft.com')
-                          serviceTreeID = '6e6194bc-7baa-4486-86d0-9f5419626d46'
-                          projectName = 'DevDiv'
-                      } | ConvertTo-Json -Depth 4
-
-                      $configDirectory = Join-Path '$(Build.SourcesDirectory)' '.config'
-                      New-Item -Path $configDirectory -ItemType Directory -Force | Out-Null
-                      $configPath = Join-Path $configDirectory 'tsaoptions.json'
-                      Set-Content -Path $configPath -Value $config
-                      Get-Content -Path $configPath
-                    displayName: Generate TSA configuration
-
-                  # Pipeline definition 28954 must authorize the shared VSEng-APIScanSC
-                  # service connection once before this job can run.
-                  - task: APIScan@2
-                    inputs:
-                      softwareFolder: $(Agent.TempDirectory)/apiscan/package
-                      softwareName: pythonExtensionApi
-                      softwareVersionNum: $(PackageVersion)
-                      symbolsFolder: 'SRV*https://symweb.azurefd.net;$(Agent.TempDirectory)/apiscan'
-                      isLargeApp: false
-                      toolVersion: Latest
-                      azureSubscription: VSEng-APIScanSC
-                    env:
-                      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-                    displayName: Run API Scan
-
-                  - task: PublishSecurityAnalysisLogs@3
-                    inputs:
-                      ArtifactName: CodeAnalysisLogs
-                      ArtifactType: Container
-                      AllTools: true
-                      ToolLogsNotFoundAction: Standard
-                    displayName: Publish API Scan logs
-
-                  - task: securedevelopmentteam.vss-secure-development-tools.build-task-uploadtotsa.TSAUpload@2
-                    continueOnError: true
-                    inputs:
-                      GdnPublishTsaConfigFile: $(Build.SourcesDirectory)/.config/tsaoptions.json
-                      GdnPublishTsaOnboard: true
-                    displayName: TSA Upload
-
       - stage: Publish
         displayName: Publish npm package
-        ${{ if eq(parameters.runAPIScan, true) }}:
-          dependsOn: APIScan
-        ${{ else }}:
-          dependsOn: Build
+        dependsOn:
+          - Build
+          - SDLSources
         condition: and(succeeded(), eq('${{ parameters.publishPythonApi }}', 'true'), eq(variables['Build.Reason'], 'Manual'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
         jobs:
           - job: ApprovePublish
@@ -308,7 +274,7 @@ extends:
                   approvers: 'plseng@microsoft.com'
                   allowApproversToApproveTheirOwnRuns: false
                   instructions: |
-                    Review the completed build, tests, package, and security scan results.
+                    Review the completed build, tests, package, and security analysis results.
                     Resume only to publish the validated package to public npm through ESRP.
                   onTimeout: reject
 
