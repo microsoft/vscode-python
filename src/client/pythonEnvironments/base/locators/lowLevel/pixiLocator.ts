@@ -24,8 +24,8 @@ async function getVirtualEnvDirs(root: string): Promise<string[]> {
 /**
  * Returns all virtual environment locations to look for in a workspace.
  */
-function getVirtualEnvRootDirs(root: string): string[] {
-    return [path.join(path.join(root, '.pixi'), 'envs')];
+export async function getVirtualEnvRootDirs(root: string): Promise<string[]> {
+    return asyncFilter([path.join(path.join(root, '.pixi'), 'envs')], pathExists);
 }
 
 export class PixiLocator extends FSWatchingLocator {
@@ -33,7 +33,7 @@ export class PixiLocator extends FSWatchingLocator {
 
     public constructor(private readonly root: string) {
         super(
-            async () => getVirtualEnvRootDirs(this.root),
+            () => getVirtualEnvRootDirs(this.root),
             async () => PythonEnvKind.Pixi,
             {
                 // Note detecting kind of virtual env depends on the file structure around the
