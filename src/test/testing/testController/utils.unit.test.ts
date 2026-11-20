@@ -935,6 +935,28 @@ suite('startRunResultNamedPipe drain-on-cancel tests', () => {
 
         assert.strictEqual(reader.disposed, true, 'reader disposed when onClose fires');
     });
+
+    test('cancellation with reader that never closes resolves deferredTillServerClose after drain grace period', async () => {
+        const reader = new FakeMessageReader();
+        sandbox.stub(namedPipes, 'createReaderPipe').resolves(reader);
+
+        const received: ExecutionTestPayload[] = [];
+        const deferredTillServerClose: Deferred<void> = createDeferred<void>();
+        const cancelSource = new CancellationTokenSource();
+
+        await startRunResultNamedPipe((payload) => received.push(payload), deferredTillServerClose, cancelSource.token);
+
+        cancelSource.cancel();
+        // Before grace period expires, not yet resolved
+        await new Promise((r) => setImmediate(r));
+        assert.strictEqual((deferredTillServerClose as Deferred<void>).completed, false);
+
+        // After grace period expires, resolved and reader disposed
+        await deferredTillServerClose.promise;
+        assert.strictEqual(reader.disposed, true);
+
+        cancelSource.dispose();
+    });
 });
 
 suite('awaitDeferredWithTimeout', () => {
