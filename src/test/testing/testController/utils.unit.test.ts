@@ -262,6 +262,107 @@ suite('populateTestTree tests', () => {
         assert.deepStrictEqual(mockTestItem.tags, [RunTestTag, DebugTestTag]);
     });
 
+    test('should convert pytest mark tags to TestTags on TestItems', () => {
+        // Arrange
+        // Tree structure:
+        // RootWorkspaceFolder (folder)
+        // └── test_example (test, tags: ["slow", "integration"])
+        const testItem: DiscoveredTestItem = {
+            path: '/test/path/test.py',
+            name: 'test_example',
+            type_: 'test',
+            id_: 'test-id',
+            lineno: 10,
+            runID: 'run-id-123',
+            tags: ['slow', 'integration'],
+        };
+
+        const testTreeData: DiscoveredTestNode = {
+            path: '/test/path/root',
+            name: 'RootWorkspaceFolder',
+            type_: 'folder',
+            id_: 'root-id',
+            children: [testItem],
+        };
+
+        const childrenAddStub = sandbox.stub();
+        const mockRootItem: TestItem = {
+            id: 'root-id',
+            children: {
+                add: childrenAddStub,
+            },
+        } as any;
+
+        const mockTestItem: TestItem = {
+            id: 'test-id',
+            label: 'test_example',
+            uri: Uri.file('/test/path/test.py'),
+            canResolveChildren: false,
+            tags: [],
+            range: undefined,
+        } as any;
+
+        createTestItemStub.returns(mockTestItem);
+
+        // Act
+        populateTestTree(testController, testTreeData, mockRootItem, resultResolver, cancelationToken);
+
+        // Assert
+        assert.ok(childrenAddStub.calledOnceWith(mockTestItem));
+        assert.deepStrictEqual(mockTestItem.tags, [
+            RunTestTag,
+            DebugTestTag,
+            { id: 'mark.slow' },
+            { id: 'mark.integration' },
+        ]);
+    });
+
+    test('should keep only default tags when no pytest mark tags are present', () => {
+        // Arrange
+        const testItem: DiscoveredTestItem = {
+            path: '/test/path/test.py',
+            name: 'test_example',
+            type_: 'test',
+            id_: 'test-id',
+            lineno: 10,
+            runID: 'run-id-123',
+        };
+
+        const testTreeData: DiscoveredTestNode = {
+            path: '/test/path/root',
+            name: 'RootWorkspaceFolder',
+            type_: 'folder',
+            id_: 'root-id',
+            children: [testItem],
+        };
+
+        const childrenAddStub = sandbox.stub();
+        const mockRootItem: TestItem = {
+            id: 'root-id',
+            children: {
+                add: childrenAddStub,
+            },
+        } as any;
+
+        const mockTestItem: TestItem = {
+            id: 'test-id',
+            label: 'test_example',
+            uri: Uri.file('/test/path/test.py'),
+            canResolveChildren: false,
+            tags: [],
+            range: undefined,
+        } as any;
+
+        createTestItemStub.returns(mockTestItem);
+
+        // Act
+        populateTestTree(testController, testTreeData, mockRootItem, resultResolver, cancelationToken);
+
+        // Assert
+        assert.ok(childrenAddStub.calledOnceWith(mockTestItem));
+        assert.deepStrictEqual(mockTestItem.tags, [RunTestTag, DebugTestTag]);
+    });
+
     test('should create TestItem with correct range when lineno is provided', () => {
         // Arrange
         const testItem: DiscoveredTestItem = {
