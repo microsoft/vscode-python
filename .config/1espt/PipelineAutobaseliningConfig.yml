@@ -1,0 +1,87 @@
+## DO NOT MODIFY THIS FILE MANUALLY. This is part of auto-baselining from 1ES Pipeline Templates. Go to [https://aka.ms/1espt-autobaselining] for more details.
+
+pipelines:
+  300:
+    retail:
+      source:
+        credscan:
+          lastModifiedDate: 2024-09-09
+        eslint:
+          lastModifiedDate: 2024-09-09
+        psscriptanalyzer:
+          lastModifiedDate: 2024-09-09
+        armory:
+          lastModifiedDate: 2024-09-09
+        policheck:
+          lastModifiedDate: 2024-11-27
+      binary:
+        credscan:
+          lastModifiedDate: 2024-09-09
+        binskim:
+          lastModifiedDate: 2025-01-11
+        spotbugs:
+          lastModifiedDate: 2024-09-09
+  299:
+    retail:
+      source:
+        credscan:
+          lastModifiedDate: 2024-11-27
+        policheck:
+          lastModifiedDate: 2024-11-27
+        eslint:
+          lastModifiedDate: 2024-11-27
+        psscriptanalyzer:
+          lastModifiedDate: 2024-11-27
+        armory:
+          lastModifiedDate: 2024-11-27
+      binary:
+        credscan:
+          lastModifiedDate: 2024-11-27
+        binskim:
+          lastModifiedDate: 2024-11-27
+        spotbugs:
+          lastModifiedDate: 2024-11-27
+  635:
+    retail:
+      source:
+        credscan:
+          lastModifiedDate: 2025-08-11
+        policheck:
+          lastModifiedDate: 2025-08-11
+        eslint:
+          lastModifiedDate: 2025-08-11
+        psscriptanalyzer:
+          lastModifiedDate: 2025-08-11
+        armory:
+          lastModifiedDate: 2025-08-11
+        accessibilityinsights:
+          lastModifiedDate: 2025-08-11
+      binary:
+        credscan:
+          lastModifiedDate: 2025-08-11
+        binskim:
+          lastModifiedDate: 2025-08-11
+        spotbugs:
+          lastModifiedDate: 2025-08-11
+  28954:
+    retail:
+      source:
+        credscan:
+          lastModifiedDate: 2026-11-20
+        policheck:
+          lastModifiedDate: 2026-11-20
+        eslint:
+          lastModifiedDate: 2026-11-20
+        psscriptanalyzer:
+          lastModifiedDate: 2026-11-20
+        armory:
+          lastModifiedDate: 2026-11-20
+        accessibilityinsights:
+          lastModifiedDate: 2026-11-20
+      binary:
+        credscan:
+          lastModifiedDate: 2026-11-20
+        binskim:
+          lastModifiedDate: 2026-11-20
+        spotbugs:
+          lastModifiedDate: 2026-11-20
