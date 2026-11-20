@@ -38,3 +38,6 @@ pytest-describe
 
 # for pytest-ruff related tests
 pytest-ruff
+
+# for pytest-xdist related tests
+pytest-xdist

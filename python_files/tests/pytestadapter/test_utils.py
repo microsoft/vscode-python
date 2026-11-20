@@ -6,13 +6,19 @@ import pathlib
 import sys
 import tempfile
 
+import pytest
+
 from .helpers import (
     TEST_DATA_PATH,
 )
 
 script_dir = pathlib.Path(__file__).parent.parent.parent
 sys.path.append(os.fspath(script_dir))
-from vscode_pytest import cached_fsdecode, has_symlink_parent  # noqa: E402
+from vscode_pytest import (  # noqa: E402
+    cached_fsdecode,
+    has_symlink_parent,
+    remove_xdist_group_suffix,
+)
 
 
 def test_has_symlink_parent_with_symlink():
@@ -55,3 +61,24 @@ def test_cached_fsdecode():
     result3 = cached_fsdecode(test_path2)
     assert result3 == os.fspath(test_path2)
     assert result3 != result1
+
+
+@pytest.mark.parametrize(
+    ("test_id", "keywords", "expected"),
+    [
+        ("test_file.py::test_a@group_a", {"xdist_group": 1}, "test_file.py::test_a"),
+        (
+            "test_file.py::TestClass::test_a@group_a",
+            {"xdist_group": 1},
+            "test_file.py::TestClass::test_a",
+        ),
+        ("test_file.py::test_a[x@y]@group_a", {"xdist_group": 1}, "test_file.py::test_a[x@y]"),
+        # Without --dist=loadgroup there is no suffix, but parameter ids can still contain "@".
+        ("test_file.py::test_a[x@y]", {"xdist_group": 1}, "test_file.py::test_a[x@y]"),
+        ("test_file.py::test_a", {"xdist_group": 1}, "test_file.py::test_a"),
+        # Tests without the xdist_group marker are left untouched.
+        ("test_file.py::test_a@group_a", {}, "test_file.py::test_a@group_a"),
+    ],
+)
+def test_remove_xdist_group_suffix(test_id, keywords, expected):
+    assert remove_xdist_group_suffix(test_id, keywords) == expected
