@@ -31,6 +31,10 @@ export class JediLanguageServerManager implements ILanguageServerManager {
 
     private connected = false;
 
+    private started = false;
+
+    private restartQueue: Promise<void> = Promise.resolve();
+
     private lsVersion: string | undefined;
 
     constructor(
@@ -43,7 +47,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
             JediLanguageServerManager.commandDispose.dispose();
         }
         JediLanguageServerManager.commandDispose = commandManager.registerCommand(Commands.RestartLS, () => {
-            this.restartLanguageServer().ignoreErrors();
+            return this.restartLanguageServer();
         });
     }
 
@@ -54,6 +58,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
     }
 
     public dispose(): void {
+        this.started = false;
         this.stopLanguageServer().ignoreErrors();
         JediLanguageServerManager.commandDispose.dispose();
         this.disposables.forEach((d) => d.dispose());
@@ -85,6 +90,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
 
         await this.analysisOptions.initialize(resource, interpreter);
         await this.startLanguageServer();
+        this.started = true;
     }
 
     public connect(): void {
@@ -109,8 +115,17 @@ export class JediLanguageServerManager implements ILanguageServerManager {
     @traceDecoratorError('Failed to restart language server')
     @traceDecoratorVerbose('Restarting language server')
     protected async restartLanguageServer(): Promise<void> {
-        await this.stopLanguageServer();
-        await this.startLanguageServer();
+        if (!this.started) {
+            return;
+        }
+        this.restartQueue = this.restartQueue.then(async () => {
+            if (!this.started) {
+                return;
+            }
+            await this.stopLanguageServer();
+            await this.startLanguageServer();
+        });
+        return this.restartQueue;
     }
 
     @captureTelemetry(
