@@ -230,6 +230,16 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         if (useEnvExtension()) {
             traceInfo('[test-by-project] Activating project-based testing mode');
 
+            // Subscribe to project and environment changes BEFORE the initial project discovery.
+            // Acquiring the environments API during discovery activates the environments extension
+            // and kicks off its initial refresh; project registrations and environment assignments
+            // raised before these subscriptions are attached would be missed entirely. A missed
+            // environment assignment leaves the workspace stuck on the fallback default project,
+            // which discovers tests with the workspace-root interpreter instead of the
+            // project-specific environment (e.g. a monorepo sub-project venv).
+            await this.subscribeToProjectChanges();
+            await this.subscribeToEnvironmentChanges();
+
             // Discover projects in parallel across all workspaces
             // Promise.allSettled ensures one workspace failure doesn't block others
             const results = await Promise.allSettled(
@@ -254,11 +264,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     this.activateLegacyWorkspace(workspace);
                 }
             });
-            // Subscribe to project changes to update test tree when projects are added/removed
-            await this.subscribeToProjectChanges();
-            // Subscribe to environment changes so projects that had no resolved environment at
-            // activation get discovered once the environments extension assigns one.
-            await this.subscribeToEnvironmentChanges();
             return;
         }
 
@@ -340,8 +345,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
         let queued = false;
         for (const workspace of affected) {
-            // Only workspaces already in project-based mode can be re-discovered this way.
-            if (this.projectRegistry.hasProjects(workspace.uri)) {
+            // Workspaces in legacy mode (a legacy adapter was registered for them) are not
+            // re-discovered this way. All other workspaces are: both workspaces with registered
+            // projects and workspaces whose initial project registration is still in flight.
+            // The latter ensures environment assignments raised during startup discovery (before
+            // the workspace had any projects registered) still trigger re-discovery once the
+            // environments extension resolves them.
+            if (this.projectRegistry.hasProjects(workspace.uri) || !this.testAdapters.has(workspace.uri)) {
                 this.pendingEnvChangeWorkspaces.set(workspace.uri.toString(), workspace);
                 queued = true;
             }
