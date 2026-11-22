@@ -1052,6 +1052,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 request.profile?.kind,
                 this.debugLauncher,
                 await this.interpreterService.getActiveInterpreter(workspace.uri),
+                request.exclude,
             );
         } catch (ex) {
             failed = true;
