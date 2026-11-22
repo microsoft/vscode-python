@@ -16,7 +16,7 @@ import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
 import { EditorLoadTelemetry } from './telemetry/types';
 import { IStartupDurations } from './types';
-import { useEnvExtension } from './envExt/api.internal';
+import { getEnvironmentsExtensionDecisionTelemetry, useEnvExtension } from './envExt/api.internal';
 import { getEnvsExplicitFalseScope } from './envExt/telemetry';
 
 export async function sendStartupTelemetry(
@@ -99,6 +99,7 @@ async function getActivationTelemetryProps(
             terminal: terminalShellType,
             isFirstSession,
             envsExplicitFalseScope: getEnvsExplicitFalseScope(),
+            ...getEnvironmentsExtensionDecisionTelemetry(),
         };
     }
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -157,5 +158,6 @@ async function getActivationTelemetryProps(
         isFirstSession,
         usingEnvironmentsExtension,
         envsExplicitFalseScope: getEnvsExplicitFalseScope(),
+        ...getEnvironmentsExtensionDecisionTelemetry(),
     };
 }
