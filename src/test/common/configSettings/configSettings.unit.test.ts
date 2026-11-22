@@ -308,4 +308,49 @@ suite('Python Settings', async () => {
     test('Experiments (not enabled)', () => testExperiments(false));
 
     test('Experiments (enabled)', () => testExperiments(true));
+
+    test('autoTestDiscoverOnSavePattern resolves glob keys and preserves a legacy string', () => {
+        const previous = process.env.AUTO_TEST_DISCOVER_PATTERN_ROOT;
+        process.env.AUTO_TEST_DISCOVER_PATTERN_ROOT = '/repo/tests';
+        try {
+            expected.pythonPath = 'python3';
+            expected.testing = {
+                promptToConfigure: true,
+                debugPort: 3000,
+                pytestEnabled: false,
+                pytestPath: 'pytest',
+                pytestArgs: [],
+                unittestEnabled: false,
+                unittestArgs: [],
+                autoTestDiscoverOnSaveEnabled: true,
+                autoTestDiscoverOnSavePattern: {
+                    '${env:AUTO_TEST_DISCOVER_PATTERN_ROOT}/**/test_*.py': true,
+                    '**/*.py': false,
+                },
+            };
+            initializeConfig(expected);
+
+            settings.update(config.object);
+
+            expect(settings.testing.autoTestDiscoverOnSavePattern).to.deep.equal({
+                '/repo/tests/**/test_*.py': true,
+                '**/*.py': false,
+            });
+
+            expected.testing = {
+                ...expected.testing,
+                autoTestDiscoverOnSavePattern: '${env:AUTO_TEST_DISCOVER_PATTERN_ROOT}/**/test_*.py',
+            };
+            initializeConfig(expected);
+            settings.update(config.object);
+
+            expect(settings.testing.autoTestDiscoverOnSavePattern).to.equal('/repo/tests/**/test_*.py');
+        } finally {
+            if (previous === undefined) {
+                delete process.env.AUTO_TEST_DISCOVER_PATTERN_ROOT;
+            } else {
+                process.env.AUTO_TEST_DISCOVER_PATTERN_ROOT = previous;
+            }
+        }
+    });
 });

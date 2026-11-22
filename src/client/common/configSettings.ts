@@ -18,6 +18,10 @@ import { IInterpreterAutoSelectionProxyService } from '../interpreter/autoSelect
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { sendSettingTelemetry } from '../telemetry/envFileTelemetry';
+import {
+    DEFAULT_AUTO_TEST_DISCOVER_ON_SAVE_PATTERN,
+    resolveAutoTestDiscoverOnSavePattern,
+} from '../testing/configuration/autoTestDiscoverOnSavePattern';
 import { ITestingSettings } from '../testing/configuration/types';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
@@ -331,7 +335,7 @@ export class PythonSettings implements IPythonSettings {
                     unittestEnabled: false,
                     pytestPath: 'pytest',
                     autoTestDiscoverOnSaveEnabled: true,
-                    autoTestDiscoverOnSavePattern: '**/*.py',
+                    autoTestDiscoverOnSavePattern: { ...DEFAULT_AUTO_TEST_DISCOVER_ON_SAVE_PATTERN },
                 } as ITestingSettings;
             }
         }
@@ -348,7 +352,7 @@ export class PythonSettings implements IPythonSettings {
                   unittestArgs: [],
                   unittestEnabled: false,
                   autoTestDiscoverOnSaveEnabled: true,
-                  autoTestDiscoverOnSavePattern: '**/*.py',
+                  autoTestDiscoverOnSavePattern: { ...DEFAULT_AUTO_TEST_DISCOVER_ON_SAVE_PATTERN },
               };
         this.testing.pytestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.pytestPath), workspaceRoot);
         if (this.testing.cwd) {
@@ -358,6 +362,15 @@ export class PythonSettings implements IPythonSettings {
         // Resolve any variables found in the test arguments.
         this.testing.pytestArgs = this.testing.pytestArgs.map((arg) => systemVariables.resolveAny(arg));
         this.testing.unittestArgs = this.testing.unittestArgs.map((arg) => systemVariables.resolveAny(arg));
+
+        // Glob patterns are the object keys. resolveAny substitutes variables in values, so resolve the keys here.
+        const resolvedPattern = resolveAutoTestDiscoverOnSavePattern(
+            this.testing.autoTestDiscoverOnSavePattern,
+            (value) => systemVariables.resolveAny(value),
+        );
+        this.testing.autoTestDiscoverOnSavePattern = resolvedPattern ?? {
+            ...DEFAULT_AUTO_TEST_DISCOVER_ON_SAVE_PATTERN,
+        };
 
         const terminalSettings = systemVariables.resolveAny(pythonSettings.get<ITerminalSettings>('terminal'))!;
         if (this.terminal) {
