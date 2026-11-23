@@ -64,7 +64,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         };
         const cSource = new CancellationTokenSource();
         runInstance.token.onCancellationRequested(() => cSource.cancel());
-        const name = await utils.startRunResultNamedPipe(
+        const resultPipe = await utils.startRunResultNamedPipe(
             dataReceivedCallback, // callback to handle data received
             deferredTillServerClose, // deferred to resolve when server closes
             cSource.token, // token to cancel
@@ -79,7 +79,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             await this.runTestsNew(
                 uri,
                 testIds,
-                name,
+                resultPipe.name,
                 cSource,
                 runInstance,
                 profileKind,
@@ -90,7 +90,10 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         } catch (error) {
             traceError(`Error in running unittest tests: ${error}`);
         } finally {
+            cSource.cancel();
             await utils.awaitDeferredWithTimeout(deferredTillServerClose, utils.RESULT_PIPE_DRAIN_TIMEOUT_MS);
+            resultPipe.dispose();
+            cSource.dispose();
         }
     }
 

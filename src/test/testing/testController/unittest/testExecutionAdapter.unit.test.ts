@@ -89,7 +89,9 @@ suite('Unittest test execution adapter', () => {
         myTestPath = path.join('/', 'my', 'test', 'path', '/');
 
         utilsStartRunResultNamedPipeStub = sinon.stub(util, 'startRunResultNamedPipe');
-        utilsStartRunResultNamedPipeStub.callsFake(() => Promise.resolve('runResultPipe-mockName'));
+        utilsStartRunResultNamedPipeStub.callsFake(() =>
+            Promise.resolve({ name: 'runResultPipe-mockName', dispose: sinon.stub() }),
+        );
 
         execService.setup((x) => x.getExecutablePath()).returns(() => Promise.resolve('/mock/path/to/python'));
     });
@@ -510,7 +512,7 @@ suite('Unittest test execution adapter', () => {
         let serverCloseDeferred: Deferred<void> | undefined;
         utilsStartRunResultNamedPipeStub.callsFake((_callback: unknown, deferred: Deferred<void>, _token: unknown) => {
             serverCloseDeferred = deferred;
-            return Promise.resolve('runResultPipe-mockName');
+            return Promise.resolve({ name: 'runResultPipe-mockName', dispose: sinon.stub() });
         });
 
         const projectPath = path.join('/', 'workspace', 'myproject');

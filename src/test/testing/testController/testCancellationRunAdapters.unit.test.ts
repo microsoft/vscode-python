@@ -112,7 +112,7 @@ suite('Execution Flow Run Adapters', () => {
                     deferredTillServerCloseTester?.resolve();
                 });
 
-                return Promise.resolve('named-pipes-socket-name');
+                return Promise.resolve({ name: 'named-pipes-socket-name', dispose: serverDisposeStub });
             });
             serverDisposeStub.callsFake(() => {
                 console.log('server disposed');
@@ -138,6 +138,7 @@ suite('Execution Flow Run Adapters', () => {
             );
             // wait for server to start to keep test from failing
             await deferredStartTestIdsNamedPipe.promise;
+            sinon.assert.calledOnce(serverDisposeStub);
         });
         test(`Adapter ${adapter}: token called mid-debug resolves correctly`, async () => {
             // mock test run and cancelation token
@@ -180,7 +181,7 @@ suite('Execution Flow Run Adapters', () => {
                 token?.onCancellationRequested(() => {
                     deferredTillServerCloseTester?.resolve();
                 });
-                return Promise.resolve('named-pipes-socket-name');
+                return Promise.resolve({ name: 'named-pipes-socket-name', dispose: serverDisposeStub });
             });
             serverDisposeStub.callsFake(() => {
                 console.log('server disposed');
@@ -219,6 +220,7 @@ suite('Execution Flow Run Adapters', () => {
             );
             // wait for server to start to keep test from failing
             await deferredStartTestIdsNamedPipe.promise;
+            sinon.assert.calledOnce(serverDisposeStub);
         });
     });
 });
