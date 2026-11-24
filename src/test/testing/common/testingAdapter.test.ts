@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { TestController, TestRun, TestRunProfileKind, Uri } from 'vscode';
+import { CancellationTokenSource, TestController, TestRun, TestRunProfileKind, Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as path from 'path';
 import * as assert from 'assert';
@@ -693,6 +693,75 @@ suite('End to End Tests: test adapters', () => {
                 }
             });
     });
+
+    test('pytest cancellation closes the POSIX result pipe promptly', async () => {
+        if (process.platform === 'win32') {
+            return;
+        }
+
+        workspaceUri = Uri.parse(rootPathSmallWorkspace);
+        configService.getSettings(workspaceUri).testing.pytestArgs = [];
+
+        const cancellation = new CancellationTokenSource();
+        const completedTestId = `${rootPathSmallWorkspace}/test_cancellation.py::test_result_before_cancellation`;
+        const slowTestId = `${rootPathSmallWorkspace}/test_cancellation.py::test_waits_for_cancellation`;
+        const previousRuntimeDir = process.env.XDG_RUNTIME_DIR;
+        const runtimeDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vscode-python-cancellation-'));
+        process.env.XDG_RUNTIME_DIR = runtimeDir;
+        let completedResultReceived = false;
+        let cancellationStartedAt: number | undefined;
+        let watchdogTriggered = false;
+        const watchdog = setTimeout(() => {
+            watchdogTriggered = true;
+            cancellation.cancel();
+        }, 60_000);
+
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+        resultResolver.resolveExecution = (payload, _runInstance) => {
+            const completedResult = Object.values(payload.result ?? {}).find(
+                (result) => result.test === completedTestId && result.outcome === 'success',
+            );
+            if (completedResult && !cancellation.token.isCancellationRequested) {
+                completedResultReceived = true;
+                cancellationStartedAt = performance.now();
+                cancellation.cancel();
+            }
+        };
+
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun.setup((t) => t.token).returns(() => cancellation.token);
+        testRun.setup((t) => t.appendOutput(typeMoq.It.isAny())).returns(() => false);
+
+        const executionAdapter = new PytestTestExecutionAdapter(configService, resultResolver, envVarsService);
+        try {
+            await executionAdapter.runTests(
+                workspaceUri,
+                [completedTestId, slowTestId],
+                TestRunProfileKind.Run,
+                testRun.object,
+                pythonExecFactory,
+            );
+        } finally {
+            clearTimeout(watchdog);
+            cancellation.cancel();
+            cancellation.dispose();
+            if (previousRuntimeDir === undefined) {
+                delete process.env.XDG_RUNTIME_DIR;
+            } else {
+                process.env.XDG_RUNTIME_DIR = previousRuntimeDir;
+            }
+            fs.rmSync(runtimeDir, { force: true, recursive: true });
+        }
+
+        assert.ok(!watchdogTriggered, 'Expected pytest to report a result before the cancellation watchdog fired');
+        assert.ok(completedResultReceived, 'Expected the completed test result before cancellation');
+        assert.ok(cancellationStartedAt, 'Expected cancellation to start after receiving a completed test result');
+        const cancellationDuration = performance.now() - cancellationStartedAt;
+        assert.ok(
+            cancellationDuration < 4_000,
+            `Expected cancellation to close the result pipe promptly, but it took ${cancellationDuration}ms`,
+        );
+    }).timeout(75_000);
 
     test('Unittest execution with coverage, small workspace', async () => {
         // result resolver and saved data for assertions
