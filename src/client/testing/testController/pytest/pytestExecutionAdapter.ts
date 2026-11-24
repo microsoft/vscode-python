@@ -233,13 +233,19 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 traceInfo(`Running pytest with arguments: ${runArgs.join(' ')} for workspace ${uri.fsPath} \r\n`);
 
                 let resultProc: ChildProcess | undefined;
+                let processKilled = false;
+                const killResultProcess = () => {
+                    if (resultProc && !processKilled) {
+                        processKilled = true;
+                        resultProc.kill();
+                        return true;
+                    }
+                    return false;
+                };
 
                 runInstance.token.onCancellationRequested(() => {
                     traceInfo(`Test run cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);
-                    // if the resultProc exists just call kill on it which will handle resolving the ExecClose deferred, otherwise resolve the deferred here.
-                    if (resultProc) {
-                        resultProc?.kill();
-                    } else {
+                    if (!killResultProcess()) {
                         deferredTillExecClose.resolve();
                         serverCancel.cancel();
                     }
@@ -247,6 +253,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
 
                 const result = execService?.execObservable(runArgs, spawnOptions);
                 resultProc = result?.proc;
+                if (runInstance.token.isCancellationRequested) {
+                    killResultProcess();
+                }
 
                 // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
