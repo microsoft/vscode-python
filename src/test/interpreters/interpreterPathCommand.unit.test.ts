@@ -5,7 +5,7 @@
 
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { anything, instance, mock, reset, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { IDisposable } from '../../client/common/types';
@@ -14,6 +14,7 @@ import { InterpreterPathCommand } from '../../client/interpreter/interpreterPath
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import * as workspaceApis from '../../client/common/vscodeApis/workspaceApis';
+import { mockedVSCodeNamespaces } from '../vscode-mock';
 
 suite('Interpreter Path Command', () => {
     let interpreterService: IInterpreterService;
@@ -30,6 +31,7 @@ suite('Interpreter Path Command', () => {
 
     teardown(() => {
         sinon.restore();
+        reset(mockedVSCodeNamespaces.workspace);
     });
 
     test('Ensure command is registered with the correct callback handler', async () => {
@@ -64,6 +66,35 @@ suite('Interpreter Path Command', () => {
 
             return Promise.resolve({ path: 'settingValue' }) as unknown;
         });
+        const setting = await interpreterPathCommand._getSelectedInterpreterPath(args);
+        expect(setting).to.equal('settingValue');
+    });
+
+    test('If `args[1]` is missing but there is exactly one workspace folder, fall back to it (tasks.json case)', async () => {
+        when(mockedVSCodeNamespaces.workspace!.workspaceFolders).thenReturn([
+            { uri: Uri.file('onlyFolderPath'), name: 'onlyFolder', index: 0 },
+        ]);
+
+        const args = ['command'];
+        when(interpreterService.getActiveInterpreter(anything())).thenCall((arg) => {
+            assert.deepEqual(arg, Uri.file('onlyFolderPath'));
+
+            return Promise.resolve({ path: 'settingValue' }) as unknown;
+        });
+        const setting = await interpreterPathCommand._getSelectedInterpreterPath(args);
+        expect(setting).to.equal('settingValue');
+    });
+
+    test('If `args[1]` is missing and there are multiple (or zero) workspace folders, value of workspace folder is `undefined`', async () => {
+        when(mockedVSCodeNamespaces.workspace!.workspaceFolders).thenReturn([
+            { uri: Uri.file('folderOne'), name: 'folderOne', index: 0 },
+            { uri: Uri.file('folderTwo'), name: 'folderTwo', index: 1 },
+        ]);
+
+        const args = ['command'];
+        when(interpreterService.getActiveInterpreter(undefined)).thenReturn(
+            Promise.resolve({ path: 'settingValue' }) as Promise<PythonEnvironment | undefined>,
+        );
         const setting = await interpreterPathCommand._getSelectedInterpreterPath(args);
         expect(setting).to.equal('settingValue');
     });
