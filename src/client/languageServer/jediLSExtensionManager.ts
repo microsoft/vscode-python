@@ -32,7 +32,6 @@ export class JediLSExtensionManager implements IDisposable, ILanguageServerExten
 
     constructor(
         serviceContainer: IServiceContainer,
-        outputChannel: ILanguageServerOutputChannel,
         _experimentService: IExperimentService,
         workspaceService: IWorkspaceService,
         configurationService: IConfigurationService,
@@ -41,6 +40,7 @@ export class JediLSExtensionManager implements IDisposable, ILanguageServerExten
         environmentService: IEnvironmentVariablesProvider,
         commandManager: ICommandManager,
     ) {
+        const outputChannel = serviceContainer.get<ILanguageServerOutputChannel>(ILanguageServerOutputChannel);
         this.analysisOptions = new JediLanguageServerAnalysisOptions(
             environmentService,
             outputChannel,

@@ -19,6 +19,7 @@ export interface IBrowserExtensionApi {
 export function buildApi(reporter: TelemetryReporter): IBrowserExtensionApi {
     const api: IBrowserExtensionApi = {
         pylance: {
+            supportsSelfManagedPylance: true,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             createClient: (...args: any[]): BaseLanguageClient =>
                 new LanguageClient(PYTHON_LANGUAGE, 'Python Language Server', args[0], args[1]),

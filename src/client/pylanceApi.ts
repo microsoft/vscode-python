@@ -18,6 +18,7 @@ export interface TelemetryReporter {
 }
 
 export interface ApiForPylance {
+    readonly supportsSelfManagedPylance: true;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     createClient(...args: any[]): BaseLanguageClient;
     start(client: BaseLanguageClient): Promise<void>;

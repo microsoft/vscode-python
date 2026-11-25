@@ -102,6 +102,9 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     @traceDecoratorError('Failed to restart language server')
     @traceDecoratorVerbose('Restarting language server')
     protected async restartLanguageServer(): Promise<void> {
+        if (await this.languageServerProxy.restartSelfManagedClient()) {
+            return;
+        }
         await this.stopLanguageServer();
         await this.startLanguageServer();
     }

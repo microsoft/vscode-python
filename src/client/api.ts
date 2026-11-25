@@ -145,12 +145,10 @@ export function buildApi(
             },
         },
         pylance: {
+            supportsSelfManagedPylance: true,
             createClient: (...args: any[]): BaseLanguageClient => {
-                // Make sure we share output channel so that we can share one with
-                // Jedi as well.
                 const clientOptions = args[1] as LanguageClientOptions;
                 clientOptions.outputChannel = clientOptions.outputChannel ?? outputChannel.channel;
-
                 return new LanguageClient(PYTHON_LANGUAGE, PYLANCE_NAME, args[0], clientOptions);
             },
             start: (client: BaseLanguageClient): Promise<void> => client.start(),

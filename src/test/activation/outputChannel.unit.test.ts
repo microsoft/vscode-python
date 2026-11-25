@@ -25,7 +25,7 @@ suite('Language Server Output Channel', () => {
 
     test('Create output channel if one does not exist before and return it', async () => {
         appShell
-            .setup((a) => a.createOutputChannel(OutputChannelNames.languageServer))
+            .setup((a) => a.createOutputChannel(OutputChannelNames.LanguageServer))
             .returns(() => output.object)
             .verifiable(TypeMoq.Times.once());
         const { channel } = languageServerOutputChannel;

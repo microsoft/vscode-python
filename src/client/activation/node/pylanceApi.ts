@@ -12,9 +12,11 @@ import {
 
 export interface PylanceApi {
     client?: {
+        readonly supportsSelfManagedLifecycle?: boolean;
         isEnabled(): boolean;
         start(): Promise<void>;
         stop(): Promise<void>;
+        restart?(): Promise<void>;
     };
     notebook?: {
         registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;

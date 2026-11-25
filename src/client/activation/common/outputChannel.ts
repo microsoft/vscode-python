@@ -13,21 +13,21 @@ import { ILanguageServerOutputChannel } from '../types';
 @injectable()
 export class LanguageServerOutputChannel implements ILanguageServerOutputChannel {
     public output: ILogOutputChannel | undefined;
-
     private registered = false;
 
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IDisposableRegistry) private readonly disposable: IDisposableRegistry,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
     ) {}
 
     public get channel(): ILogOutputChannel {
         if (!this.output) {
-            this.output = this.appShell.createOutputChannel(OutputChannelNames.languageServer);
-            this.disposable.push(this.output);
+            this.output = this.appShell.createOutputChannel(OutputChannelNames.LanguageServer);
+            this.disposables.push(this.output);
             this.registerCommand().ignoreErrors();
         }
+
         return this.output;
     }
 
@@ -39,10 +39,10 @@ export class LanguageServerOutputChannel implements ILanguageServerOutputChannel
         // This controls the visibility of the command used to display the LS Output panel.
         // We don't want to display it when Jedi is used instead of LS.
         await this.commandManager.executeCommand('setContext', 'python.hasLanguageServerOutputChannel', true);
-        this.disposable.push(
+        this.disposables.push(
             this.commandManager.registerCommand('python.viewLanguageServerOutput', () => this.output?.show(true)),
         );
-        this.disposable.push({
+        this.disposables.push({
             dispose: () => {
                 this.registered = false;
             },

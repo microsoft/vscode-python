@@ -2,9 +2,15 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
+
 import { ILanguageServerOutputChannel } from '../../client/activation/types';
 import { IWorkspaceService, ICommandManager } from '../../client/common/application/types';
-import { IExperimentService, IConfigurationService, IInterpreterPathService } from '../../client/common/types';
+import {
+    IExperimentService,
+    IConfigurationService,
+    IInterpreterPathService,
+    ILogOutputChannel,
+} from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -15,9 +21,21 @@ suite('Language Server - Jedi LS extension manager', () => {
     let manager: JediLSExtensionManager;
 
     setup(() => {
+        // Create a mock ILogOutputChannel
+        const mockOutputChannel = {} as ILogOutputChannel;
+
+        // Create a mock service container with the required get method
+        const mockServiceContainer = {
+            get: (serviceIdentifier: any) => {
+                if (serviceIdentifier === ILanguageServerOutputChannel) {
+                    return { channel: mockOutputChannel };
+                }
+                return undefined;
+            },
+        } as IServiceContainer;
+
         manager = new JediLSExtensionManager(
-            {} as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
+            mockServiceContainer,
             {} as IExperimentService,
             {} as IWorkspaceService,
             {} as IConfigurationService,

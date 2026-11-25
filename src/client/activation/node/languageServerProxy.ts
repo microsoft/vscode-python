@@ -98,8 +98,10 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
 
         const api = extension?.exports;
         if (api && api.client && api.client.isEnabled()) {
-            this.pylanceApi = api;
-            await api.client.start();
+            if (!api.client.supportsSelfManagedLifecycle) {
+                this.pylanceApi = api;
+                await api.client.start();
+            }
             return;
         }
 
@@ -149,6 +151,15 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
             this.cancellationStrategy.dispose();
             this.cancellationStrategy = undefined;
         }
+    }
+
+    public async restartSelfManagedClient(): Promise<boolean> {
+        const api = (await this.getPylanceExtension())?.exports;
+        if (api?.client?.supportsSelfManagedLifecycle && api.client.restart) {
+            await api.client.restart();
+            return true;
+        }
+        return false;
     }
 
     // eslint-disable-next-line class-methods-use-this

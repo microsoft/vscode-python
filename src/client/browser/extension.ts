@@ -67,8 +67,10 @@ async function runPylance(
     pylanceExtension = await getActivatedExtension(pylanceExtension);
     const api = pylanceExtension.exports;
     if (api.client && api.client.isEnabled()) {
-        pylanceApi = api;
-        await api.client.start();
+        if (!api.client.supportsSelfManagedLifecycle) {
+            pylanceApi = api;
+            await api.client.start();
+        }
         return;
     }
 
