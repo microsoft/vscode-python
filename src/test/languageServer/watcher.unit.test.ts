@@ -569,6 +569,68 @@ suite('Language server watcher', () => {
         assert.ok(startLanguageServerStub.calledOnce);
     });
 
+    test('When starting a language server with a Python 2.7 interpreter and the python.languageServer setting is default, use Pylance', async () => {
+        const startLanguageServerStub = sandbox.stub(PylanceLSExtensionManager.prototype, 'startLanguageServer');
+        startLanguageServerStub.returns(Promise.resolve());
+
+        sandbox.stub(PylanceLSExtensionManager.prototype, 'canStartLanguageServer').returns(true);
+
+        watcher = new LanguageServerWatcher(
+            makeMockServiceContainer(),
+            {
+                getSettings: () => ({
+                    languageServer: LanguageServerType.Jedi,
+                    languageServerIsDefault: true,
+                }),
+            } as IConfigurationService,
+            {} as IExperimentService,
+            ({
+                getActiveWorkspaceUri: () => undefined,
+            } as unknown) as IInterpreterHelper,
+            ({
+                onDidChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IInterpreterPathService,
+            ({
+                getActiveInterpreter: () => ({ version: { major: 2, minor: 7 } }),
+                onDidChangeInterpreterInformation: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IInterpreterService,
+            {} as IEnvironmentVariablesProvider,
+            ({
+                getWorkspaceFolder: (uri: Uri) => ({ uri }),
+                onDidChangeConfiguration: () => {
+                    /* do nothing */
+                },
+                onDidChangeWorkspaceFolders: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IWorkspaceService,
+            ({
+                registerCommand: () => {
+                    /* do nothing */
+                },
+            } as unknown) as ICommandManager,
+            ({
+                getExtension: () => undefined,
+                onDidChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IExtensions,
+            ({
+                showWarningMessage: () => Promise.resolve(undefined),
+            } as unknown) as IApplicationShell,
+            disposables,
+        );
+        watcher.register();
+
+        await watcher.startLanguageServer(LanguageServerType.Node);
+
+        assert.ok(startLanguageServerStub.calledOnce);
+    });
+
     test('When starting a language server in an untrusted workspace with Jedi, do not instantiate a language server', async () => {
         const startLanguageServerStub = sandbox.stub(NoneLSExtensionManager.prototype, 'startLanguageServer');
         startLanguageServerStub.returns(Promise.resolve());
