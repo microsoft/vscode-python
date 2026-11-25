@@ -17,6 +17,7 @@ import { EventName } from './telemetry/constants';
 import { EditorLoadTelemetry } from './telemetry/types';
 import { IStartupDurations } from './types';
 import { useEnvExtension } from './envExt/api.internal';
+import { getEnvsExplicitFalseScope } from './envExt/telemetry';
 
 export async function sendStartupTelemetry(
     activatedPromise: Promise<any>,
@@ -93,7 +94,12 @@ async function getActivationTelemetryProps(
     const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
     const terminalShellType = terminalHelper.identifyTerminalShell();
     if (!workspaceService.isTrusted) {
-        return { workspaceFolderCount, terminal: terminalShellType, isFirstSession };
+        return {
+            workspaceFolderCount,
+            terminal: terminalShellType,
+            isFirstSession,
+            envsExplicitFalseScope: getEnvsExplicitFalseScope(),
+        };
     }
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     const mainWorkspaceUri = workspaceService.workspaceFolders?.length
@@ -150,5 +156,6 @@ async function getActivationTelemetryProps(
         appName,
         isFirstSession,
         usingEnvironmentsExtension,
+        envsExplicitFalseScope: getEnvsExplicitFalseScope(),
     };
 }

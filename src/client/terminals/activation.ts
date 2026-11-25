@@ -9,6 +9,7 @@ import { IActiveResourceService, ITerminalManager } from '../common/application/
 import { ITerminalActivator } from '../common/terminal/types';
 import { IDisposable, IDisposableRegistry } from '../common/types';
 import { ITerminalAutoActivation } from './types';
+import { shouldEnvExtHandleActivation } from '../envExt/api.internal';
 
 @injectable()
 export class TerminalAutoActivation implements ITerminalAutoActivation {
@@ -47,6 +48,9 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
 
     private async activateTerminal(terminal: Terminal): Promise<void> {
         if (this.terminalsNotToAutoActivate.has(terminal)) {
+            return;
+        }
+        if (shouldEnvExtHandleActivation()) {
             return;
         }
         if ('hideFromUser' in terminal.creationOptions && terminal.creationOptions.hideFromUser) {

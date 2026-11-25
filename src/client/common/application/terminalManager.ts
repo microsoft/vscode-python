@@ -38,6 +38,9 @@ export class TerminalManager implements ITerminalManager {
     public onDidEndTerminalShellExecution(handler: (e: TerminalShellExecutionEndEvent) => void): Disposable {
         return window.onDidEndTerminalShellExecution(handler);
     }
+    public onDidChangeTerminalState(handler: (e: Terminal) => void): Disposable {
+        return window.onDidChangeTerminalState(handler);
+    }
 }
 
 /**

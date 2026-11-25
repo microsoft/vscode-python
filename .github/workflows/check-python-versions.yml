@@ -1,0 +1,31 @@
+name: Check supported Python versions
+
+on:
+  schedule:
+    - cron: '0 12 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: check-supported-python-versions
+  cancel-in-progress: false
+
+jobs:
+  check:
+    if: github.repository_owner == 'microsoft'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check supported Python versions
+        uses: microsoft/vscode-python-ci/actions/check-python-versions@c1aa1190277c85c93ab142e8909bcd11453ce30b
+        with:
+          files: |
+            - path: .github/workflows/pr-check.yml
+              key: python
+            - path: .github/workflows/build.yml
+              key: python
+          token: ${{ github.token }}
+          issue-labels: debt,python-version

@@ -14,6 +14,8 @@ import {
 import * as testItemUtilities from '../../../client/testing/testController/common/testItemUtilities';
 import * as ResultResolver from '../../../client/testing/testController/common/resultResolver';
 import * as util from '../../../client/testing/testController/common/utils';
+import * as telemetry from '../../../client/telemetry';
+import { EventName } from '../../../client/telemetry/constants';
 import { traceLog } from '../../../client/logging';
 
 suite('Result Resolver tests', () => {
@@ -85,7 +87,7 @@ suite('Result Resolver tests', () => {
             };
 
             // stub out functionality of populateTestTreeStub which is called in resolveDiscovery
-            const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns();
+            const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns(0);
 
             // call resolve discovery
             resultResolver.resolveDiscovery(payload, cancelationToken);
@@ -93,12 +95,13 @@ suite('Result Resolver tests', () => {
             // assert the stub functions were called with the correct parameters
 
             // header of populateTestTree is (testController: TestController, testTreeData: DiscoveredTestNode, testRoot: TestItem | undefined, resultResolver: ITestResultResolver, token?: CancellationToken)
+            // After refactor, an inline object with testItemIndex maps is passed instead of resultResolver
             sinon.assert.calledWithMatch(
                 populateTestTreeStub,
                 testController, // testController
                 tests, // testTreeData
                 undefined, // testRoot
-                resultResolver, // resultResolver
+                sinon.match.has('runIdToTestItem'), // inline object with maps
                 cancelationToken, // token
             );
         });
@@ -136,6 +139,27 @@ suite('Result Resolver tests', () => {
             // header of createErrorTestItem is (options: ErrorTestItemOptions, testController: TestController, uri: Uri)
             sinon.assert.calledWithMatch(createErrorTestItemStub, sinon.match.any, sinon.match.any);
         });
+        test('resolveDiscovery should emit failed telemetry for error payloads', async () => {
+            testProvider = 'pytest';
+            workspaceUri = Uri.file('/foo/bar');
+            resultResolver = new ResultResolver.PythonResultResolver(testController, testProvider, workspaceUri);
+            const sendTelemetryStub = sinon.stub(telemetry, 'sendTelemetryEvent');
+            sinon.stub(util, 'buildErrorNodeOptions').returns({ id: 'id', label: 'label', error: 'error' });
+            sinon.stub(testItemUtilities, 'createErrorTestItem').returns(blankTestItem);
+
+            const payload: DiscoveredTestPayload = {
+                cwd: workspaceUri.fsPath,
+                status: 'error',
+                error: ['discovery failed'],
+            };
+
+            resultResolver.resolveDiscovery(payload, cancelationToken);
+
+            sinon.assert.calledWithMatch(sendTelemetryStub, EventName.UNITTEST_DISCOVERY_DONE, sinon.match.any, {
+                failed: true,
+                failureCategory: 'unknown',
+            });
+        });
         test('resolveDiscovery should create error and root node when error and tests exist on payload', async () => {
             // test specific constants used expected values
             testProvider = 'pytest';
@@ -170,7 +194,7 @@ suite('Result Resolver tests', () => {
             const createErrorTestItemStub = sinon.stub(testItemUtilities, 'createErrorTestItem').returns(blankTestItem);
 
             // stub out functionality of populateTestTreeStub which is called in resolveDiscovery
-            const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns();
+            const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns(0);
             // call resolve discovery
             resultResolver.resolveDiscovery(payload, cancelationToken);
 
@@ -182,12 +206,13 @@ suite('Result Resolver tests', () => {
             sinon.assert.calledWithMatch(createErrorTestItemStub, sinon.match.any, sinon.match.any);
 
             // also calls populateTestTree with the discovery test results
+            // After refactor, an inline object with testItemIndex maps is passed instead of resultResolver
             sinon.assert.calledWithMatch(
                 populateTestTreeStub,
                 testController, // testController
                 tests, // testTreeData
                 undefined, // testRoot
-                resultResolver, // resultResolver
+                sinon.match.has('runIdToTestItem'), // inline object with maps
                 cancelationToken, // token
             );
         });
@@ -230,7 +255,7 @@ suite('Result Resolver tests', () => {
             const createErrorTestItemStub = sinon.stub(testItemUtilities, 'createErrorTestItem').returns(blankTestItem);
 
             // stub out functionality of populateTestTreeStub which is called in resolveDiscovery
-            sinon.stub(util, 'populateTestTree').returns();
+            sinon.stub(util, 'populateTestTree').returns(0);
             // add spies to insure these aren't called
             const deleteSpy = sinon.spy(testController.items, 'delete');
             const replaceSpy = sinon.spy(testController.items, 'replace');
@@ -327,6 +352,34 @@ suite('Result Resolver tests', () => {
             sinon.stub(testItemUtilities, 'clearAllChildren').callsFake(() => undefined);
             testProvider = 'unittest';
             workspaceUri = Uri.file('/foo/bar');
+
+            // Create parent test item with correct ID
+            const mockParentItem = createMockTestItem('parentTest');
+
+            // Update testControllerMock to include parent item in its collection
+            const mockTestItems: [string, TestItem][] = [
+                ['1', mockTestItem1],
+                ['2', mockTestItem2],
+                ['parentTest', mockParentItem],
+            ];
+            const iterableMock = mockTestItems[Symbol.iterator]();
+
+            const testItemCollectionMock = typemoq.Mock.ofType<TestItemCollection>();
+            testItemCollectionMock
+                .setup((x) => x.forEach(typemoq.It.isAny()))
+                .callback((callback) => {
+                    let result = iterableMock.next();
+                    while (!result.done) {
+                        callback(result.value[1]);
+                        result = iterableMock.next();
+                    }
+                })
+                .returns(() => mockTestItem1);
+            testItemCollectionMock.setup((x) => x.get('parentTest')).returns(() => mockParentItem);
+
+            testControllerMock.reset();
+            testControllerMock.setup((t) => t.items).returns(() => testItemCollectionMock.object);
+
             resultResolver = new ResultResolver.PythonResultResolver(
                 testControllerMock.object,
                 testProvider,
@@ -334,13 +387,16 @@ suite('Result Resolver tests', () => {
             );
             const subtestName = 'parentTest [subTest with spaces and [brackets]]';
             const mockSubtestItem = createMockTestItem(subtestName);
+
             // add a mock test item to the map of known VSCode ids to run ids
             resultResolver.runIdToVSid.set('mockTestItem2', 'mockTestItem2');
             // creates a mock test item with a space which will be used to split the runId
             resultResolver.runIdToVSid.set(subtestName, subtestName);
+            // Register parent test in testItemIndex so it can be found by getTestItem
+            resultResolver.runIdToVSid.set('parentTest', 'parentTest');
 
             // add this mock test to the map of known test items
-            resultResolver.runIdToTestItem.set('parentTest', mockTestItem2);
+            resultResolver.runIdToTestItem.set('parentTest', mockParentItem);
             resultResolver.runIdToTestItem.set(subtestName, mockSubtestItem);
 
             let generatedId: string | undefined;
@@ -563,15 +619,15 @@ suite('Result Resolver tests', () => {
 
 function createMockTestItem(id: string): TestItem {
     const range = new Range(0, 0, 0, 0);
+    const mockChildren = typemoq.Mock.ofType<TestItemCollection>();
+    mockChildren.setup((x) => x.add(typemoq.It.isAny())).returns(() => undefined);
+    mockChildren.setup((x) => x.forEach(typemoq.It.isAny())).returns(() => undefined);
+
     const mockTestItem = ({
         id,
         canResolveChildren: false,
         tags: [],
-        children: {
-            add: () => {
-                // empty
-            },
-        },
+        children: mockChildren.object,
         range,
         uri: Uri.file('/foo/bar'),
     } as unknown) as TestItem;

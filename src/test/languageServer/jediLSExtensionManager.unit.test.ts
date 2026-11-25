@@ -3,7 +3,8 @@
 
 import * as assert from 'assert';
 
-import { IWorkspaceService, ICommandManager, IApplicationShell } from '../../client/common/application/types';
+import { ILanguageServerOutputChannel } from '../../client/activation/types';
+import { IWorkspaceService, ICommandManager } from '../../client/common/application/types';
 import {
     IExperimentService,
     IConfigurationService,
@@ -23,16 +24,11 @@ suite('Language Server - Jedi LS extension manager', () => {
         // Create a mock ILogOutputChannel
         const mockOutputChannel = {} as ILogOutputChannel;
 
-        // Create a mock IApplicationShell with createOutputChannel method
-        const mockApplicationShell = ({
-            createOutputChannel: () => mockOutputChannel,
-        } as unknown) as IApplicationShell;
-
         // Create a mock service container with the required get method
         const mockServiceContainer = {
             get: (serviceIdentifier: any) => {
-                if (serviceIdentifier === IApplicationShell) {
-                    return mockApplicationShell;
+                if (serviceIdentifier === ILanguageServerOutputChannel) {
+                    return { channel: mockOutputChannel };
                 }
                 return undefined;
             },

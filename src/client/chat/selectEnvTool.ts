@@ -24,7 +24,9 @@ import {
     doesWorkspaceHaveVenvOrCondaEnv,
     getEnvDetailsForResponse,
     getToolResponseIfNotebook,
+    hasPythonToolsApi,
     IResourceReference,
+    raceCancellationError,
 } from './utils';
 import { ITerminalHelper } from '../common/terminal/types';
 import { raceTimeout } from '../common/utils/async';
@@ -37,6 +39,7 @@ import { showQuickPick } from '../common/vscodeApis/windowApis';
 import { DisposableStore } from '../common/utils/resourceLifecycle';
 import { traceError, traceVerbose, traceWarn } from '../logging';
 import { BaseTool } from './baseTool';
+import { useEnvExtension } from '../envExt/api.internal';
 
 export interface ISelectPythonEnvToolArguments extends IResourceReference {
     reason?: 'cancelled';
@@ -64,15 +67,26 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
         resource: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
+        if (await hasPythonToolsApi(token)) {
+            return new LanguageModelToolResult([
+                new LanguageModelTextPart(
+                    l10n.t('Use configure_python_environment with this version of Python Environments.'),
+                ),
+            ]);
+        }
         let selected: boolean | undefined = false;
         const hasVenvOrCondaEnvInWorkspaceFolder = doesWorkspaceHaveVenvOrCondaEnv(resource, this.api);
         if (options.input.reason === 'cancelled' || hasVenvOrCondaEnvInWorkspaceFolder) {
-            const result = (await Promise.resolve(
-                commands.executeCommand(Commands.Set_Interpreter, {
-                    hideCreateVenv: false,
-                    showBackButton: false,
-                }),
-            )) as SelectEnvironmentResult | undefined;
+            const result = await raceCancellationError(
+                Promise.resolve(
+                    commands.executeCommand(Commands.Set_Interpreter, {
+                        hideCreateVenv: false,
+                        showBackButton: false,
+                        ...(useEnvExtension() ? { resource } : {}),
+                    }),
+                ) as Promise<SelectEnvironmentResult | undefined>,
+                token,
+            );
             if (result?.path) {
                 traceVerbose(`User selected a Python environment ${result.path} in Select Python Tool.`);
                 selected = true;
@@ -80,7 +94,10 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
                 traceWarn(`User did not select a Python environment in Select Python Tool.`);
             }
         } else {
-            selected = await showCreateAndSelectEnvironmentQuickPick(resource, this.serviceContainer);
+            selected = await raceCancellationError(
+                showCreateAndSelectEnvironmentQuickPick(resource, this.serviceContainer, token),
+                token,
+            );
             if (selected) {
                 traceVerbose(`User selected a Python environment ${selected} in Select Python Tool(2).`);
             } else {
@@ -115,8 +132,11 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
     async prepareInvocationImpl(
         options: LanguageModelToolInvocationPrepareOptions<ISelectPythonEnvToolArguments>,
         resource: Uri | undefined,
-        _token: CancellationToken,
+        token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
+        if (await hasPythonToolsApi(token)) {
+            return {};
+        }
         if (getToolResponseIfNotebook(resource)) {
             return {};
         }
@@ -152,6 +172,7 @@ export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
 async function showCreateAndSelectEnvironmentQuickPick(
     uri: Uri | undefined,
     serviceContainer: IServiceContainer,
+    token: CancellationToken,
 ): Promise<boolean | undefined> {
     const createLabel = `${Octicons.Add} ${InterpreterQuickPickList.create.label}`;
     const selectLabel = l10n.t('Select an existing Python Environment');
@@ -161,11 +182,15 @@ async function showCreateAndSelectEnvironmentQuickPick(
         { label: selectLabel },
     ];
 
-    const selectedItem = await showQuickPick(items, {
-        placeHolder: l10n.t('Configure a Python Environment'),
-        matchOnDescription: true,
-        ignoreFocusOut: true,
-    });
+    const selectedItem = await showQuickPick(
+        items,
+        {
+            placeHolder: l10n.t('Configure a Python Environment'),
+            matchOnDescription: true,
+            ignoreFocusOut: true,
+        },
+        token,
+    );
 
     if (selectedItem && !Array.isArray(selectedItem) && selectedItem.label === createLabel) {
         const disposables = new DisposableStore();
@@ -187,7 +212,7 @@ async function showCreateAndSelectEnvironmentQuickPick(
             );
 
             if (created?.action === 'Back') {
-                return showCreateAndSelectEnvironmentQuickPick(uri, serviceContainer);
+                return showCreateAndSelectEnvironmentQuickPick(uri, serviceContainer, token);
             }
             if (created?.action === 'Cancel') {
                 return undefined;
@@ -203,10 +228,14 @@ async function showCreateAndSelectEnvironmentQuickPick(
     }
     if (selectedItem && !Array.isArray(selectedItem) && selectedItem.label === selectLabel) {
         const result = (await Promise.resolve(
-            commands.executeCommand(Commands.Set_Interpreter, { hideCreateVenv: true, showBackButton: true }),
+            commands.executeCommand(Commands.Set_Interpreter, {
+                hideCreateVenv: true,
+                showBackButton: true,
+                ...(useEnvExtension() ? { resource: uri } : {}),
+            }),
         )) as SelectEnvironmentResult | undefined;
         if (result?.action === 'Back') {
-            return showCreateAndSelectEnvironmentQuickPick(uri, serviceContainer);
+            return showCreateAndSelectEnvironmentQuickPick(uri, serviceContainer, token);
         }
         if (result?.action === 'Cancel') {
             return undefined;

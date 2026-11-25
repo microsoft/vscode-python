@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { EventEmitter, Terminal, Uri, Disposable, ConfigurationTarget } from 'vscode';
+import { EventEmitter, Terminal, Uri, Disposable } from 'vscode';
 import { getExtension } from '../common/vscodeApis/extensionsApi';
 import {
     GetEnvironmentScope,
@@ -13,17 +13,55 @@ import {
     DidChangeEnvironmentEventArgs,
 } from './types';
 import { executeCommand } from '../common/vscodeApis/commandApis';
-import { IInterpreterPathService } from '../common/types';
-import { getConfiguration } from '../common/vscodeApis/workspaceApis';
+import { getConfiguration, getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
+import { traceError, traceLog } from '../logging';
+import { Interpreters } from '../common/utils/localize';
+import { PythonToolsApi } from './pythonToolsApi';
 
 export const ENVS_EXTENSION_ID = 'ms-python.vscode-python-envs';
+
+export function isEnvExtensionInstalled(): boolean {
+    return !!getExtension(ENVS_EXTENSION_ID);
+}
+
+/**
+ * Returns true if the Python Environments extension is installed and not explicitly
+ * disabled by the user. Mirrors the envs extension's own activation logic: it
+ * deactivates only when `python.useEnvironmentsExtension` is explicitly set to false
+ * at the global, workspace, or workspace-folder level.
+ */
+export function shouldEnvExtHandleActivation(): boolean {
+    if (!isEnvExtensionInstalled()) {
+        return false;
+    }
+    const config = getConfiguration('python');
+    const inspection = config.inspect<boolean>('useEnvironmentsExtension');
+    if (inspection?.globalValue === false || inspection?.workspaceValue === false) {
+        return false;
+    }
+    // The envs extension also checks folder-scoped settings in multi-root workspaces.
+    // Any single folder with the setting set to false causes the envs extension to
+    // deactivate entirely (window-wide), so we must mirror that here.
+    const workspaceFolders = getWorkspaceFolders();
+    if (workspaceFolders) {
+        for (const folder of workspaceFolders) {
+            const folderConfig = getConfiguration('python', folder.uri);
+            const folderInspection = folderConfig.inspect<boolean>('useEnvironmentsExtension');
+            if (folderInspection?.workspaceFolderValue === false) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
 let _useExt: boolean | undefined;
 export function useEnvExtension(): boolean {
     if (_useExt !== undefined) {
         return _useExt;
     }
-    const inExpSetting = getConfiguration('python').get<boolean>('useEnvironmentsExtension', false);
+    const config = getConfiguration('python');
+    const inExpSetting = config?.get<boolean>('useEnvironmentsExtension', false) ?? false;
     // If extension is installed and in experiment, then use it.
     _useExt = !!getExtension(ENVS_EXTENSION_ID) && inExpSetting;
     return _useExt;
@@ -41,17 +79,57 @@ export function onDidChangeEnvironmentEnvExt(
 }
 
 let _extApi: PythonEnvironmentApi | undefined;
+
+/** Returns the validated private capability, or undefined before any tool operation. */
+export async function getPythonToolsApi(): Promise<PythonToolsApi | undefined> {
+    const extension = getExtension(ENVS_EXTENSION_ID);
+    if (!extension) {
+        return undefined;
+    }
+    if (!extension.isActive) {
+        await extension.activate();
+    }
+    const extensionApi: unknown = _extApi ?? extension.exports;
+    if (!extensionApi || typeof extensionApi !== 'object' || !('__pythonTools' in extensionApi)) {
+        return undefined;
+    }
+    return isPythonToolsApi(extensionApi.__pythonTools) ? extensionApi.__pythonTools : undefined;
+}
+
+function isPythonToolsApi(value: unknown): value is PythonToolsApi {
+    return (
+        !!value &&
+        typeof value === 'object' &&
+        'version' in value &&
+        value.version === 1 &&
+        'configureEnvironment' in value &&
+        typeof value.configureEnvironment === 'function' &&
+        'getEnvironment' in value &&
+        typeof value.getEnvironment === 'function' &&
+        'installPackages' in value &&
+        typeof value.installPackages === 'function'
+    );
+}
+
 export async function getEnvExtApi(): Promise<PythonEnvironmentApi> {
     if (_extApi) {
         return _extApi;
     }
     const extension = getExtension(ENVS_EXTENSION_ID);
     if (!extension) {
+        traceError(Interpreters.envExtActivationFailed);
         throw new Error('Python Environments extension not found.');
     }
     if (!extension?.isActive) {
-        await extension.activate();
+        try {
+            await extension.activate();
+        } catch (ex) {
+            traceError(Interpreters.envExtActivationFailed, ex);
+            throw ex;
+        }
     }
+
+    traceLog(Interpreters.envExtDiscoveryAttribution);
 
     _extApi = extension.exports as PythonEnvironmentApi;
     _extApi.onDidChangeEnvironment((e) => {
@@ -71,7 +149,11 @@ export async function runInBackground(
 
 export async function getEnvironment(scope: GetEnvironmentScope): Promise<PythonEnvironment | undefined> {
     const envExtApi = await getEnvExtApi();
-    return envExtApi.getEnvironment(scope);
+    const env = await envExtApi.getEnvironment(scope);
+    if (!env) {
+        traceLog(Interpreters.envExtNoActiveEnvironment);
+    }
+    return env;
 }
 
 export async function resolveEnvironment(pythonPath: string): Promise<PythonEnvironment | undefined> {
@@ -126,34 +208,5 @@ export async function clearCache(): Promise<void> {
     const envExtApi = await getEnvExtApi();
     if (envExtApi) {
         await executeCommand('python-envs.clearCache');
-    }
-}
-
-export function registerEnvExtFeatures(
-    disposables: Disposable[],
-    interpreterPathService: IInterpreterPathService,
-): void {
-    if (useEnvExtension()) {
-        disposables.push(
-            onDidChangeEnvironmentEnvExt(async (e: DidChangeEnvironmentEventArgs) => {
-                const previousPath = interpreterPathService.get(e.uri);
-
-                if (previousPath !== e.new?.environmentPath.fsPath) {
-                    if (e.uri) {
-                        await interpreterPathService.update(
-                            e.uri,
-                            ConfigurationTarget.WorkspaceFolder,
-                            e.new?.environmentPath.fsPath,
-                        );
-                    } else {
-                        await interpreterPathService.update(
-                            undefined,
-                            ConfigurationTarget.Global,
-                            e.new?.environmentPath.fsPath,
-                        );
-                    }
-                }
-            }),
-        );
     }
 }

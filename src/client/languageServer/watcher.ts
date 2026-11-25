@@ -7,6 +7,7 @@ import { ConfigurationChangeEvent, l10n, Uri, WorkspaceFoldersChangeEvent } from
 import { LanguageServerChangeHandler } from '../activation/common/languageServerChangeHandler';
 import { IExtensionActivationService, LanguageServerType } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
+import { IFileSystem } from '../common/platform/types';
 
 import {
     IConfigurationService,
@@ -25,10 +26,12 @@ import { traceLog } from '../logging';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JediLSExtensionManager } from './jediLSExtensionManager';
 import { NoneLSExtensionManager } from './noneLSExtensionManager';
+import { PylanceLSExtensionManager } from './pylanceLSExtensionManager';
 import { ILanguageServerExtensionManager, ILanguageServerWatcher } from './types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { StopWatch } from '../common/utils/stopWatch';
+import { ILanguageServerOutputChannel } from '../activation/types';
 
 @injectable()
 /**
@@ -240,6 +243,21 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
                 );
                 break;
             case LanguageServerType.Node:
+                lsManager = new PylanceLSExtensionManager(
+                    this.serviceContainer,
+                    this.serviceContainer.get<ILanguageServerOutputChannel>(ILanguageServerOutputChannel),
+                    this.experimentService,
+                    this.workspaceService,
+                    this.configurationService,
+                    this.interpreterPathService,
+                    this.interpreterService,
+                    this.environmentService,
+                    this.commandManager,
+                    this.serviceContainer.get<IFileSystem>(IFileSystem),
+                    this.extensions,
+                    this.applicationShell,
+                );
+                break;
             case LanguageServerType.None:
             default:
                 lsManager = new NoneLSExtensionManager();

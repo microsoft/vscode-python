@@ -124,9 +124,6 @@ export async function run(): Promise<void> {
     const mocha = new Mocha.default(options);
     const testsRoot = path.join(__dirname);
 
-    // Enable source map support.
-    require('source-map-support').install();
-
     // Ignore `ds.test.js` test files when running other tests.
     const ignoreGlob = options.testFilesSuffix.toLowerCase() === 'ds.test' ? [] : ['**/**.ds.test.js'];
     const testFiles = await new Promise<string[]>((resolve, reject) => {

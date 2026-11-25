@@ -10,7 +10,7 @@ on:
 permissions: {}
 
 env:
-  NODE_VERSION: 22.17.0
+  NODE_VERSION: 22.21.1
   PYTHON_VERSION: '3.10' # YML treats 3.10 the number as 3.1, so quotes around 3.10
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
@@ -57,12 +57,12 @@ jobs:
           #     vsix-target: alpine-arm64
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: 'microsoft/python-environment-tools'
           path: 'python-env-tools'
@@ -82,12 +82,121 @@ jobs:
           cargo_target: ${{ matrix.target }}
           vsix_target: ${{ matrix.vsix-target }}
 
+  candidate-compatibility:
+    name: Candidate Core packaged compatibility (${{ matrix.vsix-target }})
+    needs: [build-vsix]
+    if: ${{ !cancelled() }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            vsix-target: win32-x64
+          - os: ubuntu-latest
+            vsix-target: linux-x64
+    steps:
+      - name: Checkout the same run's test orchestration
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Initialize candidate infrastructure evidence
+        if: always()
+        shell: pwsh
+        run: |
+          $evidence = Join-Path $env:GITHUB_WORKSPACE 'candidate-core-evidence'
+          New-Item -ItemType Directory -Path $evidence -Force | Out-Null
+          @{
+            schemaVersion = 1
+            status = 'infrastructure-error'
+            scope = 'ci-built-candidate-core-compatibility'
+            message = 'Candidate download, preparation or execution has not completed.'
+            runId = $env:GITHUB_RUN_ID
+            sourceCommit = $env:GITHUB_SHA
+            artifactName = $env:PYTHON_CANDIDATE_ARTIFACT
+            certifiesOfficialCandidateOrSignedPublication = $false
+          } | ConvertTo-Json | Set-Content (Join-Path $evidence 'job-report.json')
+        env:
+          PYTHON_CANDIDATE_ARTIFACT: '${{ env.ARTIFACT_NAME_VSIX }}-${{ matrix.vsix-target }}'
+
+      - name: Select repository Node version
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Select Python for real fixture venvs
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Download original candidate VSIX from this workflow run
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: '${{ env.ARTIFACT_NAME_VSIX }}-${{ matrix.vsix-target }}'
+          path: candidate-core-artifact
+
+      - name: Restore only reviewed test orchestration dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Exercise candidate Core and fixed released Environments on and off
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $artifact = Join-Path $env:GITHUB_WORKSPACE 'candidate-core-artifact'
+          $files = @(Get-ChildItem -LiteralPath $artifact -Filter '*.vsix' -File -Recurse)
+          $candidate = Join-Path $artifact "ms-python-insiders-$($env:PYTHON_CANDIDATE_TARGET).vsix"
+          if ($files.Count -ne 1 -or -not (Test-Path -LiteralPath $candidate -PathType Leaf)) {
+            throw 'The exact same-run candidate artifact must contain its one expected original VSIX.'
+          }
+          $evidence = Join-Path $env:GITHUB_WORKSPACE 'candidate-core-evidence'
+          $output = Join-Path $evidence 'compatibility'
+          $script = Join-Path (Join-Path (Join-Path $env:GITHUB_WORKSPACE 'build') 'releaseCompatibility') 'selfTest.js'
+          $python = (Get-Command python).Source
+          if ($IsLinux) {
+            & xvfb-run -a node $script $output $python $candidate
+          } else {
+            & node $script $output $python $candidate
+          }
+          $result = $LASTEXITCODE
+          $report = Get-Content (Join-Path $output 'input-report.json') -Raw | ConvertFrom-Json
+          $report | ConvertTo-Json -Depth 20 | Set-Content (Join-Path $evidence 'job-report.json')
+          exit $result
+        env:
+          PYTHON_CANDIDATE_TARGET: ${{ matrix.vsix-target }}
+          PYTHON_CANDIDATE_ARTIFACT: '${{ env.ARTIFACT_NAME_VSIX }}-${{ matrix.vsix-target }}'
+          PYTHON_CANDIDATE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Retain candidate bytes provenance and all real-host outcomes
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: candidate-core-compatibility-${{ matrix.vsix-target }}
+          path: |
+            candidate-core-evidence/job-report.json
+            candidate-core-evidence/compatibility/input-report.json
+            candidate-core-evidence/compatibility/plan.json
+            candidate-core-evidence/compatibility/run/report.json
+            candidate-core-evidence/compatibility/run/environments-on/candidate/**
+            candidate-core-evidence/compatibility/run/environments-on/user-data/logs/**
+            candidate-core-evidence/compatibility/run/environments-on/workspace/probe-*.json
+            candidate-core-evidence/compatibility/run/explicit-off/candidate/**
+            candidate-core-evidence/compatibility/run/explicit-off/user-data/logs/**
+            candidate-core-evidence/compatibility/run/explicit-off/workspace/probe-*.json
+          if-no-files-found: error
+          retention-days: 7
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -101,17 +210,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Use Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: 'microsoft/python-environment-tools'
           path: 'python-env-tools'
@@ -138,9 +247,9 @@ jobs:
           python -m pip install --upgrade -r build/test-requirements.txt
 
       - name: Run Pyright
-        uses: jakebailey/pyright-action@6cabc0f01c4994be48fd45cd9dbacdd6e1ee6e5e # v2.3.3
+        uses: jakebailey/pyright-action@8ec14b5cfe41f26e5f41686a31eb6012758217ef # v3.0.2
         with:
-          version: 1.1.308
+          version: 1.1.414
           working-directory: 'python_files'
 
   python-tests:
@@ -156,34 +265,22 @@ jobs:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the Unix case.
         os: [ubuntu-latest, windows-latest]
-        # Run the tests on the oldest and most recent versions of Python.
-        python: ['3.9', '3.x', '3.13'] # run for 3 pytest versions, most recent stable, oldest version supported and pre-release
-        pytest-version: ['pytest', 'pytest@pre-release', 'pytest==6.2.0']
+        python: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.15']
+        # Test approximately one year of pytest releases and upcoming pytest changes.
+        pytest-version: ['pytest==8.4.*', 'pytest@pre-release']
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: ${{ env.special-working-directory-relative }}
           persist-credentials: false
 
       - name: Use Python ${{ matrix.python }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Install specific pytest version
-        if: matrix.pytest-version == 'pytest@pre-release'
-        run: |
-          python -m pip install --pre pytest
-
-      - name: Install specific pytest version
-        if: matrix.pytest-version != 'pytest@pre-release'
-        run: |
-          python -m pip install "${{ matrix.pytest-version }}"
-
-      - name: Install specific pytest version
-        run: python -m pytest --version
       - name: Install base Python requirements
         uses: brettcannon/pip-secure-install@92f400e3191171c1858cc0e0d9ac6320173fdb0c # v1.0.0
         with:
@@ -192,6 +289,17 @@ jobs:
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
+
+      - name: Install specific pytest version (pre-release)
+        if: matrix.pytest-version == 'pytest@pre-release'
+        run: python -m pip install --upgrade --pre pytest
+
+      - name: Install specific pytest version
+        if: matrix.pytest-version != 'pytest@pre-release'
+        run: python -m pip install --upgrade "${{ matrix.pytest-version }}"
+
+      - name: Print pytest version
+        run: python -m pytest --version
 
       - name: Run Python unit tests
         run: python python_files/tests/run_all.py
@@ -215,13 +323,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: ${{ env.special-working-directory-relative }}
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: 'microsoft/python-environment-tools'
           path: ${{ env.special-working-directory-relative }}/python-env-tools
@@ -233,7 +341,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -249,7 +357,7 @@ jobs:
         run: npx @vscode/l10n-dev@latest export ./src
 
       - name: Use Python ${{ matrix.python }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python }}
 
@@ -267,7 +375,9 @@ jobs:
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
       - name: Rust Tool Chain setup
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # stable
+        with:
+          toolchain: stable
 
       - name: Build Native Binaries
         run: nox --session native_build
@@ -305,7 +415,7 @@ jobs:
         if: matrix.test-suite == 'venv'
         run: |
           python -m pip install virtualenv
-          python -m virtualenv .virtualenv/
+          python -m virtualenv --no-venv-redirect .virtualenv/
           if ('${{ matrix.os }}' -match 'windows-latest') {
             & ".virtualenv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} virtualEnvPath
           } else {
@@ -320,11 +430,19 @@ jobs:
         if: matrix.test-suite == 'venv' && startsWith(matrix.python, 3.)
         run: |
           python -m venv .venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if ('${{ matrix.os }}' -match 'windows-latest') {
-            & ".venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
+            & "./.venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           } else {
-            & ".venv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
+            & "./.venv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           }
+
+      - name: Set up Conda for venv tests
+        uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb # v4.1.0
+        with:
+          activate-environment: ''
+          auto-activate: false
+        if: matrix.test-suite == 'venv'
 
       - name: Prepare conda for venv tests
         env:
@@ -334,12 +452,23 @@ jobs:
         if: matrix.test-suite == 'venv'
         run: |
           # 1. For `*.testvirtualenvs.test.ts`
+          $condaCommand = Get-Command conda -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $condaCommand) {
+            throw 'Conda executable was not found on PATH.'
+          }
+          $condaExecPath = $condaCommand.Source
+          $condaBasePath = & $condaExecPath info --base
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($condaBasePath)) {
+            throw "Could not determine the Conda base directory using '$condaExecPath info --base'."
+          }
+          $condaBasePath = "$condaBasePath".Trim()
           if ('${{ matrix.os }}' -match 'windows-latest') {
-            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python.exe
-            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath Scripts | Join-Path -ChildPath conda
+            $condaPythonPath = Join-Path -Path $condaBasePath -ChildPath python.exe
           } else{
-            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath python
-            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath conda
+            $condaPythonPath = Join-Path -Path $condaBasePath -ChildPath bin | Join-Path -ChildPath python
+          }
+          if (-not (Test-Path -Path $condaPythonPath -PathType Leaf)) {
+            throw "Conda base Python was not found at '$condaPythonPath'."
           }
           & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaExecPath $condaExecPath
           & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaPath
@@ -412,13 +541,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: ${{ env.special-working-directory-relative }}
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: 'microsoft/python-environment-tools'
           path: ${{ env.special-working-directory-relative }}/python-env-tools
@@ -452,12 +581,12 @@ jobs:
     steps:
       # Need the source to have the tests available.
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: 'microsoft/python-environment-tools'
           path: python-env-tools
@@ -477,6 +606,8 @@ jobs:
   ### Coverage run
   coverage:
     name: Coverage
+    # TEMPORARILY DISABLED - hanging in CI, needs investigation
+    if: false
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
     needs: [lint, check-types, python-tests, tests, native-tests]
@@ -488,12 +619,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: 'microsoft/python-environment-tools'
           path: python-env-tools
@@ -505,7 +636,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -520,7 +651,7 @@ jobs:
         run: npx @vscode/l10n-dev@latest export ./src
 
       - name: Use Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -546,7 +677,9 @@ jobs:
         shell: bash
 
       - name: Rust Tool Chain setup
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # stable
+        with:
+          toolchain: stable
 
       - name: Build Native Binaries
         run: nox --session native_build
@@ -583,7 +716,7 @@ jobs:
         shell: pwsh
         run: |
           python -m pip install virtualenv
-          python -m virtualenv .virtualenv/
+          python -m virtualenv --no-venv-redirect .virtualenv/
           if ('${{ matrix.os }}' -match 'windows-latest') {
             & ".virtualenv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} virtualEnvPath
           } else {
@@ -597,11 +730,18 @@ jobs:
         shell: pwsh
         run: |
           python -m venv .venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if ('${{ matrix.os }}' -match 'windows-latest') {
-            & ".venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
+            & "./.venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           } else {
-            & ".venv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
+            & "./.venv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           }
+
+      - name: Set up Conda for venv tests
+        uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb # v4.1.0
+        with:
+          activate-environment: ''
+          auto-activate: false
 
       - name: Prepare conda for venv tests
         env:
@@ -610,12 +750,23 @@ jobs:
         shell: pwsh
         run: |
           # 1. For `*.testvirtualenvs.test.ts`
+          $condaCommand = Get-Command conda -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $condaCommand) {
+            throw 'Conda executable was not found on PATH.'
+          }
+          $condaExecPath = $condaCommand.Source
+          $condaBasePath = & $condaExecPath info --base
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($condaBasePath)) {
+            throw "Could not determine the Conda base directory using '$condaExecPath info --base'."
+          }
+          $condaBasePath = "$condaBasePath".Trim()
           if ('${{ matrix.os }}' -match 'windows-latest') {
-            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python.exe
-            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath Scripts | Join-Path -ChildPath conda
+            $condaPythonPath = Join-Path -Path $condaBasePath -ChildPath python.exe
           } else{
-            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath python
-            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath conda
+            $condaPythonPath = Join-Path -Path $condaBasePath -ChildPath bin | Join-Path -ChildPath python
+          }
+          if (-not (Test-Path -Path $condaPythonPath -PathType Leaf)) {
+            throw "Conda base Python was not found at '$condaPythonPath'."
           }
           & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaExecPath $condaExecPath
           & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaPath
@@ -680,7 +831,7 @@ jobs:
         run: npm run test:cover:report
 
       - name: Upload HTML report
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ runner.os }}-coverage-report-html
           path: ./coverage

@@ -6,11 +6,11 @@ import { getEnvExtApi, getEnvironment } from './api.internal';
 import { EnvironmentType, PythonEnvironment as PythonEnvironmentLegacy } from '../pythonEnvironments/info';
 import { PythonEnvironment, PythonTerminalCreateOptions } from './types';
 import { Architecture } from '../common/utils/platform';
-import { parseVersion } from '../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvType } from '../pythonEnvironments/base/info';
 import { traceError } from '../logging';
 import { reportActiveInterpreterChanged } from '../environmentApi';
 import { getWorkspaceFolder, getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
+import { parsePythonEnvironmentVersion } from './utils';
 
 function toEnvironmentType(pythonEnv: PythonEnvironment): EnvironmentType {
     if (pythonEnv.envId.managerId.toLowerCase().endsWith('system')) {
@@ -73,8 +73,11 @@ function getEnvType(kind: EnvironmentType): PythonEnvType | undefined {
     }
 }
 
-function toLegacyType(env: PythonEnvironment): PythonEnvironmentLegacy {
-    const ver = parseVersion(env.version);
+function toLegacyType(env: PythonEnvironment): PythonEnvironmentLegacy | undefined {
+    const ver = parsePythonEnvironmentVersion(env);
+    if (!ver) {
+        return undefined;
+    }
     const envType = toEnvironmentType(env);
     return {
         id: env.execInfo.run.executable,
@@ -99,7 +102,9 @@ function toLegacyType(env: PythonEnvironment): PythonEnvironmentLegacy {
 }
 
 const previousEnvMap = new Map<string, PythonEnvironment | undefined>();
-export async function getActiveInterpreterLegacy(resource?: Uri): Promise<PythonEnvironmentLegacy | undefined> {
+const inFlightActiveInterpreter = new Map<string, Promise<PythonEnvironmentLegacy | undefined>>();
+
+async function resolveActiveInterpreterLegacy(resource?: Uri): Promise<PythonEnvironmentLegacy | undefined> {
     const api = await getEnvExtApi();
     const uri = resource ? api.getPythonProject(resource)?.uri : undefined;
 
@@ -117,7 +122,31 @@ export async function getActiveInterpreterLegacy(resource?: Uri): Promise<Python
         });
         previousEnvMap.set(uri?.fsPath || '', pythonEnv);
     }
-    return pythonEnv ? toLegacyType(pythonEnv) : undefined;
+    return newEnv;
+}
+
+export async function getActiveInterpreterLegacy(
+    resource?: Uri,
+    options?: { reportActiveInterpreterChanged?: boolean },
+): Promise<PythonEnvironmentLegacy | undefined> {
+    if (options?.reportActiveInterpreterChanged === false) {
+        const pythonEnv = await getEnvironment(resource);
+        return pythonEnv ? toLegacyType(pythonEnv) : undefined;
+    }
+
+    // De-duplicate concurrent resolutions for the same resource. The underlying
+    // `getEnvironment` call can block while the environments extension is performing a
+    // refresh, so multiple startup callers (e.g. the language server watcher and the
+    // configuration middleware) would otherwise each spawn their own blocking request.
+    const key = resource?.fsPath ?? '';
+    let inFlight = inFlightActiveInterpreter.get(key);
+    if (!inFlight) {
+        inFlight = resolveActiveInterpreterLegacy(resource).finally(() => {
+            inFlightActiveInterpreter.delete(key);
+        });
+        inFlightActiveInterpreter.set(key, inFlight);
+    }
+    return inFlight;
 }
 
 export async function setInterpreterLegacy(pythonPath: string, uri: Uri | undefined): Promise<void> {
@@ -148,5 +177,24 @@ export async function ensureTerminalLegacy(
         const terminal = await api.createTerminal(pythonEnv, fixedOptions);
         return terminal;
     }
+    traceError('ensureTerminalLegacy - Did not return terminal successfully.');
+    traceError(
+        'ensureTerminalLegacy - pythonEnv:',
+        pythonEnv
+            ? `id=${pythonEnv.envId.id}, managerId=${pythonEnv.envId.managerId}, name=${pythonEnv.name}, version=${pythonEnv.version}, executable=${pythonEnv.execInfo.run.executable}`
+            : 'undefined',
+    );
+    traceError(
+        'ensureTerminalLegacy - project:',
+        project ? `name=${project.name}, uri=${project.uri.toString()}` : 'undefined',
+    );
+    traceError(
+        'ensureTerminalLegacy - options:',
+        options
+            ? `name=${options.name}, cwd=${options.cwd?.toString()}, hideFromUser=${options.hideFromUser}`
+            : 'undefined',
+    );
+    traceError('ensureTerminalLegacy - resource:', resource?.toString() || 'undefined');
+
     throw new Error('Invalid arguments to create terminal');
 }

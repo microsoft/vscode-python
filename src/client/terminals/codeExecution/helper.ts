@@ -99,12 +99,10 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const endLineVal = activeEditor?.selection?.end.line ?? 0;
             const emptyHighlightVal = activeEditor?.selection?.isEmpty ?? true;
             let smartSendSettingsEnabledVal = true;
-            let shellIntegrationEnabled = false;
             const configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
             if (configuration) {
                 const pythonSettings = configuration.getSettings(this.activeResourceService.getActiveResource());
                 smartSendSettingsEnabledVal = pythonSettings.REPL.enableREPLSmartSend;
-                shellIntegrationEnabled = pythonSettings.terminal.shellIntegration.enabled;
             }
 
             const input = JSON.stringify({
@@ -127,8 +125,12 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                 await this.moveToNextBlock(lineOffset, activeEditor);
             }
 
-            // For new _pyrepl for Python3.13+ && !shellIntegration, we need to send code via bracketed paste mode.
-            if (object.attach_bracket_paste && !shellIntegrationEnabled && _replType === ReplType.terminal) {
+            // For the new _pyrepl in Python 3.13+, send code via bracketed paste mode so the REPL
+            // preserves the code's indentation instead of applying its own auto-indentation.
+            // This must happen regardless of the `terminal.shellIntegration.enabled` setting: terminal
+            // REPL code is always sent through `sendText` (never `shellIntegration.executeCommand`), so
+            // bracketed paste is the only thing preventing progressively increasing indentation.
+            if (object.attach_bracket_paste && _replType === ReplType.terminal) {
                 let trimmedNormalized = object.normalized.replace(/\n$/, '');
                 if (trimmedNormalized.endsWith(':\n')) {
                     // In case where statement is unfinished via :, truncate so auto-indentation lands nicely.

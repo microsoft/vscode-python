@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import TelemetryReporter from '@vscode/extension-telemetry';
+import { TelemetryReporter } from '@vscode/extension-telemetry';
 import { LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/browser';
 import { LanguageClientMiddlewareBase } from '../activation/languageClientMiddlewareBase';
@@ -18,6 +18,7 @@ interface BrowserConfig {
 }
 
 let languageClient: LanguageClient | undefined;
+let pylanceApi: PylanceApi | undefined;
 
 export function activate(context: vscode.ExtensionContext): Promise<IBrowserExtensionApi> {
     const reporter = getTelemetryReporter();
@@ -42,6 +43,12 @@ export function activate(context: vscode.ExtensionContext): Promise<IBrowserExte
 }
 
 export async function deactivate(): Promise<void> {
+    if (pylanceApi) {
+        const api = pylanceApi;
+        pylanceApi = undefined;
+        await api.client!.stop();
+    }
+
     if (languageClient) {
         const client = languageClient;
         languageClient = undefined;
@@ -60,6 +67,10 @@ async function runPylance(
     pylanceExtension = await getActivatedExtension(pylanceExtension);
     const api = pylanceExtension.exports;
     if (api.client && api.client.isEnabled()) {
+        if (!api.client.supportsSelfManagedLifecycle) {
+            pylanceApi = api;
+            await api.client.start();
+        }
         return;
     }
 
@@ -144,7 +155,7 @@ function getTelemetryReporter() {
     }
 
     // eslint-disable-next-line global-require
-    const Reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
+    const Reporter = require('@vscode/extension-telemetry').TelemetryReporter as typeof TelemetryReporter;
     telemetryReporter = new Reporter(AppinsightsKey, [
         {
             lookup: /(errorName|errorMessage|errorStack)/g,

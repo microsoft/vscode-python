@@ -6,7 +6,7 @@ import * as sinon from 'sinon';
 import { ConfigurationChangeEvent, Uri, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import { JediLanguageServerManager } from '../../client/activation/jedi/manager';
 
-import { LanguageServerType } from '../../client/activation/types';
+import { ILanguageServerOutputChannel, LanguageServerType } from '../../client/activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import {
     IConfigurationService,
@@ -22,6 +22,8 @@ import { IInterpreterHelper, IInterpreterService } from '../../client/interprete
 import { IServiceContainer } from '../../client/ioc/types';
 import { JediLSExtensionManager } from '../../client/languageServer/jediLSExtensionManager';
 import { NoneLSExtensionManager } from '../../client/languageServer/noneLSExtensionManager';
+import { PylanceLSExtensionManager } from '../../client/languageServer/pylanceLSExtensionManager';
+import { NodeLanguageServerManager } from '../../client/activation/node/manager';
 
 import { ILanguageServerExtensionManager } from '../../client/languageServer/types';
 import { LanguageServerWatcher } from '../../client/languageServer/watcher';
@@ -46,6 +48,9 @@ function makeMockServiceContainer(outputChannel?: ILogOutputChannel): IServiceCo
         get: (serviceIdentifier: unknown) => {
             if (serviceIdentifier === IApplicationShell) {
                 return mockApplicationShell;
+            }
+            if (serviceIdentifier === ILanguageServerOutputChannel) {
+                return { channel: mockOutputChannel };
             }
             return undefined;
         },
@@ -632,8 +637,8 @@ suite('Language server watcher', () => {
         {
             languageServer: LanguageServerType.Node,
             multiLS: false,
-            extensionLSCls: NoneLSExtensionManager,
-            lsManagerCls: undefined,
+            extensionLSCls: PylanceLSExtensionManager,
+            lsManagerCls: NodeLanguageServerManager,
         },
         {
             languageServer: LanguageServerType.None,
@@ -720,6 +725,7 @@ suite('Language server watcher', () => {
             multiLS ? '' : 'not'
         } be stopped if a workspace gets removed from the current project`, async () => {
             sandbox.stub(extensionLSCls.prototype, 'startLanguageServer').returns(Promise.resolve());
+            sandbox.stub(extensionLSCls.prototype, 'canStartLanguageServer').returns(true);
             if (lsManagerCls) {
                 sandbox.stub(lsManagerCls.prototype, 'dispose').returns();
             }

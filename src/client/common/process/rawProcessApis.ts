@@ -58,7 +58,8 @@ export function shellExec(
     const shellOptions = getDefaultOptions(options, defaultEnv);
     if (!options.doNotLog) {
         const processLogger = new ProcessLogger(new WorkspaceService());
-        processLogger.logProcess(command, undefined, shellOptions);
+        const loggingOptions = { ...shellOptions, encoding: shellOptions.encoding ?? undefined };
+        processLogger.logProcess(command, undefined, loggingOptions);
     }
     return new Promise((resolve, reject) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

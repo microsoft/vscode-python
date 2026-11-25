@@ -1,0 +1,93 @@
+name: Packaged compatibility guards
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/release-compatibility.yml'
+      - 'build/releaseCompatibility/**'
+      - 'build/azure-pipeline.release-compatibility.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.nvmrc'
+  push:
+    branches: [main, 'release/**']
+    paths:
+      - '.github/workflows/release-compatibility.yml'
+      - 'build/releaseCompatibility/**'
+      - 'build/azure-pipeline.release-compatibility.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.nvmrc'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guards:
+    name: Guards and immutable harness (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, ubuntu-22.04]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Select repository Node version
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Restore locked dependencies without install hooks
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run package, provenance, interpreter, mode, adapter and packer guards
+        run: npm run test:releaseCompatibility
+      - name: Lint compatibility implementation
+        run: npx --no-install eslint --max-warnings 0 build/releaseCompatibility
+      - name: Produce immutable reusable test harness
+        run: npm run package:releaseCompatibility -- "${{ github.workspace }}/harness.zip"
+      - name: Select Python for real fixture venvs
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.10'
+      - name: Exercise the frozen released pair in real isolated on/off hosts
+        shell: pwsh
+        run: |
+          $output = Join-Path $env:GITHUB_WORKSPACE 'released-pair-evidence'
+          $script = Join-Path (Join-Path (Join-Path $env:GITHUB_WORKSPACE 'build') 'releaseCompatibility') 'selfTest.js'
+          $python = (Get-Command python).Source
+          if ($IsLinux) {
+            & xvfb-run -a node $script $output $python
+          } else {
+            & node $script $output $python
+          }
+          exit $LASTEXITCODE
+      - name: Retain verified harness bytes
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: python-release-compatibility-harness-${{ matrix.os }}
+          path: harness.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain real-host pass, failure and infrastructure evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: released-pair-evidence-${{ matrix.os }}
+          path: |
+            released-pair-evidence/input-report.json
+            released-pair-evidence/plan.json
+            released-pair-evidence/run/report.json
+            released-pair-evidence/run/environments-on/candidate/**
+            released-pair-evidence/run/environments-on/user-data/logs/**
+            released-pair-evidence/run/environments-on/workspace/probe-*.json
+            released-pair-evidence/run/explicit-off/candidate/**
+            released-pair-evidence/run/explicit-off/user-data/logs/**
+            released-pair-evidence/run/explicit-off/workspace/probe-*.json
+          if-no-files-found: warn
+          retention-days: 7

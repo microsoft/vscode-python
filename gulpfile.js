@@ -9,7 +9,6 @@
 'use strict';
 
 const gulp = require('gulp');
-const ts = require('gulp-typescript');
 const spawn = require('cross-spawn');
 const path = require('path');
 const del = require('del');
@@ -20,22 +19,15 @@ const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const { argv } = require('yargs');
 const os = require('os');
-const typescript = require('typescript');
-
-const tsProject = ts.createProject('./tsconfig.json', { typescript });
-
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
 gulp.task('compileCore', (done) => {
-    let failed = false;
-    tsProject
-        .src()
-        .pipe(tsProject())
-        .on('error', () => {
-            failed = true;
-        })
-        .js.pipe(gulp.dest('out'))
-        .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
+    spawnAsync(process.execPath, ['./node_modules/typescript/lib/tsc.js', '-p', './tsconfig.json'], undefined, true)
+        .then(() => done())
+        .catch((ex) => {
+            console.log(ex);
+            done(new Error(`TypeScript compilation errors: ${ex instanceof Error ? ex.message : ex}`));
+        });
 });
 
 gulp.task('compileApi', (done) => {
@@ -165,9 +157,14 @@ async function buildWebPack(webpackConfigName, args, env) {
         ['run', 'webpack', '--', ...args, ...['--mode', 'production', '--devtool', 'source-map']],
         env,
     );
+    // Strip ANSI color/style escape codes before parsing webpack output lines.
+    // Webpack colorizes output (e.g. "\u001b[1m\u001b[31mERROR\u001b[39m\u001b[22m in ..."),
+    // which would prevent startsWith('ERROR in') / startsWith('WARNING in') from matching.
+    // eslint-disable-next-line no-control-regex
+    const stripAnsi = (str) => str.replace(/\u001b\[[0-9;]*m/g, '');
     const stdOutLines = stdOut
         .split(os.EOL)
-        .map((item) => item.trim())
+        .map((item) => stripAnsi(item).trim())
         .filter((item) => item.length > 0);
     // Remember to perform a case insensitive search.
     const warnings = stdOutLines

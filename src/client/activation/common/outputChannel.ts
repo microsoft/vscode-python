@@ -6,32 +6,28 @@
 import { inject, injectable } from 'inversify';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import '../../common/extensions';
-import { IDisposable, ILogOutputChannel } from '../../common/types';
+import { IDisposableRegistry, ILogOutputChannel } from '../../common/types';
 import { OutputChannelNames } from '../../common/utils/localize';
 import { ILanguageServerOutputChannel } from '../types';
 
 @injectable()
 export class LanguageServerOutputChannel implements ILanguageServerOutputChannel {
     public output: ILogOutputChannel | undefined;
-    private disposables: IDisposable[] = [];
     private registered = false;
 
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
     ) {}
-
-    public dispose(): void {
-        this.disposables.forEach((d) => d && d.dispose());
-        this.disposables = [];
-    }
 
     public get channel(): ILogOutputChannel {
         if (!this.output) {
-            this.output = this.appShell.createOutputChannel(OutputChannelNames.JediLanguageServer);
+            this.output = this.appShell.createOutputChannel(OutputChannelNames.LanguageServer);
             this.disposables.push(this.output);
             this.registerCommand().ignoreErrors();
         }
+
         return this.output;
     }
 

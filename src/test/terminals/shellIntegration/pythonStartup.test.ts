@@ -135,13 +135,23 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         globalEnvironmentVariableCollection.verify((c) => c.delete('PYTHONSTARTUP'), TypeMoq.Times.once());
     });
 
-    test('PYTHON_BASIC_REPL is set when shell integration is enabled', async () => {
+    test('PYTHON_BASIC_REPL is not set when shell integration is enabled', async () => {
         pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => true);
+
         await registerPythonStartup(context.object);
+
         globalEnvironmentVariableCollection.verify(
-            (c) => c.replace('PYTHON_BASIC_REPL', '1', TypeMoq.It.isAny()),
-            TypeMoq.Times.once(),
+            (c) => c.replace('PYTHON_BASIC_REPL', TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.never(),
         );
+    });
+
+    test('PYTHON_BASIC_REPL is deleted when shell integration is disabled', async () => {
+        pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => false);
+
+        await registerPythonStartup(context.object);
+
+        globalEnvironmentVariableCollection.verify((c) => c.delete('PYTHON_BASIC_REPL'), TypeMoq.Times.once());
     });
 
     test('Ensure registering terminal link calls registerTerminalLinkProvider', async () => {
@@ -172,7 +182,8 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         test('Mac - Verify provideTerminalLinks returns links when context.line contains expectedNativeLink', () => {
             const provider = new CustomTerminalLinkProvider();
             const context: TerminalLinkContext = {
-                line: 'Some random string with Cmd click to launch VS Code Native REPL',
+                line:
+                    'Some random string with Cmd click to launch VS Code Native REPL (https://aka.ms/python-native-repl)',
                 terminal: {} as Terminal,
             };
             const token: CancellationToken = {
@@ -214,7 +225,8 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         test('Windows/Linux - Verify provideTerminalLinks returns links when context.line contains expectedNativeLink', () => {
             const provider = new CustomTerminalLinkProvider();
             const context: TerminalLinkContext = {
-                line: 'Some random string with Ctrl click to launch VS Code Native REPL',
+                line:
+                    'Some random string with Ctrl click to launch VS Code Native REPL (https://aka.ms/python-native-repl)',
                 terminal: {} as Terminal,
             };
             const token: CancellationToken = {

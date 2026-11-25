@@ -4,7 +4,7 @@
             "Component": {
                 "Other": {
                     "Name": "get-pip",
-                    "Version": "21.3.1",
+                    "Version": "26.2.1",
                     "DownloadUrl": "https://github.com/pypa/get-pip"
                 },
                 "Type": "other"

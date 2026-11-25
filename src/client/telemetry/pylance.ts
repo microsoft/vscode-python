@@ -385,8 +385,10 @@
       "autosearchpaths" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "callArgumentNameInlayHints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "completefunctionparens" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "diagnosticsSource" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "disableTaggedHints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "disableworkspacesymbol" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "enableDjangoSupport" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "enableextractcodeaction" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "enablePytestSupport" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "extracommitchars" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -395,6 +397,7 @@
       "hasconfigfile" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "hasextrapaths" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "importformat" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "includeAliasesFromUserFiles" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "intelliCodeEnabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "includeusersymbolsinautoimport" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "indexing" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -404,7 +407,12 @@
       "movesymbol" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "nodeExecutable" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "openfilesonly" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "persistAllIndices" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "pyrightVersion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "pytestparameterinlaytypehints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "referencesCodeLens" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "regenerateStdLibIndices" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "supportDocstringTemplate" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "typecheckingmode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "unusablecompilerflags": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "useimportheuristic" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -467,6 +475,70 @@
       "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
    }
 */
+/* __GDPR__
+   "language_server/copilot_hover" : {
+      "symbolName" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+   }
+*/
+/* __GDPR__
+   "language_server.shadow.paired_request" : {
+      "method" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "primaryoutcome" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "shadowoutcome" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "pyreflyversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "primarydurationms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
+      "shadowdurationms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
+      "shadowinflight" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true }
+   }
+*/
+/* __GDPR__
+   "language_server.shadow.lifecycle" : {
+      "kind" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "reason" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "pyreflyversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "exitcode" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "exitsignal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "uptimems" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
+      "startdurationms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true }
+   }
+*/
+/* __GDPR__
+   "language_server.shadow.child_lifecycle" : {
+      "kind" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "expected" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "exitsignal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "pyreflyversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "exitcode" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
+      "uptimems" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true }
+   }
+*/
+/* __GDPR__
+   "language_server.shadow.sampling" : {
+      "reason" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "pyreflyversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "windowms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
+      "observed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
+      "emitted" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
+      "suppressedbyinterval" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
+      "suppressedbycap" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
+      "shadowdropped" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true }
+   }
+*/
+/* __GDPR__
+   "language_server/type_server_child_lifecycle" : {
+      "kind" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "expected" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "exitsignal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "pyreflyversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+      "exitcode" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true },
+      "uptimems" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo", "isMeasurement": true }
+   }
+*/
 /**
  * Telemetry event sent when LSP server crashes
  */
@@ -474,6 +546,27 @@
 "language_server.crash" : {
    "oom" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
    "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+   "pyreflyshadowexperimentenabled" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+   "pyreflyshadowserverstate" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
+   "pyreflyshadowchildstate" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" },
    "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
 }
+*/
+/**
+ * Telemetry event sent during background Pyrefly detection to measure the audience that could be
+ * offered a switch to Pyrefly. Reported once per workspace folder (per availability) for users who
+ * are not already on a Pyrefly diagnostics source.
+ */
+/* __GDPR__
+   "pyrefly.detection" : {
+      "available" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "haspyreflytoml" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "haspyprojectsection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "hasenvironmentbinary" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "promptdismissed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "notificationenabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "pyreflyextensioninstalled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+      "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "rchiodo" }
+   }
 */

@@ -11,7 +11,7 @@ on:
 permissions: {}
 
 env:
-  NODE_VERSION: 22.17.0
+  NODE_VERSION: 22.21.1
   PYTHON_VERSION: '3.10' # YML treats 3.10 the number as 3.1, so quotes around 3.10
   # Force a path with spaces and to test extension works in these scenarios
   # Unicode characters are causing 2.7 failures so skip that for now.
@@ -84,12 +84,12 @@ jobs:
           #     vsix-target: alpine-arm64
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: 'microsoft/python-environment-tools'
           path: 'python-env-tools'
@@ -115,7 +115,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -130,12 +130,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Use Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -155,9 +155,9 @@ jobs:
           python -m pip install --upgrade -r build/test-requirements.txt
 
       - name: Run Pyright
-        uses: jakebailey/pyright-action@6cabc0f01c4994be48fd45cd9dbacdd6e1ee6e5e # v2.3.3
+        uses: jakebailey/pyright-action@8ec14b5cfe41f26e5f41686a31eb6012758217ef # v3.0.2
         with:
-          version: 1.1.308
+          version: 1.1.414
           working-directory: 'python_files'
 
   python-tests:
@@ -174,17 +174,17 @@ jobs:
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the Unix case.
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
-        python: ['3.9', '3.x', '3.13']
+        python: ['3.10', '3.x', '3.13', '3.15']
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: ${{ env.special-working-directory-relative }}
           persist-credentials: false
 
       - name: Use Python ${{ matrix.python }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python }}
 
@@ -196,6 +196,9 @@ jobs:
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
+
+      - name: Install pytest
+        run: python -m pip install --upgrade pytest
 
       - name: Run Python unit tests
         run: python python_files/tests/run_all.py
@@ -218,13 +221,13 @@ jobs:
         test-suite: [ts-unit, venv, single-workspace, multi-workspace, debugger, functional]
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: ${{ env.special-working-directory-relative }}
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: 'microsoft/python-environment-tools'
           path: ${{ env.special-working-directory-relative }}/python-env-tools
@@ -236,7 +239,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -252,7 +255,7 @@ jobs:
         run: npx @vscode/l10n-dev@latest export ./src
 
       - name: Install Python ${{ matrix.python }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python }}
 
@@ -270,7 +273,9 @@ jobs:
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
       - name: Rust Tool Chain setup
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # stable
+        with:
+          toolchain: stable
 
       - name: Build Native Binaries
         run: nox --session native_build
@@ -308,7 +313,7 @@ jobs:
         if: matrix.test-suite == 'venv'
         run: |
           python -m pip install virtualenv
-          python -m virtualenv .virtualenv/
+          python -m virtualenv --no-venv-redirect .virtualenv/
           if ('${{ matrix.os }}' -match 'windows-latest') {
             & ".virtualenv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} virtualEnvPath
           } else {
@@ -323,11 +328,19 @@ jobs:
         if: matrix.test-suite == 'venv' && startsWith(matrix.python, 3.)
         run: |
           python -m venv .venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if ('${{ matrix.os }}' -match 'windows-latest') {
-            & ".venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
+            & "./.venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           } else {
-            & ".venv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
+            & "./.venv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           }
+
+      - name: Set up Conda for venv tests
+        uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb # v4.1.0
+        with:
+          activate-environment: ''
+          auto-activate: false
+        if: matrix.test-suite == 'venv'
 
       - name: Prepare conda for venv tests
         env:
@@ -337,12 +350,23 @@ jobs:
         if: matrix.test-suite == 'venv'
         run: |
           # 1. For `*.testvirtualenvs.test.ts`
+          $condaCommand = Get-Command conda -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $condaCommand) {
+            throw 'Conda executable was not found on PATH.'
+          }
+          $condaExecPath = $condaCommand.Source
+          $condaBasePath = & $condaExecPath info --base
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($condaBasePath)) {
+            throw "Could not determine the Conda base directory using '$condaExecPath info --base'."
+          }
+          $condaBasePath = "$condaBasePath".Trim()
           if ('${{ matrix.os }}' -match 'windows-latest') {
-            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python.exe
-            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath Scripts | Join-Path -ChildPath conda
+            $condaPythonPath = Join-Path -Path $condaBasePath -ChildPath python.exe
           } else{
-            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath python
-            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath conda
+            $condaPythonPath = Join-Path -Path $condaBasePath -ChildPath bin | Join-Path -ChildPath python
+          }
+          if (-not (Test-Path -Path $condaPythonPath -PathType Leaf)) {
+            throw "Conda base Python was not found at '$condaPythonPath'."
           }
           & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaExecPath $condaExecPath
           & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaPath
@@ -426,12 +450,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: 'microsoft/python-environment-tools'
           path: ${{ env.special-working-directory-relative }}/python-env-tools

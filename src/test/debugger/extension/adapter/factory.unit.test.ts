@@ -73,7 +73,7 @@ suite('Debugging - Adapter Factory', () => {
         readJSONSyncStub = sinon.stub(fs, 'readJSONSync');
         readJSONSyncStub.returns({ enableTelemetry: true });
         rewiremock.enable();
-        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').with({ TelemetryReporter: Reporter });
         stateFactory = mock(PersistentStateFactory);
         state = mock(PersistentState) as PersistentState<boolean | undefined>;
         commandManager = mock(CommandManager);

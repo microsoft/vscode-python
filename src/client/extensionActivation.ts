@@ -13,14 +13,7 @@ import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './c
 import { Commands, PYTHON_LANGUAGE, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExtensions,
-    IInterpreterPathService,
-    ILogOutputChannel,
-    IPathUtils,
-} from './common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensions, ILogOutputChannel, IPathUtils } from './common/types';
 import { noop } from './common/utils/misc';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
 import { IDebugConfigurationService } from './debugger/extension/types';
@@ -33,7 +26,6 @@ import { setExtensionInstallTelemetryProperties } from './telemetry/extensionIns
 import { registerTypes as tensorBoardRegisterTypes } from './tensorBoard/serviceRegistry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionHelper, ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
-import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
 
 // components
 import * as pythonEnvironments from './pythonEnvironments';
@@ -56,7 +48,7 @@ import { registerTriggerForTerminalREPL } from './terminals/codeExecution/termin
 import { registerPythonStartup } from './terminals/pythonStartup';
 import { registerPixiFeatures } from './pythonEnvironments/common/environmentManagers/pixi';
 import { registerCustomTerminalLinkProvider } from './terminals/pythonStartupLinkProvider';
-import { registerEnvExtFeatures } from './envExt/api.internal';
+import { registerEnvironmentsExtensionTelemetry } from './envExt/telemetry';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -93,16 +85,13 @@ export async function activateComponents(
 }
 
 export function activateFeatures(ext: ExtensionState, _components: Components): void {
+    registerEnvironmentsExtensionTelemetry(ext.disposables);
     const interpreterQuickPick: IInterpreterQuickPick = ext.legacyIOC.serviceContainer.get<IInterpreterQuickPick>(
         IInterpreterQuickPick,
-    );
-    const interpreterPathService: IInterpreterPathService = ext.legacyIOC.serviceContainer.get<IInterpreterPathService>(
-        IInterpreterPathService,
     );
     const interpreterService: IInterpreterService = ext.legacyIOC.serviceContainer.get<IInterpreterService>(
         IInterpreterService,
     );
-    registerEnvExtFeatures(ext.disposables, interpreterPathService);
     const pathUtils = ext.legacyIOC.serviceContainer.get<IPathUtils>(IPathUtils);
     registerPixiFeatures(ext.disposables);
     registerAllCreateEnvironmentFeatures(
@@ -144,7 +133,6 @@ async function activateLegacy(ext: ExtensionState, startupStopWatch: StopWatch):
     const { enableProposedApi } = applicationEnv.packageJson;
     serviceManager.addSingletonInstance<boolean>(UseProposedApi, enableProposedApi);
     // Feature specific registrations.
-    unitTestsRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);

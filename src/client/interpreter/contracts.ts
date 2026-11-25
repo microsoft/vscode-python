@@ -72,6 +72,13 @@ export interface ICondaService {
 }
 
 export const IInterpreterService = Symbol('IInterpreterService');
+export interface GetActiveInterpreterOptions {
+    /**
+     * Resolve the exact resource without using workspace-scoped in-flight or last-known state.
+     */
+    exactResource?: boolean;
+}
+
 export interface IInterpreterService {
     triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions): Promise<void>;
     readonly refreshPromise: Promise<void> | undefined;
@@ -90,7 +97,7 @@ export interface IInterpreterService {
      * @deprecated Only exists for old Jupyter integration.
      */
     getAllInterpreters(resource?: Uri): Promise<PythonEnvironment[]>;
-    getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
+    getActiveInterpreter(resource?: Uri, options?: GetActiveInterpreterOptions): Promise<PythonEnvironment | undefined>;
     getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<undefined | PythonEnvironment>;
     refresh(resource: Resource): Promise<void>;
     initialize(): void;

@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
-    "version": "2025.19.0-dev",
+    "version": "2026.13.0",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -1441,13 +1441,13 @@
                     "command": "python.execInTerminal-icon",
                     "group": "navigation@0",
                     "title": "%python.command.python.execInTerminalIcon.title%",
-                    "when": "resourceLangId == python && !isInDiffEditor && !virtualWorkspace && shellExecutionSupported"
+                    "when": "resourceLangId == python && resourceExtname != .pyi && !isInDiffEditor && !virtualWorkspace && shellExecutionSupported"
                 },
                 {
                     "command": "python.execInDedicatedTerminal",
                     "group": "navigation@0",
                     "title": "%python.command.python.execInDedicatedTerminal.title%",
-                    "when": "resourceLangId == python && !isInDiffEditor && !virtualWorkspace && shellExecutionSupported"
+                    "when": "resourceLangId == python && resourceExtname != .pyi && !isInDiffEditor && !virtualWorkspace && shellExecutionSupported"
                 }
             ],
             "explorer/context": [
@@ -1509,7 +1509,7 @@
                 "name": "get_python_environment_details",
                 "displayName": "Get Python Environment Info",
                 "userDescription": "%python.languageModelTools.get_python_environment_details.userDescription%",
-                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. The details returned include the 1. Type of Python Environment (conda, venv, etec), 2. Version of Python, 3. List of all installed Python packages with their versions. ALWAYS call configure_python_environment before using this tool.",
+                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. The details returned include the 1. Type of Python Environment (conda, venv, etc), 2. Version of Python, 3. List of all installed Python packages with their versions. This is read-only: it never creates an environment or changes the selection. With a compatible Python Environments tools API, this runs without extension prompts and reports the selected environment and its packages together. Older Environments versions use the previous compatibility workflow, which may prompt. Host tool approval still applies. ALWAYS call configure_python_environment before using this tool and reuse its returned Resource path as resourcePath. IMPORTANT: This tool is only for Python environments (venv, virtualenv, conda, pipenv, poetry, pyenv, pixi, or any other Python environment manager). Do not use this tool for npm packages, system packages, Ruby gems, or any other non-Python dependencies.",
                 "toolReferenceName": "getPythonEnvironmentInfo",
                 "tags": [
                     "python",
@@ -1524,7 +1524,7 @@
                     "properties": {
                         "resourcePath": {
                             "type": "string",
-                            "description": "The path to the Python file or workspace to get the environment information for."
+                            "description": "The path to the Python file or project to get the environment information for. When omitted, the first open workspace folder is used. Pass the task's target when known, and reuse the Resource path returned by configure_python_environment for subsequent calls."
                         }
                     },
                     "required": []
@@ -1534,7 +1534,7 @@
                 "name": "get_python_executable_details",
                 "displayName": "Get Python Executable",
                 "userDescription": "%python.languageModelTools.get_python_executable_details.userDescription%",
-                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. ALWAYS use this tool before executing any Python command in the terminal. This tool returns the details of how to construct the fully qualified path and or command including details such as arguments required to run Python in a terminal. Note: Instead of executing `python --version` or `python -c 'import sys; print(sys.executable)'`, use this tool to get the Python executable path to replace the `python` command. E.g. instead of using `python -c 'import sys; print(sys.executable)'`, use this tool to build the command `conda run -n <env_name> -c 'import sys; print(sys.executable)'`. ALWAYS call configure_python_environment before using this tool.",
+                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. ALWAYS use this tool before executing any Python command in the terminal. This tool returns the details of how to construct the fully qualified path and or command including details such as arguments required to run Python in a terminal. This is read-only: it never creates an environment or changes the selection. With a compatible Python Environments tools API, this runs without extension prompts. Older Environments versions use the previous compatibility workflow, which may prompt. Host tool approval still applies. Note: Instead of executing `python --version` or `python -c 'import sys; print(sys.executable)'`, use this tool to get the Python executable path to replace the `python` command. E.g. instead of using `python -c 'import sys; print(sys.executable)'`, use this tool to build the command `conda run -n <env_name> -c 'import sys; print(sys.executable)'`. ALWAYS call configure_python_environment before using this tool and reuse its returned Resource path as resourcePath. IMPORTANT: This tool is only for Python environments (venv, virtualenv, conda, pipenv, poetry, pyenv, pixi, or any other Python environment manager). Do not use this tool for npm packages, system packages, Ruby gems, or any other non-Python dependencies.",
                 "toolReferenceName": "getPythonExecutableCommand",
                 "tags": [
                     "python",
@@ -1549,7 +1549,7 @@
                     "properties": {
                         "resourcePath": {
                             "type": "string",
-                            "description": "The path to the Python file or workspace to get the executable information for. If not provided, the current workspace will be used. Where possible pass the path to the file or workspace."
+                            "description": "The path to the Python file or project to get the executable information for. When omitted, the first open workspace folder is used. Pass the task's target when known, and reuse the Resource path returned by configure_python_environment for subsequent calls."
                         }
                     },
                     "required": []
@@ -1559,7 +1559,7 @@
                 "name": "install_python_packages",
                 "displayName": "Install Python Package",
                 "userDescription": "%python.languageModelTools.install_python_packages.userDescription%",
-                "modelDescription": "Installs Python packages in the given workspace. Use this tool to install Python packages in the user's chosen Python environment. ALWAYS call configure_python_environment before using this tool.",
+                "modelDescription": "Installs Python packages in the selected environment for the given workspace. With a compatible Python Environments tools API, installation runs without extension prompts or package pickers and requires an open workspace, a selected isolated environment, and an explicit nonempty package list. Global Python and Conda base are always rejected with ENVIRONMENT_NOT_ISOLATED, even if manually selected or selected by configure_python_environment with pythonPath. Configure without pythonPath or select an isolated environment before retrying. Missing selection returns ENVIRONMENT_NOT_CONFIGURED; no open workspace returns NO_WORKSPACE. These errors never fall back to a global installation. Older Environments versions use the previous compatibility workflow, which may prompt; disabled Environments integration retains the legacy Python workflow. Host tool approval still applies and does not change these target restrictions. ALWAYS call configure_python_environment before using this tool and reuse its returned Resource path as resourcePath. IMPORTANT: This tool should only be used to install Python packages using package managers like pip or conda. Do not use this tool to install npm packages, system packages (apt/brew/yum), Ruby gems, or any other non-Python dependencies.",
                 "toolReferenceName": "installPythonPackage",
                 "tags": [
                     "python",
@@ -1582,7 +1582,7 @@
                         },
                         "resourcePath": {
                             "type": "string",
-                            "description": "The path to the Python file or workspace into which the packages are installed. If not provided, the current workspace will be used. Where possible pass the path to the file or workspace."
+                            "description": "The path to the Python file or project into which the packages are installed. When omitted, the first open workspace folder is used. Pass the task's target when known, and reuse the Resource path returned by configure_python_environment for subsequent calls."
                         }
                     },
                     "required": [
@@ -1593,7 +1593,7 @@
             {
                 "name": "configure_python_environment",
                 "displayName": "Configure Python Environment",
-                "modelDescription": "This tool configures a Python environment in the given workspace. ALWAYS Use this tool to set up the user's chosen environment and ALWAYS call this tool before using any other Python related tools or running any Python command in the terminal.",
+                "modelDescription": "This tool configures a Python environment in the given workspace. ALWAYS call this tool before using any other Python related tools or running any Python command in the terminal. With a compatible Python Environments tools API, this runs without extension prompts or pickers, whether or not pythonPath is supplied. Without pythonPath, it reuses an existing isolated venv, Poetry, Pipenv or non-base Conda environment, or creates and selects an isolated project environment. A selected global Python is used as the base for a new venv, whether selected automatically or manually; Conda base leads to an isolated Conda environment. Supply pythonPath only to select that exact existing interpreter or environment instead, including global Python or Conda base; this override does not permit package installation into global/base environments. Older Environments versions use the previous compatibility workflow, which may prompt; disabled Environments integration retains the legacy Python workflow. An omitted resourcePath defaults to the first open workspace folder; pass the task's file or project path when known. Reuse the returned Resource path as resourcePath in subsequent Python tool calls. Host tool approval still applies and does not change target behavior. Legacy users can supply pythonPath to configure an existing interpreter without extension prompts. IMPORTANT: This tool is only for Python environments (venv, virtualenv, conda, pipenv, poetry, pyenv, pixi, or any other Python environment manager). Do not use this tool for npm packages, system packages, Ruby gems, or any other non-Python dependencies.",
                 "userDescription": "%python.languageModelTools.configure_python_environment.userDescription%",
                 "toolReferenceName": "configurePythonEnvironment",
                 "tags": [
@@ -1608,7 +1608,11 @@
                     "properties": {
                         "resourcePath": {
                             "type": "string",
-                            "description": "The path to the Python file or workspace for which a Python Environment needs to be configured."
+                            "description": "The path to the Python file or project to configure. When omitted, the first open workspace folder is used; with a compatible Python Environments tools API, no folder picker is shown. Pass the task's target when known, and reuse the returned Resource path for subsequent Python tool calls."
+                        },
+                        "pythonPath": {
+                            "type": "string",
+                            "description": "Optional absolute path to the exact existing Python interpreter or environment to select, including global Python or Conda base. This overrides isolated reuse/creation, but does not allow package installation into global/base environments. Omit it to reuse or create an isolated project environment automatically. With a compatible Python Environments tools API, invalid paths fail without changing the selection and both supplied-path and automatic routes run without extension prompts or pickers. Older Environments versions use the previous compatibility workflow, which may prompt. Host tool approval does not change target behavior. Legacy users can supply an interpreter path to avoid extension prompts."
                         }
                     },
                     "required": []
@@ -1617,7 +1621,7 @@
             {
                 "name": "create_virtual_environment",
                 "displayName": "Create a Virtual Environment",
-                "modelDescription": "This tool will create a Virual Environment",
+                "modelDescription": "Internal virtual environment creation tool for legacy Python and older Python Environments versions. Use configure_python_environment instead.",
                 "tags": [],
                 "canBeReferencedInPrompt": false,
                 "inputSchema": {
@@ -1689,6 +1693,8 @@
         "testMultiWorkspace": "node ./out/test/testBootstrap.js ./out/test/multiRootTest.js",
         "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",
         "testSmoke": "cross-env INSTALL_JUPYTER_EXTENSION=true \"node ./out/test/smokeTest.js\"",
+        "test:releaseCompatibility": "mocha --timeout 10000 build/releaseCompatibility/checks.test.js",
+        "package:releaseCompatibility": "node build/releaseCompatibility/pack.js",
         "testInsiders": "cross-env VSC_PYTHON_CI_TEST_VSC_CHANNEL=insiders INSTALL_PYLANCE_EXTENSION=true TEST_FILES_SUFFIX=insiders.test CODE_TESTS_WORKSPACE=src/testMultiRootWkspc/smokeTests \"node ./out/test/standardTest.js\"",
         "lint-staged": "node gulpfile.js",
         "lint": "eslint  src build pythonExtensionApi",
@@ -1697,7 +1703,7 @@
         "format-fix": "prettier --write 'src/**/*.ts' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
         "check-python": "npm run check-python:ruff && npm run check-python:pyright",
         "check-python:ruff": "cd python_files && python -m pip install -U ruff && python -m ruff check . && python -m ruff format --check",
-        "check-python:pyright": "cd python_files && npx --yes pyright@1.1.308 .",
+        "check-python:pyright": "cd python_files && npx --yes pyright@1.1.414 .",
         "clean": "gulp clean",
         "addExtensionPackDependencies": "gulp addExtensionPackDependencies",
         "updateBuildNumber": "gulp updateBuildNumber",
@@ -1706,15 +1712,15 @@
     },
     "dependencies": {
         "@iarna/toml": "^3.0.0",
-        "@vscode/extension-telemetry": "^0.8.4",
+        "@vscode/extension-telemetry": "^1.5.2",
         "arch": "^2.1.0",
         "fs-extra": "^11.2.0",
         "glob": "^7.2.0",
         "iconv-lite": "^0.6.3",
         "inversify": "^6.0.2",
         "jsonc-parser": "^3.0.0",
-        "lodash": "^4.17.21",
-        "minimatch": "^5.0.1",
+        "lodash": "^4.18.1",
+        "minimatch": "^5.1.8",
         "named-js-regexp": "^1.3.3",
         "node-stream-zip": "^1.6.0",
         "reflect-metadata": "^0.2.2",
@@ -1723,7 +1729,7 @@
         "semver": "^7.5.2",
         "stack-trace": "0.0.10",
         "sudo-prompt": "^9.2.1",
-        "tmp": "^0.2.5",
+        "tmp": "^0.2.7",
         "uint64be": "^3.0.0",
         "unicode": "^14.0.0",
         "vscode-debugprotocol": "^1.28.0",
@@ -1746,7 +1752,7 @@
         "@types/glob": "^7.2.0",
         "@types/lodash": "^4.14.104",
         "@types/mocha": "^9.1.0",
-        "@types/node": "^22.5.0",
+        "@types/node": "^22.19.1",
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
         "@types/sinon": "^17.0.3",
@@ -1758,13 +1764,13 @@
         "@types/xml2js": "^0.4.2",
         "@typescript-eslint/eslint-plugin": "^6.21.0",
         "@typescript-eslint/parser": "^6.21.0",
-        "@vscode/test-electron": "^2.3.8",
-        "@vscode/vsce": "^2.27.0",
+        "@vscode/test-electron": "^3.1.0",
+        "@vscode/vsce": "^3.9.2",
         "bent": "^7.3.12",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
-        "copy-webpack-plugin": "^9.1.0",
+        "copy-webpack-plugin": "^14.0.0",
         "cross-env": "^7.0.3",
         "cross-spawn": "^6.0.5",
         "del": "^6.0.0",
@@ -1781,13 +1787,13 @@
         "get-port": "^5.1.1",
         "gulp": "^5.0.0",
         "gulp-typescript": "^5.0.0",
-        "mocha": "^11.1.0",
+        "mocha": "^11.8.0",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.1.7",
         "node-has-native-dependencies": "^1.0.2",
         "node-loader": "^1.0.2",
         "node-polyfill-webpack-plugin": "^1.1.4",
-        "nyc": "^15.0.0",
+        "nyc": "^18.0.0",
         "prettier": "^2.0.2",
         "rewiremock": "^3.13.0",
         "shortid": "^2.2.8",
@@ -1798,9 +1804,9 @@
         "ts-node": "^10.7.0",
         "tsconfig-paths-webpack-plugin": "^3.2.0",
         "typemoq": "^2.1.0",
-        "typescript": "~5.2",
-        "uuid": "^8.3.2",
-        "webpack": "^5.76.0",
+        "typescript": "~5.9",
+        "uuid": "^14.0.0",
+        "webpack": "^5.105.0",
         "webpack-bundle-analyzer": "^4.5.0",
         "webpack-cli": "^4.9.2",
         "webpack-fix-default-import-plugin": "^1.0.3",

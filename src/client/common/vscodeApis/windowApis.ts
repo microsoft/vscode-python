@@ -25,6 +25,7 @@ import {
     NotebookDocument,
     NotebookEditor,
     NotebookDocumentShowOptions,
+    Terminal,
 } from 'vscode';
 import { createDeferred, Deferred } from '../utils/async';
 import { Resource } from '../types';
@@ -122,6 +123,10 @@ export function onDidChangeActiveTextEditor(handler: (e: TextEditor | undefined)
 
 export function onDidStartTerminalShellExecution(handler: (e: TerminalShellExecutionStartEvent) => void): Disposable {
     return window.onDidStartTerminalShellExecution(handler);
+}
+
+export function onDidChangeTerminalState(handler: (e: Terminal) => void): Disposable {
+    return window.onDidChangeTerminalState(handler);
 }
 
 export enum MultiStepAction {

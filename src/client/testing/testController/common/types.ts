@@ -16,6 +16,8 @@ import {
 import { ITestDebugLauncher } from '../../common/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { ProjectAdapter } from './projectAdapter';
+import { DiscoveryTriggerKind } from './discoveryTelemetry';
 
 export enum TestDataKinds {
     Workspace,
@@ -33,7 +35,10 @@ export interface TestData {
     kind: TestDataKinds;
 }
 
-export type TestRefreshOptions = { forceRefresh: boolean };
+export type TestRefreshOptions = {
+    forceRefresh: boolean;
+    trigger?: DiscoveryTriggerKind;
+};
 
 export const ITestController = Symbol('ITestController');
 export interface ITestController {
@@ -142,10 +147,18 @@ export type TestCommandOptions = {
 //     triggerRunDataReceivedEvent(data: DataReceivedEvent): void;
 //     triggerDiscoveryDataReceivedEvent(data: DataReceivedEvent): void;
 // }
-export interface ITestResultResolver {
+
+/**
+ * Test item mapping interface used by populateTestTree.
+ * Contains only the maps needed for building the test tree.
+ */
+export interface ITestItemMappings {
     runIdToVSid: Map<string, string>;
     runIdToTestItem: Map<string, TestItem>;
     vsIdToRunId: Map<string, string>;
+}
+
+export interface ITestResultResolver extends ITestItemMappings {
     detailedCoverageMap: Map<string, FileCoverageDetail[]>;
 
     resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void;
@@ -160,6 +173,7 @@ export interface ITestDiscoveryAdapter {
         executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
         interpreter?: PythonEnvironment,
+        project?: ProjectAdapter,
     ): Promise<void>;
 }
 
@@ -173,11 +187,12 @@ export interface ITestExecutionAdapter {
         executionFactory: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
+        project?: ProjectAdapter,
     ): Promise<void>;
 }
 
 // Same types as in python_files/unittestadapter/utils.py
-export type DiscoveredTestType = 'folder' | 'file' | 'class' | 'test';
+export type DiscoveredTestType = 'folder' | 'file' | 'class' | 'function' | 'test';
 
 export type DiscoveredTestCommon = {
     path: string;
@@ -194,13 +209,17 @@ export type DiscoveredTestItem = DiscoveredTestCommon & {
 
 export type DiscoveredTestNode = DiscoveredTestCommon & {
     children: (DiscoveredTestNode | DiscoveredTestItem)[];
+    lineno?: number | string;
 };
 
 export type DiscoveredTestPayload = {
     cwd: string;
-    tests?: DiscoveredTestNode;
+    tests?: DiscoveredTestNode | null;
     status: 'success' | 'error';
     error?: string[];
+    payloadVersion?: number;
+    pathBase?: string;
+    idBase?: string;
 };
 
 export type CoveragePayload = {

@@ -7,7 +7,7 @@ import * as path from 'path';
 import { readJSON } from 'fs-extra';
 import which from 'which';
 import { getUserHomeDir, isWindows } from '../../../common/utils/platform';
-import { exec, getPythonSetting, onDidChangePythonSetting, pathExists } from '../externalDependencies';
+import { arePathsSame, exec, getPythonSetting, onDidChangePythonSetting, pathExists } from '../externalDependencies';
 import { cache } from '../../../common/utils/decorators';
 import { traceVerbose, traceWarn } from '../../../logging';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
@@ -267,15 +267,13 @@ export async function getPixiEnvironmentFromInterpreter(
     // Otherwise, we'll have to try to deduce this information.
 
     // Usually the pixi environments are stored under `<projectDir>/.pixi/envs/<environment>/`. So,
-    // we walk backwards to determine the project directory.
-    let envName: string | undefined;
+    // we walk backwards to determine a candidate project directory.
     let envsDir: string;
     let dotPixiDir: string;
     let pixiProjectDir: string;
     let pixiInfo: PixiInfo | undefined;
 
     try {
-        envName = path.basename(prefix);
         envsDir = path.dirname(prefix);
         dotPixiDir = path.dirname(envsDir);
         pixiProjectDir = path.dirname(dotPixiDir);
@@ -292,12 +290,18 @@ export async function getPixiEnvironmentFromInterpreter(
             return undefined;
         }
 
+        const environment = pixiInfo.environments_info.find((env) => arePathsSame(env.prefix, prefix));
+        if (!environment) {
+            traceVerbose(`could not find a pixi environment matching the interpreter at ${interpreterPath}`);
+            return undefined;
+        }
+
         return {
             interpreterPath,
             pixi,
             pixiVersion: pixiInfo.version,
             manifestPath: pixiInfo.project_info.manifest_path,
-            envName,
+            envName: environment.name,
         };
     } catch (error) {
         traceWarn('Error processing paths or getting Pixi Info:', error);

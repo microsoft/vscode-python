@@ -121,7 +121,7 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
         await this.commandManager.executeCommand('workbench.action.openIssueReporter', {
             extensionId: 'ms-python.python',
             issueBody: template,
-            data: userTemplate.format(
+            extensionData: userTemplate.format(
                 pythonVersion,
                 virtualEnvKind,
                 languageServer,

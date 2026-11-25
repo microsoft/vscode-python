@@ -1,0 +1,342 @@
+###############################################################################################
+#  Copyright (c) Microsoft Corporation. All rights reserved.
+#  Licensed under the MIT License. See License.txt in the project root for license information.
+###############################################################################################
+
+name: $(Date:yyyyMMdd)$(Rev:.r)
+
+trigger: none
+pr: none
+
+resources:
+  repositories:
+    - repository: MicroBuildTemplate
+      type: git
+      name: 1ESPipelineTemplates/MicroBuildTemplate
+      ref: refs/tags/release
+    - repository: templates
+      type: git
+      name: DevDiv/Pylance-Eng
+      ref: refs/heads/main
+
+parameters:
+  - name: quality
+    displayName: Release quality
+    type: string
+    default: latest
+    values:
+      - latest
+      - next
+
+  - name: publishPythonApi
+    displayName: Publish pythonExtensionApi
+    type: boolean
+    default: false
+
+variables:
+  - name: TeamName
+    value: vscode-python
+  - name: PackageName
+    value: '@vscode/python-extension'
+  - name: PackageDirectory
+    value: pythonExtensionApi
+  - name: NodeVersion
+    value: '22.21.1'
+  - name: AZURE_ARTIFACTS_FEED
+    value: 'https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/DevDiv_PublicPackages/npm/registry/'
+  - name: NpmTag
+    value: ${{ parameters.quality }}
+
+extends:
+  template: azure-pipelines/MicroBuild.1ES.Official.Publish.yml@MicroBuildTemplate
+  parameters:
+    settings:
+      networkIsolationPolicy: Preferred,GitHub,NodeTool
+    sdl:
+      sourceAnalysisPool:
+        name: AzurePipelines-EO
+        image: 1ESPT-Windows2022
+        os: windows
+      credscan:
+        enabled: true
+      policheck:
+        enabled: true
+      sbom:
+        enabled: true
+      tsa:
+        config:
+          areaPath: 'DevDiv\Python and AI Tools\Python\VS Code'
+          codebaseName: devdiv_microsoft_vscode_python
+          instanceUrl: 'https://devdiv.visualstudio.com/defaultcollection'
+          notificationAliases: ['brcan@microsoft.com', 'plseng@microsoft.com']
+          serviceTreeID: '6e6194bc-7baa-4486-86d0-9f5419626d46'
+          projectName: 'DevDiv'
+        enabled: true
+    pool:
+      name: AzurePipelines-EO
+      image: 1ESPT-Ubuntu22.04
+      os: linux
+
+    customBuildTags:
+      - ES365AIMigrationTooling
+
+    stages:
+      - stage: Build
+        displayName: Build, test, and pack
+        jobs:
+          - job: Linux_Node_22_21_1
+            displayName: Linux (Node.js 22.21.1)
+            timeoutInMinutes: 30
+            pool:
+              name: AzurePipelines-EO
+              image: 1ESPT-Ubuntu22.04
+              os: linux
+            steps:
+              - checkout: self
+                clean: true
+
+              - template: azure-pipelines/extension/templates/steps/setup.yml@templates
+                parameters:
+                  installPython: false
+                  customNPMRegistry: $(AZURE_ARTIFACTS_FEED)
+                  nodeVersion: $(NodeVersion)
+
+              - pwsh: |
+                  $registry = '$(AZURE_ARTIFACTS_FEED)'
+                  Set-Location '$(Build.SourcesDirectory)'
+                  npm config set '@types:registry' $registry --location=project
+                  if ($LASTEXITCODE -ne 0) {
+                      throw 'Failed to configure the @types npm registry.'
+                  }
+
+                  foreach ($key in @('registry', '@types:registry')) {
+                      $effectiveRegistry = (npm config get $key | Out-String).Trim()
+                      if ($LASTEXITCODE -ne 0 -or $effectiveRegistry.TrimEnd('/') -ne $registry.TrimEnd('/')) {
+                          throw "Unexpected npm registry for ${key}: $effectiveRegistry"
+                      }
+                      Write-Host "${key}: $effectiveRegistry"
+                  }
+                displayName: Route npm dependencies through CFS
+
+              - template: /build/azure-pipelines/templates/test-steps.yml@self
+                parameters:
+                  package: $(PackageDirectory)
+
+          - job: MacOS_Node_22_21_1
+            displayName: macOS (Node.js 22.21.1)
+            timeoutInMinutes: 30
+            pool:
+              name: Azure Pipelines
+              image: macOS-15
+              os: macOS
+            variables:
+              BUILDSECMON_OPT_IN: false
+            steps:
+              - checkout: self
+                clean: true
+
+              - template: azure-pipelines/extension/templates/steps/setup.yml@templates
+                parameters:
+                  installPython: false
+                  customNPMRegistry: $(AZURE_ARTIFACTS_FEED)
+                  nodeVersion: $(NodeVersion)
+
+              - pwsh: |
+                  $registry = '$(AZURE_ARTIFACTS_FEED)'
+                  Set-Location '$(Build.SourcesDirectory)'
+                  npm config set '@types:registry' $registry --location=project
+                  if ($LASTEXITCODE -ne 0) {
+                      throw 'Failed to configure the @types npm registry.'
+                  }
+
+                  foreach ($key in @('registry', '@types:registry')) {
+                      $effectiveRegistry = (npm config get $key | Out-String).Trim()
+                      if ($LASTEXITCODE -ne 0 -or $effectiveRegistry.TrimEnd('/') -ne $registry.TrimEnd('/')) {
+                          throw "Unexpected npm registry for ${key}: $effectiveRegistry"
+                      }
+                      Write-Host "${key}: $effectiveRegistry"
+                  }
+                displayName: Route npm dependencies through CFS
+
+              - template: /build/azure-pipelines/templates/test-steps.yml@self
+                parameters:
+                  package: $(PackageDirectory)
+
+          - job: Windows_Node_22_21_1
+            displayName: Windows (Node.js 22.21.1)
+            timeoutInMinutes: 30
+            pool:
+              name: AzurePipelines-EO
+              image: 1ESPT-Windows2022
+              os: windows
+            steps:
+              - checkout: self
+                clean: true
+
+              - template: azure-pipelines/extension/templates/steps/setup.yml@templates
+                parameters:
+                  installPython: false
+                  customNPMRegistry: $(AZURE_ARTIFACTS_FEED)
+                  nodeVersion: $(NodeVersion)
+
+              - pwsh: |
+                  $registry = '$(AZURE_ARTIFACTS_FEED)'
+                  Set-Location '$(Build.SourcesDirectory)'
+                  npm config set '@types:registry' $registry --location=project
+                  if ($LASTEXITCODE -ne 0) {
+                      throw 'Failed to configure the @types npm registry.'
+                  }
+
+                  foreach ($key in @('registry', '@types:registry')) {
+                      $effectiveRegistry = (npm config get $key | Out-String).Trim()
+                      if ($LASTEXITCODE -ne 0 -or $effectiveRegistry.TrimEnd('/') -ne $registry.TrimEnd('/')) {
+                          throw "Unexpected npm registry for ${key}: $effectiveRegistry"
+                      }
+                      Write-Host "${key}: $effectiveRegistry"
+                  }
+                displayName: Route npm dependencies through CFS
+
+              - template: /build/azure-pipelines/templates/test-steps.yml@self
+                parameters:
+                  package: $(PackageDirectory)
+
+          - job: Package
+            displayName: Pack npm package
+            dependsOn:
+              - Linux_Node_22_21_1
+              - MacOS_Node_22_21_1
+              - Windows_Node_22_21_1
+            timeoutInMinutes: 30
+            pool:
+              name: AzurePipelines-EO
+              image: 1ESPT-Ubuntu22.04
+              os: linux
+            templateContext:
+              outputs:
+                - output: pipelineArtifact
+                  targetPath: $(Build.ArtifactStagingDirectory)
+                  artifactName: pythonExtensionApi
+            steps:
+              - checkout: self
+                clean: true
+
+              - template: azure-pipelines/extension/templates/steps/setup.yml@templates
+                parameters:
+                  installPython: false
+                  customNPMRegistry: $(AZURE_ARTIFACTS_FEED)
+                  nodeVersion: $(NodeVersion)
+
+              - pwsh: |
+                  $registry = '$(AZURE_ARTIFACTS_FEED)'
+                  Set-Location '$(Build.SourcesDirectory)'
+                  npm config set '@types:registry' $registry --location=project
+                  if ($LASTEXITCODE -ne 0) {
+                      throw 'Failed to configure the @types npm registry.'
+                  }
+
+                  foreach ($key in @('registry', '@types:registry')) {
+                      $effectiveRegistry = (npm config get $key | Out-String).Trim()
+                      if ($LASTEXITCODE -ne 0 -or $effectiveRegistry.TrimEnd('/') -ne $registry.TrimEnd('/')) {
+                          throw "Unexpected npm registry for ${key}: $effectiveRegistry"
+                      }
+                      Write-Host "${key}: $effectiveRegistry"
+                  }
+                displayName: Route npm dependencies through CFS
+
+              - template: /build/azure-pipelines/templates/pack-steps.yml@self
+                parameters:
+                  package: $(PackageDirectory)
+
+              - script: npm pack --pack-destination $(Build.ArtifactStagingDirectory)
+                workingDirectory: $(Build.SourcesDirectory)/$(PackageDirectory)
+                displayName: Pack npm package
+
+      - stage: Publish
+        displayName: Publish npm package
+        dependsOn:
+          - Build
+          - SDLSources
+        condition: and(succeeded(), eq('${{ parameters.publishPythonApi }}', 'true'), eq(variables['Build.Reason'], 'Manual'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+        jobs:
+          - job: ApprovePublish
+            displayName: Approve public npm publication
+            pool: server
+            timeoutInMinutes: 1445
+            templateContext:
+              mb:
+                publish:
+                  enabled: false
+            steps:
+              - task: ManualValidation@1
+                timeoutInMinutes: 1440
+                inputs:
+                  notifyUsers: 'plseng@microsoft.com'
+                  approvers: 'plseng@microsoft.com'
+                  allowApproversToApproveTheirOwnRuns: false
+                  instructions: |
+                    Review the completed build, tests, package, and security analysis results.
+                    Resume only to publish the validated package to public npm through ESRP.
+                  onTimeout: reject
+
+          - job: PublishPackage
+            displayName: Publish npm package
+            dependsOn: ApprovePublish
+            pool:
+              name: AzurePipelines-EO
+              image: 1ESPT-Ubuntu22.04
+              os: linux
+            templateContext:
+              type: releaseJob
+              isProduction: true
+              inputs:
+                - input: pipelineArtifact
+                  artifactName: pythonExtensionApi
+                  targetPath: $(Pipeline.Workspace)/pythonExtensionApi
+            steps:
+              - checkout: none
+
+              - template: azure-pipelines/extension/templates/steps/setup.yml@templates
+                parameters:
+                  installPython: false
+                  nodeVersion: $(NodeVersion)
+
+              - task: ExtractFiles@1
+                inputs:
+                  archiveFilePatterns: $(Pipeline.Workspace)/pythonExtensionApi/*.tgz
+                  destinationFolder: $(Build.ArtifactStagingDirectory)/pythonExtensionApi
+                  cleanDestinationFolder: true
+                displayName: Extract npm package
+
+              - bash: |
+                  set -euo pipefail
+                  packageVersion="$(node -p "require('./package.json').version")"
+                  echo "##vso[task.setvariable variable=PackageVersion]$packageVersion"
+                  echo "Package version: $packageVersion"
+                workingDirectory: $(Build.ArtifactStagingDirectory)/pythonExtensionApi/package
+                displayName: Read package version
+
+              - task: EsrpRelease@14
+                inputs:
+                  connectedservicename: EsrpThirdPartyPackageManager
+                  usemanagedidentity: true
+                  keyvaultname: DevDiv3rdPartyPkgMngrKV
+                  signcertname: DevDiv3rdPartyPkgMngr
+                  clientid: 15908223-fc42-4083-bd72-71dedfdac47f
+                  intent: PackageDistribution
+                  contentType: npm
+                  contentsource: Folder
+                  folderlocation: $(Pipeline.Workspace)/pythonExtensionApi
+                  waitforreleasecompletion: true
+                  owners: brcan@microsoft.com
+                  approvers: plseng@microsoft.com
+                  serviceendpointurl: https://api.esrp.microsoft.com
+                  mainpublisher: ESRPRELPACMAN
+                  domaintenantid: 975f013f-7f24-47e8-a7d3-abc4752bf346
+                  productstate: $(NpmTag)
+                displayName: Publish package to npm
+
+              - template: azure-pipelines/extension/templates/steps/createGitHubRelease.yml@templates
+                parameters:
+                  isPreRelease: ${{ ne(parameters.quality, 'latest') }}
+                  ghReleaseAddChangeLog: true
+                  tagName: release/pythonExtensionApi/$(PackageVersion)
