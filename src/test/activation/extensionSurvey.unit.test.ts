@@ -3,559 +3,399 @@
 
 'use strict';
 
-import { assert, expect } from 'chai';
+import { expect } from 'chai';
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
-import * as TypeMoq from 'typemoq';
+import { when } from 'ts-mockito';
+import { UIKind, WorkspaceConfiguration } from 'vscode';
 import { ExtensionSurveyPrompt, extensionSurveyStateKeys } from '../../client/activation/extensionSurvey';
 import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { ShowExtensionSurveyPrompt } from '../../client/common/experiments/groups';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IPlatformService } from '../../client/common/platform/types';
-import {
-    IBrowserService,
-    IExperimentService,
-    IPersistentState,
-    IPersistentStateFactory,
-    IRandom,
-} from '../../client/common/types';
-import { createDeferred } from '../../client/common/utils/async';
+import { IBrowserService, IExperimentService, IRandom } from '../../client/common/types';
 import { Common, ExtensionSurveyBanner } from '../../client/common/utils/localize';
 import { OSType } from '../../client/common/utils/platform';
-import { sleep } from '../core';
-import { WorkspaceConfiguration } from 'vscode';
+import { MockMemento } from '../mocks/mementos';
+import { MockWorkspaceConfiguration } from '../mocks/mockWorkspaceConfig';
+import { mockedVSCodeNamespaces } from '../vscode-mock';
 
-suite('Extension survey prompt - shouldShowBanner()', () => {
-    let appShell: TypeMoq.IMock<IApplicationShell>;
-    let browserService: TypeMoq.IMock<IBrowserService>;
-    let random: TypeMoq.IMock<IRandom>;
-    let persistentStateFactory: IPersistentStateFactory;
-    let experiments: TypeMoq.IMock<IExperimentService>;
-    let platformService: TypeMoq.IMock<IPlatformService>;
-    let appEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
-    let disableSurveyForTime: TypeMoq.IMock<IPersistentState<any>>;
-    let doNotShowAgain: TypeMoq.IMock<IPersistentState<any>>;
-    let extensionSurveyPrompt: ExtensionSurveyPrompt;
-    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+const TWELVE_WEEKS_MS = 1000 * 60 * 60 * 24 * 7 * 12;
 
+interface SurveyPromptHarnessOptions {
+    sampleSize?: number;
+    waitTimeToShowSurvey?: number;
+    inExperiment?: boolean;
+    randomInt?: number;
+    telemetryConfig?: WorkspaceConfiguration;
+    hasTelemetryConfig?: boolean;
+    showInformationMessageResult?: string;
+}
+
+function createSurveyPromptHarness(options: SurveyPromptHarnessOptions = {}) {
+    const globalMemento = new MockMemento();
+    const workspaceMemento = new MockMemento();
+    const persistentStateFactory = new PersistentStateFactory(globalMemento, workspaceMemento);
+
+    const showInformationMessageStub = sinon.stub().resolves(options.showInformationMessageResult);
+    const appShell = ({
+        showInformationMessage: showInformationMessageStub,
+    } as unknown) as IApplicationShell;
+
+    const browserLaunchStub = sinon.stub().resolves();
+    const browserService = ({
+        launch: browserLaunchStub,
+    } as unknown) as IBrowserService;
+
+    const getRandomIntStub = sinon.stub().returns(options.randomInt ?? 0);
+    const random: IRandom = {
+        getRandomInt: getRandomIntStub,
+    };
+
+    const inExperimentStub = sinon.stub().resolves(options.inExperiment ?? true);
+    const experiments = ({
+        inExperiment: inExperimentStub,
+    } as unknown) as IExperimentService;
+
+    const appEnvironment = ({
+        vscodeVersion: 'vscodeVersion',
+        packageJson: { version: 'extensionVersion' },
+        sessionId: 'sessionId',
+    } as unknown) as IApplicationEnvironment;
+
+    const platformService = ({
+        osType: OSType.Windows,
+    } as unknown) as IPlatformService;
+
+    const telemetryConfig =
+        options.hasTelemetryConfig === false
+            ? undefined
+            : options.telemetryConfig ?? new MockWorkspaceConfiguration({ 'feedback.enabled': true });
+    const workspaceService = ({
+        getConfiguration: (section?: string) => (section === 'telemetry' ? telemetryConfig : undefined),
+    } as unknown) as IWorkspaceService;
+
+    const prompt = new ExtensionSurveyPrompt(
+        appShell,
+        browserService,
+        persistentStateFactory,
+        random,
+        experiments,
+        appEnvironment,
+        platformService,
+        workspaceService,
+        options.sampleSize ?? 10,
+        options.waitTimeToShowSurvey,
+    );
+
+    return {
+        prompt,
+        persistentStateFactory,
+        globalMemento,
+        showInformationMessageStub,
+        browserLaunchStub,
+        getRandomIntStub,
+        inExperimentStub,
+    };
+}
+
+suite('Extension survey prompt', () => {
     setup(() => {
-        experiments = TypeMoq.Mock.ofType<IExperimentService>();
-        appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        browserService = TypeMoq.Mock.ofType<IBrowserService>();
-        random = TypeMoq.Mock.ofType<IRandom>();
-        persistentStateFactory = mock(PersistentStateFactory);
-        disableSurveyForTime = TypeMoq.Mock.ofType<IPersistentState<any>>();
-        doNotShowAgain = TypeMoq.Mock.ofType<IPersistentState<any>>();
-        platformService = TypeMoq.Mock.ofType<IPlatformService>();
-        appEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>();
-        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        when(
-            persistentStateFactory.createGlobalPersistentState(
-                extensionSurveyStateKeys.disableSurveyForTime,
-                false,
-                anything(),
-            ),
-        ).thenReturn(disableSurveyForTime.object);
-        when(
-            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false),
-        ).thenReturn(doNotShowAgain.object);
-        extensionSurveyPrompt = new ExtensionSurveyPrompt(
-            appShell.object,
-            browserService.object,
-            instance(persistentStateFactory),
-            random.object,
-            experiments.object,
-            appEnvironment.object,
-            platformService.object,
-            workspaceService.object,
-            10,
-        );
-    });
-    test('Returns false if do not show again is clicked', async () => {
-        random
-            .setup((r) => r.getRandomInt(0, 100))
-            .returns(() => 10)
-            .verifiable(TypeMoq.Times.never());
-        doNotShowAgain.setup((d) => d.value).returns(() => true);
-
-        const result = extensionSurveyPrompt.shouldShowBanner();
-
-        expect(result).to.equal(false, 'Banner should not be shown');
-        verify(
-            persistentStateFactory.createGlobalPersistentState(
-                extensionSurveyStateKeys.disableSurveyForTime,
-                false,
-                anything(),
-            ),
-        ).never();
-        verify(
-            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false),
-        ).once();
-        random.verifyAll();
-    });
-    test('Returns false if prompt is disabled for a while', async () => {
-        random
-            .setup((r) => r.getRandomInt(0, 100))
-            .returns(() => 10)
-            .verifiable(TypeMoq.Times.never());
-        disableSurveyForTime.setup((d) => d.value).returns(() => true);
-        doNotShowAgain.setup((d) => d.value).returns(() => false);
-
-        const result = extensionSurveyPrompt.shouldShowBanner();
-
-        expect(result).to.equal(false, 'Banner should not be shown');
-        verify(
-            persistentStateFactory.createGlobalPersistentState(
-                extensionSurveyStateKeys.disableSurveyForTime,
-                false,
-                anything(),
-            ),
-        ).once();
-        verify(
-            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false),
-        ).once();
-        random.verifyAll();
-    });
-    test('Returns false if user is not in the random sampling', async () => {
-        disableSurveyForTime.setup((d) => d.value).returns(() => false);
-        doNotShowAgain.setup((d) => d.value).returns(() => false);
-        // Default sample size is 10
-        for (let i = 10; i < 100; i = i + 1) {
-            random.setup((r) => r.getRandomInt(0, 100)).returns(() => i);
-            const result = extensionSurveyPrompt.shouldShowBanner();
-            expect(result).to.equal(false, 'Banner should not be shown');
-        }
-        random.verifyAll();
-    });
-    test('Returns true if telemetry.feedback.enabled is enabled', async () => {
-        disableSurveyForTime.setup((d) => d.value).returns(() => false);
-        doNotShowAgain.setup((d) => d.value).returns(() => false);
-
-        const telemetryConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        workspaceService.setup((w) => w.getConfiguration('telemetry')).returns(() => telemetryConfig.object);
-        telemetryConfig
-            .setup((t) => t.get(TypeMoq.It.isValue('feedback.enabled'), TypeMoq.It.isValue(true)))
-            .returns(() => true);
-
-        const result = extensionSurveyPrompt.shouldShowBanner();
-
-        expect(result).to.equal(true, 'Banner should be shown when telemetry.feedback.enabled is true');
-        workspaceService.verify((w) => w.getConfiguration('telemetry'), TypeMoq.Times.once());
-        telemetryConfig.verify((t) => t.get('feedback.enabled', true), TypeMoq.Times.once());
-    });
-
-    test('Returns false if telemetry.feedback.enabled is disabled', async () => {
-        disableSurveyForTime.setup((d) => d.value).returns(() => false);
-        doNotShowAgain.setup((d) => d.value).returns(() => false);
-
-        const telemetryConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        workspaceService.setup((w) => w.getConfiguration('telemetry')).returns(() => telemetryConfig.object);
-        telemetryConfig
-            .setup((t) => t.get(TypeMoq.It.isValue('feedback.enabled'), TypeMoq.It.isValue(true)))
-            .returns(() => false);
-
-        const result = extensionSurveyPrompt.shouldShowBanner();
-
-        expect(result).to.equal(false, 'Banner should not be shown when feedback.enabled is false');
-        workspaceService.verify((w) => w.getConfiguration('telemetry'), TypeMoq.Times.once());
-        telemetryConfig.verify((t) => t.get('feedback.enabled', true), TypeMoq.Times.once());
-    });
-
-    test('Returns true if user is in the random sampling', async () => {
-        disableSurveyForTime.setup((d) => d.value).returns(() => false);
-        doNotShowAgain.setup((d) => d.value).returns(() => false);
-        // Default sample size is 10
-        for (let i = 0; i < 10; i = i + 1) {
-            random.setup((r) => r.getRandomInt(0, 100)).returns(() => i);
-            const result = extensionSurveyPrompt.shouldShowBanner();
-            expect(result).to.equal(true, 'Banner should be shown');
-        }
-    });
-
-    test('Always return true if sample size is 100', async () => {
-        extensionSurveyPrompt = new ExtensionSurveyPrompt(
-            appShell.object,
-            browserService.object,
-            instance(persistentStateFactory),
-            random.object,
-            experiments.object,
-            appEnvironment.object,
-            platformService.object,
-            workspaceService.object,
-            100,
-        );
-        disableSurveyForTime.setup((d) => d.value).returns(() => false);
-        doNotShowAgain.setup((d) => d.value).returns(() => false);
-        for (let i = 0; i < 100; i = i + 1) {
-            random.setup((r) => r.getRandomInt(0, 100)).returns(() => i);
-            const result = extensionSurveyPrompt.shouldShowBanner();
-            expect(result).to.equal(true, 'Banner should be shown');
-        }
-    });
-
-    test('Always return false if sample size is 0', async () => {
-        extensionSurveyPrompt = new ExtensionSurveyPrompt(
-            appShell.object,
-            browserService.object,
-            instance(persistentStateFactory),
-            random.object,
-            experiments.object,
-            appEnvironment.object,
-            platformService.object,
-            workspaceService.object,
-            0,
-        );
-        disableSurveyForTime.setup((d) => d.value).returns(() => false);
-        doNotShowAgain.setup((d) => d.value).returns(() => false);
-        for (let i = 0; i < 100; i = i + 1) {
-            random.setup((r) => r.getRandomInt(0, 100)).returns(() => i);
-            const result = extensionSurveyPrompt.shouldShowBanner();
-            expect(result).to.equal(false, 'Banner should not be shown');
-        }
-        random.verifyAll();
-    });
-});
-
-suite('Extension survey prompt - showSurvey()', () => {
-    let experiments: TypeMoq.IMock<IExperimentService>;
-    let appShell: TypeMoq.IMock<IApplicationShell>;
-    let browserService: TypeMoq.IMock<IBrowserService>;
-    let random: TypeMoq.IMock<IRandom>;
-    let persistentStateFactory: IPersistentStateFactory;
-    let disableSurveyForTime: TypeMoq.IMock<IPersistentState<any>>;
-    let doNotShowAgain: TypeMoq.IMock<IPersistentState<any>>;
-    let platformService: TypeMoq.IMock<IPlatformService>;
-    let appEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
-    let extensionSurveyPrompt: ExtensionSurveyPrompt;
-    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
-    setup(() => {
-        appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        browserService = TypeMoq.Mock.ofType<IBrowserService>();
-        random = TypeMoq.Mock.ofType<IRandom>();
-        persistentStateFactory = mock(PersistentStateFactory);
-        disableSurveyForTime = TypeMoq.Mock.ofType<IPersistentState<any>>();
-        doNotShowAgain = TypeMoq.Mock.ofType<IPersistentState<any>>();
-        platformService = TypeMoq.Mock.ofType<IPlatformService>();
-        appEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>();
-        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        when(
-            persistentStateFactory.createGlobalPersistentState(
-                extensionSurveyStateKeys.disableSurveyForTime,
-                false,
-                anything(),
-            ),
-        ).thenReturn(disableSurveyForTime.object);
-        when(
-            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false),
-        ).thenReturn(doNotShowAgain.object);
-        experiments = TypeMoq.Mock.ofType<IExperimentService>();
-        extensionSurveyPrompt = new ExtensionSurveyPrompt(
-            appShell.object,
-            browserService.object,
-            instance(persistentStateFactory),
-            random.object,
-            experiments.object,
-            appEnvironment.object,
-            platformService.object,
-            workspaceService.object,
-            10,
-        );
-    });
-
-    test("Launch survey if 'Yes' option is clicked", async () => {
-        const packageJson = {
-            version: 'extensionVersion',
-        };
-        const prompts = [ExtensionSurveyBanner.bannerLabelYes, ExtensionSurveyBanner.maybeLater, Common.doNotShowAgain];
-        const expectedUrl = `https://aka.ms/AA5rjx5?o=Windows&v=vscodeVersion&e=extensionVersion&m=sessionId`;
-        appEnvironment
-            .setup((a) => a.packageJson)
-            .returns(() => packageJson)
-            .verifiable(TypeMoq.Times.once());
-        appEnvironment
-            .setup((a) => a.vscodeVersion)
-            .returns(() => 'vscodeVersion')
-            .verifiable(TypeMoq.Times.once());
-        appEnvironment
-            .setup((a) => a.sessionId)
-            .returns(() => 'sessionId')
-            .verifiable(TypeMoq.Times.once());
-        platformService
-            .setup((a) => a.osType)
-            .returns(() => OSType.Windows)
-            .verifiable(TypeMoq.Times.once());
-        appShell
-            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage, ...prompts))
-            .returns(() => Promise.resolve(ExtensionSurveyBanner.bannerLabelYes))
-            .verifiable(TypeMoq.Times.once());
-        browserService
-            .setup((s) => s.launch(expectedUrl))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
-        disableSurveyForTime
-            .setup((d) => d.updateValue(true))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
-        doNotShowAgain
-            .setup((d) => d.updateValue(true))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.never());
-
-        await extensionSurveyPrompt.showSurvey();
-
-        verify(
-            persistentStateFactory.createGlobalPersistentState(
-                extensionSurveyStateKeys.disableSurveyForTime,
-                false,
-                anything(),
-            ),
-        ).once();
-        verify(
-            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false),
-        ).never();
-        appShell.verifyAll();
-        browserService.verifyAll();
-        disableSurveyForTime.verifyAll();
-        doNotShowAgain.verifyAll();
-        appEnvironment.verifyAll();
-        platformService.verifyAll();
-    });
-
-    test("Do nothing if 'Maybe later' option is clicked", async () => {
-        const prompts = [ExtensionSurveyBanner.bannerLabelYes, ExtensionSurveyBanner.maybeLater, Common.doNotShowAgain];
-        platformService.setup((p) => p.osType).verifiable(TypeMoq.Times.never());
-        appShell
-            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage, ...prompts))
-            .returns(() => Promise.resolve(ExtensionSurveyBanner.maybeLater))
-            .verifiable(TypeMoq.Times.once());
-        browserService
-            .setup((s) => s.launch(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.never());
-        disableSurveyForTime
-            .setup((d) => d.updateValue(true))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.never());
-        doNotShowAgain
-            .setup((d) => d.updateValue(true))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.never());
-
-        await extensionSurveyPrompt.showSurvey();
-
-        verify(
-            persistentStateFactory.createGlobalPersistentState(
-                extensionSurveyStateKeys.disableSurveyForTime,
-                false,
-                anything(),
-            ),
-        ).never();
-        verify(
-            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false),
-        ).never();
-        appShell.verifyAll();
-        browserService.verifyAll();
-        disableSurveyForTime.verifyAll();
-        doNotShowAgain.verifyAll();
-        platformService.verifyAll();
-    });
-
-    test('Do nothing if no option is clicked', async () => {
-        const prompts = [ExtensionSurveyBanner.bannerLabelYes, ExtensionSurveyBanner.maybeLater, Common.doNotShowAgain];
-        platformService.setup((p) => p.osType).verifiable(TypeMoq.Times.never());
-        appShell
-            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage, ...prompts))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.once());
-        browserService
-            .setup((s) => s.launch(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.never());
-        disableSurveyForTime
-            .setup((d) => d.updateValue(true))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.never());
-        doNotShowAgain
-            .setup((d) => d.updateValue(true))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.never());
-
-        await extensionSurveyPrompt.showSurvey();
-
-        verify(
-            persistentStateFactory.createGlobalPersistentState(
-                extensionSurveyStateKeys.disableSurveyForTime,
-                false,
-                anything(),
-            ),
-        ).never();
-        verify(
-            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false),
-        ).never();
-        appShell.verifyAll();
-        browserService.verifyAll();
-        disableSurveyForTime.verifyAll();
-        doNotShowAgain.verifyAll();
-        platformService.verifyAll();
-    });
-
-    test('Disable prompt if "Don\'t show again" option is clicked', async () => {
-        const prompts = [ExtensionSurveyBanner.bannerLabelYes, ExtensionSurveyBanner.maybeLater, Common.doNotShowAgain];
-        platformService.setup((p) => p.osType).verifiable(TypeMoq.Times.never());
-        appShell
-            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage, ...prompts))
-            .returns(() => Promise.resolve(Common.doNotShowAgain))
-            .verifiable(TypeMoq.Times.once());
-        browserService
-            .setup((s) => s.launch(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.never());
-        disableSurveyForTime
-            .setup((d) => d.updateValue(true))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.never());
-        doNotShowAgain
-            .setup((d) => d.updateValue(true))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
-
-        await extensionSurveyPrompt.showSurvey();
-
-        verify(
-            persistentStateFactory.createGlobalPersistentState(
-                extensionSurveyStateKeys.disableSurveyForTime,
-                false,
-                anything(),
-            ),
-        ).never();
-        verify(
-            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false),
-        ).once();
-        appShell.verifyAll();
-        browserService.verifyAll();
-        disableSurveyForTime.verifyAll();
-        doNotShowAgain.verifyAll();
-        platformService.verifyAll();
-    });
-});
-
-suite('Extension survey prompt - activate()', () => {
-    let appShell: TypeMoq.IMock<IApplicationShell>;
-    let browserService: TypeMoq.IMock<IBrowserService>;
-    let random: TypeMoq.IMock<IRandom>;
-    let persistentStateFactory: IPersistentStateFactory;
-    let shouldShowBanner: sinon.SinonStub<any>;
-    let showSurvey: sinon.SinonStub<any>;
-    let experiments: TypeMoq.IMock<IExperimentService>;
-    let extensionSurveyPrompt: ExtensionSurveyPrompt;
-    let platformService: TypeMoq.IMock<IPlatformService>;
-    let appEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
-    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
-    setup(() => {
-        appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        browserService = TypeMoq.Mock.ofType<IBrowserService>();
-        random = TypeMoq.Mock.ofType<IRandom>();
-        persistentStateFactory = mock(PersistentStateFactory);
-        experiments = TypeMoq.Mock.ofType<IExperimentService>();
-        platformService = TypeMoq.Mock.ofType<IPlatformService>();
-        appEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>();
-        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        when(mockedVSCodeNamespaces.env!.uiKind).thenReturn(UIKind.Desktop);
     });
 
     teardown(() => {
         sinon.restore();
+        when(mockedVSCodeNamespaces.env!.uiKind).thenReturn(UIKind.Desktop);
     });
 
-    test("If user is not in 'ShowExtensionSurveyPrompt' experiment, return immediately", async () => {
-        shouldShowBanner = sinon.stub(ExtensionSurveyPrompt.prototype, 'shouldShowBanner');
-        shouldShowBanner.callsFake(() => false);
-        extensionSurveyPrompt = new ExtensionSurveyPrompt(
-            appShell.object,
-            browserService.object,
-            instance(persistentStateFactory),
-            random.object,
-            experiments.object,
-            appEnvironment.object,
-            platformService.object,
-            workspaceService.object,
-            10,
-        );
-        experiments
-            .setup((exp) => exp.inExperiment(ShowExtensionSurveyPrompt.experiment))
-            .returns(() => Promise.resolve(false))
-            .verifiable(TypeMoq.Times.once());
-        await extensionSurveyPrompt.activate();
-        assert.ok(shouldShowBanner.notCalled);
-        experiments.verifyAll();
-    });
+    suite('shouldShowBanner()', () => {
+        test('Returns false when running in Web UI', () => {
+            when(mockedVSCodeNamespaces.env!.uiKind).thenReturn(UIKind.Web);
+            const { prompt, getRandomIntStub } = createSurveyPromptHarness();
 
-    test("No survey is shown if shouldShowBanner() returns false and user is in 'ShowExtensionSurveyPrompt' experiment", async () => {
-        const deferred = createDeferred<true>();
-        shouldShowBanner = sinon.stub(ExtensionSurveyPrompt.prototype, 'shouldShowBanner');
-        shouldShowBanner.callsFake(() => false);
-        showSurvey = sinon.stub(ExtensionSurveyPrompt.prototype, 'showSurvey');
-        showSurvey.callsFake(() => {
-            deferred.resolve(true);
-            return Promise.resolve();
+            expect(prompt.shouldShowBanner()).to.equal(false, 'Banner should not be shown on Web');
+            sinon.assert.notCalled(getRandomIntStub);
         });
-        // waitTimeToShowSurvey = 50 ms
-        extensionSurveyPrompt = new ExtensionSurveyPrompt(
-            appShell.object,
-            browserService.object,
-            instance(persistentStateFactory),
-            random.object,
-            experiments.object,
-            appEnvironment.object,
-            platformService.object,
-            workspaceService.object,
-            10,
-            50,
-        );
-        experiments
-            .setup((exp) => exp.inExperiment(ShowExtensionSurveyPrompt.experiment))
-            .returns(() => Promise.resolve(true))
-            .verifiable(TypeMoq.Times.once());
-        await extensionSurveyPrompt.activate();
-        assert.ok(shouldShowBanner.calledOnce);
 
-        const doesSurveyShowUp = await Promise.race([deferred.promise, sleep(100).then(() => false)]);
-        assert.ok(showSurvey.notCalled);
-        expect(doesSurveyShowUp).to.equal(false, 'Survey should not appear');
-        experiments.verifyAll();
+        test('Returns false if do not show again is set', async () => {
+            const { prompt, persistentStateFactory, getRandomIntStub } = createSurveyPromptHarness();
+            await persistentStateFactory
+                .createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)
+                .updateValue(true);
+
+            expect(prompt.shouldShowBanner()).to.equal(false, 'Banner should not be shown');
+            sinon.assert.notCalled(getRandomIntStub);
+        });
+
+        test('Returns false if prompt is disabled for a while, and true after expiry', async () => {
+            const clock = sinon.useFakeTimers({ now: 1_000_000 });
+            const { prompt, persistentStateFactory, getRandomIntStub } = createSurveyPromptHarness();
+            await persistentStateFactory
+                .createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, TWELVE_WEEKS_MS)
+                .updateValue(true);
+
+            expect(prompt.shouldShowBanner()).to.equal(false, 'Banner should not be shown while disabled');
+            sinon.assert.notCalled(getRandomIntStub);
+
+            clock.tick(TWELVE_WEEKS_MS + 1);
+            expect(prompt.shouldShowBanner()).to.equal(true, 'Banner should be eligible again after expiry');
+            sinon.assert.calledOnce(getRandomIntStub);
+        });
+
+        test('Returns false if user is not in the random sampling', () => {
+            const { prompt, getRandomIntStub } = createSurveyPromptHarness();
+
+            // Default sample size is 10
+            for (let i = 10; i < 100; i = i + 1) {
+                getRandomIntStub.returns(i);
+                expect(prompt.shouldShowBanner()).to.equal(false, 'Banner should not be shown');
+            }
+            sinon.assert.callCount(getRandomIntStub, 90);
+        });
+
+        test('Returns true if telemetry.feedback.enabled is enabled', () => {
+            const { prompt } = createSurveyPromptHarness({
+                telemetryConfig: new MockWorkspaceConfiguration({ 'feedback.enabled': true }),
+            });
+
+            expect(prompt.shouldShowBanner()).to.equal(
+                true,
+                'Banner should be shown when telemetry.feedback.enabled is true',
+            );
+        });
+
+        test('Returns false if telemetry.feedback.enabled is disabled', () => {
+            const { prompt, getRandomIntStub } = createSurveyPromptHarness({
+                telemetryConfig: new MockWorkspaceConfiguration({ 'feedback.enabled': false }),
+            });
+
+            expect(prompt.shouldShowBanner()).to.equal(
+                false,
+                'Banner should not be shown when feedback.enabled is false',
+            );
+            sinon.assert.notCalled(getRandomIntStub);
+        });
+
+        test('Defaults feedback.enabled to true when setting or telemetry config is absent', () => {
+            const unsetSetting = createSurveyPromptHarness({
+                telemetryConfig: new MockWorkspaceConfiguration(),
+            });
+            const missingSection = createSurveyPromptHarness({
+                hasTelemetryConfig: false,
+            });
+
+            expect(unsetSetting.prompt.shouldShowBanner()).to.equal(true);
+            expect(missingSection.prompt.shouldShowBanner()).to.equal(true);
+        });
+
+        test('Returns true if user is in the random sampling', () => {
+            const { prompt, getRandomIntStub } = createSurveyPromptHarness();
+
+            // Default sample size is 10
+            for (let i = 0; i < 10; i = i + 1) {
+                getRandomIntStub.returns(i);
+                expect(prompt.shouldShowBanner()).to.equal(true, 'Banner should be shown');
+            }
+        });
+
+        test('Always returns true if sample size is 100', () => {
+            const { prompt, getRandomIntStub } = createSurveyPromptHarness({ sampleSize: 100 });
+
+            for (let i = 0; i < 100; i = i + 1) {
+                getRandomIntStub.returns(i);
+                expect(prompt.shouldShowBanner()).to.equal(true, 'Banner should be shown');
+            }
+        });
+
+        test('Always returns false if sample size is 0', () => {
+            const { prompt, getRandomIntStub } = createSurveyPromptHarness({ sampleSize: 0 });
+
+            for (let i = 0; i < 100; i = i + 1) {
+                getRandomIntStub.returns(i);
+                expect(prompt.shouldShowBanner()).to.equal(false, 'Banner should not be shown');
+            }
+            sinon.assert.callCount(getRandomIntStub, 100);
+        });
     });
 
-    test("Survey is shown after waitTimeToShowSurvey if shouldShowBanner() returns true and user is in 'ShowExtensionSurveyPrompt' experiment", async () => {
-        const deferred = createDeferred<true>();
-        shouldShowBanner = sinon.stub(ExtensionSurveyPrompt.prototype, 'shouldShowBanner');
-        shouldShowBanner.callsFake(() => true);
-        showSurvey = sinon.stub(ExtensionSurveyPrompt.prototype, 'showSurvey');
-        showSurvey.callsFake(() => {
-            deferred.resolve(true);
-            return Promise.resolve();
-        });
-        // waitTimeToShowSurvey = 50 ms
-        extensionSurveyPrompt = new ExtensionSurveyPrompt(
-            appShell.object,
-            browserService.object,
-            instance(persistentStateFactory),
-            random.object,
-            experiments.object,
-            appEnvironment.object,
-            platformService.object,
-            workspaceService.object,
-            10,
-            50,
-        );
-        experiments
-            .setup((exp) => exp.inExperiment(ShowExtensionSurveyPrompt.experiment))
-            .returns(() => Promise.resolve(true))
-            .verifiable(TypeMoq.Times.once());
-        await extensionSurveyPrompt.activate();
-        assert.ok(shouldShowBanner.calledOnce);
+    suite('showSurvey()', () => {
+        const expectedPrompts = [
+            ExtensionSurveyBanner.bannerLabelYes,
+            ExtensionSurveyBanner.maybeLater,
+            Common.doNotShowAgain,
+        ];
 
-        const doesSurveyShowUp = await Promise.race([deferred.promise, sleep(200).then(() => false)]);
-        expect(doesSurveyShowUp).to.equal(true, 'Survey should appear');
-        assert.ok(showSurvey.calledOnce);
-        experiments.verifyAll();
+        function expectSurveyState(
+            persistentStateFactory: PersistentStateFactory,
+            expected: { disableForTime: boolean; doNotShowAgain: boolean },
+        ) {
+            expect(
+                persistentStateFactory.createGlobalPersistentState(
+                    extensionSurveyStateKeys.disableSurveyForTime,
+                    false,
+                    TWELVE_WEEKS_MS,
+                ).value,
+            ).to.equal(expected.disableForTime);
+            expect(
+                persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)
+                    .value,
+            ).to.equal(expected.doNotShowAgain);
+        }
+
+        test("Launches survey and temporarily disables prompt if 'Yes' option is clicked", async () => {
+            const {
+                prompt,
+                persistentStateFactory,
+                showInformationMessageStub,
+                browserLaunchStub,
+            } = createSurveyPromptHarness({
+                showInformationMessageResult: ExtensionSurveyBanner.bannerLabelYes,
+            });
+            const expectedUrl = 'https://aka.ms/AA5rjx5?o=Windows&v=vscodeVersion&e=extensionVersion&m=sessionId';
+
+            await prompt.showSurvey();
+
+            sinon.assert.calledOnceWithExactly(
+                showInformationMessageStub,
+                ExtensionSurveyBanner.bannerMessage,
+                ...expectedPrompts,
+            );
+            sinon.assert.calledOnceWithExactly(browserLaunchStub, expectedUrl);
+            expectSurveyState(persistentStateFactory, { disableForTime: true, doNotShowAgain: false });
+            expect(prompt.shouldShowBanner()).to.equal(false);
+        });
+
+        test("Does nothing if 'Maybe later' option is clicked", async () => {
+            const {
+                prompt,
+                persistentStateFactory,
+                showInformationMessageStub,
+                browserLaunchStub,
+            } = createSurveyPromptHarness({
+                showInformationMessageResult: ExtensionSurveyBanner.maybeLater,
+            });
+
+            await prompt.showSurvey();
+
+            sinon.assert.calledOnceWithExactly(
+                showInformationMessageStub,
+                ExtensionSurveyBanner.bannerMessage,
+                ...expectedPrompts,
+            );
+            sinon.assert.notCalled(browserLaunchStub);
+            expectSurveyState(persistentStateFactory, { disableForTime: false, doNotShowAgain: false });
+            expect(prompt.shouldShowBanner()).to.equal(true);
+        });
+
+        test('Does nothing if no option is clicked', async () => {
+            const {
+                prompt,
+                persistentStateFactory,
+                showInformationMessageStub,
+                browserLaunchStub,
+            } = createSurveyPromptHarness({
+                showInformationMessageResult: undefined,
+            });
+
+            await prompt.showSurvey();
+
+            sinon.assert.calledOnceWithExactly(
+                showInformationMessageStub,
+                ExtensionSurveyBanner.bannerMessage,
+                ...expectedPrompts,
+            );
+            sinon.assert.notCalled(browserLaunchStub);
+            expectSurveyState(persistentStateFactory, { disableForTime: false, doNotShowAgain: false });
+        });
+
+        test('Disables prompt permanently if "Don\'t show again" option is clicked', async () => {
+            const {
+                prompt,
+                persistentStateFactory,
+                showInformationMessageStub,
+                browserLaunchStub,
+            } = createSurveyPromptHarness({
+                showInformationMessageResult: Common.doNotShowAgain,
+            });
+
+            await prompt.showSurvey();
+
+            sinon.assert.calledOnceWithExactly(
+                showInformationMessageStub,
+                ExtensionSurveyBanner.bannerMessage,
+                ...expectedPrompts,
+            );
+            sinon.assert.notCalled(browserLaunchStub);
+            expectSurveyState(persistentStateFactory, { disableForTime: false, doNotShowAgain: true });
+            expect(prompt.shouldShowBanner()).to.equal(false);
+        });
+    });
+
+    suite('activate()', () => {
+        test("If user is not in 'ShowExtensionSurveyPrompt' experiment, returns immediately", async () => {
+            const clock = sinon.useFakeTimers({ now: 1_000_000 });
+            const {
+                prompt,
+                inExperimentStub,
+                getRandomIntStub,
+                showInformationMessageStub,
+            } = createSurveyPromptHarness({
+                inExperiment: false,
+                waitTimeToShowSurvey: 50,
+            });
+
+            await prompt.activate();
+            await clock.tickAsync(100);
+
+            sinon.assert.calledOnceWithExactly(inExperimentStub, ShowExtensionSurveyPrompt.experiment);
+            sinon.assert.notCalled(getRandomIntStub);
+            sinon.assert.notCalled(showInformationMessageStub);
+        });
+
+        test("No survey is shown if shouldShowBanner() returns false and user is in 'ShowExtensionSurveyPrompt' experiment", async () => {
+            const clock = sinon.useFakeTimers({ now: 1_000_000 });
+            const {
+                prompt,
+                inExperimentStub,
+                getRandomIntStub,
+                showInformationMessageStub,
+            } = createSurveyPromptHarness({
+                inExperiment: true,
+                randomInt: 50,
+                waitTimeToShowSurvey: 50,
+            });
+
+            await prompt.activate();
+            await clock.tickAsync(100);
+
+            sinon.assert.calledOnceWithExactly(inExperimentStub, ShowExtensionSurveyPrompt.experiment);
+            sinon.assert.calledOnce(getRandomIntStub);
+            sinon.assert.notCalled(showInformationMessageStub);
+        });
+
+        test("Survey is shown after waitTimeToShowSurvey if shouldShowBanner() returns true and user is in 'ShowExtensionSurveyPrompt' experiment", async () => {
+            const clock = sinon.useFakeTimers({ now: 1_000_000 });
+            const {
+                prompt,
+                inExperimentStub,
+                showInformationMessageStub,
+                browserLaunchStub,
+            } = createSurveyPromptHarness({
+                inExperiment: true,
+                randomInt: 0,
+                waitTimeToShowSurvey: 50,
+                showInformationMessageResult: ExtensionSurveyBanner.bannerLabelYes,
+            });
+
+            await prompt.activate();
+            sinon.assert.calledOnceWithExactly(inExperimentStub, ShowExtensionSurveyPrompt.experiment);
+
+            await clock.tickAsync(49);
+            sinon.assert.notCalled(showInformationMessageStub);
+
+            await clock.tickAsync(1);
+            sinon.assert.calledOnce(showInformationMessageStub);
+            sinon.assert.calledOnce(browserLaunchStub);
+        });
     });
 });
