@@ -148,7 +148,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             interpreterService.reset();
             interpreterService.setup((i) => i.hasInterpreters()).returns(() => Promise.resolve(true));
             interpreterService
-                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny(), typemoq.It.isAny()))
                 .returns(() => Promise.resolve(({ path: 'interpreterpath' } as unknown) as PythonEnvironment));
             const result2 = await triggerFunction!(undefined);
             expect(result2).to.equal(true);
@@ -228,7 +228,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             }
             // No interpreter should exist if comspec is incorrectly configured.
             interpreterService
-                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny(), typemoq.It.isAny()))
                 .returns(() => {
                     return Promise.resolve(undefined);
                 });
@@ -252,7 +252,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             }
             // No interpreter should exist if execution is failing.
             interpreterService
-                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny(), typemoq.It.isAny()))
                 .returns(() => {
                     return Promise.resolve(undefined);
                 });
@@ -272,7 +272,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             }
             // No interpreter should exist if execution is failing.
             interpreterService
-                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny(), typemoq.It.isAny()))
                 .returns(() => {
                     return Promise.resolve(undefined);
                 });
@@ -293,7 +293,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             interpreterService.setup((i) => i.hasInterpreters()).returns(() => Promise.resolve(false));
             // No interpreter should exist if execution is failing.
             interpreterService
-                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny(), typemoq.It.isAny()))
                 .returns(() => {
                     return Promise.resolve(undefined);
                 });
@@ -318,7 +318,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => Promise.resolve(true))
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny(), typemoq.It.isAny()))
                 .returns(() => {
                     return Promise.resolve(undefined);
                 });
@@ -338,13 +338,30 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         test('Should return empty diagnostics if there are interpreters and a current interpreter', async () => {
             interpreterService.setup((i) => i.hasInterpreters()).returns(() => Promise.resolve(true));
             interpreterService
-                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny(), typemoq.It.isAny()))
                 .returns(() => {
                     return Promise.resolve({ envType: EnvironmentType.Unknown } as any);
                 });
 
             const diagnostics = await diagnosticService._manualDiagnose(undefined);
             expect(diagnostics).to.be.deep.equal([], 'not the same');
+        });
+
+        test('Should wait for active interpreter resolution in _manualDiagnose', async () => {
+            interpreterService.setup((i) => i.hasInterpreters()).returns(() => Promise.resolve(true));
+            interpreterService
+                .setup((i) =>
+                    i.getActiveInterpreter(
+                        undefined,
+                        typemoq.It.is((opts) => opts?.waitForResolution === true),
+                    ),
+                )
+                .returns(() => Promise.resolve(({ path: 'interpreterpath' } as unknown) as PythonEnvironment))
+                .verifiable(typemoq.Times.once());
+
+            const diagnostics = await diagnosticService._manualDiagnose(undefined);
+            expect(diagnostics).to.be.deep.equal([]);
+            interpreterService.verifyAll();
         });
 
         test('Handling comspec diagnostic should launch expected browser link', async () => {

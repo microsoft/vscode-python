@@ -299,6 +299,9 @@ export class InterpreterService implements Disposable, IInterpreterService {
         // abandoned, so listeners are still notified of the real value once it becomes available:
         // the env-extension path reports via the environments API (see getActiveInterpreterLegacy),
         // and the native path reports via `_onConfigChanged` once auto-selection completes.
+        if (options?.waitForResolution) {
+            return resolution;
+        }
         const result = await Promise.race([
             resolution,
             sleep(GET_ACTIVE_INTERPRETER_TIMEOUT_MS).then(() => ACTIVE_INTERPRETER_TIMED_OUT),

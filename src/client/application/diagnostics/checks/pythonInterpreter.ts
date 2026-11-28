@@ -158,7 +158,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
             ];
         }
 
-        const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
+        const currentInterpreter = await interpreterService.getActiveInterpreter(resource, { waitForResolution: true });
         if (!currentInterpreter) {
             if (useEnvExtension()) {
                 traceWarn(Interpreters.envExtNoActiveEnvironment);
@@ -188,7 +188,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
             return [];
         }
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
+        const currentInterpreter = await interpreterService.getActiveInterpreter(resource, { waitForResolution: true });
         if (currentInterpreter) {
             return [];
         }

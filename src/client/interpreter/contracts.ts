@@ -77,6 +77,10 @@ export interface GetActiveInterpreterOptions {
      * Resolve the exact resource without using workspace-scoped in-flight or last-known state.
      */
     exactResource?: boolean;
+    /**
+     * Wait for active interpreter resolution to complete instead of returning early on the timeout budget.
+     */
+    waitForResolution?: boolean;
 }
 
 export interface IInterpreterService {

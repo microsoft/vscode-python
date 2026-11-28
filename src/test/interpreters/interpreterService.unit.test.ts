@@ -480,6 +480,17 @@ suite('Interpreters service', () => {
             workspace.verify((w) => w.getWorkspaceFolderIdentifier(TypeMoq.It.isAny()), TypeMoq.Times.never());
             expect(workspacePersistedValues.size).to.equal(0);
         });
+
+        test('waitForResolution waits for slow cold-start resolution instead of timing out', async () => {
+            const slowEnv = { path: path.join('usr', 'bin', 'slowpy') } as any;
+            useEnvExtensionStub.returns(true);
+            sinon.stub(legacyApi, 'getActiveInterpreterLegacy').callsFake(async () => delayed(slowEnv, 200));
+
+            const service = new InterpreterService(serviceContainer, pyenvs.object);
+            const result = await service.getActiveInterpreter(undefined, { waitForResolution: true });
+
+            expect(result).to.equal(slowEnv);
+        });
     });
 
     test('A configuration change re-runs the config change handler to report a background selection', async () => {
