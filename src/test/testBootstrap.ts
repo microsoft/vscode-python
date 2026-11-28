@@ -29,7 +29,7 @@ Final solution:
     * Send a message to the socket server with a flag (true/false whether tests passed/failed)
 * Socket server (main procecss) will receive the test status flag.
     * This will kill the spawned process
-    * This main process will kill itself with exit code 0 if tests pass succesfully, else 1.
+    * This main process will kill itself with exit code 0 if tests pass successfully, else 1.
 */
 
 const testFile = process.argv[2];

@@ -5,7 +5,7 @@
 
 /*
 Comparing performance metrics is not easy (the metrics can and always get skewed).
-One approach is to run the tests multile times and gather multiple sample data.
+One approach is to run the tests multiple times and gather multiple sample data.
 For Extension activation times, we load both extensions x times, and re-load the window y times in each x load.
 I.e. capture averages by giving the extensions sufficient time to warm up.
 This block of code merely launches the tests by using either the dev or release version of the extension,

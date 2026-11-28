@@ -37,7 +37,7 @@ export async function openInteractiveREPL(
         viewColumn = existingReplViewColumn ?? viewColumn;
         alreadyExists = true;
     } else if (!notebookDocument) {
-        // Case where NotebookDocument doesnt exist, or
+        // Case where NotebookDocument doesn't exist, or
         // became outdated (untitled.ipynb created without Python extension knowing, effectively taking over original Python REPL's URI)
         notebookDocument = await openNotebookDocument('jupyter-notebook');
     }

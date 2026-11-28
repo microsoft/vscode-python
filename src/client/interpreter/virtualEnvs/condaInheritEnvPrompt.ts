@@ -33,7 +33,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         this.initializeInBackground(resource).ignoreErrors();
     }
 
-    @traceDecoratorError('Failed to intialize conda inherit env prompt')
+    @traceDecoratorError('Failed to initialize conda inherit env prompt')
     public async initializeInBackground(resource: Uri): Promise<void> {
         const show = await this.shouldShowPrompt(resource);
         if (!show) {
